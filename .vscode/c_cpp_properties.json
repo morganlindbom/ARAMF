@@ -1,0 +1,39 @@
+{
+  "configurations": [
+    {
+      "name": "MSYS2 UCRT64 Qt6",
+      "compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
+      "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+      "includePath": [
+        "${workspaceFolder}/src",
+        "C:/msys64/ucrt64/include/qt6",
+        "C:/msys64/ucrt64/include/qt6/QtCore",
+        "C:/msys64/ucrt64/include/qt6/QtGui",
+        "C:/msys64/ucrt64/include/qt6/QtWidgets",
+        "C:/msys64/ucrt64/include"
+      ],
+      "browse": {
+        "path": [
+          "${workspaceFolder}/src",
+          "C:/msys64/ucrt64/include/qt6",
+          "C:/msys64/ucrt64/include/qt6/QtWidgets",
+          "C:/msys64/ucrt64/include/qt6/QtGui",
+          "C:/msys64/ucrt64/include/qt6/QtCore"
+        ],
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "defines": [
+        "UNICODE",
+        "_UNICODE",
+        "WIN32",
+        "WIN64",
+        "QT_WIDGETS_LIB",
+        "QT_GUI_LIB",
+        "QT_CORE_LIB"
+      ],
+      "cppStandard": "c++17",
+      "intelliSenseMode": "windows-gcc-x64"
+    }
+  ],
+  "version": 4
+}

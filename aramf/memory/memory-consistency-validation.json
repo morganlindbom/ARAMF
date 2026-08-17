@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-08-15T13:00:42+00:00",
+  "durableSequence": 2,
+  "productionSequence": 2,
+  "checks": [
+    {
+      "name": "event-identifiers-unique",
+      "status": "PASS"
+    },
+    {
+      "name": "sequence-order",
+      "status": "PASS"
+    },
+    {
+      "name": "manifest-next-sequence",
+      "status": "PASS"
+    },
+    {
+      "name": "manifest-event-count",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "warnings": []
+}

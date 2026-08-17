@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "checkedAt": "2026-08-15T13:00:42+00:00",
+  "durableSequence": 1,
+  "checks": [
+    {
+      "name": "memory-root",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "warnings": []
+}
