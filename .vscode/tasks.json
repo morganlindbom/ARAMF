@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CMake: Configure AR&MF",
+      "type": "process",
+      "command": "C:\\Program Files\\CMake\\bin\\cmake.exe",
+      "args": [
+        "--preset",
+        "windows-ucrt64"
+      ],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "CMake: Build AR&MF",
+      "type": "process",
+      "command": "C:\\Program Files\\CMake\\bin\\cmake.exe",
+      "args": [
+        "--build",
+        "${workspaceFolder}/build",
+        "--parallel",
+        "2"
+      ],
+      "dependsOn": "CMake: Configure AR&MF",
+      "dependsOrder": "sequence",
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

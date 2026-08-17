@@ -1,0 +1,5 @@
+{
+  "cmake.generator": "Ninja",
+  "cmake.configureOnOpen": true,
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+}
