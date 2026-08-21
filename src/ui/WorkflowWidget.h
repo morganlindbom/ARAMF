@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QList>
 
 class QListWidget;
 class QPushButton;
@@ -23,4 +24,5 @@ private:
     QListWidget* steps_;
     QPushButton* back_;
     QPushButton* forward_;
+    QList<int> pageRows_;
 };

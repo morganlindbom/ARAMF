@@ -1,416 +1,113 @@
-
 <!-- README.md -->
 
 # AR&MF — AI Rules & Memory Framework
 
-AR&MF is a reusable framework for organizing, controlling, and preserving AI-assisted software development.
+AR&MF is a **C++17 / Qt 6 desktop application** for creating and maintaining a project-local control plane for AI-assisted software development.
 
-The framework is designed to give AI development agents a structured project environment containing explicit rules, project configuration, persistent memory, architectural decisions, validation evidence, and current project state.
+Its purpose is to make project rules, current status, durable decisions, memory, routing, resources, and verification evidence portable between ChatGPT, Codex, and other repository-aware coding agents.
 
-The primary goal is to make AI-assisted development more **reliable, reproducible, measurable, and portable between AI sessions and development agents**.
+## Implementation
 
----
+ARAMF itself is fully C++ based:
 
-## Purpose
+- **Language:** C++17
+- **GUI:** Qt 6 Widgets
+- **Build:** CMake + Ninja/MSYS2 UCRT64 on the primary Windows environment
+- **Testing:** CTest with native C++ tests
+- **Project memory:** native C++/Qt JSON and file handling
+- **Python runtime dependency:** none
+- **Node.js runtime dependency:** none
 
-Modern AI coding agents are highly capable, but they often operate with incomplete or temporary context.
+ARAMF can still configure projects that use Python, C#, JavaScript/TypeScript, C, embedded SDKs, databases, and other technologies. Those are target-project choices, not ARAMF implementation dependencies.
 
-Important information can be lost between sessions, including:
+## Repository Structure
 
-* Architectural decisions
-* Project-specific rules
-* Development conventions
-* Current implementation state
-* Previous failures and corrections
-* Validation results
-* Known working solutions
-* User preferences
-* Environment configuration
+```text
+ARAMF/
+├── AGENTS.md                  # canonical agent instructions
+├── PROJECT_STATUS.md          # current project/program state
+├── aramf-profile.json
+├── rules/
+│   └── generated-rules.md
+├── memory/
+│   ├── decisions.md
+│   ├── checkpoints.json
+│   ├── metrics.json
+│   ├── event-log.jsonl
+│   ├── memory-manifest.json
+│   ├── current-state.md
+│   ├── cold-start-validation.json
+│   └── memory-consistency-validation.json
+├── routing/
+├── resources/
+├── templates/
+├── platforms/
+├── verification/
+├── custom/                    # user-owned; never modified automatically
+├── docs/
+└── evidence/
 
-AR&MF provides a structured mechanism for keeping this information inside the project itself.
+src/
+├── core/
+│   ├── AramfPaths.h
+│   ├── ProjectMemory.h/.cpp
+│   ├── ProjectModel.h/.cpp
+│   └── Services.h/.cpp
+└── ui/
 
-Instead of relying entirely on conversation history, an AI agent can reconstruct the project state directly from the repository.
+tests/
+└── ProjectMemoryTests.cpp
 
----
+AGENTS.md                      # minimal bootstrap only
+CMakeLists.txt
+CMakePresets.json
+README.md
+LICENSE
+```
 
-## Core Principles
+## Agent Model
 
-AR&MF is built around several fundamental principles.
+The repository root contains only a small `AGENTS.md` discovery file. The canonical instructions and every file those instructions depend on are kept under `ARAMF/`.
 
-### Explicit Rules
+The intended cold-start order is:
 
-Project behavior should be controlled by explicit rules rather than assumptions made by the AI.
+1. `ARAMF/PROJECT_STATUS.md`
+2. `ARAMF/memory/decisions.md`
+3. `ARAMF/rules/generated-rules.md`
+4. task-relevant routing/resources/platform/verification files only
 
-Rules may describe:
-
-* Coding conventions
-* Architecture constraints
-* Build systems
-* Languages
-* Frameworks
-* Databases
-* Testing requirements
-* Security requirements
-* Development workflow
-
----
-
-### Project-Local Memory
-
-Important project knowledge should remain with the project.
-
-Project memory may include:
-
-* Durable decisions
-* Current project state
-* Development history
-* Checkpoints
-* Validation results
-* Certification evidence
-* Metrics
-* Known failures
-* Corrective actions
-
-This allows a new AI session to understand the project without requiring access to previous conversations.
-
----
-
-### Source of Truth
-
-AR&MF distinguishes between authoritative project information and AI inference.
-
-A conceptual priority model is:
-
-1. Explicit current user instructions
-2. Current project Source of Truth
-3. Durable project decisions
-4. Validated project memory
-5. Approved reusable framework knowledge
-6. Templates and defaults
-7. AI inference
-
-AI inference should never silently replace authoritative project information.
-
----
-
-### Separation of Concerns
-
-AR&MF intentionally separates different kinds of project information.
-
-For example:
-
-* **Observation** — something that has been noticed
-* **TODO** — something that may need action
-* **Decision** — an approved durable choice
-* **Implementation** — a change made to the project
-* **Validation** — evidence that something works
-* **Current State** — the project's present status
-* **History** — what happened over time
-
-These concepts should not be treated as interchangeable.
-
----
+This keeps the project root clean and avoids duplicated rule stores.
 
 ## Project Memory
 
-A typical AR&MF project may contain a memory structure similar to:
+`ProjectMemory` is implemented in C++ and owns:
 
-```text
-aramf/
-└── memory/
-    ├── decisions.md
-    ├── current-state.md
-    ├── history/
-    ├── checkpoints/
-    ├── cold-start-validation.json
-    ├── memory-consistency-validation.json
-    └── certification-knowledge.jsonl
+- initialization of the canonical `ARAMF/` hierarchy;
+- append-only JSONL events;
+- durable sequence tracking;
+- generated `current-state.md`;
+- cold-start validation;
+- memory consistency validation;
+- safe creation of missing managed files.
+
+`ARAMF/PROJECT_STATUS.md` is intentionally separate from derived memory state. It is the current human/agent-facing snapshot of what the program contains, what is done, what has been verified, known issues, and what should happen next.
+
+## Build on the Primary Windows Environment
+
+```powershell
+cmake --preset windows-ucrt64
+cmake --build --preset windows-ucrt64-debug
+ctest --test-dir build --output-on-failure
 ```
 
-### Durable Decisions
+The preset expects the established MSYS2 UCRT64 GCC/Ninja environment. Qt 6 must be discoverable by CMake in the development environment.
 
-Long-lived architectural and technical decisions can be stored in:
+## Generation Contract
 
-```text
-aramf/memory/decisions.md
-```
+When ARAMF generates a managed project, it creates an uppercase `ARAMF/` control directory. A root `AGENTS.md` is created only when one does not already exist; foreign root agent instructions are not silently overwritten.
 
-These decisions are intended to survive individual tasks and AI sessions.
+Files under `ARAMF/custom/` are user-owned and protected from automatic modification.
 
----
+## Historical Material
 
-### Current State
-
-The current project status can be represented in:
-
-```text
-aramf/memory/current-state.md
-```
-
-This should describe the present state of the project rather than its full historical development.
-
----
-
-### History
-
-Development events may be recorded separately from durable decisions.
-
-This allows AR&MF to preserve historical evidence without turning every development event into permanent project policy.
-
----
-
-## Cold-Start Capability
-
-One of the main goals of AR&MF is **cold-start reconstruction**.
-
-A fresh AI session should be able to enter a repository and determine:
-
-* What the project is
-* What has already been implemented
-* Which architectural decisions are authoritative
-* Which rules apply
-* What has already been validated
-* What remains unfinished
-* Which known problems exist
-* How the project should be built and tested
-
-The AI should not need previous chat history to reconstruct this information.
-
----
-
-## AI Agent Instructions
-
-AR&MF can generate or maintain agent-facing instruction files such as:
-
-```text
-AGENTS.md
-```
-
-These files can provide AI development agents with the minimum relevant context required for a task.
-
-The framework is designed to avoid loading unnecessary project information whenever possible.
-
-This reduces context size and helps keep AI behavior focused and deterministic.
-
----
-
-## Supported Development Environments
-
-AR&MF is intended to remain independent of any single programming language or development environment.
-
-A project may define requirements for:
-
-* C
-* C++
-* C#
-* Python
-* Java
-* JavaScript
-* TypeScript
-* Rust
-* Embedded systems
-* Web applications
-* Desktop applications
-* Databases
-* Build systems
-* Testing frameworks
-
-The active project configuration determines which rules are relevant.
-
----
-
-## AI Agent Compatibility
-
-AR&MF is designed around project-local, tool-independent information.
-
-The framework can therefore be used with AI development systems such as:
-
-* OpenAI Codex
-* ChatGPT
-* Other repository-aware AI coding agents
-* Future AI development tools
-
-The repository remains the authoritative project environment rather than any specific AI conversation.
-
----
-
-## Templates
-
-AR&MF may provide reusable templates for different project types.
-
-Templates can preconfigure common requirements such as:
-
-* Programming languages
-* Project structure
-* Build systems
-* Testing strategies
-* Database technologies
-* Documentation requirements
-* Development environments
-* Security requirements
-
-Templates provide starting points, not absolute authority.
-
-Explicit project decisions always take precedence over template defaults.
-
----
-
-## Custom Project Content
-
-User-controlled content can be kept separately from automatically generated framework content.
-
-For example:
-
-```text
-aramf/custom/
-```
-
-Files stored in user-owned areas should not be modified automatically unless explicitly requested.
-
-This provides a clear boundary between framework-managed information and manually maintained project content.
-
----
-
-## Framework Knowledge
-
-AR&MF may support portable knowledge derived from completed projects.
-
-A future project may receive generalized lessons through a file such as:
-
-```text
-framework-knowledge.json
-```
-
-Framework Knowledge should contain reusable lessons rather than project-specific implementation details.
-
-It must not override:
-
-* Explicit current user instructions
-* Current project Source of Truth
-* Durable project decisions
-
----
-
-## Validation
-
-AR&MF treats validation as separate from implementation.
-
-A change being implemented does not automatically mean that it has been proven correct.
-
-Possible validation levels may include:
-
-* Implemented
-* Build verified
-* Test verified
-* Host validated
-* Target validated
-* Partially validated
-* Unverified
-
-Validation claims should be supported by evidence.
-
----
-
-## Memory Consistency
-
-Because project memory can influence future AI behavior, consistency is important.
-
-AR&MF may perform automated checks to verify that:
-
-* Generated memory is internally consistent
-* Durable decisions are represented correctly
-* Current state matches authoritative project information
-* Required memory files exist
-* Historical and current information remain separated
-
-Consistency reports can be stored as machine-readable artifacts.
-
----
-
-## Development Metrics
-
-AR&MF can collect development metrics to better understand AI-assisted development.
-
-Examples include:
-
-* Human development time
-* AI development time
-* Autonomous execution time
-* Waiting time
-* Diagnosis time
-* Development iterations
-* Build attempts
-* Test attempts
-* Failures
-* Corrective actions
-* Failure domains
-* Work categories
-
-Measured results should remain distinguishable from subjective estimates.
-
----
-
-## Security
-
-Project secrets must never be stored in repository memory or generated documentation.
-
-Runtime configuration should use appropriate mechanisms such as:
-
-```text
-.env
-```
-
-Real secrets should not be committed to Git.
-
-Example configuration files should contain placeholders only.
-
----
-
-## Design Philosophy
-
-AR&MF favors:
-
-* Explicit configuration
-* Deterministic behavior
-* Small and focused context
-* Persistent project knowledge
-* Clear ownership of information
-* Traceable decisions
-* Verifiable results
-* Reproducible AI workflows
-* Minimal unnecessary AI inference
-
-The framework should help the AI understand the project rather than force the AI to rediscover it repeatedly.
-
----
-
-## Long-Term Vision
-
-The long-term goal of AR&MF is to create a standardized project environment in which an AI development agent can:
-
-1. Enter an unfamiliar repository.
-2. Read the relevant project rules.
-3. Reconstruct the current project state.
-4. Understand previous durable decisions.
-5. Identify applicable constraints.
-6. Perform a development task.
-7. Build and test the result.
-8. Record meaningful changes.
-9. Validate project memory.
-10. Leave the repository in a state that another fresh AI session can understand.
-
-The result should be a development workflow where project knowledge belongs to the project itself rather than being trapped inside temporary AI conversations.
-
----
-
-## Status
-
-AR&MF is under active development.
-
-The architecture, memory model, validation system, project configuration, templates, and AI-agent integration will continue to evolve as the framework is tested against real software development projects.
-
----
-
-## License
-
-License information will be added when the project's distribution model has been finalized.
+Recovered architecture notes and reconstruction evidence are retained under `ARAMF/docs/reconstruction/`. They are archival evidence and may describe superseded lowercase paths or the temporary Python reconstruction. They are not current authority.

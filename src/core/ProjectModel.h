@@ -3,8 +3,11 @@
 #include <QObject>
 #include <QStringList>
 #include <QHash>
+#include <QSet>
 
 struct DevelopmentEnvironment {
+    QString language;
+    QString framework;
     QString ide;
     QString compiler;
     QString operatingSystem;
@@ -37,6 +40,7 @@ public:
     void setTemplateId(const QString& value);
     void setContext(const QString& value);
     void setDevelopmentEnvironment(const DevelopmentEnvironment& value);
+    void applyTemplateDefaults(const DevelopmentEnvironment& value);
     void setAiPlatforms(const QStringList& value);
     void setResourceNames(const QStringList& value);
     void setProfileSelections(const QStringList& value);
@@ -65,6 +69,7 @@ private:
     QStringList resourceNames_;
     QStringList profileSelections_;
     QHash<QString, QStringList> options_;
+    QSet<QString> environmentOverrides_;
     int updateDepth_ = 0;
     bool pendingNotification_ = false;
 };
