@@ -1,10 +1,27 @@
 {
+  "_file": "cold-start-validation.json",
   "status": "PASS",
-  "checkedAt": "2026-08-15T13:00:42+00:00",
-  "durableSequence": 1,
+  "checkedAt": "2026-08-21T18:28:22+00:00",
+  "durableSequence": 3,
   "checks": [
     {
-      "name": "memory-root",
+      "name": "ARAMF/AGENTS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "ARAMF/PROJECT_STATUS.md",
+      "status": "PASS"
+    },
+    {
+      "name": "ARAMF/memory/decisions.md",
+      "status": "PASS"
+    },
+    {
+      "name": "ARAMF/rules/generated-rules.md",
+      "status": "PASS"
+    },
+    {
+      "name": "ARAMF/memory/memory-manifest.json",
       "status": "PASS"
     }
   ],

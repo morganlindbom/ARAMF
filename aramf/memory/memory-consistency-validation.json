@@ -1,8 +1,9 @@
 {
+  "_file": "memory-consistency-validation.json",
   "status": "PASS",
-  "checkedAt": "2026-08-15T13:00:42+00:00",
-  "durableSequence": 2,
-  "productionSequence": 2,
+  "checkedAt": "2026-08-21T18:28:22+00:00",
+  "durableSequence": 3,
+  "productionSequence": 3,
   "checks": [
     {
       "name": "event-identifiers-unique",

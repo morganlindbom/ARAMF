@@ -2,7 +2,7 @@
 #include <QMainWindow>
 #include "core/ProjectModel.h"
 #include "core/Services.h"
-class QStackedWidget; class WorkflowWidget; class ProjectDetailsPage; class ProjectProfilePage; class TemplatePage; class CategoryPage; class DevelopmentEnvironmentPage; class AiToolsPage; class ResourcesPage; class ReviewPage; class GeneratePage; class FinalizePage; class AiStrategyPage; class RulesRoutingPage; class MemoryPage; class VerificationPage;
+class QStackedWidget; class WorkflowWidget; class ProjectDetailsPage; class TemplatePage; class DevelopmentEnvironmentPage; class AiToolsPage; class ResourcesPage; class ReviewPage; class GeneratePage; class FinalizePage; class RulesRoutingPage; class MemoryPage; class VerificationPage;
 class MainWindow final : public QMainWindow
 {
     Q_OBJECT
@@ -12,7 +12,6 @@ private slots:
     void setWorkflowPage(int index);
     void goBack();
     void goForward();
-    void applyProfile(const QStringList& profileIds);
 private:
     ProjectModel projectModel_;
     TemplateManager templateManager_;
@@ -20,11 +19,8 @@ private:
     WorkflowWidget* workflow_;
     QStackedWidget* stack_;
     ProjectDetailsPage* projectPage_;
-    ProjectProfilePage* profilePage_;
     TemplatePage* templatePage_;
-    CategoryPage* contextPage_;
     DevelopmentEnvironmentPage* developmentPage_;
-    AiStrategyPage* strategyPage_;
     AiToolsPage* aiToolsPage_;
     RulesRoutingPage* rulesPage_;
     MemoryPage* memoryPage_;
