@@ -80,3 +80,16 @@ scopes. Project-local copied resources, when implemented, belong under
 MainWindow physical screen selection and startup width/height are developer
 controlled from `src/main.cpp`, not user or project configuration. Normal Qt
 window movement remains sufficient at runtime.
+
+## 2026-08-22 — Rules and memory policy boundaries
+
+Rules selection and rules routing are separate concerns, and rules are modeled
+as grouped capabilities rather than table matrices. Memory capture and memory
+maintenance are separate concerns, and memory configuration uses selectable
+policies plus one maximum-size setting rather than status-heavy UI. ARAMF
+project memory defaults to a finite 10 GiB limit. Before writes,
+`ProjectMemory` automatically prunes the oldest eligible history toward 90% of
+the limit. Protected current state, durable decisions, source-of-truth
+references, project status, consistency metadata and active configuration are
+never automatically deleted; archived memory remains subject to the total
+storage ceiling.

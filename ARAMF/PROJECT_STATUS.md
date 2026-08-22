@@ -15,7 +15,7 @@ visible workflow page has a dedicated directory under `src/ui/workflows/`.
 
 ## Current Workflow
 
-The application has 21 clickable pages in five unnumbered groups. Numbers are
+The application has 23 clickable pages in six unnumbered groups. Numbers are
 user-facing references only; internal navigation uses stable `WorkflowPageId`
 values and explicit page registration.
 
@@ -45,15 +45,20 @@ values and explicit page registration.
 
 ### RULES
 
-16. Rules & Routing
-17. Memory
+16. Which rules should apply?
+17. How should rules be routed?
+
+### MEMORY
+
+18. What should ARAMF remember?
+19. How should project memory be maintained?
 
 ### GENERATE
 
-18. Review
-19. Generate
-20. Verify
-21. Finalize
+20. Review
+21. Generate
+22. Verify
+23. Finalize
 
 Each page is question-driven and owns one clear responsibility. Template
 selection is part of Setup and may be `Disable`. Project Type is derived from
@@ -85,6 +90,16 @@ changes only the project path and does not save.
 - One MainWindow-level vertical `QScrollArea` hosts active pages. Ctrl+Plus,
   Ctrl+Minus, Ctrl+0, and Ctrl+mouse-wheel provide 30%–150% global UI zoom
   without resizing MainWindow.
+- Rules are split into checkbox-driven selection and routing pages. Memory is
+  split into capture and maintenance pages; both use compact grouped controls
+  rather than rule tables or status-heavy panels.
+- Project memory has a finite 10 GiB default and exposes only the maximum size
+  as the user-facing capacity setting. `ProjectMemory` calculates managed
+  memory usage before writes and automatically removes the oldest eligible
+  event history until usage is near 90% of the limit. Protected current state,
+  decisions, source-of-truth references, status and configuration data are not
+  auto-deleted; if protected data alone exceeds the limit, the write is safely
+  rejected.
 
 ## Verified Functionality
 
@@ -92,13 +107,26 @@ changes only the project path and does not save.
 - CTest: PASS — `aramf_core_tests` and `aramf_workflow_tests` both passed.
 - Application startup: PASS — normal Windows platform startup smoke test
   completed and the process was stopped cleanly.
-- Workflow navigation tests cover all 21 clickable IDs and non-clickable
+- Workflow navigation tests cover all 23 clickable IDs and non-clickable
   headings.
 - Core persistence tests cover structured resource authority, scopes, policy,
   old resource-name migration, AI state, Academic state, and capability state.
 - Stale active `ProjectResourcesPage` references: none.
 - Canonical framework root: PASS — Git now tracks `ARAMF/` only; the duplicate
   lowercase root was removed from the working tree.
+- Rules and memory persistence defaults: PASS — new rule enforcement/routing,
+  memory capture/maintenance settings and the maximum byte limit round-trip
+  through project persistence; legacy threshold/action fields are ignored
+  safely when loading.
+- Memory limit enforcement: PASS — pre-write checks, finite defaults, usage
+  calculation, automatic oldest-eligible pruning toward a 90% target, and safe
+  protected-memory rejection are implemented in the memory service.
+- Memory consistency and cold-start validation: PASS. Initialization and core
+  persistence tests exercise both generated validation artifacts.
+- Final Rules/MEMORY refactor build: PASS — 23-page workflow navigation,
+  grouped checkbox pages, memory configuration persistence, and oversized-write
+  rejection are covered by the current build/tests; normal Windows startup also
+  passed.
 
 Physical multi-monitor, native file-dialog, and full interactive visual
 click-through verification were not available in automated testing. The

@@ -14,6 +14,7 @@
 #include <QJsonObject>
 #include <QSaveFile>
 #include <QSet>
+#include <QStack>
 #include <QUuid>
 
 namespace {
@@ -199,6 +200,9 @@ bool ProjectMemory::appendEvent(const QString& projectRoot,
 
     The event log remains append-only while current-state.md is regenerated as a derived snapshot.
     */
+    const QByteArray serializedEvent = QJsonDocument(fields).toJson(QJsonDocument::Compact);
+    if (!withinConfiguredLimit(projectRoot, serializedEvent.size() + 1, error)) return false;
+
     const QString manifestPath = absolutePath(projectRoot, AramfPaths::Manifest);
     QJsonObject manifest = readJsonObject(manifestPath, error);
     if (manifest.isEmpty() && QFile::exists(manifestPath)) {
@@ -236,6 +240,92 @@ bool ProjectMemory::appendEvent(const QString& projectRoot,
     }
 
     return generateCurrentState(projectRoot, error);
+}
+
+qint64 ProjectMemory::managedMemoryUsage(const QString& projectRoot) const
+{
+    qint64 total = 0;
+    QStack<QString> directories;
+    directories.push(QDir(projectRoot).filePath(QStringLiteral("ARAMF/memory")));
+    while (!directories.isEmpty()) {
+        const QDir directory(directories.pop());
+        for (const auto& entry : directory.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot)) {
+            if (entry.isDir()) directories.push(entry.absoluteFilePath());
+            else total += entry.size();
+        }
+    }
+    return total;
+}
+
+qint64 ProjectMemory::memoryUsageBytes(const QString& projectRoot) const
+{
+    return managedMemoryUsage(projectRoot);
+}
+
+bool ProjectMemory::withinConfiguredLimit(const QString& projectRoot, qint64 additionalBytes, QString* error)
+{
+    const QJsonObject configuration = readJsonObject(absolutePath(projectRoot, AramfPaths::MemoryConfiguration), nullptr);
+    const qint64 maximum = configuration.value(QStringLiteral("maximumSizeBytes")).toVariant().toLongLong() > 0
+        ? configuration.value(QStringLiteral("maximumSizeBytes")).toVariant().toLongLong()
+        : 10LL * 1024LL * 1024LL * 1024LL;
+    const qint64 current = managedMemoryUsage(projectRoot);
+    if (additionalBytes < 0 || current <= maximum && additionalBytes <= maximum - current) return true;
+
+    const qint64 target = maximum - maximum / 10;
+    QList<QJsonObject> events = readEvents(absolutePath(projectRoot, AramfPaths::EventLog), error);
+    if (events.isEmpty() && current > target) {
+        if (error) *error = QStringLiteral("Protected project memory exceeds the configured limit.");
+        return false;
+    }
+    auto protectedEvent = [](const QJsonObject& event) {
+        const QString type = event.value(QStringLiteral("eventType")).toString();
+        return isControlPlaneEvent(type) || type.contains(QStringLiteral("DECISION"), Qt::CaseInsensitive)
+            || type.contains(QStringLiteral("STATUS"), Qt::CaseInsensitive)
+            || type.contains(QStringLiteral("SOURCE"), Qt::CaseInsensitive);
+    };
+    QList<QJsonObject> retained;
+    qint64 reclaimed = 0;
+    const auto exceedsTarget = [&]() {
+        const qint64 remaining = current - qMin(current, reclaimed);
+        return remaining > target || additionalBytes > target - remaining;
+    };
+    for (const auto& event : events) {
+        const qint64 eventSize = QJsonDocument(event).toJson(QJsonDocument::Compact).size() + 1;
+        if (exceedsTarget() && !protectedEvent(event)) {
+            reclaimed += eventSize;
+        } else {
+            retained.append(event);
+        }
+    }
+    if (reclaimed == 0) {
+        if (error) *error = QStringLiteral("Protected project memory exceeds the configured limit.");
+        return false;
+    }
+    QSaveFile eventFile(absolutePath(projectRoot, AramfPaths::EventLog));
+    if (!eventFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        if (error) *error = eventFile.errorString();
+        return false;
+    }
+    for (const auto& event : retained) {
+        eventFile.write(QJsonDocument(event).toJson(QJsonDocument::Compact));
+        eventFile.write("\n");
+    }
+    if (!eventFile.commit()) {
+        if (error) *error = eventFile.errorString();
+        return false;
+    }
+    QJsonObject manifest = readJsonObject(absolutePath(projectRoot, AramfPaths::Manifest), error);
+    manifest.insert(QStringLiteral("eventCount"), retained.size());
+    if (!writeJsonFile(absolutePath(projectRoot, AramfPaths::Manifest), manifest, error)) return false;
+    QString validationError;
+    if (validate(projectRoot, &validationError).value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
+        if (error) *error = validationError.isEmpty() ? QStringLiteral("Memory consistency validation failed after automatic cleanup.") : validationError;
+        return false;
+    }
+    const qint64 remaining = managedMemoryUsage(projectRoot);
+    if (remaining <= maximum && additionalBytes <= maximum - remaining) return true;
+    if (error) *error = QStringLiteral("Protected project memory exceeds the configured limit.");
+    return false;
 }
 
 QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error) const
@@ -444,6 +534,9 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
     }
 
     const QList<QPair<QString, QJsonObject>> defaults {
+        {AramfPaths::MemoryConfiguration, QJsonObject {
+            {QStringLiteral("maximumSizeBytes"), model ? model->memoryConfiguration().maximumSizeBytes : 10LL * 1024LL * 1024LL * 1024LL}
+        }},
         {AramfPaths::Checkpoints, QJsonObject {{QStringLiteral("checkpoints"), QJsonArray {}}}},
         {AramfPaths::Metrics, QJsonObject {{QStringLiteral("iterations"), 0}, {QStringLiteral("buildAttempts"), 0}, {QStringLiteral("testAttempts"), 0}, {QStringLiteral("failures"), 0}}},
         {AramfPaths::TaskRoutes, QJsonObject {{QStringLiteral("routes"), QJsonArray {}}}},

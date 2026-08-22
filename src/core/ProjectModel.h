@@ -85,6 +85,26 @@ struct ResourcePolicy {
     QString loadingStrategy = QStringLiteral("relevant");
 };
 
+struct RuleConfiguration {
+    QStringList activeCategories;
+    QString enforcementLevel = QStringLiteral("standard");
+    QString loadingStrategy = QStringLiteral("relevant");
+    QStringList workScopes;
+    QStringList projectScopes;
+    QStringList contextPolicies;
+    QString conflictPolicy = QStringLiteral("prefer-user-instruction");
+};
+
+struct MemoryConfiguration {
+    QStringList captureCategories;
+    QString retentionLevel = QStringLiteral("standard");
+    QStringList maintenanceOptions;
+    QStringList validationOptions;
+    QString updateStrategy = QStringLiteral("meaningful-task");
+    QStringList historyOptions;
+    qint64 maximumSizeBytes = 10LL * 1024LL * 1024LL * 1024LL;
+};
+
 class ProjectModel final : public QObject {
     Q_OBJECT
 public:
@@ -103,6 +123,8 @@ public:
     AiConfiguration aiConfiguration() const { return ai_; }
     QList<ProjectResource> resources() const { return resources_; }
     ResourcePolicy resourcePolicy() const { return resourcePolicy_; }
+    RuleConfiguration ruleConfiguration() const { return ruleConfiguration_; }
+    MemoryConfiguration memoryConfiguration() const { return memoryConfiguration_; }
     QStringList aiPlatforms() const { return aiPlatforms_; }
     QStringList resourceNames() const { return resourceNames_; }
     QStringList profileSelections() const { return profileSelections_; }
@@ -123,6 +145,8 @@ public:
     void setAiConfiguration(const AiConfiguration& value);
     void setResources(const QList<ProjectResource>& value);
     void setResourcePolicy(const ResourcePolicy& value);
+    void setRuleConfiguration(const RuleConfiguration& value);
+    void setMemoryConfiguration(const MemoryConfiguration& value);
     void applyTemplateCapabilities(const DevelopmentCapabilities& value);
     void applyTemplateDefaults(const DevelopmentEnvironment& value);
     void setAiPlatforms(const QStringList& value);
@@ -160,6 +184,8 @@ private:
     AiConfiguration ai_;
     QList<ProjectResource> resources_;
     ResourcePolicy resourcePolicy_;
+    RuleConfiguration ruleConfiguration_;
+    MemoryConfiguration memoryConfiguration_;
     QStringList aiPlatforms_;
     QStringList resourceNames_;
     QStringList profileSelections_;

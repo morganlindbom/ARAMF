@@ -356,6 +356,32 @@ void ProjectModel::setResourcePolicy(const ResourcePolicy& value)
     notifyChanged();
 }
 
+void ProjectModel::setRuleConfiguration(const RuleConfiguration& value)
+{
+    if (ruleConfiguration_.activeCategories == value.activeCategories
+        && ruleConfiguration_.enforcementLevel == value.enforcementLevel
+        && ruleConfiguration_.loadingStrategy == value.loadingStrategy
+        && ruleConfiguration_.workScopes == value.workScopes
+        && ruleConfiguration_.projectScopes == value.projectScopes
+        && ruleConfiguration_.contextPolicies == value.contextPolicies
+        && ruleConfiguration_.conflictPolicy == value.conflictPolicy) return;
+    ruleConfiguration_ = value;
+    notifyChanged();
+}
+
+void ProjectModel::setMemoryConfiguration(const MemoryConfiguration& value)
+{
+    if (memoryConfiguration_.captureCategories == value.captureCategories
+        && memoryConfiguration_.retentionLevel == value.retentionLevel
+        && memoryConfiguration_.maintenanceOptions == value.maintenanceOptions
+        && memoryConfiguration_.validationOptions == value.validationOptions
+        && memoryConfiguration_.updateStrategy == value.updateStrategy
+        && memoryConfiguration_.historyOptions == value.historyOptions
+        && memoryConfiguration_.maximumSizeBytes == value.maximumSizeBytes) return;
+    memoryConfiguration_ = value;
+    notifyChanged();
+}
+
 void ProjectModel::setProfileSelections(const QStringList& value)
 {
     if (profileSelections_ == value) return;
@@ -423,6 +449,8 @@ void ProjectModel::resetForNewProject()
     resources_.clear();
     resourcePolicy_ = {};
     resourcePolicy_.options = {QStringLiteral("read-relevant"), QStringLiteral("prefer-authoritative"), QStringLiteral("respect-scope"), QStringLiteral("ignore-disabled"), QStringLiteral("warn-conflicts")};
+    ruleConfiguration_ = {};
+    memoryConfiguration_ = {};
     profileSelections_.clear();
     ai_ = {};
     options_.clear();

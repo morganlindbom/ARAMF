@@ -58,7 +58,8 @@ void WorkflowWidget::setStepCount(int)
         {tr("PROJECT"), {{tr("What is the project?"), WorkflowPageId::Setup}, {tr("Academic"), WorkflowPageId::Academic}, {tr("Which languages are used?"), WorkflowPageId::Languages}, {tr("Which frameworks / SDKs are used?"), WorkflowPageId::Frameworks}, {tr("Which development tools are used?"), WorkflowPageId::DevelopmentTools}, {tr("Where does the project run?"), WorkflowPageId::Platforms}, {tr("Which hardware / architecture is used?"), WorkflowPageId::HardwareArchitecture}, {tr("How is it built, tested and delivered?"), WorkflowPageId::BuildDelivery}}},
         {tr("AI"), {{tr("Which AI agents are used?"), WorkflowPageId::AiAgents}, {tr("What may AI work on?"), WorkflowPageId::AiResponsibilities}, {tr("How autonomous may AI be?"), WorkflowPageId::AiAutonomy}, {tr("Which ARAMF systems should AI use?"), WorkflowPageId::AiIntegration}}},
         {tr("RESOURCES"), {{tr("Which resources belong to the project?"), WorkflowPageId::ResourceInventory}, {tr("Which sources are authoritative?"), WorkflowPageId::ResourceAuthority}, {tr("How should AI use the resources?"), WorkflowPageId::ResourcePolicy}}},
-        {tr("RULES"), {{tr("Rules & Routing"), WorkflowPageId::RulesRouting}, {tr("Memory"), WorkflowPageId::Memory}}},
+        {tr("RULES"), {{tr("Which rules should apply?"), WorkflowPageId::RuleSelection}, {tr("How should rules be routed?"), WorkflowPageId::RuleRouting}}},
+        {tr("MEMORY"), {{tr("What should ARAMF remember?"), WorkflowPageId::MemoryCapture}, {tr("How should project memory be maintained?"), WorkflowPageId::MemoryMaintenance}}},
         {tr("GENERATE"), {{tr("Review"), WorkflowPageId::Review}, {tr("Generate"), WorkflowPageId::Generate}, {tr("Verify"), WorkflowPageId::Verify}, {tr("Finalize"), WorkflowPageId::Finalize}}}
     };
     for (const auto& group : groups) {

@@ -35,8 +35,11 @@ src/ui/
     │   ├── authority/
     │   └── policy/
     ├── rules/
-    │   ├── routing/
-    │   └── memory/
+    │   ├── selection/
+    │   └── routing/
+    ├── memory/
+    │   ├── capture/
+    │   └── maintenance/
     └── output/
         ├── review/
         ├── generate/
@@ -88,6 +91,18 @@ structured `ProjectResource` records and their enabled state. Authority assigns
 levels and scopes, allowing multiple sources of truth for different scopes.
 Policy controls how AI loads and uses those resources. Resource selection alone
 does not write project files or copy data.
+
+RULES is split into rule selection and rule routing. Rule selection owns the
+active rule categories and enforcement level; routing owns loading strategy,
+work/project scopes, context efficiency, and conflict handling. Both pages use
+grouped checkbox capabilities and stable IDs, never table or matrix editors.
+
+MEMORY is split into capture and maintenance. Capture owns durable-memory
+categories and retention level. Maintenance owns update triggers, validation,
+history policy and the single maximum memory size control. `ProjectMemory`
+enforces the finite storage ceiling before writes, automatically pruning the
+oldest eligible history toward a 90% target. Archived data remains part of the
+total and protected current state/decisions are never automatically deleted.
 
 ## Durable UI rules
 
