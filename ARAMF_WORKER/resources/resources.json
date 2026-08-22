@@ -1,0 +1,82 @@
+{
+  "resources": [
+    {
+      "id": "src",
+      "name": "Production source",
+      "type": "directory",
+      "location": "src/",
+      "description": "ARAMF production C++ and Qt source authority.",
+      "enabled": true,
+      "locationMode": "referenced",
+      "authorityLevel": "source-of-truth",
+      "scopes": ["implementation", "production"],
+      "status": "active",
+      "loadingStrategyOverride": "relevant"
+    },
+    {
+      "id": "tests",
+      "name": "Production tests",
+      "type": "directory",
+      "location": "tests/",
+      "description": "Production test authority and migration regression coverage.",
+      "enabled": true,
+      "locationMode": "referenced",
+      "authorityLevel": "source-of-truth",
+      "scopes": ["testing", "regression"],
+      "status": "active",
+      "loadingStrategyOverride": "relevant"
+    },
+    {
+      "id": "cmake",
+      "name": "Build configuration",
+      "type": "file",
+      "location": "CMakeLists.txt",
+      "description": "Canonical CMake and CTest build configuration.",
+      "enabled": true,
+      "locationMode": "referenced",
+      "authorityLevel": "source-of-truth",
+      "scopes": ["build", "testing"],
+      "status": "active",
+      "loadingStrategyOverride": "relevant"
+    },
+    {
+      "id": "aramf-setup",
+      "name": "Product setup source",
+      "type": "directory",
+      "location": "aramf_setup/",
+      "description": "ARAMF product-owned setup and bootstrap source material.",
+      "enabled": true,
+      "locationMode": "referenced",
+      "authorityLevel": "source-of-truth",
+      "scopes": ["architecture", "bootstrap", "documentation"],
+      "status": "active",
+      "loadingStrategyOverride": "relevant"
+    },
+    {
+      "id": "test-250",
+      "name": "Historical 250-scenario evidence",
+      "type": "directory",
+      "location": "test_250/",
+      "description": "Immutable historical certification evidence; not always-load context.",
+      "enabled": true,
+      "locationMode": "referenced",
+      "authorityLevel": "historical-evidence",
+      "scopes": ["certification", "regression"],
+      "status": "historical",
+      "loadingStrategyOverride": "on-demand"
+    },
+    {
+      "id": "test-550",
+      "name": "Historical 550-scenario evidence",
+      "type": "directory",
+      "location": "test_550/",
+      "description": "Immutable historical release-validation evidence; not always-load context.",
+      "enabled": true,
+      "locationMode": "referenced",
+      "authorityLevel": "historical-evidence",
+      "scopes": ["certification", "release-validation"],
+      "status": "historical",
+      "loadingStrategyOverride": "on-demand"
+    }
+  ]
+}

@@ -153,7 +153,7 @@ void GeneratePage::showResult(const GenerationResult& result)
         for (const auto& warning : result.warnings) text += QStringLiteral("- %1\n").arg(warning);
     }
     text += tr("\nMemory validation: %1\n")
-                .arg(result.generatedFiles.contains(QStringLiteral("ARAMF/memory/memory-consistency-validation.json"))
+                .arg(result.generatedFiles.contains(QStringLiteral("ARAMF_WORKER/memory/memory-consistency-validation.json"))
                          ? tr("PASS")
                          : tr("NOT RUN"));
     text += tr("Verification: Required\n");

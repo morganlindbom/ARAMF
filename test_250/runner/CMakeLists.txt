@@ -7,6 +7,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 add_executable(aramf_campaign_runner
     main.cpp
     ../../src/core/AramfPaths.h
+    ../../src/core/ControlPlaneMigration.h ../../src/core/ControlPlaneMigration.cpp
     ../../src/core/ProjectMemory.h ../../src/core/ProjectMemory.cpp
     ../../src/core/FrameworkKnowledge.h ../../src/core/FrameworkKnowledge.cpp
     ../../src/core/EnvironmentCatalog.h ../../src/core/EnvironmentCatalog.cpp

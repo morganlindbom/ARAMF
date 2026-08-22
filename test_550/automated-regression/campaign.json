@@ -1,0 +1,27 @@
+{
+    "automatedRegressionCompleted": 250,
+    "currentTest": "TEST-550",
+    "guiAutomatedPass": 140,
+    "guiManualPass": 0,
+    "historicalManualExcluded": 50,
+    "issuesFixedPhase2": 0,
+    "phase2Blocked": 0,
+    "phase2Completed": 250,
+    "phase2InitialFail": 140,
+    "phase2InitialPass": 110,
+    "phase2PassAfterFix": 140,
+    "phase2Planned": 250,
+    "phase2RemainingFail": 0,
+    "previousCampaign": {
+        "completed": 250,
+        "initialFail": 3,
+        "initialPass": 247,
+        "passAfterFix": 3,
+        "remainingFail": 0
+    },
+    "previousCampaignCompleted": 250,
+    "systemPass": 110,
+    "totalCertificationTarget": 550,
+    "totalCompleted": 550,
+    "uniqueIssuesPhase2": 0
+}

@@ -18,11 +18,12 @@
 - ARAMF may generate rules and configuration for projects written in other languages. Target-project language support must not be confused with ARAMF's implementation language.
 - Keep application source under `src/`, tests under `tests/`, and repository
   development control files under `aramf_setup/`.
-- The canonical project-local control directory generated for managed projects
-  is `ARAMF/`, uppercase. It is distinct from this repository's `aramf_setup/`.
+- The canonical project-local control directory generated for every managed
+  project is `ARAMF_WORKER/`. It is distinct from this repository's
+  `aramf_setup/` product/bootstrap source.
 - The repository root `AGENTS.md` is a minimal bootstrap into
   `aramf_setup/AGENTS.md`. Generated target-project bootstrap files must point
-  to their own `ARAMF/AGENTS.md` instead.
+  to their own `ARAMF_WORKER/AGENTS.md` instead.
 
 ## Project status contract
 
@@ -62,7 +63,8 @@ Update `PROJECT_STATUS.md` after every meaningful implementation task. Keep thes
 
 ## Scope
 
-All repository-development paths referenced by this file are relative to the
-`aramf_setup/` directory unless explicitly stated otherwise. Generated target
-project paths remain relative to their uppercase `ARAMF/` control directory.
-Do not confuse these two contexts.
+This file describes product/bootstrap source under `aramf_setup/`; it is not
+the live current-status authority for the ARAMF repository. The live
+self-hosted project control plane is `../ARAMF_WORKER/`. Generated target
+project paths remain relative to their `ARAMF_WORKER/` control directory. Do
+not confuse these contexts.

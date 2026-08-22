@@ -10,17 +10,17 @@ Target projects managed by ARAMF may use other languages and frameworks. Support
 
 ## 2026-08-21 — Canonical control directory
 
-All project-local files intended to provide rules, memory, status, routing, resources, templates, verification context, or related AI-facing state belong under an uppercase `ARAMF/` directory.
+All project-local files intended to provide rules, memory, status, routing, resources, templates, verification context, or related AI-facing state belong under an uppercase `ARAMF_WORKER/` directory.
 
-A repository-root `AGENTS.md` may exist as a minimal discovery/bootstrap file pointing to `ARAMF/AGENTS.md`. It must not duplicate the canonical rule set.
+A repository-root `AGENTS.md` may exist as a minimal discovery/bootstrap file pointing to `ARAMF_WORKER/AGENTS.md`. It must not duplicate the canonical rule set.
 
 ## 2026-08-21 — Project status ownership
 
-`ARAMF/PROJECT_STATUS.md` is the canonical current program/project snapshot and must be updated by the active coding agent after meaningful implementation work. It records current capabilities, implemented changes, verified state, known issues, and next work; historical events remain separate.
+`ARAMF_WORKER/PROJECT_STATUS.md` is the canonical current program/project snapshot and must be updated by the active coding agent after meaningful implementation work. It records current capabilities, implemented changes, verified state, known issues, and next work; historical events remain separate.
 
 ## 2026-08-21 — User-owned custom content
 
-Files under `ARAMF/custom/` are user-owned and must not be modified automatically by generation, migration, validation, or agent workflows.
+Files under `ARAMF_WORKER/custom/` are user-owned and must not be modified automatically by generation, migration, validation, or agent workflows. Legacy `ARAMF/custom/` content is preserved during migration.
 
 ## 2026-08-21 — UI source ownership mirrors workflow hierarchy
 
@@ -73,7 +73,7 @@ stable catalog IDs, and high-risk autonomy actions remain explicit.
 Resource inventory, resource authority, and AI resource policy are separate
 concerns. Multiple sources of truth are valid when they govern different
 scopes. Project-local copied resources, when implemented, belong under
-`ARAMF/resources/` and must remain distinct from referenced resources.
+`ARAMF_WORKER/resources/` and must remain distinct from referenced resources.
 
 ## 2026-08-22 — Developer-controlled startup placement
 
@@ -122,30 +122,30 @@ Finalize records completion only after a current successful verification and
 memory validation. Generation and verification share a deterministic
 configuration fingerprint so changes to relevant ProjectModel state invalidate
 previous results. Finalize is idempotent for an unchanged fingerprint and does
-not build, deploy, publish, commit, or push. `ARAMF/custom/` remains user-owned.
+not build, deploy, publish, commit, or push. `ARAMF_WORKER/custom/` remains user-owned.
 
 ## Repository and generated-control path distinction
 
 The repository-local ARAMF development control material is stored under
 `aramf_setup/`. The generated control plane for a managed target project is
-stored under that target's uppercase `ARAMF/` directory. Repository bootstrap
+stored under that target's uppercase `ARAMF_WORKER/` directory. Repository bootstrap
 files may point to `aramf_setup/AGENTS.md`; generated target-project bootstrap
-files must point to `ARAMF/AGENTS.md`. These paths must never be conflated.
+files must point to `ARAMF_WORKER/AGENTS.md`. These paths must never be conflated.
 
 Generation, ProjectMemory, VerificationServices and FinalizationServices must
 resolve runtime output from `ProjectModel::projectPath()` and the uppercase
-`ARAMF/` control directory only. `aramf_setup/` is repository-internal and is
+`ARAMF_WORKER/` control directory only. `aramf_setup/` is repository-internal and is
 never a managed-project output path.
 
 Root-level generated AI entry files are sourced separately under
 `aramf_setup/bootstrap/`. These are thin templates/references, not an
 independent rule store. The generated target bootstrap is written at the
-target root and points into that target's uppercase `ARAMF/` control plane;
+target root and points into that target's uppercase `ARAMF_WORKER/` control plane;
 `bootstrap/` itself is never generated.
 
 Every supported AI agent enters a managed project through a thin bootstrap
 adapter. Root and provider-specific entry files are sourced from
-`aramf_setup/bootstrap/` and converge on generated target `ARAMF/AGENTS.md`,
+`aramf_setup/bootstrap/` and converge on generated target `ARAMF_WORKER/AGENTS.md`,
 which remains the canonical instruction authority. `AgentEntryPointService`
 owns safe, idempotent creation and preserves user-owned content. Unsupported
 agents use the generic root entry point, and provider files are not
@@ -154,7 +154,7 @@ automatically deleted when selection changes.
 ## 2026-08-22 — Live Framework Knowledge
 
 Framework Knowledge is a live, evidence-backed memory layer stored at
-`ARAMF/memory/framework-knowledge.json` in managed projects and at
+`ARAMF_WORKER/memory/framework-knowledge.json` in managed projects and at
 `aramf_setup/memory/framework-knowledge.json` for development of ARAMF itself.
 Knowledge moves through `candidate` → explicit user approval → `approved`;
 agents may propose candidates but must never self-approve them. Approved entries

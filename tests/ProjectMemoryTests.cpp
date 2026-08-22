@@ -55,20 +55,20 @@ int main(int argc, char** argv)
 
     const QDir root(temporaryProject.path());
     bool ok = true;
-    ok &= require(root.exists(QStringLiteral("ARAMF/AGENTS.md")), "canonical ARAMF/AGENTS.md must exist");
-    ok &= require(root.exists(QStringLiteral("ARAMF/PROJECT_STATUS.md")), "ARAMF/PROJECT_STATUS.md must exist");
-    ok &= require(root.exists(QStringLiteral("ARAMF/memory/decisions.md")), "durable decisions must live under ARAMF/memory");
+    ok &= require(root.exists(QStringLiteral("ARAMF_WORKER/AGENTS.md")), "canonical ARAMF_WORKER/AGENTS.md must exist");
+    ok &= require(root.exists(QStringLiteral("ARAMF_WORKER/PROJECT_STATUS.md")), "ARAMF_WORKER/PROJECT_STATUS.md must exist");
+    ok &= require(root.exists(QStringLiteral("ARAMF_WORKER/memory/decisions.md")), "durable decisions must live under ARAMF_WORKER/memory");
     ok &= require(root.exists(QStringLiteral("AGENTS.md")), "root agent bootstrap must exist");
     ok &= require(!root.exists(QStringLiteral("aramf.py")), "no Python backend file may be generated");
     QFile generatedBootstrap(root.filePath(QStringLiteral("AGENTS.md")));
     ok &= require(generatedBootstrap.open(QIODevice::ReadOnly | QIODevice::Text), "generated root bootstrap must be readable");
     const QString bootstrapText = QString::fromUtf8(generatedBootstrap.readAll());
-    ok &= require(bootstrapText.contains(QStringLiteral("ARAMF/AGENTS.md")), "generated bootstrap must route to uppercase ARAMF control plane");
+    ok &= require(bootstrapText.contains(QStringLiteral("ARAMF_WORKER/AGENTS.md")), "generated bootstrap must route to ARAMF_WORKER control plane");
     ok &= require(!bootstrapText.contains(QStringLiteral("aramf_setup")), "generated bootstrap must not reference repository setup");
     ok &= require(!root.exists(QStringLiteral("aramf_setup")), "generated project must not contain repository setup directory");
     ok &= require(!root.exists(QStringLiteral("bootstrap")), "generated project must not contain repository bootstrap directory");
-    ok &= require(root.exists(QStringLiteral("ARAMF/memory/framework-knowledge.json")), "Framework Knowledge store must exist");
-    QFile canonicalAgentFile(root.filePath(QStringLiteral("ARAMF/AGENTS.md")));
+    ok &= require(root.exists(QStringLiteral("ARAMF_WORKER/memory/framework-knowledge.json")), "Framework Knowledge store must exist");
+    QFile canonicalAgentFile(root.filePath(QStringLiteral("ARAMF_WORKER/AGENTS.md")));
     ok &= require(canonicalAgentFile.open(QIODevice::ReadOnly | QIODevice::Text), "canonical agent file must be readable");
     const QString canonicalAgentText = QString::fromUtf8(canonicalAgentFile.readAll());
     ok &= require(canonicalAgentText.contains(QStringLiteral("framework-knowledge.json")), "canonical agent instructions must load live Framework Knowledge");
@@ -304,11 +304,11 @@ int main(int argc, char** argv)
     generationOptions.generateProvenance = true;
     const GenerationResult generationResult = generationServices.generate(generationModel, generationOptions);
     ok &= require(generationResult.success, "selective generation must succeed");
-    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF/rules/generated-rules.md")), "generated rules must exist");
-    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF/routing/task-routes.json")), "task routes must exist");
-    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF/resources/resources.json")), "resource manifest must exist");
-    ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF/memory/memory-config.json")), "disabled memory must not initialize memory");
-    ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF/platforms/platform-metadata.json")), "disabled platforms must not generate metadata");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/rules/generated-rules.md")), "generated rules must exist");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/routing/task-routes.json")), "task routes must exist");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/resources/resources.json")), "resource manifest must exist");
+    ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/memory/memory-config.json")), "disabled memory must not initialize memory");
+    ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/platforms/platform-metadata.json")), "disabled platforms must not generate metadata");
     VerificationServices verificationServices;
     FinalizationServices finalizationServices;
     const VerificationResult selectiveVerification = verificationServices.verify(generationModel, generationOptions);
@@ -321,12 +321,12 @@ int main(int argc, char** argv)
     ok &= require(repeatedSelectiveFinalization.success && repeatedSelectiveFinalization.alreadyFinalized,
                   "selective finalization must remain idempotent");
 
-    QFile generatedRules(QDir(generationProject.path()).filePath("ARAMF/rules/generated-rules.md"));
+    QFile generatedRules(QDir(generationProject.path()).filePath("ARAMF_WORKER/rules/generated-rules.md"));
     ok &= require(generatedRules.open(QIODevice::ReadOnly | QIODevice::Text), "generated rules must be readable");
     ok &= require(QString::fromUtf8(generatedRules.readAll()).contains(QStringLiteral("Coding Standards")), "generated rules must use catalog display names");
     generatedRules.close();
 
-    const QString routingPath = QDir(generationProject.path()).filePath("ARAMF/routing/task-routes.json");
+    const QString routingPath = QDir(generationProject.path()).filePath("ARAMF_WORKER/routing/task-routes.json");
     QFile routingSentinel(routingPath);
     ok &= require(routingSentinel.open(QIODevice::WriteOnly | QIODevice::Text), "routing sentinel must be writable");
     routingSentinel.write("sentinel");
@@ -339,26 +339,27 @@ int main(int argc, char** argv)
     generationOptions.generateMemory = true;
     const GenerationResult memoryGeneration = generationServices.generate(generationModel, generationOptions);
     ok &= require(memoryGeneration.success, "memory generation must succeed when selected");
-    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF/memory/memory-consistency-validation.json")), "memory validation must be generated");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/memory/memory-consistency-validation.json")), "memory validation must be generated");
     ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("aramf_setup")), "generated output must never use aramf_setup");
 
     AiConfiguration entryPointAi;
     entryPointAi.primaryAgent = QStringLiteral("openai-codex");
-    entryPointAi.additionalAgents = {QStringLiteral("claude-code"), QStringLiteral("github-copilot"), QStringLiteral("claude-code")};
+    entryPointAi.additionalAgents = {QStringLiteral("claude-code"), QStringLiteral("gemini"), QStringLiteral("github-copilot"), QStringLiteral("claude-code")};
     generationModel.setAiConfiguration(entryPointAi);
     AgentEntryPointService entryPointService;
     const AgentEntryPointResult entryPoints = entryPointService.createEntryPoints(generationModel);
     ok &= require(entryPoints.success, "AI agent entry-point creation must succeed");
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath("AGENTS.md")), "generic root entry point must exist");
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath("CLAUDE.md")), "Claude entry point must exist");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("GEMINI.md")), "Gemini entry point must exist");
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath(".github/copilot-instructions.md")), "Copilot entry point must exist");
     ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("CODEX.md")), "Codex must use generic AGENTS.md");
     ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("bootstrap")), "entry-point generation must not create bootstrap directory");
-    for (const auto& relative : {QStringLiteral("AGENTS.md"), QStringLiteral("CLAUDE.md"), QStringLiteral(".github/copilot-instructions.md")}) {
+    for (const auto& relative : {QStringLiteral("AGENTS.md"), QStringLiteral("CLAUDE.md"), QStringLiteral("GEMINI.md"), QStringLiteral(".github/copilot-instructions.md")}) {
         QFile entryFile(QDir(generationProject.path()).filePath(relative));
         ok &= require(entryFile.open(QIODevice::ReadOnly | QIODevice::Text), "entry point must be readable");
         const QString entryText = QString::fromUtf8(entryFile.readAll());
-        ok &= require(entryText.contains(QStringLiteral("ARAMF/AGENTS.md")), "entry point must route to canonical ARAMF instructions");
+        ok &= require(entryText.contains(QStringLiteral("ARAMF_WORKER/AGENTS.md")), "entry point must route to canonical ARAMF instructions");
         ok &= require(entryText.count(QStringLiteral("ARAMF-BEGIN")) == 1, "entry point must contain one managed section");
     }
     const AgentEntryPointResult repeatedEntryPoints = entryPointService.createEntryPoints(generationModel);
@@ -366,6 +367,7 @@ int main(int argc, char** argv)
                   && repeatedEntryPoints.updatedFiles.isEmpty()
                   && repeatedEntryPoints.unchangedFiles.contains(QStringLiteral("AGENTS.md"))
                   && repeatedEntryPoints.unchangedFiles.contains(QStringLiteral("CLAUDE.md"))
+                  && repeatedEntryPoints.unchangedFiles.contains(QStringLiteral("GEMINI.md"))
                   && repeatedEntryPoints.unchangedFiles.contains(QStringLiteral(".github/copilot-instructions.md")),
                   "repeated entry-point creation must be idempotent");
     entryPointAi.additionalAgents = {QStringLiteral("ollama")};
@@ -387,7 +389,7 @@ int main(int argc, char** argv)
     const QString userAgentsText = QString::fromUtf8(userAgents.readAll());
     ok &= require(userAgentsText.contains(QStringLiteral("User instructions")), "user-owned root content must be preserved");
     ok &= require(userAgentsText.count(QStringLiteral("ARAMF-BEGIN")) == 1, "user-owned root must receive one managed section");
-    QFile eventLog(QDir(generationProject.path()).filePath("ARAMF/memory/event-log.jsonl"));
+    QFile eventLog(QDir(generationProject.path()).filePath("ARAMF_WORKER/memory/event-log.jsonl"));
     ok &= require(eventLog.open(QIODevice::ReadOnly | QIODevice::Text), "memory event log must be readable");
     const QByteArray firstEvents = eventLog.readAll();
     eventLog.close();
@@ -427,5 +429,55 @@ int main(int argc, char** argv)
     noProducts.generateProvenance = false;
     const GenerationResult noProductResult = generationServices.generate(generationModel, noProducts);
     ok &= require(!noProductResult.success && noProductResult.error.contains(QStringLiteral("select at least one")), "empty generation must be rejected");
+
+    QTemporaryDir migrationRoot;
+    const QString spacedProject = QDir(migrationRoot.path()).filePath(QStringLiteral("Project With Spaces"));
+    ok &= require(QDir().mkpath(QDir(spacedProject).filePath("ARAMF/custom")), "legacy project custom directory must be creatable");
+    QFile legacyCustom(QDir(spacedProject).filePath("ARAMF/custom/user-note.md"));
+    ok &= require(legacyCustom.open(QIODevice::WriteOnly | QIODevice::Text), "legacy user content must be writable");
+    legacyCustom.write("user-owned legacy content\n");
+    legacyCustom.close();
+    ProjectModel legacyModel;
+    legacyModel.setProjectName(QStringLiteral("Legacy Migration Project"));
+    legacyModel.setProjectPath(spacedProject);
+    GenerationOptions migrationOptions;
+    migrationOptions.generateAgentRules = true;
+    migrationOptions.generateRouting = true;
+    migrationOptions.generateMemory = true;
+    migrationOptions.generateProvenance = true;
+    const GenerationResult migrated = generationServices.generate(legacyModel, migrationOptions);
+    ok &= require(migrated.success, "legacy project migration generation must succeed");
+    ok &= require(QDir(spacedProject).exists(QStringLiteral("ARAMF_WORKER")), "new projects and migrated projects must use ARAMF_WORKER");
+    ok &= require(QDir(spacedProject).exists(QStringLiteral("ARAMF")), "legacy ARAMF directory must be preserved");
+    ok &= require(QFile::exists(QDir(spacedProject).filePath("ARAMF_WORKER/custom/user-note.md")), "legacy user content must be preserved in the worker");
+    ok &= require(QFile::exists(QDir(spacedProject).filePath("ARAMF_WORKER/memory/framework-knowledge.json")), "Framework Knowledge must live under ARAMF_WORKER/memory");
+    ok &= require(!QDir(spacedProject).exists(QStringLiteral("ARAMF_WORKER/ARAMF_WORKER")), "worker generation must not recurse into a nested worker");
+    ok &= require(!QDir(spacedProject).exists(QStringLiteral("aramf_setup")) && !QDir(spacedProject).exists(QStringLiteral("bootstrap")), "migration must not generate setup or bootstrap directories");
+    ok &= require(QFile::exists(QDir(spacedProject).filePath("ARAMF_WORKER/legacy-migration.json")), "legacy migration report must exist");
+    QFile generatedRoot(QDir(spacedProject).filePath("AGENTS.md"));
+    ok &= require(generatedRoot.open(QIODevice::ReadOnly | QIODevice::Text), "migrated root AGENTS.md must be readable");
+    ok &= require(QString::fromUtf8(generatedRoot.readAll()).contains(QStringLiteral("ARAMF_WORKER/AGENTS.md")), "root AGENTS.md must route to ARAMF_WORKER");
+    generatedRoot.close();
+
+    const QString bothRoot = QDir(migrationRoot.path()).filePath(QStringLiteral("Both Directories"));
+    ok &= require(QDir().mkpath(QDir(bothRoot).filePath("ARAMF_WORKER/custom")), "canonical worker fixture must be creatable");
+    ok &= require(QDir().mkpath(QDir(bothRoot).filePath("ARAMF/custom")), "legacy fixture must be creatable");
+    QFile canonicalSentinel(QDir(bothRoot).filePath("ARAMF_WORKER/custom/sentinel.txt"));
+    ok &= require(canonicalSentinel.open(QIODevice::WriteOnly | QIODevice::Text), "canonical sentinel must be writable");
+    canonicalSentinel.write("canonical\n");
+    canonicalSentinel.close();
+    QFile legacyConflict(QDir(bothRoot).filePath("ARAMF/custom/sentinel.txt"));
+    ok &= require(legacyConflict.open(QIODevice::WriteOnly | QIODevice::Text), "legacy conflict must be writable");
+    legacyConflict.write("legacy\n");
+    legacyConflict.close();
+    ProjectModel bothModel;
+    bothModel.setProjectPath(bothRoot);
+    const GenerationResult bothResult = generationServices.generate(bothModel, migrationOptions);
+    ok &= require(bothResult.success && !bothResult.warnings.isEmpty(), "both-directory migration must warn and succeed");
+    QFile canonicalReadback(QDir(bothRoot).filePath("ARAMF_WORKER/custom/sentinel.txt"));
+    ok &= require(canonicalReadback.open(QIODevice::ReadOnly), "canonical sentinel must remain readable");
+    ok &= require(QString::fromUtf8(canonicalReadback.readAll()).contains("canonical"), "canonical content must remain authoritative");
+    ok &= require(QFile::exists(QDir(bothRoot).filePath("ARAMF/custom/sentinel.txt")), "legacy conflicting content must remain preserved");
+
     return ok ? 0 : 1;
 }
