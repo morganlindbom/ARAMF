@@ -161,7 +161,7 @@ MainWindow::MainWindow(
 
     pageScroll_ = new QScrollArea(central);
     pageScroll_->setWidgetResizable(true);
-    pageScroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    pageScroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     pageScroll_->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     pageScroll_->setFrameShape(QFrame::NoFrame);
 
