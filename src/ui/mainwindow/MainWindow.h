@@ -31,8 +31,10 @@ class AiResponsibilitiesPage;
 class AiAutonomyPage;
 class AiIntegrationPage;
 
-class RulesRoutingPage;
-class MemoryPage;
+class RuleSelectionPage;
+class RuleRoutingPage;
+class MemoryCapturePage;
+class MemoryMaintenancePage;
 
 class ReviewPage;
 class GeneratePage;
@@ -97,8 +99,10 @@ private:
     ResourceAuthorityPage* resourceAuthorityPage_ = nullptr;
     ResourcePolicyPage* resourcePolicyPage_ = nullptr;
 
-    RulesRoutingPage* rulesPage_ = nullptr;
-    MemoryPage* memoryPage_ = nullptr;
+    RuleSelectionPage* ruleSelectionPage_ = nullptr;
+    RuleRoutingPage* ruleRoutingPage_ = nullptr;
+    MemoryCapturePage* memoryCapturePage_ = nullptr;
+    MemoryMaintenancePage* memoryMaintenancePage_ = nullptr;
 
     ReviewPage* reviewPage_ = nullptr;
     GeneratePage* generatePage_ = nullptr;

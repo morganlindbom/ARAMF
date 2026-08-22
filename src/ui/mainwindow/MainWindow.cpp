@@ -20,8 +20,10 @@
 #include "ui/workflows/resources/authority/ResourceAuthorityPage.h"
 #include "ui/workflows/resources/policy/ResourcePolicyPage.h"
 
-#include "ui/workflows/rules/routing/RulesRoutingPage.h"
-#include "ui/workflows/rules/memory/MemoryPage.h"
+#include "ui/workflows/rules/selection/RuleSelectionPage.h"
+#include "ui/workflows/rules/routing/RuleRoutingPage.h"
+#include "ui/workflows/memory/capture/MemoryCapturePage.h"
+#include "ui/workflows/memory/maintenance/MemoryMaintenancePage.h"
 
 #include "ui/workflows/output/review/ReviewPage.h"
 #include "ui/workflows/output/generate/GeneratePage.h"
@@ -89,8 +91,10 @@ namespace
             WorkflowPageId::ResourceInventory,
             WorkflowPageId::ResourceAuthority,
             WorkflowPageId::ResourcePolicy,
-            WorkflowPageId::RulesRouting,
-            WorkflowPageId::Memory,
+            WorkflowPageId::RuleSelection,
+            WorkflowPageId::RuleRouting,
+            WorkflowPageId::MemoryCapture,
+            WorkflowPageId::MemoryMaintenance,
             WorkflowPageId::Review,
             WorkflowPageId::Generate,
             WorkflowPageId::Verify,
@@ -215,11 +219,10 @@ MainWindow::MainWindow(
     resourceAuthorityPage_ = new ResourceAuthorityPage(&projectModel_, stack_);
     resourcePolicyPage_ = new ResourcePolicyPage(&projectModel_, stack_);
 
-    rulesPage_ =
-        new RulesRoutingPage(stack_);
-
-    memoryPage_ =
-        new MemoryPage(stack_);
+    ruleSelectionPage_ = new RuleSelectionPage(&projectModel_, stack_);
+    ruleRoutingPage_ = new RuleRoutingPage(&projectModel_, stack_);
+    memoryCapturePage_ = new MemoryCapturePage(&projectModel_, stack_);
+    memoryMaintenancePage_ = new MemoryMaintenancePage(&projectModel_, stack_);
 
     reviewPage_ =
         new ReviewPage(
@@ -263,15 +266,15 @@ MainWindow::MainWindow(
     registerPage(WorkflowPageId::ResourceInventory, resourceInventoryPage_);
     registerPage(WorkflowPageId::ResourceAuthority, resourceAuthorityPage_);
     registerPage(WorkflowPageId::ResourcePolicy, resourcePolicyPage_);
-    registerPage(WorkflowPageId::RulesRouting, rulesPage_);
-    registerPage(WorkflowPageId::Memory, memoryPage_);
+    registerPage(WorkflowPageId::RuleSelection, ruleSelectionPage_);
+    registerPage(WorkflowPageId::RuleRouting, ruleRoutingPage_);
+    registerPage(WorkflowPageId::MemoryCapture, memoryCapturePage_);
+    registerPage(WorkflowPageId::MemoryMaintenance, memoryMaintenancePage_);
     registerPage(WorkflowPageId::Review, reviewPage_);
     registerPage(WorkflowPageId::Generate, generatePage_);
     registerPage(WorkflowPageId::Verify, verificationPage_);
     registerPage(WorkflowPageId::Finalize, finalizePage_);
 
-    rulesPage_->setModel(&projectModel_);
-    memoryPage_->setModel(&projectModel_);
     verificationPage_->setModel(&projectModel_);
 
     workflow_->setStepCount(stack_->count());

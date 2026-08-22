@@ -42,6 +42,31 @@ QStringList migrateResponsibilities(const QStringList& values)
     for (const auto& value : values) result << ids.value(value, value);
     return result;
 }
+
+QStringList migrateRuleCategories(const QStringList& values)
+{
+    const QHash<QString, QString> ids{
+        {QStringLiteral("Project architecture"), QStringLiteral("architecture-boundaries")},
+        {QStringLiteral("Testing and verification"), QStringLiteral("verification-before-completion")},
+        {QStringLiteral("Universal safety"), QStringLiteral("destructive-command-protection")}
+    };
+    QStringList result;
+    for (const auto& value : values) result << ids.value(value, value);
+    return result;
+}
+
+QStringList migrateMemoryOptions(const QStringList& values)
+{
+    const QHash<QString, QString> ids{
+        {QStringLiteral("Validate memory on project activation"), QStringLiteral("cold-start-validation")},
+        {QStringLiteral("Validate consistency before generation"), QStringLiteral("memory-consistency")},
+        {QStringLiteral("Record automation/offloading decisions"), QStringLiteral("record-decisions")},
+        {QStringLiteral("Keep production and durable sequence numbers separate"), QStringLiteral("preserve-append-only")}
+    };
+    QStringList result;
+    for (const auto& value : values) result << ids.value(value, value);
+    return result;
+}
 }
 
 bool ProjectPersistence::save(const ProjectModel& model, const QString& filePath, QString* error) const
@@ -145,6 +170,26 @@ bool ProjectPersistence::save(const ProjectModel& model, const QString& filePath
     resourcePolicyObject.insert(QStringLiteral("options"), toJsonArray(resourcePolicy.options));
     resourcePolicyObject.insert(QStringLiteral("loadingStrategy"), resourcePolicy.loadingStrategy);
     root.insert(QStringLiteral("resourcePolicy"), resourcePolicyObject);
+    const auto rules = model.ruleConfiguration();
+    QJsonObject rulesObject;
+    rulesObject.insert(QStringLiteral("activeCategories"), toJsonArray(rules.activeCategories));
+    rulesObject.insert(QStringLiteral("enforcementLevel"), rules.enforcementLevel);
+    rulesObject.insert(QStringLiteral("loadingStrategy"), rules.loadingStrategy);
+    rulesObject.insert(QStringLiteral("workScopes"), toJsonArray(rules.workScopes));
+    rulesObject.insert(QStringLiteral("projectScopes"), toJsonArray(rules.projectScopes));
+    rulesObject.insert(QStringLiteral("contextPolicies"), toJsonArray(rules.contextPolicies));
+    rulesObject.insert(QStringLiteral("conflictPolicy"), rules.conflictPolicy);
+    root.insert(QStringLiteral("rules"), rulesObject);
+    const auto memory = model.memoryConfiguration();
+    QJsonObject memoryObject;
+    memoryObject.insert(QStringLiteral("captureCategories"), toJsonArray(memory.captureCategories));
+    memoryObject.insert(QStringLiteral("retentionLevel"), memory.retentionLevel);
+    memoryObject.insert(QStringLiteral("maintenanceOptions"), toJsonArray(memory.maintenanceOptions));
+    memoryObject.insert(QStringLiteral("validationOptions"), toJsonArray(memory.validationOptions));
+    memoryObject.insert(QStringLiteral("updateStrategy"), memory.updateStrategy);
+    memoryObject.insert(QStringLiteral("historyOptions"), toJsonArray(memory.historyOptions));
+    memoryObject.insert(QStringLiteral("maximumSizeBytes"), memory.maximumSizeBytes);
+    root.insert(QStringLiteral("memory"), memoryObject);
     root.insert(QStringLiteral("profileSelections"), toJsonArray(model.profileSelections()));
     root.insert(QStringLiteral("options"), options);
 
@@ -281,6 +326,29 @@ bool ProjectPersistence::load(ProjectModel* model, const QString& filePath, QStr
     model->setAcademicConfiguration(academic);
     model->setAiConfiguration(ai);
     model->setAiPlatforms(fromJsonArray(root.value(QStringLiteral("aiPlatforms"))));
+    RuleConfiguration rules;
+    const auto rulesObject = root.value(QStringLiteral("rules")).toObject();
+    rules.activeCategories = fromJsonArray(rulesObject.value(QStringLiteral("activeCategories")));
+    rules.enforcementLevel = rulesObject.value(QStringLiteral("enforcementLevel")).toString(QStringLiteral("standard"));
+    rules.loadingStrategy = rulesObject.value(QStringLiteral("loadingStrategy")).toString(QStringLiteral("relevant"));
+    rules.workScopes = fromJsonArray(rulesObject.value(QStringLiteral("workScopes")));
+    rules.projectScopes = fromJsonArray(rulesObject.value(QStringLiteral("projectScopes")));
+    rules.contextPolicies = fromJsonArray(rulesObject.value(QStringLiteral("contextPolicies")));
+    rules.conflictPolicy = rulesObject.value(QStringLiteral("conflictPolicy")).toString(QStringLiteral("prefer-user-instruction"));
+    if (rules.activeCategories.isEmpty()) rules.activeCategories = migrateRuleCategories(fromJsonArray(root.value(QStringLiteral("options")).toObject().value(QStringLiteral("rules-routing"))));
+    model->setRuleConfiguration(rules);
+    MemoryConfiguration memory;
+    const auto memoryObject = root.value(QStringLiteral("memory")).toObject();
+    memory.captureCategories = fromJsonArray(memoryObject.value(QStringLiteral("captureCategories")));
+    memory.retentionLevel = memoryObject.value(QStringLiteral("retentionLevel")).toString(QStringLiteral("standard"));
+    memory.maintenanceOptions = fromJsonArray(memoryObject.value(QStringLiteral("maintenanceOptions")));
+    memory.validationOptions = fromJsonArray(memoryObject.value(QStringLiteral("validationOptions")));
+    memory.updateStrategy = memoryObject.value(QStringLiteral("updateStrategy")).toString(QStringLiteral("meaningful-task"));
+    memory.historyOptions = fromJsonArray(memoryObject.value(QStringLiteral("historyOptions")));
+    memory.maximumSizeBytes = memoryObject.value(QStringLiteral("maximumSizeBytes")).toVariant().toLongLong();
+    if (memory.maximumSizeBytes <= 0) memory.maximumSizeBytes = 10LL * 1024LL * 1024LL * 1024LL;
+    if (memory.captureCategories.isEmpty()) memory.captureCategories = migrateMemoryOptions(fromJsonArray(root.value(QStringLiteral("options")).toObject().value(QStringLiteral("memory-policy"))));
+    model->setMemoryConfiguration(memory);
     QList<ProjectResource> resources;
     const auto resourceValue = root.value(QStringLiteral("resources"));
     const auto resourceArray = resourceValue.toArray();

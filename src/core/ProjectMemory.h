@@ -22,6 +22,7 @@ public:
                      const QJsonObject& fields = {},
                      QString* error = nullptr);
     QJsonObject validate(const QString& projectRoot, QString* error = nullptr) const;
+    qint64 memoryUsageBytes(const QString& projectRoot) const;
 
 private:
     bool ensureDirectories(const QString& projectRoot, QString* error) const;
@@ -29,4 +30,6 @@ private:
     bool generateCurrentState(const QString& projectRoot, QString* error) const;
     bool generateColdStartValidation(const QString& projectRoot, QString* error) const;
     bool writeValidationReport(const QString& projectRoot, const QJsonObject& report, QString* error) const;
+    qint64 managedMemoryUsage(const QString& projectRoot) const;
+    bool withinConfiguredLimit(const QString& projectRoot, qint64 additionalBytes, QString* error);
 };

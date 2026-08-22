@@ -21,6 +21,10 @@ set(ARAMF_CORE_SOURCES
     src/core/EnvironmentCatalog.cpp
     src/core/AiCatalog.h
     src/core/AiCatalog.cpp
+    src/core/RuleCatalog.h
+    src/core/RuleCatalog.cpp
+    src/core/MemoryCatalog.h
+    src/core/MemoryCatalog.cpp
     src/core/ProjectPersistence.h
     src/core/ProjectPersistence.cpp
     src/core/ProjectModel.h
@@ -71,10 +75,14 @@ set(ARAMF_UI_SOURCES
     src/ui/workflows/resources/authority/ResourceAuthorityPage.cpp
     src/ui/workflows/resources/policy/ResourcePolicyPage.h
     src/ui/workflows/resources/policy/ResourcePolicyPage.cpp
-    src/ui/workflows/rules/routing/RulesRoutingPage.h
-    src/ui/workflows/rules/routing/RulesRoutingPage.cpp
-    src/ui/workflows/rules/memory/MemoryPage.h
-    src/ui/workflows/rules/memory/MemoryPage.cpp
+    src/ui/workflows/rules/selection/RuleSelectionPage.h
+    src/ui/workflows/rules/selection/RuleSelectionPage.cpp
+    src/ui/workflows/rules/routing/RuleRoutingPage.h
+    src/ui/workflows/rules/routing/RuleRoutingPage.cpp
+    src/ui/workflows/memory/capture/MemoryCapturePage.h
+    src/ui/workflows/memory/capture/MemoryCapturePage.cpp
+    src/ui/workflows/memory/maintenance/MemoryMaintenancePage.h
+    src/ui/workflows/memory/maintenance/MemoryMaintenancePage.cpp
     src/ui/workflows/output/review/ReviewPage.h
     src/ui/workflows/output/review/ReviewPage.cpp
     src/ui/workflows/output/generate/GeneratePage.h
@@ -102,6 +110,10 @@ if(BUILD_TESTING)
         src/core/ProjectMemory.cpp
         src/core/EnvironmentCatalog.h
         src/core/EnvironmentCatalog.cpp
+        src/core/RuleCatalog.h
+        src/core/RuleCatalog.cpp
+        src/core/MemoryCatalog.h
+        src/core/MemoryCatalog.cpp
         src/core/ProjectPersistence.h
         src/core/ProjectPersistence.cpp
         src/core/ProjectModel.h

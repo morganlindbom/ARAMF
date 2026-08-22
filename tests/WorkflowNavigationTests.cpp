@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
     WorkflowWidget workflow;
-    workflow.setStepCount(21);
+    workflow.setStepCount(23);
 
     auto* list = workflow.findChild<QListWidget*>();
     bool ok = require(list != nullptr, "workflow list must exist");
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     QObject::connect(&workflow, &WorkflowWidget::pageSelected,
                      [&selected](WorkflowPageId page) { selected << page; });
 
-    const QList<int> rows{1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 19, 20, 22, 23, 24, 25};
+    const QList<int> rows{1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 19, 20, 22, 23, 25, 26, 27, 28};
     const QList<WorkflowPageId> expected{
         WorkflowPageId::Setup,
         WorkflowPageId::Academic,
@@ -55,8 +55,10 @@ int main(int argc, char** argv)
         WorkflowPageId::ResourceInventory,
         WorkflowPageId::ResourceAuthority,
         WorkflowPageId::ResourcePolicy,
-        WorkflowPageId::RulesRouting,
-        WorkflowPageId::Memory,
+        WorkflowPageId::RuleSelection,
+        WorkflowPageId::RuleRouting,
+        WorkflowPageId::MemoryCapture,
+        WorkflowPageId::MemoryMaintenance,
         WorkflowPageId::Review,
         WorkflowPageId::Generate,
         WorkflowPageId::Verify,

@@ -94,6 +94,21 @@ int main(int argc, char** argv)
     resourcePolicy.options = {QStringLiteral("read-relevant"), QStringLiteral("prefer-authoritative")};
     resourcePolicy.loadingStrategy = QStringLiteral("relevant");
     model.setResourcePolicy(resourcePolicy);
+    RuleConfiguration rules;
+    rules.activeCategories = {QStringLiteral("coding-standards"), QStringLiteral("build-must-pass")};
+    rules.enforcementLevel = QStringLiteral("strict");
+    rules.loadingStrategy = QStringLiteral("metadata-first");
+    rules.workScopes = {QStringLiteral("coding")};
+    rules.projectScopes = {QStringLiteral("source-code")};
+    rules.conflictPolicy = QStringLiteral("manual-resolution");
+    model.setRuleConfiguration(rules);
+    MemoryConfiguration memoryConfiguration;
+    memoryConfiguration.captureCategories = {QStringLiteral("durable-decisions"), QStringLiteral("current-project-status")};
+    memoryConfiguration.retentionLevel = QStringLiteral("detailed");
+    memoryConfiguration.maintenanceOptions = {QStringLiteral("record-decisions")};
+    memoryConfiguration.validationOptions = {QStringLiteral("memory-consistency")};
+    memoryConfiguration.maximumSizeBytes = 250LL * 1024LL * 1024LL;
+    model.setMemoryConfiguration(memoryConfiguration);
     model.setOptionValues(QStringLiteral("rules-routing"), {QStringLiteral("Project architecture")});
     AiConfiguration ai;
     ai.primaryAgent = QStringLiteral("openai-codex");
@@ -139,6 +154,9 @@ int main(int argc, char** argv)
     ok &= require(loaded.resources().first().scopes == resource.scopes, "resource scopes must survive persistence");
     ok &= require(loaded.resourcePolicy().options == resourcePolicy.options, "resource policy options must survive persistence");
     ok &= require(loaded.resourcePolicy().loadingStrategy == QStringLiteral("relevant"), "resource loading strategy must survive persistence");
+    ok &= require(loaded.ruleConfiguration().activeCategories == rules.activeCategories, "rule categories must survive persistence");
+    ok &= require(loaded.ruleConfiguration().enforcementLevel == QStringLiteral("strict"), "rule enforcement must survive persistence");
+    ok &= require(loaded.memoryConfiguration().maximumSizeBytes == memoryConfiguration.maximumSizeBytes, "memory size limit must survive persistence");
 
     const QString legacyProjectFile = root.filePath(QStringLiteral("legacy-project.aramf.json"));
     QJsonObject legacyRoot;
@@ -189,5 +207,17 @@ int main(int argc, char** argv)
 
     const QJsonObject report = memory.validate(temporaryProject.path(), &error);
     ok &= require(report.value(QStringLiteral("status")).toString() == QStringLiteral("PASS"), "memory validation must pass");
+
+    QTemporaryDir limitedProject;
+    ProjectModel limitedModel;
+    auto limitedMemory = limitedModel.memoryConfiguration();
+    limitedMemory.maximumSizeBytes = 1024 * 1024;
+    limitedModel.setMemoryConfiguration(limitedMemory);
+    ProjectMemory limitedMemoryService;
+    ok &= require(limitedMemoryService.initialize(limitedProject.path(), &limitedModel, &error), "limited memory project must initialize");
+    const bool oversizedWrite = limitedMemoryService.appendEvent(
+        limitedProject.path(), QStringLiteral("TEST_OVERSIZED_WRITE"), QStringLiteral("limit test"),
+        QJsonObject{{QStringLiteral("payload"), QString(2 * 1024 * 1024, QLatin1Char('x'))}}, &error);
+    ok &= require(!oversizedWrite, "memory service must reject writes over the configured limit");
     return ok ? 0 : 1;
 }

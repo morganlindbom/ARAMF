@@ -18,6 +18,7 @@ inline const QString EventLog = QStringLiteral("ARAMF/memory/event-log.jsonl");
 inline const QString CurrentState = QStringLiteral("ARAMF/memory/current-state.md");
 inline const QString ColdStartValidation = QStringLiteral("ARAMF/memory/cold-start-validation.json");
 inline const QString ConsistencyValidation = QStringLiteral("ARAMF/memory/memory-consistency-validation.json");
+inline const QString MemoryConfiguration = QStringLiteral("ARAMF/memory/memory-config.json");
 inline const QString TaskRoutes = QStringLiteral("ARAMF/routing/task-routes.json");
 inline const QString ScopeRoutes = QStringLiteral("ARAMF/routing/scope-routes.json");
 inline const QString ResourceManifest = QStringLiteral("ARAMF/resources/resources.json");
