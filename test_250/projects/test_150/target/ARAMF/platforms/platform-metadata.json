@@ -1,0 +1,43 @@
+{
+    "_file": "platform-metadata.json",
+    "buildSystems": [
+        "cmake"
+    ],
+    "developmentTools": [
+        "git",
+        "cmake"
+    ],
+    "environment": {
+        "buildSystem": "cmake",
+        "compiler": "python",
+        "framework": "Qt",
+        "ide": "visual-studio-code",
+        "language": "C++",
+        "operatingSystem": "windows",
+        "packageManager": "none",
+        "targetArchitecture": "arm64",
+        "targetPlatform": "linux",
+        "versionControl": "git"
+    },
+    "frameworks": [
+        "Qt"
+    ],
+    "hardwareTargets": [
+        "RP2350"
+    ],
+    "languages": [
+        "C++"
+    ],
+    "processorFamilies": [
+    ],
+    "projectType": "software-development",
+    "targetArchitectures": [
+        "arm64"
+    ],
+    "targetPlatforms": [
+        "linux"
+    ],
+    "toolchains": [
+        "python"
+    ]
+}

@@ -1,0 +1,20 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "C++"
+    ],
+    "memoryMaximumSizeBytes": 786432000,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "claude-code",
+    "resources": 0,
+    "rules": [
+    ],
+    "template": "cmake-library"
+}

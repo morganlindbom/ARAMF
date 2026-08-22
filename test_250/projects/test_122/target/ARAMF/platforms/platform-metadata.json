@@ -1,0 +1,46 @@
+{
+    "_file": "platform-metadata.json",
+    "buildSystems": [
+        "cmake"
+    ],
+    "developmentTools": [
+        "git",
+        "cmake"
+    ],
+    "environment": {
+        "buildSystem": "cmake",
+        "compiler": "python",
+        "framework": "Qt",
+        "ide": "visual-studio-code",
+        "language": "C++",
+        "operatingSystem": "windows",
+        "packageManager": "none",
+        "targetArchitecture": "x86_64",
+        "targetPlatform": "linux",
+        "versionControl": "git"
+    },
+    "frameworks": [
+        "Qt",
+        "Pico SDK",
+        "FastAPI"
+    ],
+    "hardwareTargets": [
+    ],
+    "languages": [
+        "C++",
+        "C",
+        "Python"
+    ],
+    "processorFamilies": [
+    ],
+    "projectType": "software-development",
+    "targetArchitectures": [
+        "x86_64"
+    ],
+    "targetPlatforms": [
+        "linux"
+    ],
+    "toolchains": [
+        "python"
+    ]
+}

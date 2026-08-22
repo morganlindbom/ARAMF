@@ -141,7 +141,10 @@ bool isControlPlaneEvent(const QString& eventType)
         QStringLiteral("PROJECT_MEMORY_ACTIVATED"),
         QStringLiteral("PROJECT_CONTEXT_CHANGED"),
         QStringLiteral("DECISION_RECORDED"),
-        QStringLiteral("CHECKPOINT_CREATED")
+        QStringLiteral("CHECKPOINT_CREATED"),
+        QStringLiteral("FRAMEWORK_KNOWLEDGE_CANDIDATE"),
+        QStringLiteral("FRAMEWORK_KNOWLEDGE_APPROVED"),
+        QStringLiteral("FRAMEWORK_KNOWLEDGE_SUPERSEDED")
     };
     return controlPlaneEvents.contains(eventType);
 }
@@ -184,6 +187,33 @@ bool ProjectMemory::initialize(const QString& projectRoot, const ProjectModel* m
     }
 
     if (!generateCurrentState(projectRoot, error) || !generateColdStartValidation(projectRoot, error)) {
+        return false;
+    }
+    const QJsonObject report = validate(projectRoot, error);
+    return report.value(QStringLiteral("status")).toString() == QStringLiteral("PASS");
+}
+
+bool ProjectMemory::initializeMemory(const QString& projectRoot, const ProjectModel* model, QString* error)
+{
+    if (projectRoot.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("Project path is empty.");
+        return false;
+    }
+    if (!ensureMemoryDirectories(projectRoot, error)
+        || !writeMemoryFiles(projectRoot, model, error)) {
+        return false;
+    }
+
+    const QString eventPath = absolutePath(projectRoot, AramfPaths::EventLog);
+    if (!QFile::exists(eventPath) || QFileInfo(eventPath).size() == 0) {
+        if (!appendEvent(projectRoot, QStringLiteral("PROJECT_MEMORY_ACTIVATED"),
+                         QStringLiteral("Project Memory initialized"), {}, error)) {
+            return false;
+        }
+    }
+
+    if (!generateCurrentState(projectRoot, error)
+        || !generateColdStartValidation(projectRoot, error, false)) {
         return false;
     }
     const QJsonObject report = validate(projectRoot, error);
@@ -440,6 +470,52 @@ bool ProjectMemory::ensureDirectories(const QString& projectRoot, QString* error
     return true;
 }
 
+bool ProjectMemory::ensureMemoryDirectories(const QString& projectRoot, QString* error) const
+{
+    if (!QDir(projectRoot).mkpath(QStringLiteral("ARAMF/memory"))) {
+        if (error) *error = QStringLiteral("Could not create %1").arg(QDir(projectRoot).filePath(QStringLiteral("ARAMF/memory")));
+        return false;
+    }
+    return true;
+}
+
+bool ProjectMemory::writeMemoryFiles(const QString& projectRoot, const ProjectModel* model, QString* error) const
+{
+    const QList<QPair<QString, QJsonObject>> defaults {
+        {AramfPaths::MemoryConfiguration, QJsonObject {
+            {QStringLiteral("maximumSizeBytes"), model ? model->memoryConfiguration().maximumSizeBytes : 10LL * 1024LL * 1024LL * 1024LL}
+        }},
+        {AramfPaths::FrameworkKnowledge, QJsonObject {
+            {QStringLiteral("version"), 1},
+            {QStringLiteral("authority"), QJsonArray {
+                QStringLiteral("explicit-current-user-instruction"),
+                QStringLiteral("current-source-of-truth"),
+                QStringLiteral("current-durable-project-decisions"),
+                QStringLiteral("approved-framework-knowledge"),
+                QStringLiteral("templates-and-defaults"),
+                QStringLiteral("ai-inference")}},
+            {QStringLiteral("entries"), QJsonArray {}}
+        }},
+        {AramfPaths::Checkpoints, QJsonObject {{QStringLiteral("checkpoints"), QJsonArray {}}}},
+        {AramfPaths::Metrics, QJsonObject {{QStringLiteral("iterations"), 0}, {QStringLiteral("buildAttempts"), 0}, {QStringLiteral("testAttempts"), 0}, {QStringLiteral("failures"), 0}}}
+    };
+    for (const auto& [relativePath, object] : defaults) {
+        const bool preserveExisting = relativePath != AramfPaths::MemoryConfiguration;
+        if (!writeJsonFile(absolutePath(projectRoot, relativePath), object, error, preserveExisting)) return false;
+    }
+    if (!writeTextFile(absolutePath(projectRoot, AramfPaths::Decisions),
+                      QByteArrayLiteral("<!-- decisions.md -->\n\n# Durable Decisions\n\n"),
+                      error, true)) return false;
+
+    QJsonObject manifest {
+        {QStringLiteral("memoryVersion"), QStringLiteral("3")},
+        {QStringLiteral("nextSequenceNumber"), 1},
+        {QStringLiteral("workEntryCount"), 0},
+        {QStringLiteral("eventCount"), 0}
+    };
+    return writeJsonFile(absolutePath(projectRoot, AramfPaths::Manifest), manifest, error, true);
+}
+
 bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectModel* model, QString* error) const
 {
     /**Create missing managed framework files with conservative defaults.
@@ -464,13 +540,16 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         "## Required startup order\n\n"
         "1. Read `PROJECT_STATUS.md`.\n"
         "2. Read `memory/decisions.md`.\n"
-        "3. Read `rules/generated-rules.md`.\n"
-        "4. Load only task-relevant files from `routing/`, `resources/`, `platforms/`, and `verification/`.\n"
-        "5. Treat `custom/` as user-owned content and never modify it automatically.\n\n"
+        "3. Read `memory/framework-knowledge.json` and apply only entries whose status is `approved`.\n"
+        "4. Read `rules/generated-rules.md`.\n"
+        "5. Load only task-relevant files from `routing/`, `resources/`, `platforms/`, and `verification/`.\n"
+        "6. Treat `custom/` as user-owned content and never modify it automatically.\n\n"
         "## Project status contract\n\n"
         "Update `PROJECT_STATUS.md` after every meaningful implementation task. Keep it current with what exists, what was changed, verified results, known issues, and the next concrete work. Do not use it as an append-only history.\n\n"
         "## Memory contract\n\n"
         "Record durable architectural choices in `memory/decisions.md`. Keep observations, TODOs, decisions, implementation, and validation separate. Never claim validation without evidence.\n\n"
+        "## Live Framework Knowledge contract\n\n"
+        "`memory/framework-knowledge.json` is live project memory. Approved entries apply immediately in this project and do not require ARAMF regeneration. The authority order is: explicit current user instruction, current Source of Truth, current durable project decisions, approved Framework Knowledge, templates/defaults, then AI inference. When a corrected approach is verified and appears reusable, add or enrich a `candidate` entry with evidence instead of silently changing framework behavior. Never self-approve a candidate. Only after explicit user approval may its status become `approved`; once approved, use it immediately. Keep superseded entries for auditability but do not apply them.\n\n"
         "## Scope\n\n"
         "All paths in this file are relative to the `ARAMF/` directory. Do not depend on rule or memory files outside `ARAMF/`.\n");
     if (!writeTextFile(absolutePath(projectRoot, AramfPaths::AgentInstructions), canonicalAgent, error, true)) {
@@ -501,7 +580,7 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
     const QByteArray rules = QByteArrayLiteral(
         "<!-- generated-rules.md -->\n\n"
         "# Generated Rules\n\n"
-        "No project-specific generated rules have been selected yet.\n");
+        "No active rule categories are configured in this control-plane skeleton.\n");
     if (!writeTextFile(absolutePath(projectRoot, AramfPaths::GeneratedRules), rules, error, true)) {
         return false;
     }
@@ -523,22 +602,8 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         return false;
     }
 
-    QJsonObject manifest {
-        {QStringLiteral("memoryVersion"), QStringLiteral("3")},
-        {QStringLiteral("nextSequenceNumber"), 1},
-        {QStringLiteral("workEntryCount"), 0},
-        {QStringLiteral("eventCount"), 0}
-    };
-    if (!writeJsonFile(absolutePath(projectRoot, AramfPaths::Manifest), manifest, error, true)) {
-        return false;
-    }
-
+    if (!writeMemoryFiles(projectRoot, model, error)) return false;
     const QList<QPair<QString, QJsonObject>> defaults {
-        {AramfPaths::MemoryConfiguration, QJsonObject {
-            {QStringLiteral("maximumSizeBytes"), model ? model->memoryConfiguration().maximumSizeBytes : 10LL * 1024LL * 1024LL * 1024LL}
-        }},
-        {AramfPaths::Checkpoints, QJsonObject {{QStringLiteral("checkpoints"), QJsonArray {}}}},
-        {AramfPaths::Metrics, QJsonObject {{QStringLiteral("iterations"), 0}, {QStringLiteral("buildAttempts"), 0}, {QStringLiteral("testAttempts"), 0}, {QStringLiteral("failures"), 0}}},
         {AramfPaths::TaskRoutes, QJsonObject {{QStringLiteral("routes"), QJsonArray {}}}},
         {AramfPaths::ScopeRoutes, QJsonObject {{QStringLiteral("routes"), QJsonArray {}}}},
         {AramfPaths::ResourceManifest, QJsonObject {{QStringLiteral("resources"), QJsonArray {}}}},
@@ -603,19 +668,22 @@ bool ProjectMemory::generateCurrentState(const QString& projectRoot, QString* er
     return writeTextFile(absolutePath(projectRoot, AramfPaths::CurrentState), content, error);
 }
 
-bool ProjectMemory::generateColdStartValidation(const QString& projectRoot, QString* error) const
+bool ProjectMemory::generateColdStartValidation(const QString& projectRoot, QString* error, bool requireControlPlane) const
 {
     /**Write a lightweight cold-start validation report.
 
     This confirms the canonical ARAMF root and mandatory startup files are present for a fresh agent session.
     */
-    const QStringList mandatory {
-        AramfPaths::AgentInstructions,
-        AramfPaths::ProjectStatus,
+    QStringList mandatory {
         AramfPaths::Decisions,
-        AramfPaths::GeneratedRules,
+        AramfPaths::FrameworkKnowledge,
         AramfPaths::Manifest
     };
+    if (requireControlPlane) {
+        mandatory << AramfPaths::AgentInstructions
+                  << AramfPaths::ProjectStatus
+                  << AramfPaths::GeneratedRules;
+    }
 
     QJsonArray checks;
     QJsonArray errors;

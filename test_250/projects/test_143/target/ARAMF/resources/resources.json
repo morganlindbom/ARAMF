@@ -1,0 +1,70 @@
+{
+    "_file": "resources.json",
+    "loadingStrategy": "relevant",
+    "resources": [
+        {
+            "authority": "primary-source-of-truth",
+            "description": "",
+            "enabled": true,
+            "id": "resource-143-0",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_143/target/input_0.txt",
+            "locationMode": "referenced",
+            "name": "Resource 0",
+            "scopes": [
+                "requirements",
+                "implementation"
+            ],
+            "status": "unknown",
+            "type": "file"
+        },
+        {
+            "authority": "supporting-reference",
+            "description": "",
+            "enabled": true,
+            "id": "resource-143-1",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_143/target/input_1.txt",
+            "locationMode": "project-local-copy",
+            "name": "Resource 1",
+            "scopes": [
+                "requirements",
+                "implementation"
+            ],
+            "status": "unknown",
+            "type": "folder"
+        },
+        {
+            "authority": "supporting-reference",
+            "description": "",
+            "enabled": true,
+            "id": "resource-143-2",
+            "loadingPolicyOverride": "",
+            "location": "https://example.com/reference",
+            "locationMode": "referenced",
+            "name": "Resource 2",
+            "scopes": [
+                "requirements",
+                "implementation"
+            ],
+            "status": "unknown",
+            "type": "url"
+        },
+        {
+            "authority": "supporting-reference",
+            "description": "",
+            "enabled": true,
+            "id": "resource-143-3",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_143/target/input_3.txt",
+            "locationMode": "project-local-copy",
+            "name": "Resource 3",
+            "scopes": [
+                "requirements",
+                "implementation"
+            ],
+            "status": "unknown",
+            "type": "file"
+        }
+    ]
+}

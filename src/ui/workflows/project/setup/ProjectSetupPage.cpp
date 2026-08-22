@@ -38,7 +38,7 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
         if (action == tr("New")) connect(button, &QPushButton::clicked, this, &ProjectSetupPage::newProject);
         if (action == tr("Open")) connect(button, &QPushButton::clicked, this, &ProjectSetupPage::openProject);
         if (action == tr("Save")) connect(button, &QPushButton::clicked, this, &ProjectSetupPage::saveProject);
-        if (action == tr("Save As")) connect(button, &QPushButton::clicked, this, &ProjectSetupPage::saveProjectAs);
+        if (action == tr("Save As")) connect(button, &QPushButton::clicked, this, [this] { saveProjectAs(); });
     }
     actions->addStretch();
     layout->addLayout(actions);
@@ -118,27 +118,50 @@ void ProjectSetupPage::saveProject()
         saveProjectAs();
         return;
     }
-    writeProject(model_->projectFilePath());
+    QString error;
+    if (!writeProject(model_->projectFilePath(), &error)) {
+        QMessageBox::warning(this, tr("Save Project"), error);
+    }
 }
 
-void ProjectSetupPage::saveProjectAs()
+bool ProjectSetupPage::saveProjectAs(QString* error)
 {
     const QString filePath = QFileDialog::getSaveFileName(
         this, tr("Save ARAMF Project As"), QString(), tr("ARAMF Projects (*.aramf.json);;JSON files (*.json)"));
-    if (filePath.isEmpty()) return;
-    writeProject(filePath);
+    if (filePath.isEmpty()) {
+        if (error) *error = tr("Save As was cancelled.");
+        return false;
+    }
+    QString saveError;
+    if (!writeProject(filePath, &saveError)) {
+        if (error) {
+            *error = saveError;
+        } else {
+            QMessageBox::warning(this, tr("Save Project"), saveError);
+        }
+        return false;
+    }
+    return true;
 }
 
-bool ProjectSetupPage::writeProject(const QString& filePath)
+bool ProjectSetupPage::writeProject(const QString& filePath, QString* error)
 {
-    QString error;
-    if (!persistence_->save(*model_, filePath, &error)) {
-        QMessageBox::warning(this, tr("Save Project"), error);
+    QString saveError;
+    if (!persistence_->save(*model_, filePath, &saveError)) {
+        if (error) *error = saveError;
         return false;
     }
     model_->setProjectFilePath(filePath);
     model_->setModified(false);
     return true;
+}
+
+bool ProjectSetupPage::saveForGeneration(QString* error)
+{
+    if (model_->projectFilePath().trimmed().isEmpty()) {
+        return saveProjectAs(error);
+    }
+    return writeProject(model_->projectFilePath(), error);
 }
 
 bool ProjectSetupPage::confirmDiscardOrSave()

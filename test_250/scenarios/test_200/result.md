@@ -1,0 +1,62 @@
+# TEST-200 — Scenario 200
+
+## Purpose
+
+Exercise GENERATE with an isolated target and varied configuration.
+
+## Initial State
+
+New isolated target: `D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_200/target`
+Configuration: `D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_200/test_200.aramf.json`
+
+## User Configuration
+
+Area: GENERATE
+Template: varied by scenario
+Project / AI / Resources / Rules / Memory / Generation: scenario-specific model configuration.
+
+## User Actions
+
+1. Create/open the isolated project.
+2. Configure the model and save the ARAMF project file.
+3. Reload the saved model.
+4. Review, Save & Generate, Verify, Finalize, and create agent entry points where applicable.
+5. Inspect generated files on disk.
+
+## Expected Result
+
+The supported core workflow persists state and produces a valid, bounded, deterministic ARAMF control plane.
+
+## Actual Result
+
+Generate: PASS (15 files); Verify: PASS (23 checks). Finalize: PASS (second call alreadyFinalized=true); entry points: PASS.
+
+## Result
+
+PASS
+
+## Problems Found
+
+None.
+
+## Root Cause
+
+N/A
+
+## Correction
+
+N/A
+
+## Retest
+
+Not required.
+
+## Framework Knowledge Candidate
+
+NO
+
+Candidate lesson: None generated automatically by this campaign.
+
+Evidence: `test_200/result.md`
+
+Generalizable because: N/A

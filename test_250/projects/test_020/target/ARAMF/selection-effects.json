@@ -1,0 +1,25 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt",
+        "Pico SDK",
+        "FastAPI"
+    ],
+    "hardware": [
+        "RP2350"
+    ],
+    "languages": [
+        "C++",
+        "C",
+        "Python"
+    ],
+    "memoryMaximumSizeBytes": 1073741824,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "none",
+    "resources": 0,
+    "rules": [
+    ],
+    "template": "cmake-library"
+}

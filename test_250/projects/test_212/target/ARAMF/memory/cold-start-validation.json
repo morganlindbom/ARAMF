@@ -1,0 +1,23 @@
+{
+    "_file": "cold-start-validation.json",
+    "checkedAt": "2026-08-22T17:55:15Z",
+    "checks": [
+        {
+            "name": "ARAMF/memory/decisions.md",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF/memory/framework-knowledge.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF/memory/memory-manifest.json",
+            "status": "PASS"
+        }
+    ],
+    "errors": [
+    ],
+    "status": "PASS",
+    "warnings": [
+    ]
+}

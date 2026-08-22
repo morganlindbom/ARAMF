@@ -1,0 +1,178 @@
+{
+    "academic": {
+        "academicDeliverables": [
+        ],
+        "academicLanguage": "",
+        "academicMode": "disabled",
+        "academicRequirements": [
+        ],
+        "citationStyle": "",
+        "examiner": "",
+        "institution": "",
+        "programmeOrCourse": "",
+        "researchMethods": [
+        ],
+        "supervisor": "",
+        "thesisApproaches": [
+        ],
+        "thesisLevel": ""
+    },
+    "ai": {
+        "additionalAgents": [
+        ],
+        "aramfIntegrations": [
+            "rules",
+            "memory",
+            "verification"
+        ],
+        "autonomyPreset": "custom",
+        "customAgentName": "",
+        "permissions": [
+            "read-project",
+            "modify-source"
+        ],
+        "primaryAgent": "github-copilot",
+        "responsibilities": [
+            "planning",
+            "implementation",
+            "testing"
+        ]
+    },
+    "aiPlatforms": [
+        "github-copilot"
+    ],
+    "capabilities": {
+        "automationCapabilities": [
+        ],
+        "buildConfigurations": [
+            "debug",
+            "release"
+        ],
+        "buildSystems": [
+            "cmake"
+        ],
+        "deliveryCapabilities": [
+        ],
+        "dependencyManagers": [
+        ],
+        "developmentTools": [
+            "git",
+            "clang-format"
+        ],
+        "frameworks": [
+            "Qt",
+            "Pico SDK"
+        ],
+        "hardwareTargets": [
+        ],
+        "hostOperatingSystems": [
+            "windows"
+        ],
+        "ides": [
+            "visual-studio-code"
+        ],
+        "languages": [
+            "C++",
+            "C"
+        ],
+        "processorFamilies": [
+        ],
+        "qualityCapabilities": [
+        ],
+        "targetArchitectures": [
+            "x86_64"
+        ],
+        "targetPlatforms": [
+            "windows"
+        ],
+        "testingCapabilities": [
+            "unit-testing",
+            "e2e-testing"
+        ],
+        "toolchains": [
+            "msys2-ucrt64-gcc"
+        ],
+        "versionControlSystems": [
+        ]
+    },
+    "context": "software-development",
+    "description": "250-scenario campaign case 7",
+    "environment": {
+        "buildSystem": "cmake",
+        "compiler": "msys2-ucrt64-gcc",
+        "framework": "Qt",
+        "ide": "visual-studio-code",
+        "language": "C++",
+        "operatingSystem": "windows",
+        "packageManager": "none",
+        "targetArchitecture": "x86_64",
+        "targetPlatform": "windows",
+        "versionControl": "none"
+    },
+    "generationOptions": {
+        "agentRules": true,
+        "memory": true,
+        "platforms": true,
+        "provenance": true,
+        "resources": true,
+        "routing": true
+    },
+    "memory": {
+        "captureCategories": [
+            "decisions",
+            "events",
+            "verification"
+        ],
+        "historyOptions": [
+        ],
+        "maintenanceOptions": [
+            "prune-history",
+            "validate-consistency"
+        ],
+        "maximumSizeBytes": 3221225472,
+        "retentionLevel": "standard",
+        "updateStrategy": "meaningful-task",
+        "validationOptions": [
+        ]
+    },
+    "options": {
+    },
+    "profileSelections": [
+    ],
+    "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_007/test_007.aramf.json",
+    "projectId": "campaign-test_007",
+    "projectName": "Campaign 7",
+    "projectPath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_007/target",
+    "resourcePolicy": {
+        "loadingStrategy": "relevant",
+        "options": [
+            "read-relevant",
+            "prefer-authoritative",
+            "respect-scope",
+            "ignore-disabled",
+            "warn-conflicts"
+        ]
+    },
+    "resources": [
+    ],
+    "rules": {
+        "activeCategories": [
+            "path-safety",
+            "user-content",
+            "verification"
+        ],
+        "conflictPolicy": "prefer-user-instruction",
+        "contextPolicies": [
+        ],
+        "enforcementLevel": "advisory",
+        "loadingStrategy": "relevant",
+        "projectScopes": [
+            "current-project"
+        ],
+        "workScopes": [
+            "implementation",
+            "testing"
+        ]
+    },
+    "templateId": ""
+}

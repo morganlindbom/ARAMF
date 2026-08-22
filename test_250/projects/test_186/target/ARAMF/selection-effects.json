@@ -1,0 +1,23 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "C++"
+    ],
+    "memoryMaximumSizeBytes": 2147483648,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "claude-code",
+    "resources": 0,
+    "rules": [
+        "path-safety",
+        "user-content",
+        "verification"
+    ],
+    "template": "react-frontend"
+}

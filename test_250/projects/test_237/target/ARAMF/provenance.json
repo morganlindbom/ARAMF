@@ -1,0 +1,9 @@
+{
+    "_file": "provenance.json",
+    "implementation": "C++",
+    "projectId": "campaign-test_237",
+    "projectName": "Campaign 237",
+    "projectType": "software-development",
+    "status": "managed",
+    "template": "cmake-library"
+}

@@ -1,0 +1,196 @@
+{
+    "academic": {
+        "academicDeliverables": [
+        ],
+        "academicLanguage": "",
+        "academicMode": "disabled",
+        "academicRequirements": [
+        ],
+        "citationStyle": "",
+        "examiner": "",
+        "institution": "",
+        "programmeOrCourse": "",
+        "researchMethods": [
+        ],
+        "supervisor": "",
+        "thesisApproaches": [
+        ],
+        "thesisLevel": ""
+    },
+    "ai": {
+        "additionalAgents": [
+        ],
+        "aramfIntegrations": [
+            "rules",
+            "memory",
+            "verification"
+        ],
+        "autonomyPreset": "custom",
+        "customAgentName": "",
+        "permissions": [
+            "read-project",
+            "modify-source"
+        ],
+        "primaryAgent": "gemini",
+        "responsibilities": [
+            "planning",
+            "implementation",
+            "testing"
+        ]
+    },
+    "aiPlatforms": [
+        "gemini"
+    ],
+    "capabilities": {
+        "automationCapabilities": [
+        ],
+        "buildConfigurations": [
+            "debug",
+            "release"
+        ],
+        "buildSystems": [
+            "cmake"
+        ],
+        "deliveryCapabilities": [
+        ],
+        "dependencyManagers": [
+        ],
+        "developmentTools": [
+            "git",
+            "cmake"
+        ],
+        "frameworks": [
+            "Qt",
+            "Pico SDK",
+            "FastAPI"
+        ],
+        "hardwareTargets": [
+        ],
+        "hostOperatingSystems": [
+            "windows"
+        ],
+        "ides": [
+            "visual-studio-code"
+        ],
+        "languages": [
+            "C++",
+            "C",
+            "Python"
+        ],
+        "processorFamilies": [
+        ],
+        "qualityCapabilities": [
+        ],
+        "targetArchitectures": [
+            "x86_64"
+        ],
+        "targetPlatforms": [
+            "linux"
+        ],
+        "testingCapabilities": [
+            "unit-testing",
+            "e2e-testing"
+        ],
+        "toolchains": [
+            "msys2-ucrt64-gcc"
+        ],
+        "versionControlSystems": [
+            "git"
+        ]
+    },
+    "context": "software-development",
+    "description": "250-scenario campaign case 128",
+    "environment": {
+        "buildSystem": "cmake",
+        "compiler": "msys2-ucrt64-gcc",
+        "framework": "Qt",
+        "ide": "visual-studio-code",
+        "language": "C++",
+        "operatingSystem": "windows",
+        "packageManager": "none",
+        "targetArchitecture": "x86_64",
+        "targetPlatform": "linux",
+        "versionControl": "git"
+    },
+    "generationOptions": {
+        "agentRules": true,
+        "memory": true,
+        "platforms": true,
+        "provenance": true,
+        "resources": true,
+        "routing": true
+    },
+    "memory": {
+        "captureCategories": [
+            "decisions",
+            "events",
+            "verification"
+        ],
+        "historyOptions": [
+        ],
+        "maintenanceOptions": [
+            "prune-history",
+            "validate-consistency"
+        ],
+        "maximumSizeBytes": 786432000,
+        "retentionLevel": "detailed",
+        "updateStrategy": "meaningful-task",
+        "validationOptions": [
+        ]
+    },
+    "options": {
+    },
+    "profileSelections": [
+    ],
+    "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_128/test_128.aramf.json",
+    "projectId": "campaign-test_128",
+    "projectName": "Campaign 128",
+    "projectPath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_128/target",
+    "resourcePolicy": {
+        "loadingStrategy": "relevant",
+        "options": [
+            "read-relevant",
+            "prefer-authoritative",
+            "respect-scope",
+            "ignore-disabled",
+            "warn-conflicts"
+        ]
+    },
+    "resources": [
+        {
+            "authorityLevel": "primary-source-of-truth",
+            "description": "",
+            "enabled": true,
+            "fingerprint": "",
+            "id": "resource-128-0",
+            "lastModified": "",
+            "loadingStrategyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_128/target/input_0.txt",
+            "locationMode": "referenced",
+            "name": "Resource 0",
+            "scopes": [
+                "requirements",
+                "implementation"
+            ],
+            "status": "unknown",
+            "type": "file"
+        }
+    ],
+    "rules": {
+        "activeCategories": [
+        ],
+        "conflictPolicy": "prefer-user-instruction",
+        "contextPolicies": [
+        ],
+        "enforcementLevel": "standard",
+        "loadingStrategy": "relevant",
+        "projectScopes": [
+            "current-project"
+        ],
+        "workScopes": [
+            "implementation",
+            "testing"
+        ]
+    },
+    "templateId": "qt-desktop-application"
+}

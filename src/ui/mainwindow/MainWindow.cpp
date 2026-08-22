@@ -232,15 +232,18 @@ MainWindow::MainWindow(
     generatePage_ =
         new GeneratePage(
             &projectModel_,
+            projectPage_,
             &generationServices_,
             stack_);
 
     verificationPage_ =
-        new VerifyPage(stack_);
+        new VerifyPage(&projectModel_, &verificationServices_, stack_);
 
     finalizePage_ =
         new FinalizePage(
             &projectModel_,
+            &finalizationServices_,
+            &agentEntryPointService_,
             stack_);
 
     const auto registerPage =
@@ -274,8 +277,6 @@ MainWindow::MainWindow(
     registerPage(WorkflowPageId::Generate, generatePage_);
     registerPage(WorkflowPageId::Verify, verificationPage_);
     registerPage(WorkflowPageId::Finalize, finalizePage_);
-
-    verificationPage_->setModel(&projectModel_);
 
     workflow_->setStepCount(stack_->count());
 

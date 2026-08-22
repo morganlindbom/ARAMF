@@ -1,0 +1,146 @@
+{
+    "_file": "verification-result.json",
+    "checkedAt": "2026-08-22T17:55:14Z",
+    "checks": [
+        {
+            "details": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_203/target",
+            "id": "project-path",
+            "name": "Project Path",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF directory exists.",
+            "id": "control-plane",
+            "name": "ARAMF control plane",
+            "status": "PASS"
+        },
+        {
+            "details": "AGENTS.md",
+            "id": "root-agents",
+            "name": "Root AGENTS.md",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF/AGENTS.md",
+            "id": "aramf-agents",
+            "name": "ARAMF/AGENTS.md",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF/PROJECT_STATUS.md",
+            "id": "project-status",
+            "name": "PROJECT_STATUS.md",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF/rules/generated-rules.md",
+            "id": "generated-rules",
+            "name": "Generated rules",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF/routing/task-routes.json",
+            "id": "task-routes",
+            "name": "Task routes",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF/routing/scope-routes.json",
+            "id": "scope-routes",
+            "name": "Scope routes",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF/platforms/platform-metadata.json",
+            "id": "platforms",
+            "name": "Platform metadata",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF/resources/resources.json",
+            "id": "resources",
+            "name": "Resource manifest",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF/memory/memory-config.json",
+            "id": "memory",
+            "name": "Memory configuration",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF/memory/framework-knowledge.json",
+            "id": "framework-knowledge",
+            "name": "Framework Knowledge",
+            "status": "PASS"
+        },
+        {
+            "details": "Product was not selected.",
+            "id": "provenance",
+            "name": "Provenance",
+            "status": "NOT_APPLICABLE"
+        },
+        {
+            "details": "Product was not selected.",
+            "id": "selection-effects",
+            "name": "Selection effects",
+            "status": "NOT_APPLICABLE"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-task-routes.json",
+            "name": "Valid JSON: ARAMF/routing/task-routes.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-scope-routes.json",
+            "name": "Valid JSON: ARAMF/routing/scope-routes.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-platform-metadata.json",
+            "name": "Valid JSON: ARAMF/platforms/platform-metadata.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-resources.json",
+            "name": "Valid JSON: ARAMF/resources/resources.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-memory-config.json",
+            "name": "Valid JSON: ARAMF/memory/memory-config.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-framework-knowledge.json",
+            "name": "Valid JSON: ARAMF/memory/framework-knowledge.json",
+            "status": "PASS"
+        },
+        {
+            "details": "PASS",
+            "id": "memory-consistency",
+            "name": "Memory consistency",
+            "status": "PASS"
+        },
+        {
+            "details": "PASS",
+            "id": "cold-start",
+            "name": "Cold-start validation",
+            "status": "PASS"
+        },
+        {
+            "details": "Fingerprint matches ProjectModel.",
+            "id": "freshness",
+            "name": "Generated configuration is current",
+            "status": "PASS"
+        }
+    ],
+    "fingerprint": "a0b3d7f2f579880fa814543f5fe59c201325b8874d073e265168ec18cc8152d2",
+    "overallStatus": "PASS"
+}

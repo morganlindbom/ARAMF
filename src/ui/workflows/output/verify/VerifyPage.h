@@ -1,14 +1,25 @@
 #pragma once
 
+#include "core/Services.h"
+
 #include <QWidget>
 
-class ProjectModel;
+class QListWidget;
+class QLabel;
+class QPushButton;
 
-class VerifyPage final : public QWidget {
+class VerifyPage final : public QWidget
+{
+    Q_OBJECT
 public:
-    explicit VerifyPage(QWidget* parent = nullptr);
-    void setModel(ProjectModel* model);
+    VerifyPage(ProjectModel* model, VerificationServices* services, QWidget* parent = nullptr);
 
 private:
+    void runVerification();
+    void showResult(const VerificationResult& result);
     ProjectModel* model_ = nullptr;
+    VerificationServices* services_ = nullptr;
+    QLabel* status_ = nullptr;
+    QListWidget* checks_ = nullptr;
+    QPushButton* verifyButton_ = nullptr;
 };

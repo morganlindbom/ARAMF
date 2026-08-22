@@ -1,0 +1,29 @@
+{
+    "_file": "memory-consistency-validation.json",
+    "checkedAt": "2026-08-22T17:54:58Z",
+    "checks": [
+        {
+            "name": "event-identifiers-unique",
+            "status": "PASS"
+        },
+        {
+            "name": "sequence-order",
+            "status": "PASS"
+        },
+        {
+            "name": "manifest-next-sequence",
+            "status": "PASS"
+        },
+        {
+            "name": "manifest-event-count",
+            "status": "PASS"
+        }
+    ],
+    "durableSequence": 1,
+    "errors": [
+    ],
+    "productionSequence": 0,
+    "status": "PASS",
+    "warnings": [
+    ]
+}

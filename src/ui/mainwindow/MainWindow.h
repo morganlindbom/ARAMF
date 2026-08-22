@@ -78,6 +78,9 @@ private:
     ProjectPersistence projectPersistence_;
     TemplateManager templateManager_;
     GenerationServices generationServices_;
+    VerificationServices verificationServices_;
+    FinalizationServices finalizationServices_;
+    AgentEntryPointService agentEntryPointService_;
 
     WorkflowWidget* workflow_ = nullptr;
     QScrollArea* pageScroll_ = nullptr;

@@ -1,0 +1,21 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt"
+    ],
+    "hardware": [
+        "RP2350"
+    ],
+    "languages": [
+        "C++"
+    ],
+    "memoryMaximumSizeBytes": 786432000,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "none",
+    "resources": 1,
+    "rules": [
+    ],
+    "template": "cpp-command-line"
+}

@@ -1,0 +1,12 @@
+{
+    "completed": 250,
+    "currentTest": "TEST-250",
+    "guiAutomation": "not available; core workflow exercised",
+    "initialFail": 3,
+    "initialPass": 247,
+    "issuesFixed": 1,
+    "issuesFound": 1,
+    "passAfterFix": 3,
+    "planned": 250,
+    "remainingFail": 0
+}

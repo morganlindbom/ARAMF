@@ -1,0 +1,22 @@
+{
+    "_file": "resources.json",
+    "loadingStrategy": "relevant",
+    "resources": [
+        {
+            "authority": "primary-source-of-truth",
+            "description": "",
+            "enabled": true,
+            "id": "resource-116-0",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_116/target/input_0.txt",
+            "locationMode": "referenced",
+            "name": "Resource 0",
+            "scopes": [
+                "requirements",
+                "implementation"
+            ],
+            "status": "unknown",
+            "type": "file"
+        }
+    ]
+}

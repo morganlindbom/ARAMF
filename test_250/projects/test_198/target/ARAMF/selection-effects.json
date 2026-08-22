@@ -1,0 +1,23 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "C++"
+    ],
+    "memoryMaximumSizeBytes": 4294967296,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "gemini",
+    "resources": 0,
+    "rules": [
+        "path-safety",
+        "user-content",
+        "verification"
+    ],
+    "template": "qt-desktop-application"
+}

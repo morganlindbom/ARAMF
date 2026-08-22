@@ -1,0 +1,9 @@
+{
+    "_file": "provenance.json",
+    "implementation": "C++",
+    "projectId": "campaign-test_043",
+    "projectName": "Campaign 43",
+    "projectType": "software-development",
+    "status": "managed",
+    "template": "cpp-command-line"
+}

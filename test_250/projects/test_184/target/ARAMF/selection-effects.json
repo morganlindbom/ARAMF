@@ -1,0 +1,22 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt",
+        "Pico SDK"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "C++",
+        "C"
+    ],
+    "memoryMaximumSizeBytes": 786432000,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "unsupported-agent",
+    "resources": 0,
+    "rules": [
+    ],
+    "template": "qt-desktop-application"
+}

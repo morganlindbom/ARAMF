@@ -1,5 +1,21 @@
 #pragma once
-#include <QWidget>
+
 #include "core/ProjectModel.h"
-class QTextBrowser;
-class ReviewPage final:public QWidget{public:explicit ReviewPage(ProjectModel*,QWidget* parent=nullptr);public slots:void refreshFromModel();private:ProjectModel*model_;QTextBrowser*summary_;};
+
+#include <QWidget>
+
+class QPlainTextEdit;
+
+class ReviewPage final : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit ReviewPage(ProjectModel* model, QWidget* parent = nullptr);
+
+public slots:
+    void refreshFromModel();
+
+private:
+    ProjectModel* model_ = nullptr;
+    QPlainTextEdit* summary_ = nullptr;
+};

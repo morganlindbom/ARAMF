@@ -1,0 +1,26 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt",
+        "Pico SDK"
+    ],
+    "hardware": [
+        "RP2350"
+    ],
+    "languages": [
+        "C++",
+        "C"
+    ],
+    "memoryMaximumSizeBytes": 1073741824,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "none",
+    "resources": 0,
+    "rules": [
+        "path-safety",
+        "user-content",
+        "verification"
+    ],
+    "template": ""
+}

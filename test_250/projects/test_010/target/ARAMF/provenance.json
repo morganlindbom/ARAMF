@@ -1,0 +1,9 @@
+{
+    "_file": "provenance.json",
+    "implementation": "C++",
+    "projectId": "campaign-test_010",
+    "projectName": "Campaign 10",
+    "projectType": "software-development",
+    "status": "managed",
+    "template": "python-backend"
+}

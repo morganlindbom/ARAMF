@@ -1,0 +1,25 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt",
+        "Pico SDK"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "C++",
+        "C"
+    ],
+    "memoryMaximumSizeBytes": 2147483648,
+    "platforms": [
+        "windows"
+    ],
+    "primaryAiAgent": "claude-code",
+    "resources": 0,
+    "rules": [
+        "path-safety",
+        "user-content",
+        "verification"
+    ],
+    "template": "cmake-library"
+}

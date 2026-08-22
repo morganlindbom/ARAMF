@@ -1,0 +1,23 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "C++"
+    ],
+    "memoryMaximumSizeBytes": 4294967296,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "gemini",
+    "resources": 3,
+    "rules": [
+        "path-safety",
+        "user-content",
+        "verification"
+    ],
+    "template": "raspberry-pi-pico-firmware"
+}

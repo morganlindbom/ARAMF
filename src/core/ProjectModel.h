@@ -105,6 +105,15 @@ struct MemoryConfiguration {
     qint64 maximumSizeBytes = 10LL * 1024LL * 1024LL * 1024LL;
 };
 
+struct GenerationOptions {
+    bool generateAgentRules = true;
+    bool generateRouting = true;
+    bool generatePlatforms = true;
+    bool generateResources = true;
+    bool generateMemory = true;
+    bool generateProvenance = true;
+};
+
 class ProjectModel final : public QObject {
     Q_OBJECT
 public:
@@ -125,6 +134,7 @@ public:
     ResourcePolicy resourcePolicy() const { return resourcePolicy_; }
     RuleConfiguration ruleConfiguration() const { return ruleConfiguration_; }
     MemoryConfiguration memoryConfiguration() const { return memoryConfiguration_; }
+    GenerationOptions generationOptions() const { return generationOptions_; }
     QStringList aiPlatforms() const { return aiPlatforms_; }
     QStringList resourceNames() const { return resourceNames_; }
     QStringList profileSelections() const { return profileSelections_; }
@@ -147,6 +157,7 @@ public:
     void setResourcePolicy(const ResourcePolicy& value);
     void setRuleConfiguration(const RuleConfiguration& value);
     void setMemoryConfiguration(const MemoryConfiguration& value);
+    void setGenerationOptions(const GenerationOptions& value);
     void applyTemplateCapabilities(const DevelopmentCapabilities& value);
     void applyTemplateDefaults(const DevelopmentEnvironment& value);
     void setAiPlatforms(const QStringList& value);
@@ -186,6 +197,7 @@ private:
     ResourcePolicy resourcePolicy_;
     RuleConfiguration ruleConfiguration_;
     MemoryConfiguration memoryConfiguration_;
+    GenerationOptions generationOptions_;
     QStringList aiPlatforms_;
     QStringList resourceNames_;
     QStringList profileSelections_;

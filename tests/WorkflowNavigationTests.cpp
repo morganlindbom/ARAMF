@@ -3,14 +3,17 @@
 #include "ui/workflows/ai/responsibilities/AiResponsibilitiesPage.h"
 #include "ui/workflows/ai/autonomy/AiAutonomyPage.h"
 #include "ui/workflows/ai/integration/AiIntegrationPage.h"
+#include "ui/workflows/memory/maintenance/MemoryMaintenancePage.h"
 #include "core/ProjectModel.h"
 
 #include <QApplication>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QPushButton>
 #include <QListWidget>
+#include <cmath>
 #include <iostream>
 
 namespace {
@@ -168,5 +171,84 @@ int main(int argc, char** argv)
     checkSelectAllPage(autonomy, QStringLiteral("High-Risk Actions"));
     AiIntegrationPage integration(&model);
     checkSelectAllPage(integration);
+
+    MemoryMaintenancePage memoryPage(&model);
+    const auto memoryPresets = MemoryMaintenancePage::memorySizePresets();
+    const QList<qint64> expectedMemorySizes{
+        500LL * 1024LL * 1024LL,
+        1LL * 1024LL * 1024LL * 1024LL,
+        2LL * 1024LL * 1024LL * 1024LL,
+        5LL * 1024LL * 1024LL * 1024LL,
+        10LL * 1024LL * 1024LL * 1024LL,
+        20LL * 1024LL * 1024LL * 1024LL,
+        50LL * 1024LL * 1024LL * 1024LL,
+        100LL * 1024LL * 1024LL * 1024LL
+    };
+    ok &= require(memoryPresets.size() == expectedMemorySizes.size(),
+                  "memory preset catalog must contain all standard sizes");
+    for (int index = 0; index < memoryPresets.size(); ++index) {
+        ok &= require(memoryPresets.at(index).second == expectedMemorySizes.at(index),
+                      "memory preset must use the exact byte value");
+    }
+
+    auto* memoryPreset = memoryPage.findChild<QComboBox*>(QStringLiteral("memorySizePreset"));
+    auto* customSize = memoryPage.findChild<QDoubleSpinBox*>(QStringLiteral("customMemorySize"));
+    auto* customUnit = memoryPage.findChild<QComboBox*>(QStringLiteral("customMemoryUnit"));
+    ok &= require(memoryPreset && customSize && customUnit,
+                  "memory size preset and custom controls must exist");
+    if (memoryPreset && customSize && customUnit) {
+        ok &= require(memoryPreset->currentIndex() == 4
+                          && model.memoryConfiguration().maximumSizeBytes == expectedMemorySizes.at(4),
+                      "memory size must default to 10 GB");
+        for (int index = 0; index < memoryPresets.size(); ++index) {
+            memoryPreset->setCurrentIndex(index);
+            app.processEvents();
+            ok &= require(model.memoryConfiguration().maximumSizeBytes == expectedMemorySizes.at(index),
+                          "selecting a memory preset must update bytes");
+        }
+
+        memoryPreset->setCurrentIndex(4);
+        app.processEvents();
+        memoryPreset->setCurrentIndex(memoryPresets.size());
+        app.processEvents();
+        ok &= require(customSize->decimals() == 0 && std::abs(customSize->value() - 10.0) < 0.000001,
+                      "10 GB custom display must not show trailing decimals");
+        customUnit->setCurrentIndex(customUnit->findData(QStringLiteral("mb")));
+        customSize->setValue(2048.0);
+        app.processEvents();
+        const qint64 twoGiB = 2LL * 1024LL * 1024LL * 1024LL;
+        ok &= require(model.memoryConfiguration().maximumSizeBytes == twoGiB,
+                      "custom MB value must persist as exact bytes");
+        customUnit->setCurrentIndex(customUnit->findData(QStringLiteral("gb")));
+        app.processEvents();
+        ok &= require(std::abs(customSize->value() - 2.0) < 0.000001
+                          && model.memoryConfiguration().maximumSizeBytes == twoGiB,
+                      "switching custom units must preserve bytes");
+
+        customUnit->setCurrentIndex(customUnit->findData(QStringLiteral("mb")));
+        customSize->setValue(750.0);
+        app.processEvents();
+        const qint64 sevenHundredFiftyMiB = 750LL * 1024LL * 1024LL;
+        ok &= require(model.memoryConfiguration().maximumSizeBytes == sevenHundredFiftyMiB,
+                      "custom 750 MB value must be exact");
+        customUnit->setCurrentIndex(customUnit->findData(QStringLiteral("gb")));
+        app.processEvents();
+        ok &= require(std::abs(customSize->value() - (750.0 / 1024.0)) < 0.000001
+                          && model.memoryConfiguration().maximumSizeBytes == sevenHundredFiftyMiB,
+                      "non-integer custom unit conversion must preserve bytes");
+        ok &= require(customSize->decimals() == 9,
+                      "fractional GB display must retain sufficient precision");
+        customUnit->setCurrentIndex(customUnit->findData(QStringLiteral("mb")));
+        app.processEvents();
+        ok &= require(std::abs(customSize->value() - 750.0) < 0.000001,
+                      "switching back to MB must restore the exact display value");
+        customSize->setValue(1536.0);
+        app.processEvents();
+        customUnit->setCurrentIndex(customUnit->findData(QStringLiteral("gb")));
+        app.processEvents();
+        ok &= require(customSize->decimals() == 1 && std::abs(customSize->value() - 1.5) < 0.000001,
+                      "1.5 GB display must omit unnecessary trailing zeroes");
+    }
+
     return ok ? 0 : 1;
 }

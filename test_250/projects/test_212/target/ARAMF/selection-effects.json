@@ -1,0 +1,24 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt",
+        "Pico SDK",
+        "FastAPI"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "C++",
+        "C",
+        "Python"
+    ],
+    "memoryMaximumSizeBytes": 3221225472,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "github-copilot",
+    "resources": 0,
+    "rules": [
+    ],
+    "template": "qt-desktop-application"
+}

@@ -22,8 +22,19 @@ ARAMF can still configure projects that use Python, C#, JavaScript/TypeScript, C
 
 ## Repository Structure
 
+The repository-local ARAMF development control material is under
+`aramf_setup/`. The uppercase `ARAMF/` name is reserved for the control plane
+generated inside managed target projects.
+
+Root-level generated entry-file templates are kept separately under
+`aramf_setup/bootstrap/`. In particular, `aramf_setup/bootstrap/AGENTS.md` is
+the source reference for a generated `<ProjectPath>/AGENTS.md`; it is not the
+repository-development `aramf_setup/AGENTS.md`. The generated bootstrap points
+to `<ProjectPath>/ARAMF/AGENTS.md`, and the bootstrap source directory is never
+copied into a target project.
+
 ```text
-ARAMF/
+aramf_setup/
 ├── AGENTS.md                  # canonical agent instructions
 ├── PROJECT_STATUS.md          # current project/program state
 ├── aramf-profile.json
@@ -67,13 +78,17 @@ LICENSE
 
 ## Agent Model
 
-The repository root contains only a small `AGENTS.md` discovery file. The canonical instructions and every file those instructions depend on are kept under `ARAMF/`.
+The repository root contains only a small `AGENTS.md` discovery file. The
+canonical repository-development instructions and every file those
+instructions depend on are kept under `aramf_setup/`. This is intentionally
+different from the uppercase `ARAMF/` control directory generated inside a
+managed target project.
 
 The intended cold-start order is:
 
-1. `ARAMF/PROJECT_STATUS.md`
-2. `ARAMF/memory/decisions.md`
-3. `ARAMF/rules/generated-rules.md`
+1. `aramf_setup/PROJECT_STATUS.md`
+2. `aramf_setup/memory/decisions.md`
+3. `aramf_setup/rules/generated-rules.md`
 4. task-relevant routing/resources/platform/verification files only
 
 This keeps the project root clean and avoids duplicated rule stores.
@@ -82,7 +97,7 @@ This keeps the project root clean and avoids duplicated rule stores.
 
 `ProjectMemory` is implemented in C++ and owns:
 
-- initialization of the canonical `ARAMF/` hierarchy;
+- initialization of the canonical generated-project `ARAMF/` hierarchy;
 - append-only JSONL events;
 - durable sequence tracking;
 - generated `current-state.md`;
@@ -90,7 +105,10 @@ This keeps the project root clean and avoids duplicated rule stores.
 - memory consistency validation;
 - safe creation of missing managed files.
 
-`ARAMF/PROJECT_STATUS.md` is intentionally separate from derived memory state. It is the current human/agent-facing snapshot of what the program contains, what is done, what has been verified, known issues, and what should happen next.
+`aramf_setup/PROJECT_STATUS.md` is intentionally separate from derived memory
+state. It is the current human/agent-facing snapshot of what the program
+contains, what is done, what has been verified, known issues, and what should
+happen next.
 
 ## Build on the Primary Windows Environment
 
@@ -110,4 +128,17 @@ Files under `ARAMF/custom/` are user-owned and protected from automatic modifica
 
 ## Historical Material
 
-Recovered architecture notes and reconstruction evidence are retained under `ARAMF/docs/reconstruction/`. They are archival evidence and may describe superseded lowercase paths or the temporary Python reconstruction. They are not current authority.
+Recovered architecture notes and reconstruction evidence are retained under
+`aramf_setup/docs/reconstruction/`. They are archival evidence and may describe
+superseded lowercase paths or the temporary Python reconstruction. They are not
+current authority.
+
+## Live Framework Knowledge
+
+ARAMF managed projects keep reusable, evidence-backed lessons in
+`ARAMF/memory/framework-knowledge.json`. Agents may propose candidates after a
+verified correction, but only explicit user approval can promote a candidate to
+`approved`. Approved knowledge is immediately active through `ARAMF/AGENTS.md`;
+users do not need to reopen ARAMF just to benefit from an already approved
+lesson. Current user instructions, Sources of Truth, and durable project
+decisions always outrank Framework Knowledge.
