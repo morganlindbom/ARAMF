@@ -38,10 +38,10 @@ QStringList TemplateManager::builtInTemplates() const
 
 QList<TemplateDefinition> TemplateManager::definitions() const
 {
-    auto make = [](const QString& id, const QString& name, const QString& type, const QString& language, const QString& framework, const QString& compiler, const QString& target, const QString& build, const QStringList& capabilities, const QStringList& resources) {
-        TemplateDefinition d; d.id=id; d.displayName=name; d.projectType=type; d.environment.language=language; d.environment.framework=framework; d.environment.ide=QStringLiteral("vscode"); d.environment.compiler=compiler; d.environment.operatingSystem=QStringLiteral("windows"); d.environment.targetPlatform=target; d.environment.buildSystem=build; d.environment.packageManager=QStringLiteral("none"); d.environment.versionControl=QStringLiteral("git"); d.supportedCapabilities=capabilities; d.recommendedResources=resources; d.recommendedAiConfiguration={QStringLiteral("codex"), QStringLiteral("planning"), QStringLiteral("coding"), QStringLiteral("review"), QStringLiteral("testing"), QStringLiteral("documentation")}; d.recommendedRules={QStringLiteral("Universal safety"), QStringLiteral("Project architecture")}; return d;
+    auto make = [](const QString& id, const QString& name, const QString& type, const QString& language, const QString& framework, const QString& compiler, const QString& target, const QString& build, const QStringList& supported, const QStringList& resources) {
+        TemplateDefinition d; d.id=id; d.displayName=name; d.projectType=type; d.environment.language=language; d.environment.framework=framework; d.environment.ide=QStringLiteral("visual-studio-code"); d.environment.compiler=compiler; d.environment.operatingSystem=QStringLiteral("windows"); d.environment.targetPlatform=target; d.environment.targetArchitecture=target == QStringLiteral("embedded") ? QStringLiteral("cortex-m") : QStringLiteral("x86_64"); d.environment.buildSystem=build; d.environment.packageManager=QStringLiteral("none"); d.environment.versionControl=QStringLiteral("git"); d.supportedCapabilities=supported; d.recommendedResources=resources; d.recommendedAiConfiguration={QStringLiteral("codex"), QStringLiteral("planning"), QStringLiteral("coding"), QStringLiteral("review"), QStringLiteral("testing"), QStringLiteral("documentation")}; d.recommendedRules={QStringLiteral("Universal safety"), QStringLiteral("Project architecture")}; d.capabilities.languages={language}; d.capabilities.frameworks={framework}; d.capabilities.ides={d.environment.ide}; d.capabilities.versionControlSystems={QStringLiteral("git")}; d.capabilities.hostOperatingSystems={d.environment.operatingSystem}; d.capabilities.targetPlatforms={target}; d.capabilities.targetArchitectures={d.environment.targetArchitecture}; d.capabilities.toolchains={compiler}; d.capabilities.buildSystems={build}; d.capabilities.buildConfigurations={QStringLiteral("debug"), QStringLiteral("release")}; if (id == QStringLiteral("pico-2w-visual-designer")) { d.capabilities.languages={QStringLiteral("cpp"), QStringLiteral("c"), QStringLiteral("pio-assembly")}; d.capabilities.frameworks={QStringLiteral("qt"), QStringLiteral("pico-sdk")}; d.capabilities.ides={QStringLiteral("visual-studio-code")}; d.capabilities.versionControlSystems={QStringLiteral("git")}; d.capabilities.developmentTools={QStringLiteral("debugger"), QStringLiteral("hardware-debug-probe")}; d.capabilities.targetPlatforms={QStringLiteral("windows-desktop"), QStringLiteral("microcontroller")}; d.capabilities.targetArchitectures={QStringLiteral("x86_64"), QStringLiteral("rp2350"), QStringLiteral("cortex-m")}; d.capabilities.processorFamilies={QStringLiteral("rp2350")}; d.capabilities.hardwareTargets={QStringLiteral("raspberry-pi-pico-2-w")}; d.capabilities.toolchains={QStringLiteral("msys2-ucrt64-gcc"), QStringLiteral("arm-gnu"), QStringLiteral("pico-sdk-toolchain")}; d.capabilities.buildSystems={QStringLiteral("cmake"), QStringLiteral("ninja")}; d.capabilities.testingCapabilities={QStringLiteral("unit-testing")}; d.capabilities.buildConfigurations={QStringLiteral("debug"), QStringLiteral("release")}; } return d;
     };
-    return {
+    auto result = QList<TemplateDefinition>{
         make("pico-2w-visual-designer", "Pico 2 W Visual Designer", "embedded-firmware", "cpp", "pico-sdk", "msys2-ucrt64-gcc", "embedded", "cmake", {"Networking", "Testing", "Documentation"}, {"Pico 2 W datasheet", "Pico SDK documentation"}),
         make("qt-desktop-application", "Qt Desktop Application", "desktop-application", "cpp", "qt6", "msys2-ucrt64-gcc", "desktop", "cmake", {"SQLite", "Networking", "Testing", "Documentation"}, {"Qt documentation", "Architecture document"}),
         make("cpp-command-line", "C++ Command Line", "software-development", "cpp", "none", "msys2-ucrt64-gcc", "desktop", "cmake", {"Testing", "Documentation"}, {"Specification"}),
@@ -54,6 +54,35 @@ QList<TemplateDefinition> TemplateManager::definitions() const
         make("full-stack-web-application", "Full Stack Web Application", "web-application", "typescript", "react", "node", "web", "npm", {"SQLite", "Networking", "Testing", "Documentation"}, {"Architecture document", "API specification"}),
         make("bachelor-thesis", "Bachelor Thesis", "thesis", "cpp", "none", "msys2-ucrt64-gcc", "desktop", "cmake", {"Documentation"}, {"Thesis specification", "Reference implementations"})
     };
+    auto& pico = result.first();
+    pico.ai.primaryAgent = QStringLiteral("openai-codex");
+    pico.ai.additionalAgents = {QStringLiteral("chatgpt")};
+    pico.ai.responsibilities = {
+        QStringLiteral("planning"), QStringLiteral("architecture"),
+        QStringLiteral("coding"), QStringLiteral("testing"),
+        QStringLiteral("documentation")
+    };
+    pico.ai.aramfIntegrations = {
+        QStringLiteral("agents-md"), QStringLiteral("rules"),
+        QStringLiteral("routing"), QStringLiteral("project-memory"),
+        QStringLiteral("project-status")
+    };
+    auto& bachelor = result.last();
+    bachelor.academic.academicMode = QStringLiteral("thesis");
+    bachelor.academic.thesisLevel = QStringLiteral("bachelor");
+    bachelor.academic.thesisApproaches = {QStringLiteral("software-system-development")};
+    bachelor.academic.academicRequirements = {
+        QStringLiteral("source-citations"),
+        QStringLiteral("reference-list"),
+        QStringLiteral("methodology-section"),
+        QStringLiteral("research-questions"),
+        QStringLiteral("academic-formatting")
+    };
+    bachelor.academic.academicDeliverables = {
+        QStringLiteral("written-thesis"),
+        QStringLiteral("source-code")
+    };
+    return result;
 }
 
 TemplateDefinition TemplateManager::definition(const QString& id) const { for (const auto& definition : definitions()) if (definition.id == id) return definition; return {}; }
@@ -72,6 +101,10 @@ bool TemplateManager::applyTemplate(ProjectModel* model, const QString& id) cons
     model->setTemplateId(id);
     const auto selected = definition(id);
     model->setContext(selected.projectType);
+    model->applyTemplateDefaults(selected.environment);
+    model->applyTemplateCapabilities(selected.capabilities);
+    model->setAcademicConfiguration(selected.academic);
+    model->setAiConfiguration(selected.ai);
     model->applyTemplateDefaults(selected.environment);
     model->endUpdate();
     return true;
