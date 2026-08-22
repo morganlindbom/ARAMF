@@ -1,0 +1,183 @@
+{
+    "academic": {
+        "academicDeliverables": [
+        ],
+        "academicLanguage": "Swedish",
+        "academicMode": "thesis",
+        "academicRequirements": [
+        ],
+        "citationStyle": "Harvard",
+        "examiner": "",
+        "institution": "",
+        "programmeOrCourse": "",
+        "researchMethods": [
+            "qualitative",
+            "literature-review"
+        ],
+        "supervisor": "",
+        "thesisApproaches": [
+        ],
+        "thesisLevel": "doctoral"
+    },
+    "ai": {
+        "additionalAgents": [
+            "claude-code",
+            "github-copilot"
+        ],
+        "aramfIntegrations": [
+            "rules",
+            "memory",
+            "verification"
+        ],
+        "autonomyPreset": "custom",
+        "customAgentName": "",
+        "permissions": [
+            "read-project",
+            "modify-source"
+        ],
+        "primaryAgent": "none",
+        "responsibilities": [
+            "planning",
+            "implementation",
+            "testing"
+        ]
+    },
+    "aiPlatforms": [
+        "claude-code",
+        "github-copilot"
+    ],
+    "capabilities": {
+        "automationCapabilities": [
+        ],
+        "buildConfigurations": [
+            "debug",
+            "release"
+        ],
+        "buildSystems": [
+            "cmake"
+        ],
+        "deliveryCapabilities": [
+        ],
+        "dependencyManagers": [
+        ],
+        "developmentTools": [
+            "git",
+            "cmake"
+        ],
+        "frameworks": [
+            "Qt"
+        ],
+        "hardwareTargets": [
+            "RP2350"
+        ],
+        "hostOperatingSystems": [
+            "windows"
+        ],
+        "ides": [
+            "visual-studio-code"
+        ],
+        "languages": [
+            "C++"
+        ],
+        "processorFamilies": [
+        ],
+        "qualityCapabilities": [
+        ],
+        "targetArchitectures": [
+            "arm64"
+        ],
+        "targetPlatforms": [
+            "linux"
+        ],
+        "testingCapabilities": [
+            "unit-testing",
+            "e2e-testing"
+        ],
+        "toolchains": [
+            "msys2-ucrt64-gcc"
+        ],
+        "versionControlSystems": [
+            "git"
+        ]
+    },
+    "context": "software-development",
+    "description": "250-scenario campaign case 30",
+    "environment": {
+        "buildSystem": "cmake",
+        "compiler": "msys2-ucrt64-gcc",
+        "framework": "Qt",
+        "ide": "visual-studio-code",
+        "language": "C++",
+        "operatingSystem": "windows",
+        "packageManager": "none",
+        "targetArchitecture": "arm64",
+        "targetPlatform": "linux",
+        "versionControl": "git"
+    },
+    "generationOptions": {
+        "agentRules": true,
+        "memory": true,
+        "platforms": true,
+        "provenance": true,
+        "resources": true,
+        "routing": true
+    },
+    "memory": {
+        "captureCategories": [
+            "decisions",
+            "events",
+            "verification"
+        ],
+        "historyOptions": [
+        ],
+        "maintenanceOptions": [
+            "prune-history",
+            "validate-consistency"
+        ],
+        "maximumSizeBytes": 1073741824,
+        "retentionLevel": "minimal",
+        "updateStrategy": "meaningful-task",
+        "validationOptions": [
+        ]
+    },
+    "options": {
+    },
+    "profileSelections": [
+    ],
+    "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_030/test_030.aramf.json",
+    "projectId": "campaign-test_030",
+    "projectName": "Campaign 30",
+    "projectPath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_030/target",
+    "resourcePolicy": {
+        "loadingStrategy": "relevant",
+        "options": [
+            "read-relevant",
+            "prefer-authoritative",
+            "respect-scope",
+            "ignore-disabled",
+            "warn-conflicts"
+        ]
+    },
+    "resources": [
+    ],
+    "rules": {
+        "activeCategories": [
+            "path-safety",
+            "user-content",
+            "verification"
+        ],
+        "conflictPolicy": "prefer-user-instruction",
+        "contextPolicies": [
+        ],
+        "enforcementLevel": "strict",
+        "loadingStrategy": "relevant",
+        "projectScopes": [
+            "current-project"
+        ],
+        "workScopes": [
+            "implementation",
+            "testing"
+        ]
+    },
+    "templateId": "qt-desktop-application"
+}

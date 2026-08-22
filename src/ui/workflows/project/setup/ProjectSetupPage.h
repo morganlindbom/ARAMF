@@ -17,16 +17,21 @@ public:
 public slots:
     void refreshFromModel();
 
+public:
+    // Saves the current model, invoking the existing Save As dialog when needed.
+    // No generation is performed here.
+    bool saveForGeneration(QString* error = nullptr);
+
 private slots:
     void browseProjectPath();
     void newProject();
     void openProject();
     void saveProject();
-    void saveProjectAs();
+    bool saveProjectAs(QString* error = nullptr);
 
 private:
     bool confirmDiscardOrSave();
-    bool writeProject(const QString& filePath);
+    bool writeProject(const QString& filePath, QString* error = nullptr);
 
     ProjectModel* model_;
     TemplateManager* manager_;

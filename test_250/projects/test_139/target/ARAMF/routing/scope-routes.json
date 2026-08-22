@@ -1,0 +1,6 @@
+{
+    "_file": "scope-routes.json",
+    "scopes": [
+        "current-project"
+    ]
+}

@@ -1,0 +1,23 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "C++"
+    ],
+    "memoryMaximumSizeBytes": 3221225472,
+    "platforms": [
+        "windows"
+    ],
+    "primaryAiAgent": "github-copilot",
+    "resources": 0,
+    "rules": [
+        "path-safety",
+        "user-content",
+        "verification"
+    ],
+    "template": "cpp-command-line"
+}

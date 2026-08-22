@@ -1,0 +1,11 @@
+<!-- AGENTS.md -->
+
+<!-- ARAMF-BEGIN -->
+This project is managed by ARAMF.
+
+Read and follow:
+
+ARAMF/AGENTS.md
+
+ARAMF contains the canonical project rules, routing, resources, memory and project status.
+<!-- ARAMF-END -->

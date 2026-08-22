@@ -1,0 +1,24 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt",
+        "Pico SDK",
+        "FastAPI"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "C++",
+        "C",
+        "Python"
+    ],
+    "memoryMaximumSizeBytes": 2147483648,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "claude-code",
+    "resources": 1,
+    "rules": [
+    ],
+    "template": "react-frontend"
+}

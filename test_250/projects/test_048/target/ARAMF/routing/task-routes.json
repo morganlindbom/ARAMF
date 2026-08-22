@@ -1,0 +1,11 @@
+{
+    "_file": "task-routes.json",
+    "conflictPolicy": "prefer-user-instruction",
+    "contextPolicies": [
+    ],
+    "strategy": "relevant",
+    "workTypes": [
+        "implementation",
+        "testing"
+    ]
+}

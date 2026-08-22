@@ -1,0 +1,44 @@
+{
+  "_file": "framework-knowledge.json",
+  "version": 1,
+  "authority": [
+    "explicit-current-user-instruction",
+    "current-source-of-truth",
+    "current-durable-project-decisions",
+    "approved-framework-knowledge",
+    "templates-and-defaults",
+    "ai-inference"
+  ],
+  "entries": [
+    {
+      "id": "fk-preserve-verified-corrections",
+      "title": "Preserve verified corrections as the active baseline",
+      "lesson": "When a correction has been explicitly accepted and subsequently verified, treat the corrected behavior as the current baseline. Do not reintroduce the superseded behavior unless newer evidence or a higher-priority instruction requires it.",
+      "status": "approved",
+      "scopes": ["implementation", "instructions", "regression"],
+      "evidence": [
+        "Repeated project iterations showed that a previously corrected implementation can regress when later work recreates an older assumption instead of preserving the verified baseline."
+      ],
+      "portable": true,
+      "createdAt": "2026-08-22T00:00:00Z",
+      "approvedAt": "2026-08-22T00:00:00Z",
+      "approvalSource": "explicit-user-request",
+      "supersededBy": ""
+    },
+    {
+      "id": "fk-resolve-paths-from-working-root",
+      "title": "Resolve repository paths from the actual working root",
+      "lesson": "Before changing or documenting repository paths, inspect the actual tree and resolve paths relative to the agent's current repository working root. Keep repository-internal setup paths distinct from generated target-project control-plane paths.",
+      "status": "approved",
+      "scopes": ["paths", "repository", "generation"],
+      "evidence": [
+        "The internal ARAMF directory rename was initially described from the wrong path perspective; inspecting the repository root showed that ./ARAMF/ was the actual directory to rename while generated <ProjectPath>/ARAMF/ had to remain unchanged."
+      ],
+      "portable": true,
+      "createdAt": "2026-08-22T00:00:00Z",
+      "approvedAt": "2026-08-22T00:00:00Z",
+      "approvalSource": "explicit-user-approved-correction",
+      "supersededBy": ""
+    }
+  ]
+}

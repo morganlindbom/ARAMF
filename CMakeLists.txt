@@ -17,6 +17,8 @@ set(ARAMF_CORE_SOURCES
     src/core/AramfPaths.h
     src/core/ProjectMemory.h
     src/core/ProjectMemory.cpp
+    src/core/FrameworkKnowledge.h
+    src/core/FrameworkKnowledge.cpp
     src/core/EnvironmentCatalog.h
     src/core/EnvironmentCatalog.cpp
     src/core/AiCatalog.h
@@ -108,8 +110,12 @@ if(BUILD_TESTING)
         tests/ProjectMemoryTests.cpp
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
+        src/core/FrameworkKnowledge.h
+        src/core/FrameworkKnowledge.cpp
         src/core/EnvironmentCatalog.h
         src/core/EnvironmentCatalog.cpp
+        src/core/AiCatalog.h
+        src/core/AiCatalog.cpp
         src/core/RuleCatalog.h
         src/core/RuleCatalog.cpp
         src/core/MemoryCatalog.h
@@ -127,10 +133,15 @@ if(BUILD_TESTING)
 
     add_executable(aramf_workflow_tests
         tests/WorkflowNavigationTests.cpp
+        src/core/AramfPaths.h
         src/core/ProjectModel.h
         src/core/ProjectModel.cpp
+        src/core/ProjectMemory.h
+        src/core/ProjectMemory.cpp
         src/core/AiCatalog.h
         src/core/AiCatalog.cpp
+        src/core/MemoryCatalog.h
+        src/core/MemoryCatalog.cpp
         src/ui/shared/CapabilityCheckGroup.h
         src/ui/shared/CapabilityCheckGroup.cpp
         src/ui/workflows/ai/agents/AiAgentsPage.h
@@ -141,6 +152,8 @@ if(BUILD_TESTING)
         src/ui/workflows/ai/autonomy/AiAutonomyPage.cpp
         src/ui/workflows/ai/integration/AiIntegrationPage.h
         src/ui/workflows/ai/integration/AiIntegrationPage.cpp
+        src/ui/workflows/memory/maintenance/MemoryMaintenancePage.h
+        src/ui/workflows/memory/maintenance/MemoryMaintenancePage.cpp
         src/ui/workflow/WorkflowWidget.h
         src/ui/workflow/WorkflowWidget.cpp
         src/ui/workflow/WorkflowPageId.h

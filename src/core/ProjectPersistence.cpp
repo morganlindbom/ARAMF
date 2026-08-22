@@ -190,6 +190,15 @@ bool ProjectPersistence::save(const ProjectModel& model, const QString& filePath
     memoryObject.insert(QStringLiteral("historyOptions"), toJsonArray(memory.historyOptions));
     memoryObject.insert(QStringLiteral("maximumSizeBytes"), memory.maximumSizeBytes);
     root.insert(QStringLiteral("memory"), memoryObject);
+
+    const auto generation = model.generationOptions();
+    root.insert(QStringLiteral("generationOptions"), QJsonObject{
+        {QStringLiteral("agentRules"), generation.generateAgentRules},
+        {QStringLiteral("routing"), generation.generateRouting},
+        {QStringLiteral("platforms"), generation.generatePlatforms},
+        {QStringLiteral("resources"), generation.generateResources},
+        {QStringLiteral("memory"), generation.generateMemory},
+        {QStringLiteral("provenance"), generation.generateProvenance}});
     root.insert(QStringLiteral("profileSelections"), toJsonArray(model.profileSelections()));
     root.insert(QStringLiteral("options"), options);
 
@@ -349,6 +358,18 @@ bool ProjectPersistence::load(ProjectModel* model, const QString& filePath, QStr
     if (memory.maximumSizeBytes <= 0) memory.maximumSizeBytes = 10LL * 1024LL * 1024LL * 1024LL;
     if (memory.captureCategories.isEmpty()) memory.captureCategories = migrateMemoryOptions(fromJsonArray(root.value(QStringLiteral("options")).toObject().value(QStringLiteral("memory-policy"))));
     model->setMemoryConfiguration(memory);
+
+    const auto generationObject = root.value(QStringLiteral("generationOptions")).toObject();
+    if (!generationObject.isEmpty()) {
+        GenerationOptions generation;
+        generation.generateAgentRules = generationObject.value(QStringLiteral("agentRules")).toBool(true);
+        generation.generateRouting = generationObject.value(QStringLiteral("routing")).toBool(true);
+        generation.generatePlatforms = generationObject.value(QStringLiteral("platforms")).toBool(true);
+        generation.generateResources = generationObject.value(QStringLiteral("resources")).toBool(true);
+        generation.generateMemory = generationObject.value(QStringLiteral("memory")).toBool(true);
+        generation.generateProvenance = generationObject.value(QStringLiteral("provenance")).toBool(true);
+        model->setGenerationOptions(generation);
+    }
     QList<ProjectResource> resources;
     const auto resourceValue = root.value(QStringLiteral("resources"));
     const auto resourceArray = resourceValue.toArray();

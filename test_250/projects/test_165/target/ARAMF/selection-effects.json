@@ -1,0 +1,24 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt"
+    ],
+    "hardware": [
+        "RP2350"
+    ],
+    "languages": [
+        "C++"
+    ],
+    "memoryMaximumSizeBytes": 1073741824,
+    "platforms": [
+        "windows"
+    ],
+    "primaryAiAgent": "none",
+    "resources": 0,
+    "rules": [
+        "path-safety",
+        "user-content",
+        "verification"
+    ],
+    "template": "react-frontend"
+}

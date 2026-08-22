@@ -1,0 +1,11 @@
+{
+    "_file": "generation-state.json",
+    "agentRules": true,
+    "fingerprint": "0faf126d0121fd937bbc4e737b9f1b9e99d578b46e9935d01ea559748a990f70",
+    "generatedAt": "2026-08-22T17:54:56Z",
+    "memory": true,
+    "platforms": true,
+    "provenance": true,
+    "resources": true,
+    "routing": true
+}

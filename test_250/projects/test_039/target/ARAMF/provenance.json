@@ -1,0 +1,9 @@
+{
+    "_file": "provenance.json",
+    "implementation": "C++",
+    "projectId": "campaign-test_039",
+    "projectName": "Campaign 39",
+    "projectType": "software-development",
+    "status": "managed",
+    "template": "react-frontend"
+}

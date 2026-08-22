@@ -1,0 +1,9 @@
+{
+    "_file": "provenance.json",
+    "implementation": "C++",
+    "projectId": "campaign-test_222",
+    "projectName": "Campaign 222",
+    "projectType": "software-development",
+    "status": "managed",
+    "template": "raspberry-pi-pico-firmware"
+}

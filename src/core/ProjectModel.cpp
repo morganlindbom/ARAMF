@@ -382,6 +382,20 @@ void ProjectModel::setMemoryConfiguration(const MemoryConfiguration& value)
     notifyChanged();
 }
 
+void ProjectModel::setGenerationOptions(const GenerationOptions& value)
+{
+    if (generationOptions_.generateAgentRules == value.generateAgentRules
+        && generationOptions_.generateRouting == value.generateRouting
+        && generationOptions_.generatePlatforms == value.generatePlatforms
+        && generationOptions_.generateResources == value.generateResources
+        && generationOptions_.generateMemory == value.generateMemory
+        && generationOptions_.generateProvenance == value.generateProvenance) {
+        return;
+    }
+    generationOptions_ = value;
+    notifyChanged();
+}
+
 void ProjectModel::setProfileSelections(const QStringList& value)
 {
     if (profileSelections_ == value) return;

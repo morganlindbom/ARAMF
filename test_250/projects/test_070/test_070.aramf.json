@@ -1,0 +1,182 @@
+{
+    "academic": {
+        "academicDeliverables": [
+        ],
+        "academicLanguage": "",
+        "academicMode": "disabled",
+        "academicRequirements": [
+        ],
+        "citationStyle": "",
+        "examiner": "",
+        "institution": "",
+        "programmeOrCourse": "",
+        "researchMethods": [
+        ],
+        "supervisor": "",
+        "thesisApproaches": [
+        ],
+        "thesisLevel": ""
+    },
+    "ai": {
+        "additionalAgents": [
+            "claude-code",
+            "github-copilot"
+        ],
+        "aramfIntegrations": [
+            "rules",
+            "memory",
+            "verification"
+        ],
+        "autonomyPreset": "custom",
+        "customAgentName": "",
+        "permissions": [
+            "read-project",
+            "modify-source"
+        ],
+        "primaryAgent": "none",
+        "responsibilities": [
+            "planning",
+            "implementation",
+            "testing"
+        ]
+    },
+    "aiPlatforms": [
+        "claude-code",
+        "github-copilot"
+    ],
+    "capabilities": {
+        "automationCapabilities": [
+        ],
+        "buildConfigurations": [
+            "debug",
+            "release"
+        ],
+        "buildSystems": [
+            "cmake"
+        ],
+        "deliveryCapabilities": [
+        ],
+        "dependencyManagers": [
+        ],
+        "developmentTools": [
+            "git",
+            "cmake"
+        ],
+        "frameworks": [
+            "Qt",
+            "Pico SDK"
+        ],
+        "hardwareTargets": [
+            "RP2350"
+        ],
+        "hostOperatingSystems": [
+            "windows"
+        ],
+        "ides": [
+            "visual-studio-code"
+        ],
+        "languages": [
+            "C++",
+            "C"
+        ],
+        "processorFamilies": [
+        ],
+        "qualityCapabilities": [
+        ],
+        "targetArchitectures": [
+            "x86_64"
+        ],
+        "targetPlatforms": [
+            "linux"
+        ],
+        "testingCapabilities": [
+            "unit-testing",
+            "e2e-testing"
+        ],
+        "toolchains": [
+            "msys2-ucrt64-gcc"
+        ],
+        "versionControlSystems": [
+        ]
+    },
+    "context": "software-development",
+    "description": "250-scenario campaign case 70",
+    "environment": {
+        "buildSystem": "cmake",
+        "compiler": "msys2-ucrt64-gcc",
+        "framework": "Qt",
+        "ide": "visual-studio-code",
+        "language": "C++",
+        "operatingSystem": "windows",
+        "packageManager": "none",
+        "targetArchitecture": "x86_64",
+        "targetPlatform": "linux",
+        "versionControl": "none"
+    },
+    "generationOptions": {
+        "agentRules": true,
+        "memory": true,
+        "platforms": true,
+        "provenance": true,
+        "resources": true,
+        "routing": true
+    },
+    "memory": {
+        "captureCategories": [
+            "decisions",
+            "events",
+            "verification"
+        ],
+        "historyOptions": [
+        ],
+        "maintenanceOptions": [
+            "prune-history",
+            "validate-consistency"
+        ],
+        "maximumSizeBytes": 1073741824,
+        "retentionLevel": "standard",
+        "updateStrategy": "meaningful-task",
+        "validationOptions": [
+        ]
+    },
+    "options": {
+    },
+    "profileSelections": [
+    ],
+    "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_070/test_070.aramf.json",
+    "projectId": "campaign-test_070",
+    "projectName": "Campaign 70",
+    "projectPath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_070/target",
+    "resourcePolicy": {
+        "loadingStrategy": "relevant",
+        "options": [
+            "read-relevant",
+            "prefer-authoritative",
+            "respect-scope",
+            "ignore-disabled",
+            "warn-conflicts"
+        ]
+    },
+    "resources": [
+    ],
+    "rules": {
+        "activeCategories": [
+            "path-safety",
+            "user-content",
+            "verification"
+        ],
+        "conflictPolicy": "prefer-user-instruction",
+        "contextPolicies": [
+        ],
+        "enforcementLevel": "standard",
+        "loadingStrategy": "relevant",
+        "projectScopes": [
+            "current-project"
+        ],
+        "workScopes": [
+            "implementation",
+            "testing"
+        ]
+    },
+    "templateId": ""
+}

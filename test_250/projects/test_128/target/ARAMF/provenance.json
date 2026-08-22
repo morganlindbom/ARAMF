@@ -1,0 +1,9 @@
+{
+    "_file": "provenance.json",
+    "implementation": "C++",
+    "projectId": "campaign-test_128",
+    "projectName": "Campaign 128",
+    "projectType": "software-development",
+    "status": "managed",
+    "template": "qt-desktop-application"
+}

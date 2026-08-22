@@ -1,0 +1,20 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "C++"
+    ],
+    "memoryMaximumSizeBytes": 3221225472,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "github-copilot",
+    "resources": 1,
+    "rules": [
+    ],
+    "template": "cmake-library"
+}

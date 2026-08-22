@@ -1,0 +1,14 @@
+{
+    "_file": "framework-knowledge.json",
+    "authority": [
+        "explicit-current-user-instruction",
+        "current-source-of-truth",
+        "current-durable-project-decisions",
+        "approved-framework-knowledge",
+        "templates-and-defaults",
+        "ai-inference"
+    ],
+    "entries": [
+    ],
+    "version": 1
+}

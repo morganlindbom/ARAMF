@@ -1,6 +1,7 @@
 // ProjectMemoryTests.cpp
 
 #include "core/ProjectMemory.h"
+#include "core/FrameworkKnowledge.h"
 #include "core/EnvironmentCatalog.h"
 #include "core/ProjectModel.h"
 #include "core/ProjectPersistence.h"
@@ -59,6 +60,50 @@ int main(int argc, char** argv)
     ok &= require(root.exists(QStringLiteral("ARAMF/memory/decisions.md")), "durable decisions must live under ARAMF/memory");
     ok &= require(root.exists(QStringLiteral("AGENTS.md")), "root agent bootstrap must exist");
     ok &= require(!root.exists(QStringLiteral("aramf.py")), "no Python backend file may be generated");
+    QFile generatedBootstrap(root.filePath(QStringLiteral("AGENTS.md")));
+    ok &= require(generatedBootstrap.open(QIODevice::ReadOnly | QIODevice::Text), "generated root bootstrap must be readable");
+    const QString bootstrapText = QString::fromUtf8(generatedBootstrap.readAll());
+    ok &= require(bootstrapText.contains(QStringLiteral("ARAMF/AGENTS.md")), "generated bootstrap must route to uppercase ARAMF control plane");
+    ok &= require(!bootstrapText.contains(QStringLiteral("aramf_setup")), "generated bootstrap must not reference repository setup");
+    ok &= require(!root.exists(QStringLiteral("aramf_setup")), "generated project must not contain repository setup directory");
+    ok &= require(!root.exists(QStringLiteral("bootstrap")), "generated project must not contain repository bootstrap directory");
+    ok &= require(root.exists(QStringLiteral("ARAMF/memory/framework-knowledge.json")), "Framework Knowledge store must exist");
+    QFile canonicalAgentFile(root.filePath(QStringLiteral("ARAMF/AGENTS.md")));
+    ok &= require(canonicalAgentFile.open(QIODevice::ReadOnly | QIODevice::Text), "canonical agent file must be readable");
+    const QString canonicalAgentText = QString::fromUtf8(canonicalAgentFile.readAll());
+    ok &= require(canonicalAgentText.contains(QStringLiteral("framework-knowledge.json")), "canonical agent instructions must load live Framework Knowledge");
+
+    FrameworkKnowledgeService frameworkKnowledge;
+    const QString candidateId = frameworkKnowledge.propose(
+        temporaryProject.path(),
+        QStringLiteral("Preserve verified corrections"),
+        QStringLiteral("Do not restore a superseded implementation after a verified correction unless newer evidence requires it."),
+        {QStringLiteral("implementation"), QStringLiteral("regression")},
+        {QStringLiteral("Corrected behavior passed verification.")},
+        true, &error);
+    ok &= require(!candidateId.isEmpty(), "Framework Knowledge candidate must be created");
+    const QString repeatedCandidateId = frameworkKnowledge.propose(
+        temporaryProject.path(),
+        QStringLiteral("Preserve verified corrections"),
+        QStringLiteral("Do not restore a superseded implementation after a verified correction unless newer evidence requires it."),
+        {QStringLiteral("implementation"), QStringLiteral("regression")},
+        {QStringLiteral("Second evidence item.")},
+        true, &error);
+    ok &= require(repeatedCandidateId == candidateId, "matching Framework Knowledge proposals must deduplicate");
+    ok &= require(frameworkKnowledge.approvedEntries(temporaryProject.path(), {QStringLiteral("implementation")}, &error).isEmpty(),
+                  "candidate Framework Knowledge must not be active before approval");
+    ok &= require(!frameworkKnowledge.approve(temporaryProject.path(), candidateId, QString(), &error),
+                  "Framework Knowledge approval must require an explicit approval source");
+    error.clear();
+    ok &= require(frameworkKnowledge.approve(temporaryProject.path(), candidateId, QStringLiteral("explicit-user-approval"), &error),
+                  "Framework Knowledge candidate must be approvable after explicit user approval");
+    const auto activeKnowledge = frameworkKnowledge.approvedEntries(temporaryProject.path(), {QStringLiteral("implementation")}, &error);
+    ok &= require(activeKnowledge.size() == 1 && activeKnowledge.first().id == candidateId,
+                  "approved Framework Knowledge must become active immediately");
+    ok &= require(frameworkKnowledge.supersede(temporaryProject.path(), candidateId, QStringLiteral("replacement-entry"), &error),
+                  "Framework Knowledge must support non-destructive superseding");
+    ok &= require(frameworkKnowledge.approvedEntries(temporaryProject.path(), {QStringLiteral("implementation")}, &error).isEmpty(),
+                  "superseded Framework Knowledge must no longer be active");
 
     TemplateManager templates;
     ok &= require(templates.builtInTemplates().first() == QStringLiteral("pico-2w-visual-designer"), "Pico visual designer must remain the first template");
@@ -107,7 +152,7 @@ int main(int argc, char** argv)
     memoryConfiguration.retentionLevel = QStringLiteral("detailed");
     memoryConfiguration.maintenanceOptions = {QStringLiteral("record-decisions")};
     memoryConfiguration.validationOptions = {QStringLiteral("memory-consistency")};
-    memoryConfiguration.maximumSizeBytes = 250LL * 1024LL * 1024LL;
+    memoryConfiguration.maximumSizeBytes = 750LL * 1024LL * 1024LL;
     model.setMemoryConfiguration(memoryConfiguration);
     model.setOptionValues(QStringLiteral("rules-routing"), {QStringLiteral("Project architecture")});
     AiConfiguration ai;
@@ -219,5 +264,160 @@ int main(int argc, char** argv)
         limitedProject.path(), QStringLiteral("TEST_OVERSIZED_WRITE"), QStringLiteral("limit test"),
         QJsonObject{{QStringLiteral("payload"), QString(2 * 1024 * 1024, QLatin1Char('x'))}}, &error);
     ok &= require(!oversizedWrite, "memory service must reject writes over the configured limit");
+
+    QTemporaryDir generationProject;
+    ProjectModel generationModel;
+    generationModel.setProjectName(QStringLiteral("Generation Test Project"));
+    generationModel.setProjectPath(generationProject.path());
+    RuleConfiguration generationRules;
+    generationRules.activeCategories = {QStringLiteral("coding-standards")};
+    generationRules.enforcementLevel = QStringLiteral("strict");
+    generationRules.loadingStrategy = QStringLiteral("relevant");
+    generationRules.workScopes = {QStringLiteral("coding")};
+    generationRules.projectScopes = {QStringLiteral("source-code")};
+    generationRules.contextPolicies = {QStringLiteral("matching-categories")};
+    generationModel.setRuleConfiguration(generationRules);
+    ProjectResource generationResource;
+    generationResource.id = QStringLiteral("generation-resource");
+    generationResource.name = QStringLiteral("Generation Datasheet");
+    generationResource.type = QStringLiteral("file");
+    generationResource.location = QStringLiteral("C:/docs/datasheet.pdf");
+    generationResource.authorityLevel = QStringLiteral("primary-source-of-truth");
+    generationResource.scopes = {QStringLiteral("hardware")};
+    generationModel.setResources({generationResource});
+
+    GenerationServices generationServices;
+    GenerationOptions generationOptions;
+    generationOptions.generateAgentRules = true;
+    generationOptions.generateRouting = true;
+    generationOptions.generatePlatforms = false;
+    generationOptions.generateResources = true;
+    generationOptions.generateMemory = false;
+    generationOptions.generateProvenance = true;
+    const GenerationResult generationResult = generationServices.generate(generationModel, generationOptions);
+    ok &= require(generationResult.success, "selective generation must succeed");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF/rules/generated-rules.md")), "generated rules must exist");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF/routing/task-routes.json")), "task routes must exist");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF/resources/resources.json")), "resource manifest must exist");
+    ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF/memory/memory-config.json")), "disabled memory must not initialize memory");
+    ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF/platforms/platform-metadata.json")), "disabled platforms must not generate metadata");
+    VerificationServices verificationServices;
+    FinalizationServices finalizationServices;
+    const VerificationResult selectiveVerification = verificationServices.verify(generationModel, generationOptions);
+    ok &= require(selectiveVerification.overallStatus == VerificationStatus::Pass,
+                  "selective verification must pass without the memory product");
+    const FinalizationResult selectiveFinalized = finalizationServices.finalize(generationModel, generationOptions);
+    ok &= require(selectiveFinalized.success && !selectiveFinalized.alreadyFinalized,
+                  "finalization must allow a verified selective generation without the memory product");
+    const FinalizationResult repeatedSelectiveFinalization = finalizationServices.finalize(generationModel, generationOptions);
+    ok &= require(repeatedSelectiveFinalization.success && repeatedSelectiveFinalization.alreadyFinalized,
+                  "selective finalization must remain idempotent");
+
+    QFile generatedRules(QDir(generationProject.path()).filePath("ARAMF/rules/generated-rules.md"));
+    ok &= require(generatedRules.open(QIODevice::ReadOnly | QIODevice::Text), "generated rules must be readable");
+    ok &= require(QString::fromUtf8(generatedRules.readAll()).contains(QStringLiteral("Coding Standards")), "generated rules must use catalog display names");
+    generatedRules.close();
+
+    const QString routingPath = QDir(generationProject.path()).filePath("ARAMF/routing/task-routes.json");
+    QFile routingSentinel(routingPath);
+    ok &= require(routingSentinel.open(QIODevice::WriteOnly | QIODevice::Text), "routing sentinel must be writable");
+    routingSentinel.write("sentinel");
+    routingSentinel.close();
+    generationOptions.generateRouting = false;
+    const GenerationResult skippedRouting = generationServices.generate(generationModel, generationOptions);
+    ok &= require(skippedRouting.success, "generation without routing must succeed");
+    ok &= require(QFile(routingPath).open(QIODevice::ReadOnly | QIODevice::Text), "unselected routing output must remain available");
+
+    generationOptions.generateMemory = true;
+    const GenerationResult memoryGeneration = generationServices.generate(generationModel, generationOptions);
+    ok &= require(memoryGeneration.success, "memory generation must succeed when selected");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF/memory/memory-consistency-validation.json")), "memory validation must be generated");
+    ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("aramf_setup")), "generated output must never use aramf_setup");
+
+    AiConfiguration entryPointAi;
+    entryPointAi.primaryAgent = QStringLiteral("openai-codex");
+    entryPointAi.additionalAgents = {QStringLiteral("claude-code"), QStringLiteral("github-copilot"), QStringLiteral("claude-code")};
+    generationModel.setAiConfiguration(entryPointAi);
+    AgentEntryPointService entryPointService;
+    const AgentEntryPointResult entryPoints = entryPointService.createEntryPoints(generationModel);
+    ok &= require(entryPoints.success, "AI agent entry-point creation must succeed");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("AGENTS.md")), "generic root entry point must exist");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("CLAUDE.md")), "Claude entry point must exist");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath(".github/copilot-instructions.md")), "Copilot entry point must exist");
+    ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("CODEX.md")), "Codex must use generic AGENTS.md");
+    ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("bootstrap")), "entry-point generation must not create bootstrap directory");
+    for (const auto& relative : {QStringLiteral("AGENTS.md"), QStringLiteral("CLAUDE.md"), QStringLiteral(".github/copilot-instructions.md")}) {
+        QFile entryFile(QDir(generationProject.path()).filePath(relative));
+        ok &= require(entryFile.open(QIODevice::ReadOnly | QIODevice::Text), "entry point must be readable");
+        const QString entryText = QString::fromUtf8(entryFile.readAll());
+        ok &= require(entryText.contains(QStringLiteral("ARAMF/AGENTS.md")), "entry point must route to canonical ARAMF instructions");
+        ok &= require(entryText.count(QStringLiteral("ARAMF-BEGIN")) == 1, "entry point must contain one managed section");
+    }
+    const AgentEntryPointResult repeatedEntryPoints = entryPointService.createEntryPoints(generationModel);
+    ok &= require(repeatedEntryPoints.success && repeatedEntryPoints.createdFiles.isEmpty()
+                  && repeatedEntryPoints.updatedFiles.isEmpty()
+                  && repeatedEntryPoints.unchangedFiles.contains(QStringLiteral("AGENTS.md"))
+                  && repeatedEntryPoints.unchangedFiles.contains(QStringLiteral("CLAUDE.md"))
+                  && repeatedEntryPoints.unchangedFiles.contains(QStringLiteral(".github/copilot-instructions.md")),
+                  "repeated entry-point creation must be idempotent");
+    entryPointAi.additionalAgents = {QStringLiteral("ollama")};
+    generationModel.setAiConfiguration(entryPointAi);
+    const AgentEntryPointResult unsupportedEntryPoint = entryPointService.createEntryPoints(generationModel);
+    ok &= require(unsupportedEntryPoint.success && !unsupportedEntryPoint.genericAgents.isEmpty(), "unsupported agents must use generic entry point");
+    ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("OLLAMA.md")), "unsupported agents must not get invented files");
+
+    QTemporaryDir userOwnedProject;
+    QFile userAgents(QDir(userOwnedProject.path()).filePath("AGENTS.md"));
+    ok &= require(userAgents.open(QIODevice::WriteOnly | QIODevice::Text), "user-owned AGENTS.md must be writable");
+    userAgents.write("User instructions\n");
+    userAgents.close();
+    ProjectModel userOwnedModel;
+    userOwnedModel.setProjectPath(userOwnedProject.path());
+    const AgentEntryPointResult userOwnedEntryPoint = entryPointService.createEntryPoints(userOwnedModel);
+    ok &= require(userOwnedEntryPoint.success, "entry point must preserve user-owned root content");
+    ok &= require(userAgents.open(QIODevice::ReadOnly | QIODevice::Text), "updated user-owned AGENTS.md must be readable");
+    const QString userAgentsText = QString::fromUtf8(userAgents.readAll());
+    ok &= require(userAgentsText.contains(QStringLiteral("User instructions")), "user-owned root content must be preserved");
+    ok &= require(userAgentsText.count(QStringLiteral("ARAMF-BEGIN")) == 1, "user-owned root must receive one managed section");
+    QFile eventLog(QDir(generationProject.path()).filePath("ARAMF/memory/event-log.jsonl"));
+    ok &= require(eventLog.open(QIODevice::ReadOnly | QIODevice::Text), "memory event log must be readable");
+    const QByteArray firstEvents = eventLog.readAll();
+    eventLog.close();
+    const GenerationResult repeatedGeneration = generationServices.generate(generationModel, generationOptions);
+    ok &= require(repeatedGeneration.success, "repeated generation must succeed");
+    ok &= require(eventLog.open(QIODevice::ReadOnly | QIODevice::Text), "repeated memory event log must be readable");
+    const QByteArray repeatedEvents = eventLog.readAll();
+    eventLog.close();
+    ok &= require(firstEvents.count("PROJECT_MEMORY_ACTIVATED") == repeatedEvents.count("PROJECT_MEMORY_ACTIVATED"),
+                  "repeated memory generation must not duplicate activation events");
+
+    const VerificationResult verification = verificationServices.verify(generationModel, generationOptions);
+    ok &= require(verification.overallStatus == VerificationStatus::Pass,
+                  "verification must pass for the generated selected products");
+    const FinalizationResult finalized = finalizationServices.finalize(generationModel, generationOptions);
+    ok &= require(finalized.success && !finalized.alreadyFinalized,
+                  "finalization must record a verified lifecycle completion");
+    const FinalizationResult repeatedFinalization = finalizationServices.finalize(generationModel, generationOptions);
+    ok &= require(repeatedFinalization.success && repeatedFinalization.alreadyFinalized,
+                  "finalization must be idempotent for an unchanged configuration");
+    auto changedCapabilities = generationModel.developmentCapabilities();
+    changedCapabilities.languages.append(QStringLiteral("c"));
+    generationModel.setDevelopmentCapabilities(changedCapabilities);
+    const VerificationResult staleVerification = verificationServices.verify(generationModel, generationOptions);
+    ok &= require(staleVerification.overallStatus == VerificationStatus::Warning,
+                  "verification must report stale generated configuration after model changes");
+    const FinalizationResult blockedFinalization = finalizationServices.finalize(generationModel, generationOptions);
+    ok &= require(!blockedFinalization.success && !blockedFinalization.blockers.isEmpty(),
+                  "stale verification must block finalization");
+
+    GenerationOptions noProducts;
+    noProducts.generateAgentRules = false;
+    noProducts.generateRouting = false;
+    noProducts.generatePlatforms = false;
+    noProducts.generateResources = false;
+    noProducts.generateMemory = false;
+    noProducts.generateProvenance = false;
+    const GenerationResult noProductResult = generationServices.generate(generationModel, noProducts);
+    ok &= require(!noProductResult.success && noProductResult.error.contains(QStringLiteral("select at least one")), "empty generation must be rejected");
     return ok ? 0 : 1;
 }

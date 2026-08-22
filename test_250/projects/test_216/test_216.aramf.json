@@ -1,0 +1,174 @@
+{
+    "academic": {
+        "academicDeliverables": [
+        ],
+        "academicLanguage": "",
+        "academicMode": "disabled",
+        "academicRequirements": [
+        ],
+        "citationStyle": "",
+        "examiner": "",
+        "institution": "",
+        "programmeOrCourse": "",
+        "researchMethods": [
+        ],
+        "supervisor": "",
+        "thesisApproaches": [
+        ],
+        "thesisLevel": ""
+    },
+    "ai": {
+        "additionalAgents": [
+        ],
+        "aramfIntegrations": [
+            "rules",
+            "memory",
+            "verification"
+        ],
+        "autonomyPreset": "custom",
+        "customAgentName": "",
+        "permissions": [
+            "read-project",
+            "modify-source"
+        ],
+        "primaryAgent": "claude-code",
+        "responsibilities": [
+            "planning",
+            "implementation",
+            "testing"
+        ]
+    },
+    "aiPlatforms": [
+        "claude-code"
+    ],
+    "capabilities": {
+        "automationCapabilities": [
+        ],
+        "buildConfigurations": [
+            "debug",
+            "release"
+        ],
+        "buildSystems": [
+            "cmake"
+        ],
+        "deliveryCapabilities": [
+        ],
+        "dependencyManagers": [
+        ],
+        "developmentTools": [
+            "git",
+            "cmake"
+        ],
+        "frameworks": [
+            "Qt"
+        ],
+        "hardwareTargets": [
+        ],
+        "hostOperatingSystems": [
+            "windows"
+        ],
+        "ides": [
+            "visual-studio-code"
+        ],
+        "languages": [
+            "C++"
+        ],
+        "processorFamilies": [
+        ],
+        "qualityCapabilities": [
+        ],
+        "targetArchitectures": [
+            "arm64"
+        ],
+        "targetPlatforms": [
+            "linux"
+        ],
+        "testingCapabilities": [
+            "unit-testing",
+            "e2e-testing"
+        ],
+        "toolchains": [
+            "msys2-ucrt64-gcc"
+        ],
+        "versionControlSystems": [
+            "git"
+        ]
+    },
+    "context": "software-development",
+    "description": "250-scenario campaign case 216",
+    "environment": {
+        "buildSystem": "cmake",
+        "compiler": "msys2-ucrt64-gcc",
+        "framework": "Qt",
+        "ide": "visual-studio-code",
+        "language": "C++",
+        "operatingSystem": "windows",
+        "packageManager": "none",
+        "targetArchitecture": "arm64",
+        "targetPlatform": "linux",
+        "versionControl": "none"
+    },
+    "generationOptions": {
+        "agentRules": true,
+        "memory": true,
+        "platforms": true,
+        "provenance": true,
+        "resources": true,
+        "routing": true
+    },
+    "memory": {
+        "captureCategories": [
+            "decisions",
+            "events",
+            "verification"
+        ],
+        "historyOptions": [
+        ],
+        "maintenanceOptions": [
+            "prune-history",
+            "validate-consistency"
+        ],
+        "maximumSizeBytes": 786432000,
+        "retentionLevel": "minimal",
+        "updateStrategy": "meaningful-task",
+        "validationOptions": [
+        ]
+    },
+    "options": {
+    },
+    "profileSelections": [
+    ],
+    "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_216/test_216.aramf.json",
+    "projectId": "campaign-test_216",
+    "projectName": "Campaign 216",
+    "projectPath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/projects/test_216/target",
+    "resourcePolicy": {
+        "loadingStrategy": "relevant",
+        "options": [
+            "read-relevant",
+            "prefer-authoritative",
+            "respect-scope",
+            "ignore-disabled",
+            "warn-conflicts"
+        ]
+    },
+    "resources": [
+    ],
+    "rules": {
+        "activeCategories": [
+        ],
+        "conflictPolicy": "prefer-user-instruction",
+        "contextPolicies": [
+        ],
+        "enforcementLevel": "strict",
+        "loadingStrategy": "relevant",
+        "projectScopes": [
+            "current-project"
+        ],
+        "workScopes": [
+            "implementation",
+            "testing"
+        ]
+    },
+    "templateId": "cmake-library"
+}

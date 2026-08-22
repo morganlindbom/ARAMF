@@ -1,0 +1,24 @@
+{
+    "_file": "selection-effects.json",
+    "frameworks": [
+        "Qt",
+        "Pico SDK",
+        "FastAPI"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "C++",
+        "C",
+        "Python"
+    ],
+    "memoryMaximumSizeBytes": 4294967296,
+    "platforms": [
+        "linux"
+    ],
+    "primaryAiAgent": "gemini",
+    "resources": 0,
+    "rules": [
+    ],
+    "template": "cmake-library"
+}

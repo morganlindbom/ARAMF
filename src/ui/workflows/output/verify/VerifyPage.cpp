@@ -1,50 +1,53 @@
 #include "VerifyPage.h"
 
-#include "core/ProjectModel.h"
-#include "ui/shared/PageSupport.h"
-
-#include <QCheckBox>
-#include <QComboBox>
-#include <QFormLayout>
-#include <QGroupBox>
+#include <QAbstractItemView>
+#include <QLabel>
+#include <QListWidget>
+#include <QPushButton>
 #include <QVBoxLayout>
 
-VerifyPage::VerifyPage(QWidget* parent)
-    : QWidget(parent)
+namespace {
+QString statusText(VerificationStatus status)
 {
-    auto* content = new QWidget;
-    auto* layout = new QVBoxLayout(content);
-
-    auto* checks = new QVBoxLayout;
-    checks->addWidget(AramfUi::check(tr("Build"), tr("Compile the generated project."), content));
-    checks->addWidget(AramfUi::check(tr("Tests"), tr("Run the project test suite."), content));
-    checks->addWidget(AramfUi::check(tr("Launch"), tr("Start and observe the generated application."), content));
-    checks->addWidget(AramfUi::check(tr("Memory consistency"), tr("Validate append-only and derived state."), content));
-    checks->addWidget(AramfUi::check(tr("AGENTS deployment safety"), tr("Verify managed/foreign root file behavior."), content));
-    layout->addWidget(AramfUi::group(tr("Verification plan"), checks, content));
-
-    auto* evidence = new QFormLayout;
-    auto* level = new QComboBox;
-    level->addItems({tr("Development"), tr("Release candidate"), tr("Certification baseline")});
-    auto* artifact = new QComboBox;
-    artifact->addItems({tr("Keep local evidence"), tr("Record project evidence"),
-                        tr("Record reusable certification")});
-    evidence->addRow(tr("Validation level"), level);
-    evidence->addRow(tr("Evidence policy"), artifact);
-    layout->addWidget(AramfUi::group(tr("Evidence"), evidence, content));
-    layout->addStretch();
-
-    auto* outer = new QVBoxLayout(this);
-    outer->setContentsMargins(0, 0, 0, 0);
-    outer->addWidget(AramfUi::pageShell(
-        tr("Verification & Evidence"),
-        tr("Separate implementation, verification and reusable certification claims."),
-        content));
+    switch (status) {
+    case VerificationStatus::Pass: return QStringLiteral("PASS");
+    case VerificationStatus::Warning: return QStringLiteral("WARNING");
+    case VerificationStatus::Fail: return QStringLiteral("FAIL");
+    case VerificationStatus::NotApplicable: return QStringLiteral("NOT APPLICABLE");
+    }
+    return QStringLiteral("FAIL");
+}
 }
 
-void VerifyPage::setModel(ProjectModel* model)
+VerifyPage::VerifyPage(ProjectModel* model, VerificationServices* services, QWidget* parent)
+    : QWidget(parent), model_(model), services_(services), status_(new QLabel(this)), checks_(new QListWidget(this))
 {
-    if (model_ == model) return;
-    model_ = model;
-    AramfUi::bindCheckboxes(this, model_, QStringLiteral("verification-plan"));
+    auto* layout = new QVBoxLayout(this);
+    layout->addWidget(new QLabel(tr("<h2>Verify</h2>Verify that the generated ARAMF control plane is complete, consistent and matches the current project configuration."), this));
+    status_->setText(tr("Overall status: NOT VERIFIED"));
+    layout->addWidget(status_);
+    verifyButton_ = new QPushButton(tr("Verify ARAMF control plane"), this);
+    layout->addWidget(verifyButton_);
+    checks_->setSelectionMode(QAbstractItemView::NoSelection);
+    layout->addWidget(checks_);
+    layout->addStretch();
+    connect(verifyButton_, &QPushButton::clicked, this, &VerifyPage::runVerification);
+    connect(model_, &ProjectModel::modelChanged, this, [this] {
+        status_->setText(tr("Overall status: OUTDATED — run Verify again"));
+    });
+}
+
+void VerifyPage::runVerification()
+{
+    showResult(services_->verify(*model_, model_->generationOptions()));
+}
+
+void VerifyPage::showResult(const VerificationResult& result)
+{
+    status_->setText(tr("Overall status: %1").arg(statusText(result.overallStatus)));
+    checks_->clear();
+    for (const auto& check : result.checks) {
+        checks_->addItem(QStringLiteral("%1  %2 — %3\n    %4")
+                             .arg(statusText(check.status), check.name, check.id, check.details));
+    }
 }

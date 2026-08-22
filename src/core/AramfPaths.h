@@ -5,7 +5,13 @@
 #include <QString>
 
 namespace AramfPaths {
-inline const QString RootDirectory = QStringLiteral("ARAMF");
+// Repository-local development material lives under ./aramf_setup/.
+// These runtime paths intentionally describe only the generated target
+// control plane below ProjectModel::projectPath().
+inline const QString RepositorySetupDirectory = QStringLiteral("aramf_setup");
+inline const QString BootstrapDirectory = QStringLiteral("bootstrap");
+inline const QString ControlDirectory = QStringLiteral("ARAMF");
+inline const QString RootDirectory = ControlDirectory;
 inline const QString AgentInstructions = QStringLiteral("ARAMF/AGENTS.md");
 inline const QString ProjectStatus = QStringLiteral("ARAMF/PROJECT_STATUS.md");
 inline const QString Profile = QStringLiteral("ARAMF/aramf-profile.json");
@@ -19,6 +25,7 @@ inline const QString CurrentState = QStringLiteral("ARAMF/memory/current-state.m
 inline const QString ColdStartValidation = QStringLiteral("ARAMF/memory/cold-start-validation.json");
 inline const QString ConsistencyValidation = QStringLiteral("ARAMF/memory/memory-consistency-validation.json");
 inline const QString MemoryConfiguration = QStringLiteral("ARAMF/memory/memory-config.json");
+inline const QString FrameworkKnowledge = QStringLiteral("ARAMF/memory/framework-knowledge.json");
 inline const QString TaskRoutes = QStringLiteral("ARAMF/routing/task-routes.json");
 inline const QString ScopeRoutes = QStringLiteral("ARAMF/routing/scope-routes.json");
 inline const QString ResourceManifest = QStringLiteral("ARAMF/resources/resources.json");
