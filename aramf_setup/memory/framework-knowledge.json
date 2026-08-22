@@ -39,6 +39,32 @@
       "approvedAt": "2026-08-22T00:00:00Z",
       "approvalSource": "explicit-user-approved-correction",
       "supersededBy": ""
+    },
+    {
+      "id": "fk-7a246faa4bc6ad74",
+      "title": "Selected products define lifecycle preconditions",
+      "lesson": "Lifecycle preconditions must be derived from the explicitly selected product set. Optional products must not introduce mandatory lifecycle requirements when they were intentionally excluded.",
+      "status": "candidate",
+      "reviewStatus": "more-evidence",
+      "scopes": [
+        "lifecycle",
+        "selective-generation",
+        "optional-components",
+        "verification",
+        "finalization"
+      ],
+      "evidence": [
+        "ISSUE-001 — Selective generation blocked Finalize",
+        "TEST-198: Generate and Verify passed with Memory excluded; Finalize initially failed on unconditional memory validation.",
+        "TEST-204: Same selective-generation failure pattern; passed after the correction.",
+        "TEST-210: Same selective-generation failure pattern; passed after the correction.",
+        "Correction gated memory-related Finalize requirements on the selected Memory product; all three retests passed with no recurrence."
+      ],
+      "portable": true,
+      "createdAt": "2026-08-22T00:00:00Z",
+      "approvedAt": "",
+      "approvalSource": "",
+      "supersededBy": ""
     }
   ]
 }
