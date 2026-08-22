@@ -1,0 +1,27 @@
+{
+    "currentTest": "TEST-550",
+    "guiAutomatedPass": 140,
+    "guiManualPass": 50,
+    "guiManualPassAfterFix": 10,
+    "issuesFixedPhase2": 1,
+    "phase2Blocked": 0,
+    "phase2Completed": 300,
+    "phase2InitialFail": 140,
+    "phase2InitialPass": 110,
+    "phase2PassAfterFix": 150,
+    "phase2Planned": 300,
+    "phase2RemainingFail": 0,
+    "previousCampaign": {
+        "completed": 250,
+        "initialFail": 3,
+        "initialPass": 247,
+        "passAfterFix": 3,
+        "remainingFail": 0
+    },
+    "previousCampaignCompleted": 250,
+    "systemPass": 110,
+    "totalCertificationTarget": 550,
+    "totalCompleted": 550,
+    "uniqueIssuesPhase2": 1,
+    "testHarnessIssuesPhase2": 2
+}

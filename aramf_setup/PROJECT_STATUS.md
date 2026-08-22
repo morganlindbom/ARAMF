@@ -230,4 +230,11 @@ application was started normally, but those interactions remain manual checks.
   evidence is attached from TEST-198, TEST-204 and TEST-210. It remains
   inactive until explicit human approval and is not part of the approved
   knowledge precedence layer.
+- Release validation TEST-251 through TEST-550 completed 300 new scenarios.
+  The manual phase has user-confirmed 40 GUI passes and 10 PASS-AFTER-FIX
+  cases. ISSUE-002 (viewport overflow with horizontal scrolling disabled) was
+  fixed and retested. The apparent Save As failure was reclassified as
+  TEST-HARNESS-002 after the normal production executable passed Cancel, Escape
+  and window-close verification. All manual scenarios are complete and the
+  classification is RELEASE-READY.
 - Headless source-level verification was added; a clean CMake configure in this Linux runtime is currently blocked because Qt 6 development packages are not installed here. Windows/Qt build verification remains required after transfer.
