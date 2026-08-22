@@ -12,6 +12,8 @@
 #include <QSizePolicy>
 #include <QVBoxLayout>
 
+#include <algorithm>
+
 ResourceAuthorityPage::ResourceAuthorityPage(ProjectModel* model, QWidget* parent)
     : QWidget(parent), model_(model), resources_(new QListWidget(this))
 {
@@ -29,7 +31,12 @@ ResourceAuthorityPage::ResourceAuthorityPage(ProjectModel* model, QWidget* paren
     auto* form = new QFormLayout;
     form->addRow(tr("Authority"), authority_);
     layout->addLayout(form); layout->addWidget(scopes_); layout->addStretch();
-    connect(resources_, &QListWidget::currentRowChanged, this, [this] { refreshSelected(); });
+    connect(resources_, &QListWidget::currentRowChanged, this, [this] {
+        selectedResourceId_ = resources_->currentItem()
+            ? resources_->currentItem()->data(Qt::UserRole).toString()
+            : QString();
+        refreshSelected();
+    });
     connect(authority_, &QComboBox::currentIndexChanged, this, [this] { saveSelected(); });
     connect(scopes_, &CapabilityCheckGroup::selectionChanged, this, [this] { saveSelected(); });
     connect(model_, &ProjectModel::modelChanged, this, &ResourceAuthorityPage::refresh);
@@ -38,13 +45,22 @@ ResourceAuthorityPage::ResourceAuthorityPage(ProjectModel* model, QWidget* paren
 
 ProjectResource* ResourceAuthorityPage::selectedResource(QList<ProjectResource>& resources) const
 {
-    const int row = resources_->currentRow();
-    return row >= 0 && row < resources.size() ? &resources[row] : nullptr;
+    const auto* item = resources_->currentItem();
+    const QString selectedId = selectedResourceId_.isEmpty()
+        ? (item ? item->data(Qt::UserRole).toString() : QString())
+        : selectedResourceId_;
+    if (selectedId.isEmpty()) return nullptr;
+    for (auto& resource : resources) {
+        if (resource.id == selectedId) return &resource;
+    }
+    return nullptr;
 }
 
 void ResourceAuthorityPage::refresh()
 {
-    const QString selectedId = resources_->currentItem() ? resources_->currentItem()->data(Qt::UserRole).toString() : QString();
+    const QString selectedId = selectedResourceId_.isEmpty()
+        ? (resources_->currentItem() ? resources_->currentItem()->data(Qt::UserRole).toString() : QString())
+        : selectedResourceId_;
     const QSignalBlocker blocker(resources_);
     resources_->clear();
     const auto values = model_->resources();
@@ -55,19 +71,31 @@ void ResourceAuthorityPage::refresh()
         item->setData(Qt::UserRole, resource.id);
         if (resource.id == selectedId) rowToSelect = index;
     }
-    if (!values.isEmpty()) resources_->setCurrentRow(rowToSelect);
+    if (!values.isEmpty()) {
+        resources_->setCurrentRow(rowToSelect);
+        selectedResourceId_ = resources_->currentItem()->data(Qt::UserRole).toString();
+    } else {
+        selectedResourceId_.clear();
+    }
     refreshSelected();
 }
 
 void ResourceAuthorityPage::refreshSelected()
 {
     const auto values = model_->resources();
-    const int row = resources_->currentRow();
-    const bool valid = row >= 0 && row < values.size();
+    const auto* item = resources_->currentItem();
+    const QString selectedId = selectedResourceId_.isEmpty()
+        ? (item ? item->data(Qt::UserRole).toString() : QString())
+        : selectedResourceId_;
+    const auto resourceIt = std::find_if(values.cbegin(), values.cend(), [&selectedId](const ProjectResource& resource) {
+        return resource.id == selectedId;
+    });
+    const bool valid = resourceIt != values.cend();
     authority_->setEnabled(valid); scopes_->setEnabled(valid);
     if (!valid) return;
-    const auto& resource = values.at(row);
+    const auto& resource = *resourceIt;
     const QSignalBlocker authorityBlocker(authority_);
+    const QSignalBlocker scopesBlocker(scopes_);
     authority_->setCurrentIndex(authority_->findData(resource.authorityLevel));
     scopes_->setSelectedIds(resource.scopes);
 }

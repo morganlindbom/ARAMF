@@ -1,0 +1,42 @@
+{
+    "_file": "platform-metadata.json",
+    "buildSystems": [
+        "cmake",
+        "ninja"
+    ],
+    "developmentTools": [
+    ],
+    "environment": {
+        "buildSystem": "cmake",
+        "compiler": "msys2-ucrt64-gcc",
+        "framework": "qt",
+        "ide": "visual-studio-code",
+        "language": "cpp",
+        "operatingSystem": "",
+        "packageManager": "none",
+        "targetArchitecture": "x86_64",
+        "targetPlatform": "desktop",
+        "versionControl": "none"
+    },
+    "frameworks": [
+        "qt"
+    ],
+    "hardwareTargets": [
+    ],
+    "languages": [
+        "cpp"
+    ],
+    "processorFamilies": [
+    ],
+    "projectType": "desktop-application",
+    "targetArchitectures": [
+        "x86_64"
+    ],
+    "targetPlatforms": [
+        "desktop",
+        "windows-desktop"
+    ],
+    "toolchains": [
+        "msys2-ucrt64-gcc"
+    ]
+}

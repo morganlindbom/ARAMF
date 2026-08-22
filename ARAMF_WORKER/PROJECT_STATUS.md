@@ -280,3 +280,14 @@ application was started normally, but those interactions remain manual checks.
   verified `ScrollBarAsNeeded` behavior, and deterministic reverse page IDs.
   It now executes only the 250 automatically executable scenarios and passes
   250/250. The 50 historical manual scenarios remain separate and unchanged.
+
+## ARAMF Lifecycle
+
+Current state: Finalized
+
+SELFHOST-ISSUE-002 (resource authority persistence) is fixed. Final production
+GUI validation preserved the complete ten-resource authority matrix through
+navigation, Save, Close/Open, Save without edits, second Close/Open, Save &
+Generate, Verify, Finalize, and final Close/Open. The generated resource
+manifest matched the persisted project state for all 10 resources; IDs,
+descriptions, scopes, and canonical identities were preserved.

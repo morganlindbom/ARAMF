@@ -16,6 +16,7 @@
 #include <QJsonObject>
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QHash>
 #include <QSaveFile>
 
 #include <algorithm>
@@ -491,7 +492,29 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
 
     if (options.generateResources) {
         QJsonArray resources;
-        for (const auto& resource : model.resources()) {
+        QHash<QString, int> resourceIdentities;
+        const auto modelResources = model.resources();
+        for (int resourceIndex = 0; resourceIndex < modelResources.size(); ++resourceIndex) {
+            const auto& resource = modelResources.at(resourceIndex);
+            const QString identity = canonicalResourceIdentity(resource, model.projectPath());
+            if (!identity.isEmpty() && resourceIdentities.contains(identity)) {
+                const auto& existing = modelResources.at(resourceIdentities.value(identity));
+                const bool sameMetadata = existing.name == resource.name
+                    && existing.type == resource.type
+                    && existing.description == resource.description
+                    && existing.enabled == resource.enabled
+                    && existing.locationMode == resource.locationMode
+                    && existing.authorityLevel == resource.authorityLevel
+                    && existing.scopes == resource.scopes
+                    && existing.status == resource.status
+                    && existing.loadingStrategyOverride == resource.loadingStrategyOverride
+                    && existing.lastModified == resource.lastModified
+                    && existing.fingerprint == resource.fingerprint;
+                if (sameMetadata) continue;
+                return fail(QStringLiteral("Resource manifest"),
+                            QStringLiteral("Conflicting duplicate resource identity: %1").arg(identity));
+            }
+            if (!identity.isEmpty()) resourceIdentities.insert(identity, resourceIndex);
             resources.append(QJsonObject{
                 {QStringLiteral("id"), resource.id}, {QStringLiteral("name"), resource.name},
                 {QStringLiteral("type"), resource.type}, {QStringLiteral("location"), resource.location},
@@ -612,6 +635,26 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     checkFile(QStringLiteral("framework-knowledge"), QStringLiteral("Framework Knowledge"), AramfPaths::FrameworkKnowledge, expectedOptions.generateMemory);
     checkFile(QStringLiteral("provenance"), QStringLiteral("Provenance"), AramfPaths::Provenance, expectedOptions.generateProvenance);
     checkFile(QStringLiteral("selection-effects"), QStringLiteral("Selection effects"), AramfPaths::SelectionEffects, expectedOptions.generateProvenance);
+
+    if (expectedOptions.generateResources) {
+        QHash<QString, int> identities;
+        bool duplicate = false;
+        QString duplicateDetails;
+        const auto resources = model.resources();
+        for (int index = 0; index < resources.size(); ++index) {
+            const QString identity = canonicalResourceIdentity(resources.at(index), model.projectPath());
+            if (identity.isEmpty()) continue;
+            if (identities.contains(identity)) {
+                duplicate = true;
+                duplicateDetails = QStringLiteral("Duplicate canonical resource identity: %1").arg(identity);
+                break;
+            }
+            identities.insert(identity, index);
+        }
+        addCheck(result, QStringLiteral("resource-identities"), QStringLiteral("Unique resource identities"),
+                 duplicate ? VerificationStatus::Fail : VerificationStatus::Pass,
+                 duplicate ? duplicateDetails : QStringLiteral("All configured resources have unique canonical identities."));
+    }
 
     const QStringList jsonFiles{AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes,
         QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json"), AramfPaths::ResourceManifest,

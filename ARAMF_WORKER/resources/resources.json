@@ -1,82 +1,164 @@
 {
-  "resources": [
-    {
-      "id": "src",
-      "name": "Production source",
-      "type": "directory",
-      "location": "src/",
-      "description": "ARAMF production C++ and Qt source authority.",
-      "enabled": true,
-      "locationMode": "referenced",
-      "authorityLevel": "source-of-truth",
-      "scopes": ["implementation", "production"],
-      "status": "active",
-      "loadingStrategyOverride": "relevant"
-    },
-    {
-      "id": "tests",
-      "name": "Production tests",
-      "type": "directory",
-      "location": "tests/",
-      "description": "Production test authority and migration regression coverage.",
-      "enabled": true,
-      "locationMode": "referenced",
-      "authorityLevel": "source-of-truth",
-      "scopes": ["testing", "regression"],
-      "status": "active",
-      "loadingStrategyOverride": "relevant"
-    },
-    {
-      "id": "cmake",
-      "name": "Build configuration",
-      "type": "file",
-      "location": "CMakeLists.txt",
-      "description": "Canonical CMake and CTest build configuration.",
-      "enabled": true,
-      "locationMode": "referenced",
-      "authorityLevel": "source-of-truth",
-      "scopes": ["build", "testing"],
-      "status": "active",
-      "loadingStrategyOverride": "relevant"
-    },
-    {
-      "id": "aramf-setup",
-      "name": "Product setup source",
-      "type": "directory",
-      "location": "aramf_setup/",
-      "description": "ARAMF product-owned setup and bootstrap source material.",
-      "enabled": true,
-      "locationMode": "referenced",
-      "authorityLevel": "source-of-truth",
-      "scopes": ["architecture", "bootstrap", "documentation"],
-      "status": "active",
-      "loadingStrategyOverride": "relevant"
-    },
-    {
-      "id": "test-250",
-      "name": "Historical 250-scenario evidence",
-      "type": "directory",
-      "location": "test_250/",
-      "description": "Immutable historical certification evidence; not always-load context.",
-      "enabled": true,
-      "locationMode": "referenced",
-      "authorityLevel": "historical-evidence",
-      "scopes": ["certification", "regression"],
-      "status": "historical",
-      "loadingStrategyOverride": "on-demand"
-    },
-    {
-      "id": "test-550",
-      "name": "Historical 550-scenario evidence",
-      "type": "directory",
-      "location": "test_550/",
-      "description": "Immutable historical release-validation evidence; not always-load context.",
-      "enabled": true,
-      "locationMode": "referenced",
-      "authorityLevel": "historical-evidence",
-      "scopes": ["certification", "release-validation"],
-      "status": "historical",
-      "loadingStrategyOverride": "on-demand"
-    }
-  ]
+    "_file": "resources.json",
+    "loadingStrategy": "relevant",
+    "resources": [
+        {
+            "authority": "supporting-reference",
+            "description": "Historical 250-scenario validation campaign and executable regression material.",
+            "enabled": true,
+            "id": "d6ba3523-c781-4897-9ffa-144cae535632",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250",
+            "locationMode": "referenced",
+            "name": "test_250",
+            "scopes": [
+                "architecture",
+                "software",
+                "build-system",
+                "testing"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authority": "supporting-reference",
+            "description": "Historical 550-test campaign and release-validation evidence.",
+            "enabled": true,
+            "id": "47cf373a-e57b-49fa-b876-c21d975986e8",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550",
+            "locationMode": "referenced",
+            "name": "test_550",
+            "scopes": [
+                "testing"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authority": "primary-source-of-truth",
+            "description": "Authoritative CMake build configuration, C++ standard, targets and Qt dependencies.",
+            "enabled": true,
+            "id": "769b24cd-ace8-482f-8f96-05c09a1a4cb8",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/CMakeLists.txt",
+            "locationMode": "referenced",
+            "name": "CMakeLists.txt",
+            "scopes": [
+                "software",
+                "build-system"
+            ],
+            "status": "available",
+            "type": "file"
+        },
+        {
+            "authority": "supporting-reference",
+            "description": "Historical 250-scenario validation summary and evidence.",
+            "enabled": true,
+            "id": "1e352162-a59b-4e73-89fb-a35072a97cfd",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/info.md",
+            "locationMode": "referenced",
+            "name": "info.md",
+            "scopes": [
+            ],
+            "status": "available",
+            "type": "file"
+        },
+        {
+            "authority": "authoritative",
+            "description": "ARAMF product-owned setup, bootstrap, templates, documentation and source material; not the live worker.",
+            "enabled": true,
+            "id": "eb45af79-6ae2-43df-aafa-a41b80ba8f2b",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/aramf_setup",
+            "locationMode": "referenced",
+            "name": "aramf_setup",
+            "scopes": [
+                "software"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authority": "primary-source-of-truth",
+            "description": "Production ARAMF C++/Qt source code and architecture authority.",
+            "enabled": true,
+            "id": "226c31e8-233e-4bcb-acf0-f1f853c04cbf",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/src",
+            "locationMode": "referenced",
+            "name": "src",
+            "scopes": [
+                "architecture",
+                "software"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authority": "supporting-reference",
+            "description": "Historical 550-test campaign and release-validation evidence.",
+            "enabled": true,
+            "id": "ad17b8ba-7dfb-4fed-998b-ca0a66a9ab48",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550/info.md",
+            "locationMode": "referenced",
+            "name": "info.md",
+            "scopes": [
+            ],
+            "status": "available",
+            "type": "file"
+        },
+        {
+            "authority": "primary-source-of-truth",
+            "description": "Generated live self-hosted ARAMF control plane: status, memory, rules, routing and Framework Knowledge.",
+            "enabled": true,
+            "id": "04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER",
+            "locationMode": "referenced",
+            "name": "ARAMF_WORKER",
+            "scopes": [
+                "project-requirements",
+                "current-project-state"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authority": "authoritative",
+            "description": "Current ARAMF core and regression tests.",
+            "enabled": true,
+            "id": "be17deda-e75e-47bc-afd8-5c83472af077",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/tests",
+            "locationMode": "referenced",
+            "name": "tests",
+            "scopes": [
+                "testing"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authority": "primary-source-of-truth",
+            "description": "Repository bootstrap directing AI agents to ARAMF_WORKER/AGENTS.md.",
+            "enabled": true,
+            "id": "c693014c-27ef-4ce1-9291-6fb37ff0c375",
+            "loadingPolicyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/AGENTS.md",
+            "locationMode": "referenced",
+            "name": "AGENTS.md",
+            "scopes": [
+                "project-requirements",
+                "architecture",
+                "software",
+                "testing",
+                "current-project-state"
+            ],
+            "status": "available",
+            "type": "url"
+        }
+    ]
 }

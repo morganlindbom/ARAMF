@@ -146,10 +146,14 @@ if(BUILD_TESTING)
         src/core/ControlPlaneMigration.cpp
         src/core/AiCatalog.h
         src/core/AiCatalog.cpp
+        src/core/EnvironmentCatalog.h
+        src/core/EnvironmentCatalog.cpp
         src/core/MemoryCatalog.h
         src/core/MemoryCatalog.cpp
         src/ui/shared/CapabilityCheckGroup.h
         src/ui/shared/CapabilityCheckGroup.cpp
+        src/ui/workflows/resources/authority/ResourceAuthorityPage.h
+        src/ui/workflows/resources/authority/ResourceAuthorityPage.cpp
         src/ui/workflows/ai/agents/AiAgentsPage.h
         src/ui/workflows/ai/agents/AiAgentsPage.cpp
         src/ui/workflows/ai/responsibilities/AiResponsibilitiesPage.h

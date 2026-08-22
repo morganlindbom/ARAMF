@@ -80,6 +80,16 @@ struct ProjectResource {
     QString fingerprint;
 };
 
+// Returns a stable identity for a resource location. Local paths are resolved
+// relative to projectPath and normalized for equivalent Windows spellings;
+// URLs use a separate normalized identity namespace.
+QString canonicalResourceIdentity(const ProjectResource& resource,
+                                  const QString& projectPath = QString());
+
+bool sameResourceIdentity(const ProjectResource& left,
+                          const ProjectResource& right,
+                          const QString& projectPath = QString());
+
 struct ResourcePolicy {
     QStringList options;
     QString loadingStrategy = QStringLiteral("relevant");

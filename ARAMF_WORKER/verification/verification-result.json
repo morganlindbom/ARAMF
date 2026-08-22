@@ -1,0 +1,164 @@
+{
+    "_file": "verification-result.json",
+    "checkedAt": "2026-08-22T23:07:04Z",
+    "checks": [
+        {
+            "details": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "id": "project-path",
+            "name": "Project Path",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER directory exists.",
+            "id": "control-plane",
+            "name": "ARAMF_WORKER control plane",
+            "status": "PASS"
+        },
+        {
+            "details": "AGENTS.md",
+            "id": "root-agents",
+            "name": "Root AGENTS.md",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER/AGENTS.md",
+            "id": "aramf-worker-agents",
+            "name": "ARAMF_WORKER/AGENTS.md",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER/PROJECT_STATUS.md",
+            "id": "project-status",
+            "name": "PROJECT_STATUS.md",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER/rules/generated-rules.md",
+            "id": "generated-rules",
+            "name": "Generated rules",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER/routing/task-routes.json",
+            "id": "task-routes",
+            "name": "Task routes",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER/routing/scope-routes.json",
+            "id": "scope-routes",
+            "name": "Scope routes",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER/platforms/platform-metadata.json",
+            "id": "platforms",
+            "name": "Platform metadata",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER/resources/resources.json",
+            "id": "resources",
+            "name": "Resource manifest",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER/memory/memory-config.json",
+            "id": "memory",
+            "name": "Memory configuration",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER/memory/framework-knowledge.json",
+            "id": "framework-knowledge",
+            "name": "Framework Knowledge",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER/provenance.json",
+            "id": "provenance",
+            "name": "Provenance",
+            "status": "PASS"
+        },
+        {
+            "details": "ARAMF_WORKER/selection-effects.json",
+            "id": "selection-effects",
+            "name": "Selection effects",
+            "status": "PASS"
+        },
+        {
+            "details": "All configured resources have unique canonical identities.",
+            "id": "resource-identities",
+            "name": "Unique resource identities",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-task-routes.json",
+            "name": "Valid JSON: ARAMF_WORKER/routing/task-routes.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-scope-routes.json",
+            "name": "Valid JSON: ARAMF_WORKER/routing/scope-routes.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-platform-metadata.json",
+            "name": "Valid JSON: ARAMF_WORKER/platforms/platform-metadata.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-resources.json",
+            "name": "Valid JSON: ARAMF_WORKER/resources/resources.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-memory-config.json",
+            "name": "Valid JSON: ARAMF_WORKER/memory/memory-config.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-framework-knowledge.json",
+            "name": "Valid JSON: ARAMF_WORKER/memory/framework-knowledge.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-provenance.json",
+            "name": "Valid JSON: ARAMF_WORKER/provenance.json",
+            "status": "PASS"
+        },
+        {
+            "details": "Parsed successfully.",
+            "id": "json-selection-effects.json",
+            "name": "Valid JSON: ARAMF_WORKER/selection-effects.json",
+            "status": "PASS"
+        },
+        {
+            "details": "PASS",
+            "id": "memory-consistency",
+            "name": "Memory consistency",
+            "status": "PASS"
+        },
+        {
+            "details": "PASS",
+            "id": "cold-start",
+            "name": "Cold-start validation",
+            "status": "PASS"
+        },
+        {
+            "details": "Fingerprint matches ProjectModel.",
+            "id": "freshness",
+            "name": "Generated configuration is current",
+            "status": "PASS"
+        }
+    ],
+    "fingerprint": "cd37b2c11a0bf46271c7b2324578b9fbef2b76dbc25915f7e9bbe71604e70317",
+    "overallStatus": "PASS"
+}

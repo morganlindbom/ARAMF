@@ -18,6 +18,8 @@
 #include <QSizePolicy>
 #include <QSignalBlocker>
 #include <QTextEdit>
+
+#include <algorithm>
 #include <QVBoxLayout>
 #include <QUuid>
 
@@ -94,11 +96,23 @@ ResourceInventoryPage::ResourceInventoryPage(ProjectModel* model, QWidget* paren
         addResource(resource);
     });
     connect(remove, &QPushButton::clicked, this, [this] {
-        const int row = resources_->currentRow();
-        if (row < 0 || row >= model_->resources().size()) return;
-        auto values = model_->resources(); values.removeAt(row); model_->setResources(values);
+        const auto* item = resources_->currentItem();
+        if (!item) return;
+        const QString selectedId = item->data(Qt::UserRole).toString();
+        auto values = model_->resources();
+        const auto it = std::find_if(values.begin(), values.end(), [&selectedId](const ProjectResource& resource) {
+            return resource.id == selectedId;
+        });
+        if (it == values.end()) return;
+        values.erase(it);
+        model_->setResources(values);
     });
-    connect(resources_, &QListWidget::currentRowChanged, this, [this] { refreshDetails(); });
+    connect(resources_, &QListWidget::currentRowChanged, this, [this] {
+        selectedResourceId_ = resources_->currentItem()
+            ? resources_->currentItem()->data(Qt::UserRole).toString()
+            : QString();
+        refreshDetails();
+    });
     connect(resources_, &QListWidget::itemChanged, this, [this](QListWidgetItem* item) {
         if (!item || item->flags() == Qt::NoItemFlags) return;
         const QString id = item->data(Qt::UserRole).toString();
@@ -123,7 +137,18 @@ ResourceInventoryPage::ResourceInventoryPage(ProjectModel* model, QWidget* paren
 
 void ResourceInventoryPage::addResource(const ProjectResource& resource)
 {
-    auto values = model_->resources(); values.append(resource); model_->setResources(values);
+    auto values = model_->resources();
+    const QString identity = canonicalResourceIdentity(resource, model_->projectPath());
+    if (!identity.isEmpty()) {
+        for (int index = 0; index < values.size(); ++index) {
+            if (canonicalResourceIdentity(values.at(index), model_->projectPath()) == identity) {
+                refresh();
+                resources_->setCurrentRow(index);
+                return;
+            }
+        }
+    }
+    values.append(resource); model_->setResources(values);
     refresh(); resources_->setCurrentRow(values.size() - 1);
 }
 
@@ -134,7 +159,9 @@ void ResourceInventoryPage::updateStatus(ProjectResource& resource)
 
 void ResourceInventoryPage::refresh()
 {
-    const QString selectedId = resources_->currentItem() ? resources_->currentItem()->data(Qt::UserRole).toString() : QString();
+    const QString selectedId = selectedResourceId_.isEmpty()
+        ? (resources_->currentItem() ? resources_->currentItem()->data(Qt::UserRole).toString() : QString())
+        : selectedResourceId_;
     const QSignalBlocker blocker(resources_);
     resources_->clear();
     const auto values = model_->resources();
@@ -147,21 +174,29 @@ void ResourceInventoryPage::refresh()
     }
     if (values.isEmpty()) {
         auto* empty = new QListWidgetItem(tr("No resources configured"), resources_); empty->setFlags(Qt::NoItemFlags);
+        selectedResourceId_.clear();
     } else {
         resources_->setCurrentRow(selectedRow >= 0 ? selectedRow : 0);
+        selectedResourceId_ = resources_->currentItem()->data(Qt::UserRole).toString();
     }
     refreshDetails();
 }
 
 void ResourceInventoryPage::refreshDetails()
 {
-    const int row = resources_->currentRow();
     const auto values = model_->resources();
-    const bool valid = row >= 0 && row < values.size();
+    const auto* item = resources_->currentItem();
+    const QString selectedId = selectedResourceId_.isEmpty()
+        ? (item ? item->data(Qt::UserRole).toString() : QString())
+        : selectedResourceId_;
+    const auto resourceIt = std::find_if(values.cbegin(), values.cend(), [&selectedId](const ProjectResource& resource) {
+        return resource.id == selectedId;
+    });
+    const bool valid = resourceIt != values.cend();
     detailsEditor_->setVisible(valid);
     detailsEmptyState_->setVisible(!valid);
     if (!valid) return;
-    const auto& resource = values.at(row);
+    const auto& resource = *resourceIt;
     const QSignalBlocker b1(name_), b2(type_), b3(location_), b4(description_), b5(enabled_), b6(locationMode_);
     name_->setText(resource.name);
     const int typeIndex = type_->findData(resource.type);
@@ -175,10 +210,17 @@ void ResourceInventoryPage::refreshDetails()
 
 void ResourceInventoryPage::saveDetails()
 {
-    const int row = resources_->currentRow();
     auto values = model_->resources();
-    if (row < 0 || row >= values.size()) return;
-    auto& resource = values[row];
+    const auto* item = resources_->currentItem();
+    if (!item) return;
+    const QString selectedId = selectedResourceId_.isEmpty()
+        ? item->data(Qt::UserRole).toString()
+        : selectedResourceId_;
+    const auto resourceIt = std::find_if(values.begin(), values.end(), [&selectedId](const ProjectResource& resource) {
+        return resource.id == selectedId;
+    });
+    if (resourceIt == values.end()) return;
+    auto& resource = *resourceIt;
     resource.name = name_->text(); resource.type = type_->currentData().toString(); resource.location = location_->text();
     resource.description = description_->toPlainText(); resource.enabled = enabled_->isChecked(); resource.locationMode = locationMode_->currentData().toString();
     if (resource.type != QStringLiteral("url")) updateStatus(resource);

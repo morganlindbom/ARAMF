@@ -1,4 +1,9 @@
 {
-  "status": "reconstructed",
-  "source": "recovered knowledge pack"
+    "_file": "provenance.json",
+    "implementation": "C++",
+    "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
+    "projectName": "ARAMF",
+    "projectType": "desktop-application",
+    "status": "managed",
+    "template": ""
 }

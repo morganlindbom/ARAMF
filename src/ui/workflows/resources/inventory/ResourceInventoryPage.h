@@ -35,4 +35,5 @@ private:
     QTextEdit* description_ = nullptr;
     QCheckBox* enabled_ = nullptr;
     QComboBox* locationMode_ = nullptr;
+    QString selectedResourceId_;
 };

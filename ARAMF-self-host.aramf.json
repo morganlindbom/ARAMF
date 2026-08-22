@@ -1,0 +1,550 @@
+{
+    "academic": {
+        "academicDeliverables": [
+        ],
+        "academicLanguage": "",
+        "academicMode": "disabled",
+        "academicRequirements": [
+        ],
+        "citationStyle": "",
+        "examiner": "",
+        "institution": "",
+        "programmeOrCourse": "",
+        "researchMethods": [
+        ],
+        "supervisor": "",
+        "thesisApproaches": [
+        ],
+        "thesisLevel": ""
+    },
+    "ai": {
+        "additionalAgents": [
+            "chatgpt",
+            "github-copilot"
+        ],
+        "aramfIntegrations": [
+            "agents-md",
+            "task-lifecycle",
+            "rules",
+            "routing",
+            "project-memory",
+            "project-status",
+            "project-resources",
+            "source-of-truth",
+            "durable-decisions",
+            "framework-knowledge",
+            "template-knowledge",
+            "source-references",
+            "user-approved-knowledge",
+            "decision-recording",
+            "checkpoint-recording",
+            "validation-verification",
+            "memory-consistency-validation",
+            "cold-start-validation",
+            "certification-knowledge",
+            "evidence-recording",
+            "test-result-recording",
+            "build-result-recording",
+            "update-project-status",
+            "record-durable-decisions",
+            "update-current-state-memory",
+            "record-validation-results",
+            "record-checkpoints",
+            "update-evidence",
+            "update-verification-state"
+        ],
+        "autonomyPreset": "custom",
+        "customAgentName": "",
+        "permissions": [
+            "read-project-files",
+            "create-files",
+            "modify-files",
+            "rename-files",
+            "move-files",
+            "copy-files",
+            "modify-generated-files",
+            "run-builds",
+            "run-tests",
+            "run-linters",
+            "run-static-analysis",
+            "run-project-tools",
+            "run-scripts",
+            "run-generated-executables",
+            "run-debugging-tools",
+            "run-package-managers",
+            "start-local-services",
+            "stop-local-services",
+            "modify-build-configuration",
+            "modify-dependency-configuration",
+            "modify-project-configuration",
+            "modify-ci-cd-configuration",
+            "modify-aramf-generated-files",
+            "modify-environment-configuration",
+            "create-branch",
+            "stage-changes"
+        ],
+        "primaryAgent": "openai-codex",
+        "responsibilities": [
+            "planning",
+            "requirement-analysis",
+            "architecture",
+            "technical-design",
+            "task-breakdown",
+            "specification-writing",
+            "ui-ux-design",
+            "data-model-design",
+            "coding",
+            "refactoring",
+            "code-generation",
+            "dependency-management",
+            "configuration",
+            "migration",
+            "data-transformation",
+            "code-review",
+            "testing",
+            "debugging",
+            "static-analysis",
+            "performance-analysis",
+            "security-review",
+            "accessibility-review",
+            "compatibility-review",
+            "regression-analysis",
+            "dependency-review",
+            "documentation",
+            "research",
+            "build-ci",
+            "release-preparation",
+            "resource-analysis",
+            "project-memory-maintenance",
+            "project-status-maintenance",
+            "dependency-research",
+            "changelog-maintenance",
+            "issue-task-management",
+            "release-notes",
+            "technical-investigation"
+        ]
+    },
+    "aiPlatforms": [
+        "openai-codex",
+        "chatgpt",
+        "github-copilot"
+    ],
+    "capabilities": {
+        "automationCapabilities": [
+            "automated-build",
+            "automated-testing"
+        ],
+        "buildConfigurations": [
+            "debug",
+            "release"
+        ],
+        "buildSystems": [
+            "cmake",
+            "ninja"
+        ],
+        "deliveryCapabilities": [
+        ],
+        "dependencyManagers": [
+        ],
+        "developmentTools": [
+        ],
+        "frameworks": [
+            "qt"
+        ],
+        "hardwareTargets": [
+        ],
+        "hostOperatingSystems": [
+        ],
+        "ides": [
+            "visual-studio-code"
+        ],
+        "languages": [
+            "cpp"
+        ],
+        "processorFamilies": [
+        ],
+        "qualityCapabilities": [
+        ],
+        "targetArchitectures": [
+            "x86_64"
+        ],
+        "targetPlatforms": [
+            "desktop",
+            "windows-desktop"
+        ],
+        "testingCapabilities": [
+            "unit-testing",
+            "integration-testing"
+        ],
+        "toolchains": [
+            "msys2-ucrt64-gcc"
+        ],
+        "versionControlSystems": [
+            "git"
+        ]
+    },
+    "context": "desktop-application",
+    "description": "AI Rules And Memory Framework - self-hosted development project.",
+    "environment": {
+        "buildSystem": "cmake",
+        "compiler": "msys2-ucrt64-gcc",
+        "framework": "qt",
+        "ide": "visual-studio-code",
+        "language": "cpp",
+        "operatingSystem": "",
+        "packageManager": "none",
+        "targetArchitecture": "x86_64",
+        "targetPlatform": "desktop",
+        "versionControl": "none"
+    },
+    "generationOptions": {
+        "agentRules": true,
+        "memory": true,
+        "platforms": true,
+        "provenance": true,
+        "resources": true,
+        "routing": true
+    },
+    "memory": {
+        "captureCategories": [
+            "current-project-status",
+            "project-capabilities",
+            "durable-decisions",
+            "completed-tasks",
+            "corrective-actions",
+            "validation-results",
+            "checkpoints",
+            "certification-knowledge"
+        ],
+        "historyOptions": [
+            "event-history",
+            "decision-history",
+            "validation-history",
+            "task-history",
+            "failure-history",
+            "milestone-history"
+        ],
+        "maintenanceOptions": [
+            "update-current-state",
+            "record-decisions",
+            "record-checkpoints",
+            "record-validation",
+            "record-build-results",
+            "record-test-results",
+            "record-task-completion",
+            "update-project-status",
+            "remove-stale-state",
+            "preserve-append-only"
+        ],
+        "maximumSizeBytes": 10737418240,
+        "retentionLevel": "standard",
+        "updateStrategy": "meaningful-task",
+        "validationOptions": [
+            "memory-consistency",
+            "cold-start-validation",
+            "sequence-continuity",
+            "conflicting-decisions",
+            "stale-current-state",
+            "referenced-resources",
+            "project-status-consistency"
+        ]
+    },
+    "options": {
+    },
+    "profileSelections": [
+    ],
+    "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF-self-host.aramf.json",
+    "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
+    "projectName": "ARAMF",
+    "projectPath": "D:\\ON DESCTOP\\HKR KURSER\\C++\\ARAMF2\\ARAMF",
+    "resourcePolicy": {
+        "loadingStrategy": "relevant",
+        "options": [
+            "read-relevant",
+            "prefer-authoritative",
+            "respect-scope",
+            "ignore-disabled",
+            "warn-conflicts"
+        ]
+    },
+    "resources": [
+        {
+            "authorityLevel": "supporting-reference",
+            "description": "Historical 250-scenario validation campaign and executable regression material.",
+            "enabled": true,
+            "fingerprint": "",
+            "id": "d6ba3523-c781-4897-9ffa-144cae535632",
+            "lastModified": "",
+            "loadingStrategyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250",
+            "locationMode": "referenced",
+            "name": "test_250",
+            "scopes": [
+                "architecture",
+                "software",
+                "build-system",
+                "testing"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authorityLevel": "supporting-reference",
+            "description": "Historical 550-test campaign and release-validation evidence.",
+            "enabled": true,
+            "fingerprint": "",
+            "id": "47cf373a-e57b-49fa-b876-c21d975986e8",
+            "lastModified": "",
+            "loadingStrategyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550",
+            "locationMode": "referenced",
+            "name": "test_550",
+            "scopes": [
+                "testing"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authorityLevel": "primary-source-of-truth",
+            "description": "Authoritative CMake build configuration, C++ standard, targets and Qt dependencies.",
+            "enabled": true,
+            "fingerprint": "",
+            "id": "769b24cd-ace8-482f-8f96-05c09a1a4cb8",
+            "lastModified": "",
+            "loadingStrategyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/CMakeLists.txt",
+            "locationMode": "referenced",
+            "name": "CMakeLists.txt",
+            "scopes": [
+                "software",
+                "build-system"
+            ],
+            "status": "available",
+            "type": "file"
+        },
+        {
+            "authorityLevel": "supporting-reference",
+            "description": "Historical 250-scenario validation summary and evidence.",
+            "enabled": true,
+            "fingerprint": "",
+            "id": "1e352162-a59b-4e73-89fb-a35072a97cfd",
+            "lastModified": "",
+            "loadingStrategyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/info.md",
+            "locationMode": "referenced",
+            "name": "info.md",
+            "scopes": [
+            ],
+            "status": "available",
+            "type": "file"
+        },
+        {
+            "authorityLevel": "authoritative",
+            "description": "ARAMF product-owned setup, bootstrap, templates, documentation and source material; not the live worker.",
+            "enabled": true,
+            "fingerprint": "",
+            "id": "eb45af79-6ae2-43df-aafa-a41b80ba8f2b",
+            "lastModified": "",
+            "loadingStrategyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/aramf_setup",
+            "locationMode": "referenced",
+            "name": "aramf_setup",
+            "scopes": [
+                "software"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authorityLevel": "primary-source-of-truth",
+            "description": "Production ARAMF C++/Qt source code and architecture authority.",
+            "enabled": true,
+            "fingerprint": "",
+            "id": "226c31e8-233e-4bcb-acf0-f1f853c04cbf",
+            "lastModified": "",
+            "loadingStrategyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/src",
+            "locationMode": "referenced",
+            "name": "src",
+            "scopes": [
+                "architecture",
+                "software"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authorityLevel": "supporting-reference",
+            "description": "Historical 550-test campaign and release-validation evidence.",
+            "enabled": true,
+            "fingerprint": "",
+            "id": "ad17b8ba-7dfb-4fed-998b-ca0a66a9ab48",
+            "lastModified": "",
+            "loadingStrategyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550/info.md",
+            "locationMode": "referenced",
+            "name": "info.md",
+            "scopes": [
+            ],
+            "status": "available",
+            "type": "file"
+        },
+        {
+            "authorityLevel": "primary-source-of-truth",
+            "description": "Generated live self-hosted ARAMF control plane: status, memory, rules, routing and Framework Knowledge.",
+            "enabled": true,
+            "fingerprint": "",
+            "id": "04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3",
+            "lastModified": "",
+            "loadingStrategyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER",
+            "locationMode": "referenced",
+            "name": "ARAMF_WORKER",
+            "scopes": [
+                "project-requirements",
+                "current-project-state"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authorityLevel": "authoritative",
+            "description": "Current ARAMF core and regression tests.",
+            "enabled": true,
+            "fingerprint": "",
+            "id": "be17deda-e75e-47bc-afd8-5c83472af077",
+            "lastModified": "",
+            "loadingStrategyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/tests",
+            "locationMode": "referenced",
+            "name": "tests",
+            "scopes": [
+                "testing"
+            ],
+            "status": "available",
+            "type": "folder"
+        },
+        {
+            "authorityLevel": "primary-source-of-truth",
+            "description": "Repository bootstrap directing AI agents to ARAMF_WORKER/AGENTS.md.",
+            "enabled": true,
+            "fingerprint": "",
+            "id": "c693014c-27ef-4ce1-9291-6fb37ff0c375",
+            "lastModified": "",
+            "loadingStrategyOverride": "",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/AGENTS.md",
+            "locationMode": "referenced",
+            "name": "AGENTS.md",
+            "scopes": [
+                "project-requirements",
+                "architecture",
+                "software",
+                "testing",
+                "current-project-state"
+            ],
+            "status": "available",
+            "type": "url"
+        }
+    ],
+    "rules": {
+        "activeCategories": [
+            "coding-standards",
+            "naming-conventions",
+            "formatting",
+            "static-analysis",
+            "warning-policy",
+            "refactoring-rules",
+            "complexity-limits",
+            "error-handling",
+            "logging",
+            "documentation-comments",
+            "architecture-boundaries",
+            "module-ownership",
+            "dependency-direction",
+            "separation-of-concerns",
+            "interface-contracts",
+            "data-ownership",
+            "generated-code-boundaries",
+            "shared-component-rules",
+            "file-folder-ownership",
+            "unit-testing",
+            "integration-testing",
+            "regression-testing",
+            "test-naming",
+            "test-coverage",
+            "test-evidence",
+            "failure-reproduction",
+            "verification-before-completion",
+            "build-must-pass",
+            "warnings-reviewed",
+            "cmake-rules",
+            "dependency-rules",
+            "toolchain-rules",
+            "ci-rules",
+            "release-build-rules",
+            "generated-artifact-rules",
+            "secret-handling",
+            "input-validation",
+            "dependency-security",
+            "unsafe-operation-rules",
+            "production-safety",
+            "destructive-command-protection",
+            "data-protection",
+            "follow-agents",
+            "respect-source-of-truth",
+            "respect-project-resources",
+            "respect-durable-decisions",
+            "protected-files",
+            "no-invented-verification",
+            "ask-high-risk",
+            "record-decisions",
+            "update-project-status",
+            "use-project-memory",
+            "readme-maintenance",
+            "architecture-documentation",
+            "project-status-maintenance",
+            "changelog-maintenance",
+            "source-references"
+        ],
+        "conflictPolicy": "prefer-user-instruction",
+        "contextPolicies": [
+            "matching-categories",
+            "avoid-duplicates",
+            "prefer-project-specific",
+            "summaries-first",
+            "avoid-inactive",
+            "avoid-unrelated"
+        ],
+        "enforcementLevel": "standard",
+        "loadingStrategy": "relevant",
+        "projectScopes": [
+            "entire-project",
+            "source-code",
+            "tests",
+            "build-system",
+            "documentation",
+            "resources",
+            "generated-files",
+            "configuration",
+            "ci-cd",
+            "ui-ux"
+        ],
+        "workScopes": [
+            "planning",
+            "architecture",
+            "coding",
+            "refactoring",
+            "testing",
+            "debugging",
+            "documentation",
+            "build-ci",
+            "release",
+            "research",
+            "resource-analysis",
+            "project-memory",
+            "project-status"
+        ]
+    },
+    "templateId": ""
+}

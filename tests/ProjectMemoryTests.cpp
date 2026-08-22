@@ -14,6 +14,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QTemporaryDir>
+#include <algorithm>
 #include <iostream>
 
 namespace {
@@ -205,6 +206,59 @@ int main(int argc, char** argv)
     ok &= require(loaded.resources().size() == 1, "structured resources must survive persistence");
     ok &= require(loaded.resources().first().authorityLevel == QStringLiteral("primary-source-of-truth"), "resource authority must survive persistence");
     ok &= require(loaded.resources().first().scopes == resource.scopes, "resource scopes must survive persistence");
+    ok &= require(loaded.resources().first().description == resource.description, "resource description must survive persistence");
+
+    ProjectResource secondaryResource;
+    secondaryResource.id = QStringLiteral("secondary-resource");
+    secondaryResource.name = QStringLiteral("Secondary Resource");
+    secondaryResource.type = QStringLiteral("folder");
+    secondaryResource.location = QStringLiteral("C:/docs/secondary");
+    secondaryResource.description = QStringLiteral("Supporting project reference");
+    secondaryResource.authorityLevel = QStringLiteral("trusted-reference");
+    secondaryResource.scopes = {QStringLiteral("architecture")};
+    secondaryResource.status = QStringLiteral("available");
+    model.setResources({resource, secondaryResource});
+    const QString reorderedProjectFile = root.filePath(QStringLiteral("reordered-resources.aramf.json"));
+    ok &= require(persistence.save(model, reorderedProjectFile, &error), "reordered resource save must succeed");
+    ProjectModel reorderedLoaded;
+    ok &= require(persistence.load(&reorderedLoaded, reorderedProjectFile, &error), "reordered resource open must succeed");
+    auto reordered = reorderedLoaded.resources();
+    std::reverse(reordered.begin(), reordered.end());
+    reorderedLoaded.setResources(reordered);
+    ok &= require(reorderedLoaded.resources().first().id == secondaryResource.id, "resource reorder must preserve resource identity");
+    ok &= require(reorderedLoaded.resources().first().authorityLevel == secondaryResource.authorityLevel
+                  && reorderedLoaded.resources().first().description == secondaryResource.description
+                  && reorderedLoaded.resources().first().scopes == secondaryResource.scopes,
+                  "authority, description, and scopes must remain attached after resource reorder");
+    ok &= require(reorderedLoaded.resources().last().id == resource.id
+                  && reorderedLoaded.resources().last().authorityLevel == resource.authorityLevel
+                  && reorderedLoaded.resources().last().description == resource.description
+                  && reorderedLoaded.resources().last().scopes == resource.scopes,
+                  "reordered primary resource metadata must remain attached by ID");
+
+    const QString identityRoot = QDir(root.path()).filePath(QStringLiteral("identity"));
+    ok &= require(QDir().mkpath(identityRoot), "resource identity fixture directory must be creatable");
+    QFile identityFile(QDir(identityRoot).filePath(QStringLiteral("same.txt")));
+    ok &= require(identityFile.open(QIODevice::WriteOnly), "resource identity fixture file must be writable");
+    identityFile.write("identity\n");
+    identityFile.close();
+    ProjectResource identityA;
+    identityA.type = QStringLiteral("file");
+    identityA.location = identityFile.fileName();
+    ProjectResource identityB = identityA;
+    identityB.location = QDir(root.path()).relativeFilePath(identityFile.fileName());
+    ok &= require(sameResourceIdentity(identityA, identityB, root.path()), "absolute and project-relative paths must share resource identity");
+    identityB.location = QDir(identityRoot).filePath(QStringLiteral("./same.txt"));
+    ok &= require(sameResourceIdentity(identityA, identityB, root.path()), "dot path variants must share resource identity");
+    identityB.location = identityFile.fileName() + QDir::separator();
+    ok &= require(sameResourceIdentity(identityA, identityB, root.path()), "trailing separator variants must share resource identity");
+    ProjectResource differentFile = identityA;
+    differentFile.location = QDir(identityRoot).filePath(QStringLiteral("other/same.txt"));
+    ok &= require(!sameResourceIdentity(identityA, differentFile, root.path()), "different files with the same name must remain distinct");
+    ProjectResource urlA;
+    urlA.type = QStringLiteral("url"); urlA.location = QStringLiteral("HTTPS://Example.com/docs/");
+    ProjectResource urlB = urlA; urlB.location = QStringLiteral("https://example.com/docs");
+    ok &= require(sameResourceIdentity(urlA, urlB, root.path()), "equivalent URLs must share resource identity");
     ok &= require(loaded.resourcePolicy().options == resourcePolicy.options, "resource policy options must survive persistence");
     ok &= require(loaded.resourcePolicy().loadingStrategy == QStringLiteral("relevant"), "resource loading strategy must survive persistence");
     ok &= require(loaded.ruleConfiguration().activeCategories == rules.activeCategories, "rule categories must survive persistence");
@@ -309,8 +363,69 @@ int main(int argc, char** argv)
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/resources/resources.json")), "resource manifest must exist");
     ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/memory/memory-config.json")), "disabled memory must not initialize memory");
     ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/platforms/platform-metadata.json")), "disabled platforms must not generate metadata");
+    QFile generationManifest(QDir(generationProject.path()).filePath("ARAMF_WORKER/resources/resources.json"));
+    ok &= require(generationManifest.open(QIODevice::ReadOnly | QIODevice::Text), "generated resource metadata must be readable");
+    const auto generationManifestJson = QJsonDocument::fromJson(generationManifest.readAll()).object();
+    generationManifest.close();
+    const auto generatedResources = generationManifestJson.value(QStringLiteral("resources")).toArray();
+    ok &= require(generatedResources.size() == 1, "generated resource metadata must contain the configured resource");
+    if (!generatedResources.isEmpty()) {
+        const auto generatedResource = generatedResources.first().toObject();
+        ok &= require(generatedResource.value(QStringLiteral("authority")).toString() == generationResource.authorityLevel,
+                      "generated resource authority must match the project resource");
+        const auto generatedScopes = generatedResource.value(QStringLiteral("scopes")).toArray();
+        ok &= require(generatedScopes.size() == generationResource.scopes.size()
+                      && generatedScopes.first().toString() == generationResource.scopes.first(),
+                      "generated resource scopes must match the project resource");
+    }
     VerificationServices verificationServices;
     FinalizationServices finalizationServices;
+
+    QTemporaryDir duplicateProject;
+    ProjectModel duplicateModel;
+    duplicateModel.setProjectName(QStringLiteral("Duplicate Resource Test"));
+    duplicateModel.setProjectPath(duplicateProject.path());
+    const QString duplicateFilePath = QDir(duplicateProject.path()).filePath(QStringLiteral("src/same.txt"));
+    ok &= require(QDir().mkpath(QFileInfo(duplicateFilePath).absolutePath()), "duplicate resource fixture directory must be creatable");
+    QFile duplicateFile(duplicateFilePath);
+    ok &= require(duplicateFile.open(QIODevice::WriteOnly), "duplicate resource fixture must be writable");
+    duplicateFile.write("duplicate\n");
+    duplicateFile.close();
+    ProjectResource duplicateA;
+    duplicateA.id = QStringLiteral("duplicate-a");
+    duplicateA.name = QStringLiteral("same.txt");
+    duplicateA.type = QStringLiteral("file");
+    duplicateA.location = duplicateFilePath;
+    duplicateA.status = QStringLiteral("available");
+    ProjectResource duplicateB = duplicateA;
+    duplicateB.id = QStringLiteral("duplicate-b");
+    duplicateB.location = QDir(duplicateProject.path()).relativeFilePath(duplicateFilePath);
+    duplicateModel.setResources({duplicateA, duplicateB});
+    GenerationOptions duplicateOptions;
+    duplicateOptions.generateAgentRules = false;
+    duplicateOptions.generateRouting = false;
+    duplicateOptions.generatePlatforms = false;
+    duplicateOptions.generateResources = true;
+    duplicateOptions.generateMemory = false;
+    duplicateOptions.generateProvenance = false;
+    const GenerationResult duplicateGeneration = generationServices.generate(duplicateModel, duplicateOptions);
+    ok &= require(duplicateGeneration.success, "identical duplicate resources must be safely deduplicated during generation");
+    QFile duplicateManifest(QDir(duplicateProject.path()).filePath("ARAMF_WORKER/resources/resources.json"));
+    ok &= require(duplicateManifest.open(QIODevice::ReadOnly | QIODevice::Text), "deduplicated resource manifest must be readable");
+    const auto duplicateManifestJson = QJsonDocument::fromJson(duplicateManifest.readAll()).object();
+    duplicateManifest.close();
+    ok &= require(duplicateManifestJson.value(QStringLiteral("resources")).toArray().size() == 1,
+                  "generation must emit one resource entry for an identical duplicate identity");
+    const VerificationResult duplicateVerification = verificationServices.verify(duplicateModel, duplicateOptions);
+    ok &= require(duplicateVerification.overallStatus == VerificationStatus::Fail,
+                  "Verify must reject duplicate canonical resource identities in the project configuration");
+    ProjectResource conflictingDuplicate = duplicateB;
+    conflictingDuplicate.id = QStringLiteral("duplicate-conflict");
+    conflictingDuplicate.authorityLevel = QStringLiteral("primary-source-of-truth");
+    duplicateModel.setResources({duplicateA, conflictingDuplicate});
+    const GenerationResult conflictingGeneration = generationServices.generate(duplicateModel, duplicateOptions);
+    ok &= require(!conflictingGeneration.success, "generation must reject conflicting duplicate resource metadata");
+
     const VerificationResult selectiveVerification = verificationServices.verify(generationModel, generationOptions);
     ok &= require(selectiveVerification.overallStatus == VerificationStatus::Pass,
                   "selective verification must pass without the memory product");
