@@ -101,6 +101,7 @@ QJsonObject toJson(const FrameworkKnowledgeEntry& entry)
         {QStringLiteral("title"), entry.title},
         {QStringLiteral("lesson"), entry.lesson},
         {QStringLiteral("status"), entry.status},
+        {QStringLiteral("reviewStatus"), entry.reviewStatus},
         {QStringLiteral("scopes"), strings(entry.scopes)},
         {QStringLiteral("evidence"), strings(entry.evidence)},
         {QStringLiteral("portable"), entry.portable},
@@ -118,6 +119,10 @@ FrameworkKnowledgeEntry fromJson(const QJsonObject& value)
     entry.title = value.value(QStringLiteral("title")).toString();
     entry.lesson = value.value(QStringLiteral("lesson")).toString();
     entry.status = value.value(QStringLiteral("status")).toString(QStringLiteral("candidate"));
+    entry.reviewStatus = value.value(QStringLiteral("reviewStatus")).toString(
+        entry.status == QStringLiteral("approved") ? QStringLiteral("approved")
+        : entry.status == QStringLiteral("superseded") ? QStringLiteral("superseded")
+        : QStringLiteral("more-evidence"));
     entry.scopes = strings(value.value(QStringLiteral("scopes")).toArray());
     entry.evidence = strings(value.value(QStringLiteral("evidence")).toArray());
     entry.portable = value.value(QStringLiteral("portable")).toBool(true);
@@ -252,6 +257,7 @@ bool FrameworkKnowledgeService::approve(const QString& projectRoot,
             return false;
         }
         value.insert(QStringLiteral("status"), QStringLiteral("approved"));
+        value.insert(QStringLiteral("reviewStatus"), QStringLiteral("approved"));
         value.insert(QStringLiteral("approvedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
         value.insert(QStringLiteral("approvalSource"), approvalSource.trimmed());
         values.replace(i, value);
@@ -288,6 +294,7 @@ bool FrameworkKnowledgeService::supersede(const QString& projectRoot,
         QJsonObject value = values.at(i).toObject();
         if (value.value(QStringLiteral("id")).toString() != entryId) continue;
         value.insert(QStringLiteral("status"), QStringLiteral("superseded"));
+        value.insert(QStringLiteral("reviewStatus"), QStringLiteral("superseded"));
         value.insert(QStringLiteral("supersededBy"), replacementId.trimmed());
         values.replace(i, value);
         found = true;

@@ -224,4 +224,10 @@ application was started normally, but those interactions remain manual checks.
 - AI agents are explicitly forbidden from self-approving candidates.
 - Repository development uses the same live model in `aramf_setup/memory/framework-knowledge.json`.
 - Two approved development lessons currently preserve verified corrections and correct repository-root path interpretation.
+- The 250-scenario campaign produced candidate `fk-7a246faa4bc6ad74` with
+  `reviewStatus: more-evidence`. It generalizes ISSUE-001 across lifecycle,
+  selective-generation, optional-components, verification and finalization;
+  evidence is attached from TEST-198, TEST-204 and TEST-210. It remains
+  inactive until explicit human approval and is not part of the approved
+  knowledge precedence layer.
 - Headless source-level verification was added; a clean CMake configure in this Linux runtime is currently blocked because Qt 6 development packages are not installed here. Windows/Qt build verification remains required after transfer.

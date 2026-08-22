@@ -82,6 +82,11 @@ int main(int argc, char** argv)
         {QStringLiteral("Corrected behavior passed verification.")},
         true, &error);
     ok &= require(!candidateId.isEmpty(), "Framework Knowledge candidate must be created");
+    const auto proposedEntries = frameworkKnowledge.entries(temporaryProject.path(), &error);
+    ok &= require(proposedEntries.size() == 1
+                  && proposedEntries.first().status == QStringLiteral("candidate")
+                  && proposedEntries.first().reviewStatus == QStringLiteral("more-evidence"),
+                  "Framework Knowledge candidate must remain reviewable and inactive");
     const QString repeatedCandidateId = frameworkKnowledge.propose(
         temporaryProject.path(),
         QStringLiteral("Preserve verified corrections"),
@@ -97,6 +102,9 @@ int main(int argc, char** argv)
     error.clear();
     ok &= require(frameworkKnowledge.approve(temporaryProject.path(), candidateId, QStringLiteral("explicit-user-approval"), &error),
                   "Framework Knowledge candidate must be approvable after explicit user approval");
+    const auto approvedEntries = frameworkKnowledge.entries(temporaryProject.path(), &error);
+    ok &= require(approvedEntries.size() == 1 && approvedEntries.first().reviewStatus == QStringLiteral("approved"),
+                  "Framework Knowledge approval must update review status");
     const auto activeKnowledge = frameworkKnowledge.approvedEntries(temporaryProject.path(), {QStringLiteral("implementation")}, &error);
     ok &= require(activeKnowledge.size() == 1 && activeKnowledge.first().id == candidateId,
                   "approved Framework Knowledge must become active immediately");

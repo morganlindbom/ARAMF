@@ -11,6 +11,7 @@ struct FrameworkKnowledgeEntry
     QString title;
     QString lesson;
     QString status = QStringLiteral("candidate");
+    QString reviewStatus = QStringLiteral("more-evidence");
     QStringList scopes;
     QStringList evidence;
     bool portable = true;
