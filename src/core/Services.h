@@ -12,6 +12,9 @@ struct TemplateDefinition {
     QString displayName;
     QString projectType;
     DevelopmentEnvironment environment;
+    DevelopmentCapabilities capabilities;
+    AcademicConfiguration academic;
+    AiConfiguration ai;
     QStringList recommendedRules;
     QStringList recommendedResources;
     QStringList recommendedAiConfiguration;
