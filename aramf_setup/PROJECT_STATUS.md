@@ -1,11 +1,12 @@
-# ARAMF Project Status
+# ARAMF Product/Bootstrap Source Status
 
 ## Current Architecture
 
-ARAMF is a C++17 / Qt 6 desktop application. The repository's own framework,
-development status and agent-facing setup material live under `aramf_setup/`.
-The canonical control directory generated inside managed target projects
-remains `ARAMF/` (uppercase). Application code is under `src/`, tests are under
+ARAMF is a C++17 / Qt 6 desktop application. This file documents product and
+bootstrap source material; it is not the live development status authority for
+this repository. The live self-hosted status is
+`../ARAMF_WORKER/PROJECT_STATUS.md`. The canonical control directory generated
+inside every managed target project is `ARAMF_WORKER/`. Application code is under `src/`, tests are under
 `tests/`, and target-project support is data driven rather than a second runtime
 backend.
 
@@ -19,7 +20,7 @@ Repository-local setup material is stored under `aramf_setup/`. This is not a
 runtime generation destination. When a user selects `ProjectModel::projectPath()`,
 all generated bootstrap, memory, rules, routing, resources, verification and
 other control-plane files are written below the selected project's uppercase
-`ARAMF/` directory.
+`ARAMF_WORKER/` directory.
 
 Root-level generated bootstrap source is kept separately in
 `aramf_setup/bootstrap/`. Its `AGENTS.md` is a thin template/reference for the
@@ -94,7 +95,7 @@ changes only the project path and does not save.
   from Select All while Clear All clears all permissions.
 - Finalize provides explicit AI Agent Entry Point creation. Generic and
   supported provider bootstraps are managed idempotently, preserve user-owned
-  content, and converge on generated `ARAMF/AGENTS.md`.
+  content, and converge on generated `ARAMF_WORKER/AGENTS.md`.
 - Three resource pages for inventory, authority/scopes, and AI resource policy.
   `ProjectResource` stores stable ID, type, location, description, enabled
   state, location mode, authority, scopes, status, and loading override.
@@ -145,7 +146,7 @@ changes only the project path and does not save.
   for selected stable AI agent IDs. Managed sections are idempotent, existing
   user content is preserved, unsupported agents use generic `AGENTS.md`, and
   removed agents are never deleted automatically. All entry points route to
-  target `ARAMF/AGENTS.md`; repository-only `aramf_setup/bootstrap/` is never
+  target `ARAMF_WORKER/AGENTS.md`; repository-only `aramf_setup/bootstrap/` is never
   generated.
 
 ## Verified Functionality
@@ -173,7 +174,8 @@ changes only the project path and does not save.
 - Stale active `ProjectResourcesPage` references: none.
 - Repository setup root: PASS — Git now tracks `aramf_setup/`; the former
   repository-local `ARAMF/` directory is gone. Generated target control paths
-  remain uppercase `ARAMF/`.
+  use the canonical `ARAMF_WORKER/` directory; legacy `ARAMF/` is preserved only
+  as a migration source.
 - Rules and memory persistence defaults: PASS — new rule enforcement/routing,
   memory capture/maintenance settings and the maximum byte limit round-trip
   through project persistence; legacy threshold/action fields are ignored
@@ -218,8 +220,8 @@ application was started normally, but those interactions remain manual checks.
 ## Live Framework Knowledge
 
 - `FrameworkKnowledgeService` is implemented in C++ core.
-- Managed projects receive `ARAMF/memory/framework-knowledge.json` as part of Project Memory initialization.
-- Approved lessons are read directly by AI agents through the canonical `ARAMF/AGENTS.md` startup contract and therefore become useful immediately without reopening ARAMF.
+- Managed projects receive `ARAMF_WORKER/memory/framework-knowledge.json` as part of Project Memory initialization.
+- Approved lessons are read directly by AI agents through the canonical `ARAMF_WORKER/AGENTS.md` startup contract and therefore become useful immediately without reopening ARAMF.
 - The lifecycle supports evidence-backed candidates, explicit user approval, deduplication, scope filtering and non-destructive superseding.
 - AI agents are explicitly forbidden from self-approving candidates.
 - Repository development uses the same live model in `aramf_setup/memory/framework-knowledge.json`.
@@ -237,4 +239,18 @@ application was started normally, but those interactions remain manual checks.
   TEST-HARNESS-002 after the normal production executable passed Cancel, Escape
   and window-close verification. All manual scenarios are complete and the
   classification is RELEASE-READY.
-- Headless source-level verification was added; a clean CMake configure in this Linux runtime is currently blocked because Qt 6 development packages are not installed here. Windows/Qt build verification remains required after transfer.
+- Windows/Qt source-level verification is available through the existing CMake build and CTest configuration.
+
+## Current Migration Source Record
+
+The canonical generated control plane is now `ARAMF_WORKER/`. This directory
+is the live self-hosted plane for the ARAMF repository; this file remains
+product/bootstrap source documentation and is not a second live status
+authority. Legacy `ARAMF/` projects are preserved during non-destructive
+migration, while new generation, memory, resources, routing, rules,
+verification, finalization, and provider bootstrap paths use `ARAMF_WORKER/`.
+Windows verification completed with production build PASS, CTest 2/2 PASS,
+test_250 250/250 PASS, current automated test_550 regression 250/250 PASS,
+and application startup PASS. The existing candidate `fk-7a246faa4bc6ad74`
+remains candidate / more-evidence. Historical test_550 manual evidence remains
+50/50 PASS-equivalent and was not rewritten.

@@ -2,11 +2,11 @@
 
 Repository path note: this documentation is part of the repository-local
 `aramf_setup/` development control material. It must not be confused with the
-uppercase `ARAMF/` control plane generated inside a managed target project.
+`ARAMF_WORKER/` control plane generated inside a managed target project.
 
 Generation resolves its destination from `ProjectModel::projectPath()` and
 appends `ARAMF`. `aramf_setup` is never created in a managed target project.
-The generated root `AGENTS.md` always routes to `ARAMF/AGENTS.md`; Verify and
+The generated root `AGENTS.md` always routes to `ARAMF_WORKER/AGENTS.md`; Verify and
 Finalize inspect that same generated control plane.
 
 Repository templates for root-level generated entry files live under
@@ -166,7 +166,7 @@ Finalize also exposes an explicit AI Agent Entry Points action. The page
 delegates file work to `AgentEntryPointService` in `src/core/Services.*`; it
 does not write files directly. The service combines selected stable agent IDs,
 maintains target-root `AGENTS.md`, and uses central metadata for supported
-provider files. Managed sections point to generated target `ARAMF/AGENTS.md`,
+provider files. Managed sections point to generated target `ARAMF_WORKER/AGENTS.md`,
 preserve unrelated user content, are idempotent, and never delete provider
 files when an agent is removed. Unsupported agents use the generic entry
 point. `aramf_setup/bootstrap/` is repository-internal source/template
@@ -175,8 +175,8 @@ material and is never copied to `<ProjectPath>/bootstrap/`.
 ## Live Framework Knowledge
 
 Framework Knowledge is intentionally not tied to a workflow page. The managed
-project stores it at `ARAMF/memory/framework-knowledge.json`, and canonical
-`ARAMF/AGENTS.md` tells every bootstrap-connected agent to read relevant
+project stores it at `ARAMF_WORKER/memory/framework-knowledge.json`, and canonical
+`ARAMF_WORKER/AGENTS.md` tells every bootstrap-connected agent to read relevant
 approved entries during startup. This makes approved lessons effective in the
 current project immediately, without reopening the ARAMF desktop application.
 Agents may add evidence-backed candidates during normal work after verified

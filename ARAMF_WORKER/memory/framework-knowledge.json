@@ -1,0 +1,70 @@
+{
+  "_file": "framework-knowledge.json",
+  "version": 1,
+  "authority": [
+    "explicit-current-user-instruction",
+    "current-source-of-truth",
+    "current-durable-project-decisions",
+    "approved-framework-knowledge",
+    "templates-and-defaults",
+    "ai-inference"
+  ],
+  "entries": [
+    {
+      "id": "fk-preserve-verified-corrections",
+      "title": "Preserve verified corrections as the active baseline",
+      "lesson": "When a correction has been explicitly accepted and subsequently verified, treat the corrected behavior as the current baseline. Do not reintroduce the superseded behavior unless newer evidence or a higher-priority instruction requires it.",
+      "status": "approved",
+      "scopes": ["implementation", "instructions", "regression"],
+      "evidence": [
+        "Repeated project iterations showed that a previously corrected implementation can regress when later work recreates an older assumption instead of preserving the verified baseline."
+      ],
+      "portable": true,
+      "createdAt": "2026-08-22T00:00:00Z",
+      "approvedAt": "2026-08-22T00:00:00Z",
+      "approvalSource": "explicit-user-request",
+      "supersededBy": ""
+    },
+    {
+      "id": "fk-resolve-paths-from-working-root",
+      "title": "Resolve repository paths from the actual working root",
+      "lesson": "Before changing or documenting repository paths, inspect the actual tree and resolve paths relative to the agent's current repository working root. Keep repository-internal setup paths distinct from generated target-project control-plane paths.",
+      "status": "approved",
+      "scopes": ["paths", "repository", "generation"],
+      "evidence": [
+        "The internal ARAMF directory rename was initially described from the wrong path perspective; inspecting the repository root showed that ./ARAMF/ was the actual directory to rename while generated <ProjectPath>/ARAMF/ had to remain unchanged."
+      ],
+      "portable": true,
+      "createdAt": "2026-08-22T00:00:00Z",
+      "approvedAt": "2026-08-22T00:00:00Z",
+      "approvalSource": "explicit-user-approved-correction",
+      "supersededBy": ""
+    },
+    {
+      "id": "fk-7a246faa4bc6ad74",
+      "title": "Selected products define lifecycle preconditions",
+      "lesson": "Lifecycle preconditions must be derived from the explicitly selected product set. Optional products must not introduce mandatory lifecycle requirements when they were intentionally excluded.",
+      "status": "candidate",
+      "reviewStatus": "more-evidence",
+      "scopes": [
+        "lifecycle",
+        "selective-generation",
+        "optional-components",
+        "verification",
+        "finalization"
+      ],
+      "evidence": [
+        "ISSUE-001 — Selective generation blocked Finalize",
+        "TEST-198: Generate and Verify passed with Memory excluded; Finalize initially failed on unconditional memory validation.",
+        "TEST-204: Same selective-generation failure pattern; passed after the correction.",
+        "TEST-210: Same selective-generation failure pattern; passed after the correction.",
+        "Correction gated memory-related Finalize requirements on the selected Memory product; all three retests passed with no recurrence."
+      ],
+      "portable": true,
+      "createdAt": "2026-08-22T00:00:00Z",
+      "approvedAt": "",
+      "approvalSource": "",
+      "supersededBy": ""
+    }
+  ]
+}

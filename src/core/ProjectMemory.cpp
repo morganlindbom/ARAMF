@@ -3,6 +3,7 @@
 #include "ProjectMemory.h"
 
 #include "AramfPaths.h"
+#include "ControlPlaneMigration.h"
 #include "ProjectModel.h"
 
 #include <QDateTime>
@@ -171,6 +172,11 @@ bool ProjectMemory::initialize(const QString& projectRoot, const ProjectModel* m
         }
         return false;
     }
+    const auto preparation = prepareControlPlane(projectRoot);
+    if (!preparation.success) {
+        if (error) *error = preparation.error;
+        return false;
+    }
     if (!ensureDirectories(projectRoot, error) || !writeInitialFiles(projectRoot, model, error)) {
         return false;
     }
@@ -197,6 +203,11 @@ bool ProjectMemory::initializeMemory(const QString& projectRoot, const ProjectMo
 {
     if (projectRoot.trimmed().isEmpty()) {
         if (error) *error = QStringLiteral("Project path is empty.");
+        return false;
+    }
+    const auto preparation = prepareControlPlane(projectRoot);
+    if (!preparation.success) {
+        if (error) *error = preparation.error;
         return false;
     }
     if (!ensureMemoryDirectories(projectRoot, error)
@@ -276,7 +287,7 @@ qint64 ProjectMemory::managedMemoryUsage(const QString& projectRoot) const
 {
     qint64 total = 0;
     QStack<QString> directories;
-    directories.push(QDir(projectRoot).filePath(QStringLiteral("ARAMF/memory")));
+    directories.push(QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/memory")));
     while (!directories.isEmpty()) {
         const QDir directory(directories.pop());
         for (const auto& entry : directory.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot)) {
@@ -446,16 +457,16 @@ bool ProjectMemory::ensureDirectories(const QString& projectRoot, QString* error
     Custom content is isolated from generated and memory data so automation can protect user ownership boundaries.
     */
     const QStringList directories {
-        QStringLiteral("ARAMF"),
-        QStringLiteral("ARAMF/memory"),
-        QStringLiteral("ARAMF/rules"),
-        QStringLiteral("ARAMF/routing"),
-        QStringLiteral("ARAMF/resources"),
-        QStringLiteral("ARAMF/templates"),
-        QStringLiteral("ARAMF/platforms"),
-        QStringLiteral("ARAMF/verification"),
-        QStringLiteral("ARAMF/custom"),
-        QStringLiteral("ARAMF/docs")
+        AramfPaths::ControlDirectory,
+        QStringLiteral("ARAMF_WORKER/memory"),
+        QStringLiteral("ARAMF_WORKER/rules"),
+        QStringLiteral("ARAMF_WORKER/routing"),
+        QStringLiteral("ARAMF_WORKER/resources"),
+        QStringLiteral("ARAMF_WORKER/templates"),
+        QStringLiteral("ARAMF_WORKER/platforms"),
+        QStringLiteral("ARAMF_WORKER/verification"),
+        QStringLiteral("ARAMF_WORKER/custom"),
+        QStringLiteral("ARAMF_WORKER/docs")
     };
 
     QDir root(projectRoot);
@@ -472,8 +483,8 @@ bool ProjectMemory::ensureDirectories(const QString& projectRoot, QString* error
 
 bool ProjectMemory::ensureMemoryDirectories(const QString& projectRoot, QString* error) const
 {
-    if (!QDir(projectRoot).mkpath(QStringLiteral("ARAMF/memory"))) {
-        if (error) *error = QStringLiteral("Could not create %1").arg(QDir(projectRoot).filePath(QStringLiteral("ARAMF/memory")));
+    if (!QDir(projectRoot).mkpath(QStringLiteral("ARAMF_WORKER/memory"))) {
+        if (error) *error = QStringLiteral("Could not create %1").arg(QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/memory")));
         return false;
     }
     return true;
@@ -520,7 +531,7 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
 {
     /**Create missing managed framework files with conservative defaults.
 
-    The root AGENTS.md is only a bootstrap; every referenced instruction and state file lives inside ARAMF/.
+    The root AGENTS.md is only a bootstrap; every referenced instruction and state file lives inside ARAMF_WORKER/.
     */
     const QString projectName = model ? model->projectName() : QStringLiteral("Unnamed Project");
     const QString projectId = model ? model->projectId() : QUuid::createUuid().toString(QUuid::WithoutBraces);
@@ -528,8 +539,8 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
     const QByteArray rootAgent = QByteArrayLiteral(
         "<!-- AGENTS.md -->\n\n"
         "# ARAMF Agent Entry Point\n\n"
-        "Read and follow `ARAMF/AGENTS.md` before making project changes.\n"
-        "All ARAMF rule, memory, status, routing, resource, and verification context is stored under `ARAMF/`.\n");
+        "Read and follow `ARAMF_WORKER/AGENTS.md` before making project changes.\n"
+        "All ARAMF rule, memory, status, routing, resource, and verification context is stored under `ARAMF_WORKER/`.\n");
     if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("AGENTS.md")), rootAgent, error, true)) {
         return false;
     }
@@ -551,7 +562,7 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         "## Live Framework Knowledge contract\n\n"
         "`memory/framework-knowledge.json` is live project memory. Approved entries apply immediately in this project and do not require ARAMF regeneration. The authority order is: explicit current user instruction, current Source of Truth, current durable project decisions, approved Framework Knowledge, templates/defaults, then AI inference. When a corrected approach is verified and appears reusable, add or enrich a `candidate` entry with evidence instead of silently changing framework behavior. Never self-approve a candidate. Only after explicit user approval may its status become `approved`; once approved, use it immediately. Keep superseded entries for auditability but do not apply them.\n\n"
         "## Scope\n\n"
-        "All paths in this file are relative to the `ARAMF/` directory. Do not depend on rule or memory files outside `ARAMF/`.\n");
+        "All paths in this file are relative to the `ARAMF_WORKER/` directory. Do not depend on rule or memory files outside `ARAMF_WORKER/`.\n");
     if (!writeTextFile(absolutePath(projectRoot, AramfPaths::AgentInstructions), canonicalAgent, error, true)) {
         return false;
     }
@@ -596,7 +607,7 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         {QStringLiteral("projectId"), projectId},
         {QStringLiteral("projectName"), projectName},
         {QStringLiteral("implementationLanguage"), QStringLiteral("C++")},
-        {QStringLiteral("controlDirectory"), QStringLiteral("ARAMF")}
+        {QStringLiteral("controlDirectory"), AramfPaths::ControlDirectory}
     };
     if (!writeJsonFile(absolutePath(projectRoot, AramfPaths::Profile), profile, error, true)) {
         return false;
@@ -617,7 +628,7 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         }
     }
 
-    const QString routingReadme = QDir(projectRoot).filePath(QStringLiteral("ARAMF/routing/README.md"));
+    const QString routingReadme = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/routing/README.md"));
     const QByteArray routing = QByteArrayLiteral(
         "<!-- README.md -->\n\n"
         "# Routing\n\n"

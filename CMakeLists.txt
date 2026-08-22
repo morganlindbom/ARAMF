@@ -15,6 +15,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
 set(ARAMF_CORE_SOURCES
     src/core/AramfPaths.h
+    src/core/ControlPlaneMigration.h
+    src/core/ControlPlaneMigration.cpp
     src/core/ProjectMemory.h
     src/core/ProjectMemory.cpp
     src/core/FrameworkKnowledge.h
@@ -110,6 +112,8 @@ if(BUILD_TESTING)
         tests/ProjectMemoryTests.cpp
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
+        src/core/ControlPlaneMigration.h
+        src/core/ControlPlaneMigration.cpp
         src/core/FrameworkKnowledge.h
         src/core/FrameworkKnowledge.cpp
         src/core/EnvironmentCatalog.h
@@ -138,6 +142,8 @@ if(BUILD_TESTING)
         src/core/ProjectModel.cpp
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
+        src/core/ControlPlaneMigration.h
+        src/core/ControlPlaneMigration.cpp
         src/core/AiCatalog.h
         src/core/AiCatalog.cpp
         src/core/MemoryCatalog.h

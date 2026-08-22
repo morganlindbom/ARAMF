@@ -1,0 +1,17 @@
+{
+  "_file": "aramf-profile.json",
+  "name": "ARAMF",
+  "version": 2,
+  "projectId": "c7265892-3b58-4671-bcda-0ccc7cf65721",
+  "implementationLanguage": "C++17",
+  "guiFramework": "Qt 6 Widgets",
+  "buildSystem": "CMake",
+  "controlDirectory": "ARAMF_WORKER",
+  "projectContext": "AI Rules And Memory Framework — self-hosted development project.",
+  "developmentEnvironment": {
+    "ide": "Visual Studio Code",
+    "operatingSystem": "Windows Desktop",
+    "versionControl": "Git",
+    "hosting": "GitHub"
+  }
+}

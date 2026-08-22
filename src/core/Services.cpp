@@ -3,6 +3,7 @@
 #include "Services.h"
 
 #include "AramfPaths.h"
+#include "ControlPlaneMigration.h"
 #include "AiCatalog.h"
 #include "ProjectMemory.h"
 #include "RuleCatalog.h"
@@ -113,8 +114,8 @@ QString managedBootstrapBlock()
     return QStringLiteral("<!-- ARAMF-BEGIN -->\n"
                           "This project is managed by ARAMF.\n\n"
                           "Read and follow:\n\n"
-                          "ARAMF/AGENTS.md\n\n"
-                          "ARAMF contains the canonical project rules, routing, resources, memory and project status.\n"
+                          "ARAMF_WORKER/AGENTS.md\n\n"
+                          "ARAMF_WORKER contains the canonical project rules, routing, resources, memory and project status.\n"
                           "<!-- ARAMF-END -->\n");
 }
 
@@ -356,10 +357,12 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         result.error = QStringLiteral("Generation stopped: choose a project path first.");
         return result;
     }
-    if (!QDir().mkpath(QDir(projectRoot).filePath(QStringLiteral("ARAMF")))) {
-        result.error = QStringLiteral("Generation failed: could not create the ARAMF directory.");
+    const auto preparation = prepareControlPlane(projectRoot);
+    if (!preparation.success) {
+        result.error = QStringLiteral("Generation failed: %1").arg(preparation.error);
         return result;
     }
+    result.warnings.append(preparation.warnings);
 
     auto fail = [&result](const QString& product, const QString& error) {
         result.error = QStringLiteral("Generation failed in %1: %2")
@@ -391,7 +394,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "Authority order: explicit current user instruction, current Source of Truth, current durable project decisions, approved Framework Knowledge, templates/defaults, then AI inference.\n"
             "When a corrected approach is verified and reusable, record a Framework Knowledge candidate with evidence. Never self-approve it; explicit user approval is required before changing its status to `approved`. Superseded entries remain auditable but are not active.\n"
             "Keep project status current and use project memory when configured.\n"
-            "The generated control directory is `ARAMF/`.\n");
+            "The generated control directory is `ARAMF_WORKER/`.\n");
         if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("AGENTS.md")), rootAgent.toUtf8(), &error, true)
             || !writeTextFile(QDir(projectRoot).filePath(AramfPaths::AgentInstructions), canonicalAgent.toUtf8(), &error, true)) {
             return fail(QStringLiteral("Agent rules"), error);
@@ -454,10 +457,10 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "Scope routing selects relevant project areas: %3\n\n"
             "Routing minimizes irrelevant AI context by loading only applicable rules and scopes.\n")
                                   .arg(rules.loadingStrategy, rules.workScopes.join(QStringLiteral(", ")), rules.projectScopes.join(QStringLiteral(", ")));
-        if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("ARAMF/routing/README.md")), readme.toUtf8(), &error)) {
+        if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/routing/README.md")), readme.toUtf8(), &error)) {
             return fail(QStringLiteral("Routing"), error);
         }
-        addGeneratedFiles(result, {AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes, QStringLiteral("ARAMF/routing/README.md")});
+        addGeneratedFiles(result, {AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes, QStringLiteral("ARAMF_WORKER/routing/README.md")});
     }
 
     if (options.generatePlatforms) {
@@ -481,7 +484,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             {QStringLiteral("toolchains"), toJsonArray(capabilities.toolchains)},
             {QStringLiteral("buildSystems"), toJsonArray(capabilities.buildSystems)}
         };
-        const QString platformPath = QStringLiteral("ARAMF/platforms/platform-metadata.json");
+        const QString platformPath = QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json");
         if (!writeJsonFile(QDir(projectRoot).filePath(platformPath), platform, &error)) return fail(QStringLiteral("Platform metadata"), error);
         addGeneratedFiles(result, {platformPath});
     }
@@ -542,11 +545,11 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         {QStringLiteral("resources"), options.generateResources},
         {QStringLiteral("memory"), options.generateMemory},
         {QStringLiteral("provenance"), options.generateProvenance}};
-    if (!writeJsonFile(QDir(projectRoot).filePath(QStringLiteral("ARAMF/verification/generation-state.json")),
+    if (!writeJsonFile(QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/verification/generation-state.json")),
                        generationState, &error)) {
         return fail(QStringLiteral("Generation state"), error);
     }
-    addGeneratedFiles(result, {QStringLiteral("ARAMF/verification/generation-state.json")});
+    addGeneratedFiles(result, {QStringLiteral("ARAMF_WORKER/verification/generation-state.json")});
 
     result.success = true;
     return result;
@@ -572,12 +575,18 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     addCheck(result, QStringLiteral("project-path"), QStringLiteral("Project Path"),
              QDir(root).exists() ? VerificationStatus::Pass : VerificationStatus::Fail,
              QDir(root).exists() ? root : QStringLiteral("Project path does not exist."));
-    const QString aramf = QDir(root).filePath(QStringLiteral("ARAMF"));
-    const bool aramfExists = QDir(aramf).exists();
-    addCheck(result, QStringLiteral("control-plane"), QStringLiteral("ARAMF control plane"),
-             aramfExists ? VerificationStatus::Pass : VerificationStatus::Fail,
-             aramfExists ? QStringLiteral("ARAMF directory exists.") : QStringLiteral("ARAMF control plane has not been generated."));
-    if (!aramfExists) {
+    const QString worker = QDir(root).filePath(AramfPaths::ControlDirectory);
+    const QString legacy = QDir(root).filePath(AramfPaths::LegacyControlDirectory);
+    const bool workerExists = QDir(worker).exists();
+    addCheck(result, QStringLiteral("control-plane"), QStringLiteral("ARAMF_WORKER control plane"),
+             workerExists ? VerificationStatus::Pass : VerificationStatus::Fail,
+             workerExists ? QStringLiteral("ARAMF_WORKER directory exists.") : QStringLiteral("ARAMF_WORKER control plane has not been generated."));
+    if (legacy != worker && QDir(legacy).exists()) {
+        addCheck(result, QStringLiteral("legacy-control-plane"), QStringLiteral("Legacy ARAMF control plane"),
+                 VerificationStatus::Warning,
+                 workerExists ? QStringLiteral("Legacy ARAMF/ preserved; ARAMF_WORKER/ is authoritative.") : QStringLiteral("Legacy ARAMF/ detected; migrate before use."));
+    }
+    if (!workerExists) {
         result.overallStatus = VerificationStatus::Fail;
         return result;
     }
@@ -592,12 +601,12 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
                  readableNonEmpty(path) ? relative : QStringLiteral("Missing or empty: %1").arg(relative));
     };
     checkFile(QStringLiteral("root-agents"), QStringLiteral("Root AGENTS.md"), QStringLiteral("AGENTS.md"), expectedOptions.generateAgentRules);
-    checkFile(QStringLiteral("aramf-agents"), QStringLiteral("ARAMF/AGENTS.md"), AramfPaths::AgentInstructions, expectedOptions.generateAgentRules);
+    checkFile(QStringLiteral("aramf-worker-agents"), QStringLiteral("ARAMF_WORKER/AGENTS.md"), AramfPaths::AgentInstructions, expectedOptions.generateAgentRules);
     checkFile(QStringLiteral("project-status"), QStringLiteral("PROJECT_STATUS.md"), AramfPaths::ProjectStatus, expectedOptions.generateAgentRules);
     checkFile(QStringLiteral("generated-rules"), QStringLiteral("Generated rules"), AramfPaths::GeneratedRules, expectedOptions.generateAgentRules);
     checkFile(QStringLiteral("task-routes"), QStringLiteral("Task routes"), AramfPaths::TaskRoutes, expectedOptions.generateRouting);
     checkFile(QStringLiteral("scope-routes"), QStringLiteral("Scope routes"), AramfPaths::ScopeRoutes, expectedOptions.generateRouting);
-    checkFile(QStringLiteral("platforms"), QStringLiteral("Platform metadata"), QStringLiteral("ARAMF/platforms/platform-metadata.json"), expectedOptions.generatePlatforms);
+    checkFile(QStringLiteral("platforms"), QStringLiteral("Platform metadata"), QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json"), expectedOptions.generatePlatforms);
     checkFile(QStringLiteral("resources"), QStringLiteral("Resource manifest"), AramfPaths::ResourceManifest, expectedOptions.generateResources);
     checkFile(QStringLiteral("memory"), QStringLiteral("Memory configuration"), AramfPaths::MemoryConfiguration, expectedOptions.generateMemory);
     checkFile(QStringLiteral("framework-knowledge"), QStringLiteral("Framework Knowledge"), AramfPaths::FrameworkKnowledge, expectedOptions.generateMemory);
@@ -605,11 +614,11 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     checkFile(QStringLiteral("selection-effects"), QStringLiteral("Selection effects"), AramfPaths::SelectionEffects, expectedOptions.generateProvenance);
 
     const QStringList jsonFiles{AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes,
-        QStringLiteral("ARAMF/platforms/platform-metadata.json"), AramfPaths::ResourceManifest,
+        QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json"), AramfPaths::ResourceManifest,
         AramfPaths::MemoryConfiguration, AramfPaths::FrameworkKnowledge, AramfPaths::Provenance, AramfPaths::SelectionEffects};
     for (const auto& relative : jsonFiles) {
         const bool expected = (relative == AramfPaths::TaskRoutes || relative == AramfPaths::ScopeRoutes) ? expectedOptions.generateRouting
-            : relative == QStringLiteral("ARAMF/platforms/platform-metadata.json") ? expectedOptions.generatePlatforms
+            : relative == QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json") ? expectedOptions.generatePlatforms
             : relative == AramfPaths::ResourceManifest ? expectedOptions.generateResources
             : (relative == AramfPaths::MemoryConfiguration || relative == AramfPaths::FrameworkKnowledge) ? expectedOptions.generateMemory
             : expectedOptions.generateProvenance;
@@ -637,7 +646,7 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     }
 
     QJsonObject state; QString stateError;
-    const bool stateReadable = readJson(QDir(root).filePath(QStringLiteral("ARAMF/verification/generation-state.json")), &state, &stateError);
+    const bool stateReadable = readJson(QDir(root).filePath(QStringLiteral("ARAMF_WORKER/verification/generation-state.json")), &state, &stateError);
     const bool current = stateReadable && state.value(QStringLiteral("fingerprint")).toString() == result.fingerprint;
     addCheck(result, QStringLiteral("freshness"), QStringLiteral("Generated configuration is current"),
              current ? VerificationStatus::Pass : VerificationStatus::Warning,
@@ -651,7 +660,7 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     result.overallStatus = hasFail ? VerificationStatus::Fail : hasWarning ? VerificationStatus::Warning : VerificationStatus::Pass;
     QJsonArray checks;
     for (const auto& check : result.checks) checks.append(QJsonObject{{QStringLiteral("id"), check.id}, {QStringLiteral("name"), check.name}, {QStringLiteral("status"), statusName(check.status)}, {QStringLiteral("details"), check.details}});
-    writeJsonFile(QDir(root).filePath(QStringLiteral("ARAMF/verification/verification-result.json")),
+    writeJsonFile(QDir(root).filePath(QStringLiteral("ARAMF_WORKER/verification/verification-result.json")),
                   QJsonObject{{QStringLiteral("fingerprint"), result.fingerprint}, {QStringLiteral("overallStatus"), statusName(result.overallStatus)}, {QStringLiteral("checkedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}, {QStringLiteral("checks"), checks}}, nullptr);
     return result;
 }
@@ -673,7 +682,7 @@ FinalizationResult FinalizationServices::finalize(const ProjectModel& model,
     }
     QJsonObject verification;
     QString error;
-    const QString verificationPath = QDir(root).filePath(QStringLiteral("ARAMF/verification/verification-result.json"));
+    const QString verificationPath = QDir(root).filePath(QStringLiteral("ARAMF_WORKER/verification/verification-result.json"));
     if (!readJson(verificationPath, &verification, &error)) {
         result.blockers << QStringLiteral("Run Verify before finalizing.");
         return result;
@@ -684,7 +693,7 @@ FinalizationResult FinalizationServices::finalize(const ProjectModel& model,
         return result;
     }
     QJsonObject existing;
-    const QString finalizationPath = QDir(root).filePath(QStringLiteral("ARAMF/verification/finalization-state.json"));
+    const QString finalizationPath = QDir(root).filePath(QStringLiteral("ARAMF_WORKER/verification/finalization-state.json"));
     if (readJson(finalizationPath, &existing, nullptr)
         && existing.value(QStringLiteral("fingerprint")).toString() == result.fingerprint) {
         result.success = true;
