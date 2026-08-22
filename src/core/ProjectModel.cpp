@@ -2,8 +2,17 @@
 
 #include <QUuid>
 #include <QSet>
+#include <QFileInfo>
+#include <QDir>
+#include <QRegularExpression>
+#include <QUrl>
 
 namespace {
+
+bool isUrlLocation(const QString& location)
+{
+    return location.contains(QRegularExpression(QStringLiteral("^[A-Za-z][A-Za-z0-9+.-]*://")));
+}
 
 bool containsAny(const QStringList& values, std::initializer_list<QStringView> candidates)
 {
@@ -13,6 +22,39 @@ bool containsAny(const QStringList& values, std::initializer_list<QStringView> c
         }
     }
     return false;
+}
+
+}
+
+QString canonicalResourceIdentity(const ProjectResource& resource, const QString& projectPath)
+{
+    const QString location = resource.location.trimmed();
+    if (location.isEmpty()) return {};
+
+    if (resource.type.compare(QStringLiteral("url"), Qt::CaseInsensitive) == 0 || isUrlLocation(location)) {
+        QUrl url(location);
+        if (!url.isValid()) return QStringLiteral("url:") + location;
+        url.setScheme(url.scheme().toLower());
+        url.setHost(url.host().toLower());
+        url.setPath(QDir::cleanPath(url.path()));
+        return QStringLiteral("url:") + url.toString(QUrl::FullyEncoded).toCaseFolded();
+    }
+
+    QString path = location;
+    if (QDir::isRelativePath(path) && !projectPath.trimmed().isEmpty()) {
+        path = QDir(projectPath).filePath(path);
+    }
+    QFileInfo info(QDir::cleanPath(QDir::fromNativeSeparators(path)));
+    QString canonical = info.canonicalFilePath();
+    if (canonical.isEmpty()) canonical = info.absoluteFilePath();
+    return QStringLiteral("local:") + QDir::cleanPath(QDir::fromNativeSeparators(canonical)).toCaseFolded();
+}
+
+bool sameResourceIdentity(const ProjectResource& left, const ProjectResource& right, const QString& projectPath)
+{
+    const QString leftIdentity = canonicalResourceIdentity(left, projectPath);
+    const QString rightIdentity = canonicalResourceIdentity(right, projectPath);
+    return !leftIdentity.isEmpty() && leftIdentity == rightIdentity;
 }
 
 QString deriveProjectContext(const DevelopmentCapabilities& capabilities)
@@ -37,8 +79,6 @@ QString deriveProjectContext(const DevelopmentCapabilities& capabilities)
         return QStringLiteral("reusable-library");
     }
     return QStringLiteral("software-development");
-}
-
 }
 
 ProjectModel::ProjectModel(QObject* parent) : QObject(parent), projectId_(QUuid::createUuid().toString(QUuid::WithoutBraces))

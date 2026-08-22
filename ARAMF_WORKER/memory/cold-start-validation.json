@@ -1,30 +1,23 @@
 {
-  "_file": "cold-start-validation.json",
-  "status": "PASS",
-  "checkedAt": "2026-08-21T18:28:22+00:00",
-  "durableSequence": 3,
-  "checks": [
-    {
-      "name": "ARAMF_WORKER/AGENTS.md",
-      "status": "PASS"
-    },
-    {
-      "name": "ARAMF_WORKER/PROJECT_STATUS.md",
-      "status": "PASS"
-    },
-    {
-      "name": "ARAMF_WORKER/memory/decisions.md",
-      "status": "PASS"
-    },
-    {
-      "name": "ARAMF_WORKER/rules/generated-rules.md",
-      "status": "PASS"
-    },
-    {
-      "name": "ARAMF_WORKER/memory/memory-manifest.json",
-      "status": "PASS"
-    }
-  ],
-  "errors": [],
-  "warnings": []
+    "_file": "cold-start-validation.json",
+    "checkedAt": "2026-08-22T23:06:46Z",
+    "checks": [
+        {
+            "name": "ARAMF_WORKER/memory/decisions.md",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/framework-knowledge.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/memory-manifest.json",
+            "status": "PASS"
+        }
+    ],
+    "errors": [
+    ],
+    "status": "PASS",
+    "warnings": [
+    ]
 }

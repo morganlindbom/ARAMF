@@ -5,6 +5,7 @@
 #include "ui/workflows/ai/integration/AiIntegrationPage.h"
 #include "ui/workflows/memory/maintenance/MemoryMaintenancePage.h"
 #include "core/ProjectModel.h"
+#include "ui/workflows/resources/authority/ResourceAuthorityPage.h"
 
 #include <QApplication>
 #include <QCheckBox>
@@ -248,6 +249,64 @@ int main(int argc, char** argv)
         app.processEvents();
         ok &= require(customSize->decimals() == 1 && std::abs(customSize->value() - 1.5) < 0.000001,
                       "1.5 GB display must omit unnecessary trailing zeroes");
+    }
+
+    ProjectModel authorityModel;
+    ProjectResource authorityA;
+    authorityA.id = QStringLiteral("authority-a");
+    authorityA.name = QStringLiteral("CMakeLists.txt");
+    authorityA.location = QStringLiteral("C:/project/CMakeLists.txt");
+    authorityA.authorityLevel = QStringLiteral("primary-source-of-truth");
+    ProjectResource authorityB;
+    authorityB.id = QStringLiteral("authority-b");
+    authorityB.name = QStringLiteral("src");
+    authorityB.location = QStringLiteral("C:/project/src");
+    authorityB.authorityLevel = QStringLiteral("trusted-reference");
+    ProjectResource authorityC;
+    authorityC.id = QStringLiteral("authority-c");
+    authorityC.name = QStringLiteral("tests");
+    authorityC.location = QStringLiteral("C:/project/tests");
+    authorityC.authorityLevel = QStringLiteral("supporting-reference");
+    authorityModel.setResources({authorityA, authorityB, authorityC});
+
+    ResourceAuthorityPage authorityPage(&authorityModel);
+    app.processEvents();
+    auto* authorityList = authorityPage.findChild<QListWidget*>();
+    auto* authorityCombo = authorityPage.findChild<QComboBox*>();
+    ok &= require(authorityList && authorityCombo, "resource authority controls must exist");
+    ok &= require(authorityModel.resources().at(0).authorityLevel == authorityA.authorityLevel
+                  && authorityModel.resources().at(1).authorityLevel == authorityB.authorityLevel
+                  && authorityModel.resources().at(2).authorityLevel == authorityC.authorityLevel,
+                  "opening ResourceAuthorityPage must not mutate model authority values");
+    if (authorityList && authorityCombo) {
+        authorityList->setCurrentRow(1);
+        app.processEvents();
+        authorityCombo->setCurrentIndex(authorityCombo->findData(QStringLiteral("authoritative")));
+        app.processEvents();
+        authorityList->setCurrentRow(2);
+        app.processEvents();
+        authorityCombo->setCurrentIndex(authorityCombo->findData(QStringLiteral("primary-source-of-truth")));
+        app.processEvents();
+        authorityList->setCurrentRow(0);
+        app.processEvents();
+        ok &= require(authorityModel.resources().at(0).authorityLevel == authorityA.authorityLevel,
+                      "selecting another resource must not change the first authority");
+        ok &= require(authorityModel.resources().at(1).authorityLevel == QStringLiteral("authoritative"),
+                      "authority combo must update only the selected resource");
+        ok &= require(authorityModel.resources().at(2).authorityLevel == QStringLiteral("primary-source-of-truth"),
+                      "different authority levels must remain attached to their resource IDs");
+        authorityModel.setDescription(QStringLiteral("trigger authority page refresh"));
+        app.processEvents();
+        ok &= require(authorityModel.resources().at(0).authorityLevel == authorityA.authorityLevel
+                      && authorityModel.resources().at(1).authorityLevel == QStringLiteral("authoritative")
+                      && authorityModel.resources().at(2).authorityLevel == QStringLiteral("primary-source-of-truth"),
+                      "authority values must survive model-driven list rebuilds");
+        ResourceAuthorityPage reopenedAuthorityPage(&authorityModel);
+        app.processEvents();
+        ok &= require(authorityModel.resources().at(0).authorityLevel == authorityA.authorityLevel
+                      && authorityModel.resources().at(1).authorityLevel == QStringLiteral("authoritative")
+                      && authorityModel.resources().at(2).authorityLevel == QStringLiteral("primary-source-of-truth"),
+                      "constructing a second authority page must be read-only");
     }
 
     return ok ? 0 : 1;

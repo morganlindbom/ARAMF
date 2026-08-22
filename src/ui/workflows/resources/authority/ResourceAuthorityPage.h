@@ -24,4 +24,5 @@ private:
     QListWidget* resources_ = nullptr;
     QComboBox* authority_ = nullptr;
     CapabilityCheckGroup* scopes_ = nullptr;
+    QString selectedResourceId_;
 };
