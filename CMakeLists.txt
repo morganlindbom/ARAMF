@@ -19,6 +19,8 @@ set(ARAMF_CORE_SOURCES
     src/core/ControlPlaneMigration.cpp
     src/core/ProjectMemory.h
     src/core/ProjectMemory.cpp
+    src/core/MemoryCommand.h
+    src/core/MemoryCommand.cpp
     src/core/FrameworkKnowledge.h
     src/core/FrameworkKnowledge.cpp
     src/core/EnvironmentCatalog.h
@@ -112,6 +114,8 @@ if(BUILD_TESTING)
         tests/ProjectMemoryTests.cpp
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
+        src/core/MemoryCommand.h
+        src/core/MemoryCommand.cpp
         src/core/ControlPlaneMigration.h
         src/core/ControlPlaneMigration.cpp
         src/core/FrameworkKnowledge.h
@@ -142,6 +146,8 @@ if(BUILD_TESTING)
         src/core/ProjectModel.cpp
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
+        src/core/MemoryCommand.h
+        src/core/MemoryCommand.cpp
         src/core/ControlPlaneMigration.h
         src/core/ControlPlaneMigration.cpp
         src/core/AiCatalog.h

@@ -53,6 +53,34 @@ bool writeJsonFile(const QString& path, const QJsonObject& object, QString* erro
     return writeTextFile(path, QJsonDocument(value).toJson(QJsonDocument::Indented), error, onlyIfMissing);
 }
 
+bool upsertManagedSection(const QString& path,
+                          const QString& beginMarker,
+                          const QString& endMarker,
+                          const QString& section,
+                          QString* error)
+{
+    QString content;
+    QFile existing(path);
+    if (existing.exists()) {
+        if (!existing.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            if (error) *error = existing.errorString();
+            return false;
+        }
+        content = QString::fromUtf8(existing.readAll());
+        existing.close();
+    }
+    const int begin = content.indexOf(beginMarker);
+    if (begin >= 0) {
+        const int end = content.indexOf(endMarker, begin);
+        if (end >= 0) content.replace(begin, end + endMarker.size() - begin, section);
+        else content = content.left(begin) + section;
+    } else {
+        if (!content.isEmpty() && !content.endsWith(QLatin1Char('\n'))) content += QLatin1Char('\n');
+        content += QLatin1Char('\n') + section;
+    }
+    return writeTextFile(path, content.toUtf8(), error);
+}
+
 QString ruleDisplayName(const QString& id, const QList<EnvironmentOption>& options)
 {
     for (const auto& option : options) {
@@ -396,8 +424,45 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "When a corrected approach is verified and reusable, record a Framework Knowledge candidate with evidence. Never self-approve it; explicit user approval is required before changing its status to `approved`. Superseded entries remain auditable but are not active.\n"
             "Keep project status current and use project memory when configured.\n"
             "The generated control directory is `ARAMF_WORKER/`.\n");
-        if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("AGENTS.md")), rootAgent.toUtf8(), &error, true)
-            || !writeTextFile(QDir(projectRoot).filePath(AramfPaths::AgentInstructions), canonicalAgent.toUtf8(), &error, true)) {
+        if (options.generateMemory) {
+            const auto memory = model.memoryConfiguration();
+            QString memorySection = QStringLiteral(
+                "<!-- ARAMF-MEMORY-BEGIN -->\n"
+                "\n## Project Memory Feedback\n\n"
+                "Read `memory/memory-contract.json` before recording development results. "
+                "Do not edit `memory/event-log.jsonl`, `memory/metrics.json`, `memory/current-state.md`, "
+                "`memory/memory-manifest.json`, validation state, or `PROJECT_STATUS.md` bookkeeping fields directly. "
+                "Use the ARAMF recorder described by the contract: `aramf memory record --project <project-root> "
+                "--operation <operation> ...`.\n");
+            const auto addInstruction = [&memorySection, &memory](const QString& option, const QString& text) {
+                if (memory.maintenanceOptions.contains(option)) memorySection += QStringLiteral("- %1\n").arg(text);
+            };
+            addInstruction(QStringLiteral("record-task-completion"), QStringLiteral("Record meaningful task starts and completions."));
+            addInstruction(QStringLiteral("record-build-results"), QStringLiteral("Record completed build attempts and their PASS/FAIL result."));
+            addInstruction(QStringLiteral("record-test-results"), QStringLiteral("Record completed test attempts and their PASS/FAIL result."));
+            addInstruction(QStringLiteral("record-validation"), QStringLiteral("Record meaningful validation outcomes."));
+            addInstruction(QStringLiteral("update-current-state"), QStringLiteral("Let ProjectMemory refresh current-state from accepted events."));
+            addInstruction(QStringLiteral("update-project-status"), QStringLiteral("Allow meaningful completed tasks to update PROJECT_STATUS through the recorder policy."));
+            addInstruction(QStringLiteral("record-checkpoints"), QStringLiteral("Record a checkpoint only when an actual stable checkpoint is warranted."));
+            memorySection += QStringLiteral("\nThe recorder owns event IDs, timestamps, sequences, metrics, pruning, validation, and current-state pointers.\n\n<!-- ARAMF-MEMORY-END -->\n");
+            canonicalAgent += memorySection;
+        }
+        if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("AGENTS.md")), rootAgent.toUtf8(), &error, true)) {
+            return fail(QStringLiteral("Agent rules"), error);
+        }
+        const QString agentInstructionsPath = QDir(projectRoot).filePath(AramfPaths::AgentInstructions);
+        if (options.generateMemory) {
+            const int memoryBegin = canonicalAgent.indexOf(QStringLiteral("<!-- ARAMF-MEMORY-BEGIN -->"));
+            const QString memorySection = memoryBegin >= 0 ? canonicalAgent.mid(memoryBegin) : QString();
+            if (!QFile::exists(agentInstructionsPath)) {
+                if (!writeTextFile(agentInstructionsPath, canonicalAgent.toUtf8(), &error)) return fail(QStringLiteral("Agent rules"), error);
+            } else if (!upsertManagedSection(agentInstructionsPath,
+                                             QStringLiteral("<!-- ARAMF-MEMORY-BEGIN -->"),
+                                             QStringLiteral("<!-- ARAMF-MEMORY-END -->"),
+                                             memorySection, &error)) {
+                return fail(QStringLiteral("Agent rules"), error);
+            }
+        } else if (!writeTextFile(agentInstructionsPath, canonicalAgent.toUtf8(), &error, true)) {
             return fail(QStringLiteral("Agent rules"), error);
         }
 
@@ -536,7 +601,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         addGeneratedFiles(result, {AramfPaths::MemoryConfiguration, AramfPaths::Manifest,
                                    AramfPaths::EventLog, AramfPaths::CurrentState,
                                    AramfPaths::ColdStartValidation, AramfPaths::ConsistencyValidation,
-                                   AramfPaths::Checkpoints, AramfPaths::Metrics, AramfPaths::Decisions});
+                                   AramfPaths::Checkpoints, AramfPaths::Metrics, AramfPaths::Decisions,
+                                   AramfPaths::MemoryContract});
     }
 
     if (options.generateProvenance) {

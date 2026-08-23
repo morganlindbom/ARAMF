@@ -30,6 +30,11 @@ ResourceAuthorityPage::ResourceAuthorityPage(ProjectModel* model, QWidget* paren
     scopes_ = new CapabilityCheckGroup(tr("Applies to"), EnvironmentCatalog::resourceScopes(), 3, this);
     auto* form = new QFormLayout;
     form->addRow(tr("Authority"), authority_);
+    auto* authorityHelp = new QLabel(
+        tr("Authority controls how strongly ARAMF treats this resource as a Source of Truth within its applicable scopes."),
+        this);
+    authorityHelp->setWordWrap(true);
+    form->addRow(QString(), authorityHelp);
     layout->addLayout(form); layout->addWidget(scopes_); layout->addStretch();
     connect(resources_, &QListWidget::currentRowChanged, this, [this] {
         selectedResourceId_ = resources_->currentItem()

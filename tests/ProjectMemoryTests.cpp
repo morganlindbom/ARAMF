@@ -1,6 +1,7 @@
 // ProjectMemoryTests.cpp
 
 #include "core/ProjectMemory.h"
+#include "core/MemoryCommand.h"
 #include "core/FrameworkKnowledge.h"
 #include "core/EnvironmentCatalog.h"
 #include "core/ProjectModel.h"
@@ -8,12 +9,14 @@
 #include "core/Services.h"
 
 #include <QCoreApplication>
+#include <QBuffer>
 #include <QDir>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QTemporaryDir>
+#include <QTextStream>
 #include <algorithm>
 #include <iostream>
 
@@ -47,6 +50,16 @@ int main(int argc, char** argv)
     ProjectModel model;
     model.setProjectName(QStringLiteral("Memory Test Project"));
     model.setProjectPath(temporaryProject.path());
+    MemoryConfiguration feedbackConfiguration;
+    feedbackConfiguration.captureCategories = {QStringLiteral("completed-tasks"), QStringLiteral("build-attempts"), QStringLiteral("test-attempts")};
+    feedbackConfiguration.historyOptions = {QStringLiteral("event-history"), QStringLiteral("task-history")};
+    feedbackConfiguration.maintenanceOptions = {
+        QStringLiteral("update-current-state"), QStringLiteral("record-validation"),
+        QStringLiteral("record-build-results"), QStringLiteral("record-test-results"),
+        QStringLiteral("record-task-completion"), QStringLiteral("update-project-status"),
+        QStringLiteral("preserve-append-only")};
+    feedbackConfiguration.validationOptions = {QStringLiteral("memory-consistency")};
+    model.setMemoryConfiguration(feedbackConfiguration);
 
     ProjectMemory memory;
     QString error;
@@ -69,6 +82,21 @@ int main(int argc, char** argv)
     ok &= require(!root.exists(QStringLiteral("aramf_setup")), "generated project must not contain repository setup directory");
     ok &= require(!root.exists(QStringLiteral("bootstrap")), "generated project must not contain repository bootstrap directory");
     ok &= require(root.exists(QStringLiteral("ARAMF_WORKER/memory/framework-knowledge.json")), "Framework Knowledge store must exist");
+    ok &= require(root.exists(QStringLiteral("ARAMF_WORKER/memory/memory-contract.json")), "memory contract must exist");
+    QJsonObject memoryConfig;
+    QFile memoryConfigFile(root.filePath(QStringLiteral("ARAMF_WORKER/memory/memory-config.json")));
+    ok &= require(memoryConfigFile.open(QIODevice::ReadOnly), "memory config must be readable");
+    memoryConfig = QJsonDocument::fromJson(memoryConfigFile.readAll()).object();
+    memoryConfigFile.close();
+    ok &= require(memoryConfig.value(QStringLiteral("maintenanceOptions")).toArray().contains(QStringLiteral("record-build-results")),
+                  "memory config must preserve maintenance options");
+    QJsonObject memoryContract;
+    QFile memoryContractFile(root.filePath(QStringLiteral("ARAMF_WORKER/memory/memory-contract.json")));
+    ok &= require(memoryContractFile.open(QIODevice::ReadOnly), "memory contract must be readable");
+    memoryContract = QJsonDocument::fromJson(memoryContractFile.readAll()).object();
+    memoryContractFile.close();
+    ok &= require(memoryContract.value(QStringLiteral("supportedOperations")).toArray().contains(QStringLiteral("test-result")),
+                  "memory contract must advertise test recording");
     QFile canonicalAgentFile(root.filePath(QStringLiteral("ARAMF_WORKER/AGENTS.md")));
     ok &= require(canonicalAgentFile.open(QIODevice::ReadOnly | QIODevice::Text), "canonical agent file must be readable");
     const QString canonicalAgentText = QString::fromUtf8(canonicalAgentFile.readAll());
@@ -113,6 +141,176 @@ int main(int argc, char** argv)
                   "Framework Knowledge must support non-destructive superseding");
     ok &= require(frameworkKnowledge.approvedEntries(temporaryProject.path(), {QStringLiteral("implementation")}, &error).isEmpty(),
                   "superseded Framework Knowledge must no longer be active");
+
+    QJsonObject recordingResult;
+    ok &= require(memory.recordOperation(temporaryProject.path(), QStringLiteral("task-start"),
+                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("Feedback bridge test")},
+                                                     {QStringLiteral("category"), QStringLiteral("testing")}},
+                                         &recordingResult, &error),
+                  "task start must be recordable through ProjectMemory");
+    ok &= require(memory.recordOperation(temporaryProject.path(), QStringLiteral("build-result"),
+                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("Feedback bridge test")},
+                                                     {QStringLiteral("status"), QStringLiteral("PASS")},
+                                                     {QStringLiteral("configuration"), QStringLiteral("Debug")}},
+                                         nullptr, &error),
+                  "build result must be recordable through ProjectMemory");
+    ok &= require(memory.recordOperation(temporaryProject.path(), QStringLiteral("test-result"),
+                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("Feedback bridge test")},
+                                                     {QStringLiteral("status"), QStringLiteral("PASS")},
+                                                     {QStringLiteral("suite"), QStringLiteral("CTest")},
+                                                     {QStringLiteral("passed"), 2}, {QStringLiteral("total"), 2}},
+                                         nullptr, &error),
+                  "test result must be recordable through ProjectMemory");
+    ok &= require(memory.recordOperation(temporaryProject.path(), QStringLiteral("task-complete"),
+                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("Feedback bridge test")},
+                                                     {QStringLiteral("status"), QStringLiteral("PASS")},
+                                                     {QStringLiteral("summary"), QStringLiteral("Completed successfully.")}},
+                                         nullptr, &error),
+                  "task completion must be recordable through ProjectMemory");
+    QFile metricsFile(root.filePath(QStringLiteral("ARAMF_WORKER/memory/metrics.json")));
+    ok &= require(metricsFile.open(QIODevice::ReadOnly), "metrics must remain readable after recording");
+    const auto metrics = QJsonDocument::fromJson(metricsFile.readAll()).object();
+    metricsFile.close();
+    ok &= require(metrics.value(QStringLiteral("iterations")).toInt() == 1
+                  && metrics.value(QStringLiteral("buildAttempts")).toInt() == 1
+                  && metrics.value(QStringLiteral("testAttempts")).toInt() == 1
+                  && metrics.value(QStringLiteral("failures")).toInt() == 0,
+                  "feedback recording must update metrics deterministically");
+    QFile checkpointsFile(root.filePath(QStringLiteral("ARAMF_WORKER/memory/checkpoints.json")));
+    QJsonDocument checkpointDocument;
+    if (checkpointsFile.open(QIODevice::ReadOnly)) checkpointDocument = QJsonDocument::fromJson(checkpointsFile.readAll());
+    checkpointsFile.close();
+    const bool noCheckpoints = checkpointDocument.isArray()
+        ? checkpointDocument.array().isEmpty()
+        : checkpointDocument.object().value(QStringLiteral("checkpoints")).toArray().isEmpty();
+    ok &= require(noCheckpoints, "ordinary task feedback must not create a checkpoint");
+    QFile currentStateFile(root.filePath(QStringLiteral("ARAMF_WORKER/memory/current-state.md")));
+    QString currentState;
+    if (currentStateFile.open(QIODevice::ReadOnly)) currentState = QString::fromUtf8(currentStateFile.readAll());
+    currentStateFile.close();
+    ok &= require(!currentState.isEmpty()
+                  && currentState.contains(QStringLiteral("Latest Production Development Event"))
+                  && currentState.contains(QStringLiteral("event-")),
+                  "current state must advance to a recorded production event");
+
+    QBuffer commandOutput;
+    QBuffer commandError;
+    commandOutput.open(QIODevice::ReadWrite);
+    commandError.open(QIODevice::ReadWrite);
+    QTextStream commandOut(&commandOutput);
+    QTextStream commandErr(&commandError);
+    const int commandStatus = runMemoryCommand({QStringLiteral("memory"), QStringLiteral("record"),
+                                                 QStringLiteral("--project"), temporaryProject.path(),
+                                                 QStringLiteral("--operation"), QStringLiteral("validation-result"),
+                                                 QStringLiteral("--task"), QStringLiteral("Feedback bridge CLI test"),
+                                                 QStringLiteral("--status"), QStringLiteral("PASS")}, commandOut, commandErr);
+    commandOut.flush();
+    commandErr.flush();
+    if (commandStatus != 0 || !commandOutput.data().contains("recorded operation=validation-result")) {
+        std::cerr << "memory command output: " << commandOutput.data().constData()
+                  << " error: " << commandError.data().constData() << '\n';
+    }
+    ok &= require(commandStatus == 0 && commandOutput.data().contains("recorded operation=validation-result"),
+                  "headless memory command must record without GUI");
+    ok &= require(memory.recordOperation(temporaryProject.path(), QStringLiteral("build-result"),
+                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("Feedback bridge failure test")},
+                                                     {QStringLiteral("status"), QStringLiteral("FAIL")},
+                                                     {QStringLiteral("detail"), QStringLiteral("controlled failure fixture")}},
+                                         nullptr, &error),
+                  "failed build result must still be recordable");
+    QFile failedMetricsFile(root.filePath(QStringLiteral("ARAMF_WORKER/memory/metrics.json")));
+    QJsonObject failedMetrics;
+    if (failedMetricsFile.open(QIODevice::ReadOnly)) failedMetrics = QJsonDocument::fromJson(failedMetricsFile.readAll()).object();
+    failedMetricsFile.close();
+    ok &= require(failedMetrics.value(QStringLiteral("buildAttempts")).toInt() == 2
+                  && failedMetrics.value(QStringLiteral("failures")).toInt() == 1,
+                  "failed build must increment build attempts and failure metrics");
+    QFile statusFile(root.filePath(QStringLiteral("ARAMF_WORKER/PROJECT_STATUS.md")));
+    QString statusText;
+    if (statusFile.open(QIODevice::ReadOnly)) statusText = QString::fromUtf8(statusFile.readAll());
+    statusFile.close();
+    ok &= require(statusText.contains(QStringLiteral("Latest Agent Task")),
+                  "meaningful task completion must update project status through policy");
+
+    QTemporaryDir disabledProject;
+    ProjectModel disabledModel;
+    disabledModel.setProjectPath(disabledProject.path());
+    MemoryConfiguration disabledConfiguration;
+    disabledConfiguration.maintenanceOptions = {QStringLiteral("record-task-completion")};
+    disabledModel.setMemoryConfiguration(disabledConfiguration);
+    ProjectMemory disabledMemory;
+    ok &= require(disabledMemory.initializeMemory(disabledProject.path(), &disabledModel, &error),
+                  "disabled recording fixture must initialize");
+    ok &= require(!disabledMemory.recordOperation(disabledProject.path(), QStringLiteral("build-result"),
+                                                  QJsonObject{{QStringLiteral("task"), QStringLiteral("Disabled build")},
+                                                              {QStringLiteral("status"), QStringLiteral("PASS")}},
+                                                  nullptr, &error)
+                  && error.contains(QStringLiteral("Recording disabled")),
+                  "disabled build recording must be rejected cleanly");
+    error.clear();
+    ok &= require(!disabledMemory.recordOperation(disabledProject.path(), QStringLiteral("test-result"),
+                                                  QJsonObject{{QStringLiteral("task"), QStringLiteral("Disabled test")},
+                                                              {QStringLiteral("status"), QStringLiteral("PASS")}},
+                                                  nullptr, &error)
+                  && error.contains(QStringLiteral("Recording disabled")),
+                  "disabled test recording must be rejected cleanly");
+
+    QTemporaryDir taskDisabledProject;
+    ProjectModel taskDisabledModel;
+    taskDisabledModel.setProjectPath(taskDisabledProject.path());
+    MemoryConfiguration taskDisabledConfiguration;
+    taskDisabledConfiguration.maintenanceOptions = {QStringLiteral("record-build-results")};
+    taskDisabledModel.setMemoryConfiguration(taskDisabledConfiguration);
+    ProjectMemory taskDisabledMemory;
+    ok &= require(taskDisabledMemory.initializeMemory(taskDisabledProject.path(), &taskDisabledModel, &error),
+                  "task-disabled recording fixture must initialize");
+    error.clear();
+    ok &= require(!taskDisabledMemory.recordOperation(taskDisabledProject.path(), QStringLiteral("task-complete"),
+                                                      QJsonObject{{QStringLiteral("task"), QStringLiteral("Disabled task")},
+                                                                  {QStringLiteral("status"), QStringLiteral("PASS")}},
+                                                      nullptr, &error)
+                  && error.contains(QStringLiteral("Recording disabled")),
+                  "disabled task completion must be rejected cleanly");
+
+    QTemporaryDir stateDisabledProject;
+    ProjectModel stateDisabledModel;
+    stateDisabledModel.setProjectPath(stateDisabledProject.path());
+    MemoryConfiguration stateDisabledConfiguration;
+    stateDisabledConfiguration.maintenanceOptions = {QStringLiteral("record-task-completion")};
+    stateDisabledModel.setMemoryConfiguration(stateDisabledConfiguration);
+    ProjectMemory stateDisabledMemory;
+    ok &= require(stateDisabledMemory.initializeMemory(stateDisabledProject.path(), &stateDisabledModel, &error),
+                  "current-state disabled fixture must initialize");
+    QFile stateBeforeFile(QDir(stateDisabledProject.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/current-state.md")));
+    QString stateBefore;
+    if (stateBeforeFile.open(QIODevice::ReadOnly)) stateBefore = QString::fromUtf8(stateBeforeFile.readAll());
+    stateBeforeFile.close();
+    ok &= require(stateDisabledMemory.recordOperation(stateDisabledProject.path(), QStringLiteral("task-complete"),
+                                                      QJsonObject{{QStringLiteral("task"), QStringLiteral("No snapshot update")},
+                                                                  {QStringLiteral("status"), QStringLiteral("PASS")} },
+                                                      nullptr, &error),
+                  "task recording must work when current-state updates are disabled");
+    QFile stateAfterFile(QDir(stateDisabledProject.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/current-state.md")));
+    QString stateAfter;
+    if (stateAfterFile.open(QIODevice::ReadOnly)) stateAfter = QString::fromUtf8(stateAfterFile.readAll());
+    stateAfterFile.close();
+    ok &= require(stateBefore == stateAfter, "disabled current-state maintenance must preserve the snapshot");
+
+    QBuffer malformedOutput;
+    QBuffer malformedError;
+    malformedOutput.open(QIODevice::ReadWrite);
+    malformedError.open(QIODevice::ReadWrite);
+    QTextStream malformedOut(&malformedOutput);
+    QTextStream malformedErr(&malformedError);
+    const int malformedStatus = runMemoryCommand({QStringLiteral("memory"), QStringLiteral("record"),
+                                                   QStringLiteral("--project"), temporaryProject.path(),
+                                                   QStringLiteral("--operation"), QStringLiteral("unknown"),
+                                                   QStringLiteral("--task"), QStringLiteral("Malformed request")},
+                                                  malformedOut, malformedErr);
+    malformedOut.flush();
+    malformedErr.flush();
+    ok &= require(malformedStatus != 0 && malformedError.data().contains("Unknown recording operation"),
+                  "malformed memory requests must fail without writing state");
 
     TemplateManager templates;
     ok &= require(templates.builtInTemplates().first() == QStringLiteral("pico-2w-visual-designer"), "Pico visual designer must remain the first template");
@@ -378,6 +576,23 @@ int main(int argc, char** argv)
                       && generatedScopes.first().toString() == generationResource.scopes.first(),
                       "generated resource scopes must match the project resource");
     }
+    QTemporaryDir feedbackGenerationProject;
+    ProjectModel feedbackGenerationModel;
+    feedbackGenerationModel.setProjectName(QStringLiteral("Feedback Generation Project"));
+    feedbackGenerationModel.setProjectPath(feedbackGenerationProject.path());
+    feedbackGenerationModel.setMemoryConfiguration(feedbackConfiguration);
+    GenerationOptions feedbackGenerationOptions;
+    const GenerationResult feedbackGeneration = generationServices.generate(feedbackGenerationModel, feedbackGenerationOptions);
+    ok &= require(feedbackGeneration.success, "feedback generation must succeed");
+    QFile feedbackAgentFile(QDir(feedbackGenerationProject.path()).filePath("ARAMF_WORKER/AGENTS.md"));
+    QString feedbackAgent;
+    if (feedbackAgentFile.open(QIODevice::ReadOnly | QIODevice::Text)) feedbackAgent = QString::fromUtf8(feedbackAgentFile.readAll());
+    feedbackAgentFile.close();
+    ok &= require(feedbackAgent.contains(QStringLiteral("memory/memory-contract.json"))
+                  && feedbackAgent.contains(QStringLiteral("Record completed build attempts")),
+                  "generated agent instructions must describe configured memory feedback");
+    ok &= require(QFile::exists(QDir(feedbackGenerationProject.path()).filePath("ARAMF_WORKER/memory/memory-contract.json")),
+                  "feedback generation must create the machine-readable memory contract");
     VerificationServices verificationServices;
     FinalizationServices finalizationServices;
 
@@ -453,7 +668,7 @@ int main(int argc, char** argv)
 
     generationOptions.generateMemory = true;
     const GenerationResult memoryGeneration = generationServices.generate(generationModel, generationOptions);
-    ok &= require(memoryGeneration.success, "memory generation must succeed when selected");
+    ok &= require(memoryGeneration.success, qPrintable(QStringLiteral("memory generation must succeed when selected: %1").arg(memoryGeneration.error)));
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/memory/memory-consistency-validation.json")), "memory validation must be generated");
     ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("aramf_setup")), "generated output must never use aramf_setup");
 

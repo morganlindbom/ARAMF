@@ -1,0 +1,58 @@
+{
+    "_file": "memory-contract.json",
+    "command": {
+        "executable": "aramf",
+        "projectArgument": "--project <project-root>",
+        "syntax": "aramf memory record --project <project-root> --operation <operation> ..."
+    },
+    "configuredMaintenanceOptions": [
+        "update-current-state",
+        "record-decisions",
+        "record-checkpoints",
+        "record-validation",
+        "record-build-results",
+        "record-test-results",
+        "record-task-completion",
+        "update-project-status",
+        "remove-stale-state",
+        "preserve-append-only"
+    ],
+    "arguments": {
+        "optional": [
+            "--status",
+            "--summary",
+            "--detail",
+            "--category",
+            "--issue",
+            "--build-system",
+            "--configuration",
+            "--suite",
+            "--passed",
+            "--failed",
+            "--total"
+        ],
+        "required": [
+            "--project",
+            "--operation",
+            "--task"
+        ]
+    },
+    "directEditing": "forbidden: use the ARAMF memory recorder; do not edit owned files directly.",
+    "ownedFiles": [
+        "memory/event-log.jsonl",
+        "memory/metrics.json",
+        "memory/current-state.md",
+        "memory/memory-manifest.json",
+        "memory/memory-consistency-validation.json",
+        "PROJECT_STATUS.md"
+    ],
+    "recordingEnabled": true,
+    "supportedOperations": [
+        "task-start",
+        "task-complete",
+        "build-result",
+        "test-result",
+        "validation-result"
+    ],
+    "version": 1
+}

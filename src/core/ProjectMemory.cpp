@@ -6,6 +6,7 @@
 #include "ControlPlaneMigration.h"
 #include "ProjectModel.h"
 
+#include <algorithm>
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
@@ -16,6 +17,7 @@
 #include <QSaveFile>
 #include <QSet>
 #include <QStack>
+#include <QVariant>
 #include <QUuid>
 
 namespace {
@@ -149,6 +151,96 @@ bool isControlPlaneEvent(const QString& eventType)
     };
     return controlPlaneEvents.contains(eventType);
 }
+
+QJsonArray stringListToJson(const QStringList& values)
+{
+    QJsonArray result;
+    for (const auto& value : values) result.append(value);
+    return result;
+}
+
+bool validResultStatus(const QString& status)
+{
+    return status == QStringLiteral("PASS") || status == QStringLiteral("FAIL");
+}
+
+QString recordingOptionFor(const QString& operation)
+{
+    if (operation == QStringLiteral("task-start") || operation == QStringLiteral("task-complete")) return QStringLiteral("record-task-completion");
+    if (operation == QStringLiteral("build-result")) return QStringLiteral("record-build-results");
+    if (operation == QStringLiteral("test-result")) return QStringLiteral("record-test-results");
+    if (operation == QStringLiteral("validation-result")) return QStringLiteral("record-validation");
+    return {};
+}
+
+QString eventTypeFor(const QString& operation)
+{
+    if (operation == QStringLiteral("task-start")) return QStringLiteral("TASK_STARTED");
+    if (operation == QStringLiteral("task-complete")) return QStringLiteral("TASK_COMPLETED");
+    if (operation == QStringLiteral("build-result")) return QStringLiteral("BUILD_RESULT");
+    if (operation == QStringLiteral("test-result")) return QStringLiteral("TEST_RESULT");
+    if (operation == QStringLiteral("validation-result")) return QStringLiteral("VALIDATION_RESULT");
+    return {};
+}
+
+struct FileSnapshot {
+    QString path;
+    bool existed = false;
+    QByteArray contents;
+};
+
+QList<FileSnapshot> snapshotFiles(const QString& projectRoot, const QStringList& relativePaths)
+{
+    QList<FileSnapshot> snapshots;
+    for (const auto& relative : relativePaths) {
+        FileSnapshot snapshot;
+        snapshot.path = absolutePath(projectRoot, relative);
+        snapshot.existed = QFile::exists(snapshot.path);
+        if (snapshot.existed) {
+            QFile file(snapshot.path);
+            if (file.open(QIODevice::ReadOnly)) snapshot.contents = file.readAll();
+        }
+        snapshots.append(snapshot);
+    }
+    return snapshots;
+}
+
+bool restoreSnapshots(const QList<FileSnapshot>& snapshots, QString* error)
+{
+    for (const auto& snapshot : snapshots) {
+        if (!snapshot.existed) {
+            if (QFile::exists(snapshot.path) && !QFile::remove(snapshot.path)) {
+                if (error) *error = QStringLiteral("Could not roll back %1").arg(snapshot.path);
+                return false;
+            }
+            continue;
+        }
+        if (!writeTextFile(snapshot.path, snapshot.contents, error)) return false;
+    }
+    return true;
+}
+
+bool restoreSnapshot(const FileSnapshot& snapshot, QString* error)
+{
+    if (!snapshot.existed) {
+        if (QFile::exists(snapshot.path) && !QFile::remove(snapshot.path)) {
+            if (error) *error = QStringLiteral("Could not roll back %1").arg(snapshot.path);
+            return false;
+        }
+        return true;
+    }
+    QDir().mkpath(QFileInfo(snapshot.path).absolutePath());
+    QSaveFile file(snapshot.path);
+    if (!file.open(QIODevice::WriteOnly)) {
+        if (error) *error = file.errorString();
+        return false;
+    }
+    if (file.write(snapshot.contents) != snapshot.contents.size() || !file.commit()) {
+        if (error) *error = file.errorString();
+        return false;
+    }
+    return true;
+}
 }
 
 ProjectMemory::ProjectMemory(QObject* parent)
@@ -281,6 +373,142 @@ bool ProjectMemory::appendEvent(const QString& projectRoot,
     }
 
     return generateCurrentState(projectRoot, error);
+}
+
+QStringList ProjectMemory::supportedRecordOperations()
+{
+    return {QStringLiteral("task-start"), QStringLiteral("task-complete"), QStringLiteral("build-result"),
+            QStringLiteral("test-result"), QStringLiteral("validation-result")};
+}
+
+bool ProjectMemory::recordOperation(const QString& projectRoot,
+                                    const QString& operation,
+                                    const QJsonObject& fields,
+                                    QJsonObject* result,
+                                    QString* error)
+{
+    if (!supportedRecordOperations().contains(operation)) {
+        if (error) *error = QStringLiteral("Unknown recording operation: %1").arg(operation);
+        return false;
+    }
+    const QString option = recordingOptionFor(operation);
+    QString configError;
+    const QJsonObject config = readJsonObject(absolutePath(projectRoot, AramfPaths::MemoryConfiguration), &configError);
+    if (!configError.isEmpty() || config.isEmpty()) {
+        if (error) *error = QStringLiteral("Memory configuration is unavailable.");
+        return false;
+    }
+    const QJsonArray configured = config.value(QStringLiteral("maintenanceOptions")).toArray();
+    bool enabled = false;
+    for (const auto& value : configured) enabled |= value.toString() == option;
+    if (!enabled) {
+        if (error) *error = QStringLiteral("Recording disabled by configuration: %1").arg(option);
+        return false;
+    }
+    if (operation != QStringLiteral("task-start")) {
+        const QString status = fields.value(QStringLiteral("status")).toString();
+        if (!validResultStatus(status)) {
+            if (error) *error = QStringLiteral("status must be PASS or FAIL.");
+            return false;
+        }
+    }
+    const QString task = fields.value(QStringLiteral("task")).toString().trimmed();
+    if (task.isEmpty() || task.size() > 512) {
+        if (error) *error = QStringLiteral("task is required and must be at most 512 characters.");
+        return false;
+    }
+    const QStringList protectedFiles {
+        AramfPaths::EventLog, AramfPaths::Manifest, AramfPaths::CurrentState,
+        AramfPaths::Metrics, AramfPaths::ConsistencyValidation, AramfPaths::ProjectStatus
+    };
+    const auto snapshots = snapshotFiles(projectRoot, protectedFiles);
+    QJsonObject eventFields = fields;
+    eventFields.insert(QStringLiteral("task"), task);
+    eventFields.remove(QStringLiteral("operation"));
+    const QString eventType = eventTypeFor(operation);
+    if (!appendEvent(projectRoot, eventType, task, eventFields, error)) {
+        QString rollbackError;
+        restoreSnapshots(snapshots, &rollbackError);
+        return false;
+    }
+
+    const bool updateCurrentState = configured.contains(QStringLiteral("update-current-state"));
+    if (!updateCurrentState) {
+        const auto currentStateSnapshot = std::find_if(
+            snapshots.cbegin(), snapshots.cend(), [](const FileSnapshot& snapshot) {
+                return snapshot.path.endsWith(AramfPaths::CurrentState);
+            });
+        if (currentStateSnapshot != snapshots.cend()) {
+            QString restoreError;
+            if (!restoreSnapshot(*currentStateSnapshot, &restoreError)) {
+                restoreSnapshots(snapshots, nullptr);
+                if (error) *error = restoreError;
+                return false;
+            }
+        }
+    }
+
+    QJsonObject metrics = readJsonObject(absolutePath(projectRoot, AramfPaths::Metrics), error);
+    if (metrics.isEmpty()) {
+        QString rollbackError;
+        restoreSnapshots(snapshots, &rollbackError);
+        if (error && error->isEmpty()) *error = QStringLiteral("Metrics file is unavailable.");
+        return false;
+    }
+    auto increment = [&metrics](const QString& key) {
+        metrics.insert(key, metrics.value(key).toInt() + 1);
+    };
+    if (operation == QStringLiteral("task-complete")) increment(QStringLiteral("iterations"));
+    if (operation == QStringLiteral("build-result")) increment(QStringLiteral("buildAttempts"));
+    if (operation == QStringLiteral("test-result")) increment(QStringLiteral("testAttempts"));
+    if (fields.value(QStringLiteral("status")).toString() == QStringLiteral("FAIL")) increment(QStringLiteral("failures"));
+    if (!writeJsonFile(absolutePath(projectRoot, AramfPaths::Metrics), metrics, error)) {
+        QString rollbackError;
+        restoreSnapshots(snapshots, &rollbackError);
+        return false;
+    }
+
+    if (operation == QStringLiteral("task-complete")
+        && config.value(QStringLiteral("maintenanceOptions")).toArray().contains(QStringLiteral("update-project-status"))) {
+        QFile statusFile(absolutePath(projectRoot, AramfPaths::ProjectStatus));
+        if (!statusFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QString rollbackError;
+            restoreSnapshots(snapshots, &rollbackError);
+            if (error) *error = statusFile.errorString();
+            return false;
+        }
+        QString status = QString::fromUtf8(statusFile.readAll());
+        statusFile.close();
+        const QString marker = QStringLiteral("## Latest Agent Task");
+        const QString section = QStringLiteral("%1\n\n- Task: %2\n- Status: %3\n")
+                                    .arg(marker, task, fields.value(QStringLiteral("status")).toString());
+        const int markerAt = status.indexOf(marker);
+        if (markerAt >= 0) status.truncate(markerAt);
+        status += QLatin1Char('\n') + section;
+        if (!writeTextFile(absolutePath(projectRoot, AramfPaths::ProjectStatus), status.toUtf8(), error)) {
+            QString rollbackError;
+            restoreSnapshots(snapshots, &rollbackError);
+            return false;
+        }
+    }
+
+    QString validationError;
+    const auto validation = validate(projectRoot, &validationError);
+    if (!validationError.isEmpty() || validation.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
+        QString rollbackError;
+        restoreSnapshots(snapshots, &rollbackError);
+        if (error) *error = validationError.isEmpty() ? QStringLiteral("Memory consistency validation failed.") : validationError;
+        return false;
+    }
+    if (result) {
+        const QJsonObject manifest = readJsonObject(absolutePath(projectRoot, AramfPaths::Manifest), nullptr);
+        result->insert(QStringLiteral("operation"), operation);
+        result->insert(QStringLiteral("eventType"), eventType);
+        result->insert(QStringLiteral("eventId"), manifest.value(QStringLiteral("latestEventId")));
+        result->insert(QStringLiteral("sequenceNumber"), manifest.value(QStringLiteral("nextSequenceNumber")).toInt() - 1);
+        result->insert(QStringLiteral("status"), QStringLiteral("PASS"));
+    }
+    return true;
 }
 
 qint64 ProjectMemory::managedMemoryUsage(const QString& projectRoot) const
@@ -492,10 +720,43 @@ bool ProjectMemory::ensureMemoryDirectories(const QString& projectRoot, QString*
 
 bool ProjectMemory::writeMemoryFiles(const QString& projectRoot, const ProjectModel* model, QString* error) const
 {
+    const MemoryConfiguration memory = model ? model->memoryConfiguration() : MemoryConfiguration{};
+    const auto operations = supportedRecordOperations();
+    QJsonObject memoryConfiguration{
+        {QStringLiteral("captureCategories"), stringListToJson(memory.captureCategories)},
+        {QStringLiteral("historyOptions"), stringListToJson(memory.historyOptions)},
+        {QStringLiteral("maintenanceOptions"), stringListToJson(memory.maintenanceOptions)},
+        {QStringLiteral("validationOptions"), stringListToJson(memory.validationOptions)},
+        {QStringLiteral("retentionLevel"), memory.retentionLevel},
+        {QStringLiteral("updateStrategy"), memory.updateStrategy},
+        {QStringLiteral("maximumSizeBytes"), memory.maximumSizeBytes}
+    };
+    QJsonArray operationNames;
+    for (const auto& operation : operations) operationNames.append(operation);
+    const QJsonObject contract{
+        {QStringLiteral("version"), 1},
+        {QStringLiteral("recordingEnabled"), !memory.maintenanceOptions.isEmpty()},
+        {QStringLiteral("command"), QJsonObject{
+            {QStringLiteral("executable"), QStringLiteral("aramf")},
+            {QStringLiteral("syntax"), QStringLiteral("aramf memory record --project <project-root> --operation <operation> ...")},
+            {QStringLiteral("projectArgument"), QStringLiteral("--project <project-root>")}}},
+        {QStringLiteral("supportedOperations"), operationNames},
+        {QStringLiteral("configuredMaintenanceOptions"), stringListToJson(memory.maintenanceOptions)},
+        {QStringLiteral("arguments"), QJsonObject{
+            {QStringLiteral("required"), QJsonArray{QStringLiteral("--project"), QStringLiteral("--operation"), QStringLiteral("--task")}},
+            {QStringLiteral("optional"), QJsonArray{QStringLiteral("--status"), QStringLiteral("--summary"), QStringLiteral("--detail"),
+                                                     QStringLiteral("--category"), QStringLiteral("--issue"), QStringLiteral("--build-system"),
+                                                     QStringLiteral("--configuration"), QStringLiteral("--suite"), QStringLiteral("--passed"),
+                                                     QStringLiteral("--failed"), QStringLiteral("--total")}}}},
+        {QStringLiteral("ownedFiles"), QJsonArray{
+            QStringLiteral("memory/event-log.jsonl"), QStringLiteral("memory/metrics.json"),
+            QStringLiteral("memory/current-state.md"), QStringLiteral("memory/memory-manifest.json"),
+            QStringLiteral("memory/memory-consistency-validation.json"), QStringLiteral("PROJECT_STATUS.md")}},
+        {QStringLiteral("directEditing"), QStringLiteral("forbidden: use the ARAMF memory recorder; do not edit owned files directly.")}
+    };
     const QList<QPair<QString, QJsonObject>> defaults {
-        {AramfPaths::MemoryConfiguration, QJsonObject {
-            {QStringLiteral("maximumSizeBytes"), model ? model->memoryConfiguration().maximumSizeBytes : 10LL * 1024LL * 1024LL * 1024LL}
-        }},
+        {AramfPaths::MemoryConfiguration, memoryConfiguration},
+        {AramfPaths::MemoryContract, contract},
         {AramfPaths::FrameworkKnowledge, QJsonObject {
             {QStringLiteral("version"), 1},
             {QStringLiteral("authority"), QJsonArray {
@@ -511,7 +772,8 @@ bool ProjectMemory::writeMemoryFiles(const QString& projectRoot, const ProjectMo
         {AramfPaths::Metrics, QJsonObject {{QStringLiteral("iterations"), 0}, {QStringLiteral("buildAttempts"), 0}, {QStringLiteral("testAttempts"), 0}, {QStringLiteral("failures"), 0}}}
     };
     for (const auto& [relativePath, object] : defaults) {
-        const bool preserveExisting = relativePath != AramfPaths::MemoryConfiguration;
+        const bool preserveExisting = relativePath != AramfPaths::MemoryConfiguration
+            && relativePath != AramfPaths::MemoryContract;
         if (!writeJsonFile(absolutePath(projectRoot, relativePath), object, error, preserveExisting)) return false;
     }
     if (!writeTextFile(absolutePath(projectRoot, AramfPaths::Decisions),

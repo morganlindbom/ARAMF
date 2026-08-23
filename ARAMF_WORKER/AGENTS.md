@@ -67,3 +67,20 @@ This file is the live self-hosted project control plane for the repository.
 Product implementation and bootstrap source remains under `../aramf_setup/`;
 do not treat it as a second live project status or memory authority. Generated
 project paths remain relative to their `ARAMF_WORKER/` control directory.
+
+<!-- ARAMF-MEMORY-BEGIN -->
+
+## Project Memory Feedback
+
+Read `memory/memory-contract.json` before recording development results. Do not edit `memory/event-log.jsonl`, `memory/metrics.json`, `memory/current-state.md`, `memory/memory-manifest.json`, validation state, or `PROJECT_STATUS.md` bookkeeping fields directly. Use the ARAMF recorder described by the contract: `aramf memory record --project <project-root> --operation <operation> ...`.
+- Record meaningful task starts and completions.
+- Record completed build attempts and their PASS/FAIL result.
+- Record completed test attempts and their PASS/FAIL result.
+- Record meaningful validation outcomes.
+- Let ProjectMemory refresh current-state from accepted events.
+- Allow meaningful completed tasks to update PROJECT_STATUS through the recorder policy.
+- Record a checkpoint only when an actual stable checkpoint is warranted.
+
+The recorder owns event IDs, timestamps, sequences, metrics, pruning, validation, and current-state pointers.
+
+<!-- ARAMF-MEMORY-END -->
