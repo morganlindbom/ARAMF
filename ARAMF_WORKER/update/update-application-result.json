@@ -1,0 +1,1307 @@
+{
+    "_file": "update-application-result.json",
+    "actualProjectChanges": [
+    ],
+    "actualProjectFiles": [
+        ".gitignore",
+        "ARAMF_WORKER/AGENTS.md",
+        "ARAMF_WORKER/PROJECT_STATUS.md",
+        "ARAMF_WORKER/memory/cold-start-validation.json",
+        "ARAMF_WORKER/memory/current-state.md",
+        "ARAMF_WORKER/memory/decisions.md",
+        "ARAMF_WORKER/memory/event-log.jsonl",
+        "ARAMF_WORKER/memory/framework-knowledge.json",
+        "ARAMF_WORKER/memory/memory-consistency-validation.json",
+        "ARAMF_WORKER/memory/memory-contract.json",
+        "ARAMF_WORKER/memory/memory-manifest.json",
+        "ARAMF_WORKER/memory/metrics.json",
+        "CMakeLists.txt",
+        "aramf_setup/PROJECT_STATUS.md",
+        "aramf_setup/docs/ui-architecture.md",
+        "src/core/AramfPaths.h",
+        "src/core/FrameworkKnowledge.cpp",
+        "src/core/FrameworkKnowledge.h",
+        "src/core/MemoryCommand.cpp",
+        "src/core/ProjectMemory.cpp",
+        "src/core/ProjectMemory.h",
+        "src/core/Services.cpp",
+        "src/ui/mainwindow/MainWindow.cpp",
+        "src/ui/mainwindow/MainWindow.h",
+        "src/ui/workflow/WorkflowPageId.h",
+        "src/ui/workflow/WorkflowWidget.cpp",
+        "tests/ProjectMemoryTests.cpp",
+        "tests/WorkflowNavigationTests.cpp",
+        "ARAMF_WORKER/update/",
+        "src/core/AgentExecutionAdapter.h",
+        "src/core/CodexExecutableResolver.cpp",
+        "src/core/CodexExecutableResolver.h",
+        "src/core/CodexExecutionAdapter.cpp",
+        "src/core/CodexExecutionAdapter.h",
+        "src/core/UpdateExecutionService.cpp",
+        "src/core/UpdateExecutionService.h",
+        "src/core/UpdateService.cpp",
+        "src/core/UpdateService.h",
+        "src/ui/workflows/update/",
+        "test_update/"
+    ],
+    "adoptedFrameworkKnowledge": [
+        "fk-preserve-verified-corrections",
+        "fk-resolve-paths-from-working-root",
+        "fk-7a246faa4bc6ad74",
+        "fk-persist-stable-domain-identifiers",
+        "fk-one-authoritative-project-model",
+        "fk-separate-target-and-config-paths",
+        "fk-regenerate-managed-artifacts-from-authority",
+        "fk-separate-shared-and-feature-local-ownership",
+        "fk-validation-proportional-to-change-risk",
+        "fk-preserve-historical-validation-evidence",
+        "fk-validate-through-production-user-flow",
+        "fk-separate-approval-from-application",
+        "fk-reusable-knowledge-never-overrides-project-authority",
+        "fk-persistent-data-outside-disposable-builds",
+        "fk-migrations-converge-to-one-live-authority",
+        "fk-explicit-shared-resource-ownership",
+        "fk-prefer-native-platform-types",
+        "fk-provider-entrypoints-adapt-canonical-rules",
+        "fk-separate-memory-history-state-decisions-checkpoints",
+        "fk-self-host-through-production-workflow",
+        "fk-fail-explicitly-instead-of-silent-fallback"
+    ],
+    "agentExitCode": -1,
+    "agentLaunched": false,
+    "agentProvider": "openai-codex",
+    "agentSucceeded": true,
+    "completionRule": "COMPLETED requires actual managed-project changes and validation, or explicit NO_CHANGE_REQUIRED evidence.",
+    "controlPlaneChanges": [
+        "ARAMF_WORKER/update/update-plan.json",
+        "ARAMF_WORKER/update/update-contract.json"
+    ],
+    "controlPlaneFiles": [
+        "ARAMF_WORKER/update/update-application-result.json"
+    ],
+    "controlRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER",
+    "executionId": "742d4948-9ec6-41fb-9448-fd57a76e2b56",
+    "executionMechanism": "Codex CLI via QProcess",
+    "failureReason": "",
+    "finalState": "COMPLETED",
+    "finishedAt": "2026-08-23T05:01:52Z",
+    "handoff": "External agent must perform and validate selected implementation changes before completion.",
+    "knowledgeIds": [
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "explicit-user-request",
+            "approvedAt": "2026-08-22T00:00:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "Repeated project iterations showed that a previously corrected implementation can regress when later work recreates an older assumption instead of preserving the verified baseline."
+            ],
+            "id": "fk-preserve-verified-corrections",
+            "implementationRequired": false,
+            "lesson": "When a correction has been explicitly accepted and subsequently verified, treat the corrected behavior as the current baseline. Do not reintroduce the superseded behavior unless newer evidence or a higher-priority instruction requires it.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-preserve-verified-corrections",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "implementation",
+                "instructions",
+                "regression"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Preserve verified corrections as the active baseline"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "explicit-user-approved-correction",
+            "approvedAt": "2026-08-22T00:00:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "The internal ARAMF directory rename was initially described from the wrong path perspective; inspecting the repository root showed that ./ARAMF/ was the actual directory to rename while generated <ProjectPath>/ARAMF/ had to remain unchanged."
+            ],
+            "id": "fk-resolve-paths-from-working-root",
+            "implementationRequired": false,
+            "lesson": "Before changing or documenting repository paths, inspect the actual tree and resolve paths relative to the agent's current repository working root. Keep repository-internal setup paths distinct from generated target-project control-plane paths.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-resolve-paths-from-working-root",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "paths",
+                "repository",
+                "generation"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Resolve repository paths from the actual working root"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T01:46:26Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ISSUE-001 — Selective generation blocked Finalize",
+                "TEST-198: Generate and Verify passed with Memory excluded; Finalize initially failed on unconditional memory validation.",
+                "TEST-204: Same selective-generation failure pattern; passed after the correction.",
+                "TEST-210: Same selective-generation failure pattern; passed after the correction.",
+                "Correction gated memory-related Finalize requirements on the selected Memory product; all three retests passed with no recurrence."
+            ],
+            "id": "fk-7a246faa4bc6ad74",
+            "implementationRequired": false,
+            "lesson": "Lifecycle preconditions must be derived from the explicitly selected product set. Optional products must not introduce mandatory lifecycle requirements when they were intentionally excluded.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-7a246faa4bc6ad74",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "lifecycle",
+                "selective-generation",
+                "optional-components",
+                "verification",
+                "finalization"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Selected products define lifecycle preconditions"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF configuration became more robust when persisted selections used centralized catalog IDs instead of visible labels or list positions.",
+                "Pico Visual Designer likewise depends on stable functional identities while workflow presentation continues to evolve."
+            ],
+            "id": "fk-persist-stable-domain-identifiers",
+            "implementationRequired": false,
+            "lesson": "Persist stable domain identifiers rather than UI labels, translated text, or visible list indexes. Presentation order and wording may change without corrupting saved configuration, routing, or migration behavior.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-persist-stable-domain-identifiers",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "persistence",
+                "configuration",
+                "ui",
+                "migration",
+                "routing"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Persist stable domain identifiers"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF's ProjectModel-centered workflow improved consistency between GUI selections, persistence, generation, review, and verification.",
+                "Pico Visual Designer reconstruction benefited from explicit system-level ownership instead of allowing individual UI components to become independent sources of truth."
+            ],
+            "id": "fk-one-authoritative-project-model",
+            "implementationRequired": false,
+            "lesson": "Keep one authoritative project model for persisted user configuration. UI pages, generators, review, verification, and automation should consume or update that model through defined services rather than maintain competing copies of project state.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-one-authoritative-project-model",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "architecture",
+                "configuration",
+                "persistence",
+                "generation",
+                "consistency"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Keep one authoritative project model"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF Setup required projectFilePath to remain distinct from projectPath so browsing for the managed project did not implicitly change or save the configuration file."
+            ],
+            "id": "fk-separate-target-and-config-paths",
+            "implementationRequired": false,
+            "lesson": "Treat the managed project root and the configuration-file location as separate concepts. Browsing, saving, loading, and generation must not implicitly conflate target paths with configuration paths.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-separate-target-and-config-paths",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "paths",
+                "persistence",
+                "configuration",
+                "ui",
+                "generation"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Separate target paths from configuration paths"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF self-hosting established that generated ARAMF_WORKER artifacts must be regenerated from saved project configuration and ProjectModel rather than manually edited to manufacture a desired state.",
+                "Pico Visual Designer code generation follows the same principle: correct the source configuration or generator when generated code is wrong."
+            ],
+            "id": "fk-regenerate-managed-artifacts-from-authority",
+            "implementationRequired": false,
+            "lesson": "Do not repair managed generated artifacts as if they were authoritative source files. Correct the authoritative configuration, model, template, or generator and regenerate the managed output so the fix remains reproducible.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-regenerate-managed-artifacts-from-authority",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "generation",
+                "source-of-truth",
+                "reproducibility",
+                "maintenance"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Regenerate managed artifacts from authority"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "Pico Visual Designer reconstruction became clearer when shared Workflow and Viewer infrastructure remained global while workflow-specific columns were separate objects.",
+                "ARAMF likewise became easier to maintain after workflow pages were split into dedicated folders while MainWindow and shared infrastructure stayed centralized."
+            ],
+            "id": "fk-separate-shared-and-feature-local-ownership",
+            "implementationRequired": false,
+            "lesson": "Keep genuinely shared infrastructure centralized and isolate feature- or workflow-specific behavior in dedicated components. Explicit ownership boundaries reduce coupling, file growth, accidental cross-feature state, and reconstruction cost.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-separate-shared-and-feature-local-ownership",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "architecture",
+                "modularity",
+                "ui",
+                "ownership",
+                "maintainability"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Separate shared and feature-local ownership"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF's validation routing was introduced after broad historical campaigns were being run for ordinary changes, causing unnecessary work.",
+                "The FOCUSED → SUBSYSTEM → FULL REGRESSION escalation model retained confidence while avoiding habitual full-suite execution."
+            ],
+            "id": "fk-validation-proportional-to-change-risk",
+            "implementationRequired": false,
+            "lesson": "Choose the minimum sufficient validation level from the scope, shared impact, uncertainty, and risk of the change. Escalate from focused to subsystem to full regression when evidence requires it rather than running the broadest campaign by habit.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-validation-proportional-to-change-risk",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "testing",
+                "validation",
+                "efficiency",
+                "risk",
+                "regression"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Make validation proportional to change risk"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF preserved the completed test_250 and test_550 campaigns as historical certification evidence and created test_update for later subsystem work.",
+                "Real intermediate failures were retained instead of rewriting old evidence to make later results appear clean."
+            ],
+            "id": "fk-preserve-historical-validation-evidence",
+            "implementationRequired": false,
+            "lesson": "Treat completed certification campaigns and recorded failures as immutable historical evidence. New work should create new validation evidence or a new campaign instead of rewriting old results, renumbering history, or erasing failed attempts that were later corrected.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-preserve-historical-validation-evidence",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "testing",
+                "certification",
+                "auditability",
+                "history",
+                "regression"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Preserve historical validation evidence"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF's Framework Knowledge approval was persisted correctly but initially failed to appear on the Apply page because page activation did not refresh the UI and applicability logic used incompatible exact scope matching.",
+                "Pico Visual Designer hardware certification repeatedly relied on end-to-end Generate → Configure → Build → Transfer → Debug validation rather than isolated generator calls alone."
+            ],
+            "id": "fk-validate-through-production-user-flow",
+            "implementationRequired": false,
+            "lesson": "For user-visible state, persistence, generation, or lifecycle behavior, validate the production user flow in addition to service-level logic. Correct backend state can still fail at page refresh, wiring, lifecycle transitions, or integration boundaries.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-validate-through-production-user-flow",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "ui",
+                "integration",
+                "testing",
+                "persistence",
+                "workflow"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Validate through the production user flow"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF separates Framework Knowledge review and approval from the later Apply workflow so approving reusable knowledge does not silently modify project implementation."
+            ],
+            "id": "fk-separate-approval-from-application",
+            "implementationRequired": false,
+            "lesson": "Keep human review and approval separate from execution. Approving knowledge, a rule, or a recommendation should make it eligible for use but must not silently modify a project; application requires its own explicit action, applicability analysis, and validation.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-separate-approval-from-application",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "approval",
+                "automation",
+                "governance",
+                "workflow",
+                "safety"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Separate approval from application"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF's authority hierarchy places explicit current instructions, current Sources of Truth, and current durable project decisions above reusable Framework Knowledge."
+            ],
+            "id": "fk-reusable-knowledge-never-overrides-project-authority",
+            "implementationRequired": false,
+            "lesson": "Reusable learned knowledge is advisory below the current project's explicit authority. Never let global knowledge, templates, defaults, or AI inference override explicit current user instructions, current Sources of Truth, or current durable project decisions.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-reusable-knowledge-never-overrides-project-authority",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "authority",
+                "source-of-truth",
+                "governance",
+                "knowledge",
+                "ai"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Protect current project authority from reusable knowledge"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF initially placed persistent global Framework Knowledge beside the build executable, which made learned knowledge vulnerable to a normal build reset.",
+                "The corrected design stores ARAMF_DATA at the resolved program root while treating build directories as disposable."
+            ],
+            "id": "fk-persistent-data-outside-disposable-builds",
+            "implementationRequired": false,
+            "lesson": "Persistent user-owned application data must not live inside disposable build, cache, temporary, or generated-output directories. Build cleanup and rebuild operations must be safe without risking accumulated user data.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-persistent-data-outside-disposable-builds",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "storage",
+                "build",
+                "persistence",
+                "data-integrity",
+                "portability"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Keep persistent data outside disposable builds"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF migrated global knowledge from AppData and legacy executable/build-local ARAMF_DATA into one root-level ARAMF_DATA library while keeping legacy locations as migration sources only.",
+                "Duplicate and downgrade handling were required so an older candidate could not override an explicitly approved global entry with the same stable ID."
+            ],
+            "id": "fk-migrations-converge-to-one-live-authority",
+            "implementationRequired": false,
+            "lesson": "When storage or schema locations change, migrate old data non-destructively into one canonical live authority. Legacy locations may be migration sources, but must not remain competing active stores after successful convergence.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-migrations-converge-to-one-live-authority",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "migration",
+                "persistence",
+                "data-integrity",
+                "deduplication",
+                "authority"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Migrations must converge to one live authority"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "Pico Visual Designer multicore and hardware certification showed that GPIO, PWM slices/channels, PIO blocks/state machines, buses, and related shared hardware need explicit ownership and conflict validation before safe generation or execution.",
+                "The scooter Hall/PWM work showed that multiple execution contexts touching the same hardware resource require a defined owner and arbitration model."
+            ],
+            "id": "fk-explicit-shared-resource-ownership",
+            "implementationRequired": false,
+            "lesson": "Model ownership of shared resources explicitly and validate conflicts before generation or execution. Resources with shared configuration or multiple potential writers need a defined owner, arbitration rule, and conflict policy rather than relying on call order.",
+            "origin": "project+global",
+            "originProjectId": "Pico Visual Designer",
+            "originalKnowledgeId": "fk-explicit-shared-resource-ownership",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "resources",
+                "ownership",
+                "concurrency",
+                "generation",
+                "validation"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Define shared resource ownership explicitly"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "Pico Visual Designer adopted the Pico SDK's native hardware types for PIO, GPIO, DMA, and IRQ while reserving custom enums for project-specific abstractions."
+            ],
+            "id": "fk-prefer-native-platform-types",
+            "implementationRequired": false,
+            "lesson": "When a platform or SDK already defines the correct type for a native concept, use that type directly. Introduce custom enums or wrappers only for project-domain concepts or when they add a real abstraction boundary.",
+            "origin": "project+global",
+            "originProjectId": "Pico Visual Designer",
+            "originalKnowledgeId": "fk-prefer-native-platform-types",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "code-generation",
+                "sdk",
+                "types",
+                "interoperability",
+                "maintainability"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Prefer native platform types for native concepts"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF's agent-entry-point design keeps ARAMF_WORKER/AGENTS.md canonical while provider-specific files such as CLAUDE.md, GEMINI.md, and .github/copilot-instructions.md act as adapters."
+            ],
+            "id": "fk-provider-entrypoints-adapt-canonical-rules",
+            "implementationRequired": false,
+            "lesson": "Maintain one canonical internal rule and context model, then generate provider-specific AI entry points as thin adapters. Provider files should route to canonical instructions rather than becoming independent Sources of Truth.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-provider-entrypoints-adapt-canonical-rules",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "ai-agents",
+                "routing",
+                "generation",
+                "source-of-truth",
+                "maintainability"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Use provider entry points as adapters"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF project memory became more robust after append-only history, derived current state, durable decisions, explicit checkpoints, and consistency/cold-start validation were kept as distinct concerns."
+            ],
+            "id": "fk-separate-memory-history-state-decisions-checkpoints",
+            "implementationRequired": false,
+            "lesson": "Do not collapse project memory into one mutable summary. Keep historical events, derived current state, durable decisions, and checkpoints as distinct artifacts with explicit ownership and consistency validation.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-separate-memory-history-state-decisions-checkpoints",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "memory",
+                "auditability",
+                "recovery",
+                "decisions",
+                "validation"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Separate memory history, state, decisions, and checkpoints"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF self-hosting exposed configuration and generation defects that service-only or synthetic test projects did not reveal.",
+                "Using the same production GUI, persistence, generation, and worker model for ARAMF itself made the product exercise its own rules."
+            ],
+            "id": "fk-self-host-through-production-workflow",
+            "implementationRequired": false,
+            "lesson": "When a framework can manage projects of its own type, self-host it through the same production workflow used by ordinary projects. Avoid privileged manual shortcuts that hide defects in configuration, persistence, generation, or agent routing.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-self-host-through-production-workflow",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "self-hosting",
+                "integration",
+                "validation",
+                "generation",
+                "workflow"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Self-host through the production workflow"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF root-level knowledge storage explicitly rejects silent fallback to AppData when the canonical program-local store cannot be written.",
+                "Pico Visual Designer hardware work used explicit safe handling for invalid or unmapped states instead of guessing an active output."
+            ],
+            "id": "fk-fail-explicitly-instead-of-silent-fallback",
+            "implementationRequired": false,
+            "lesson": "When a required authority, storage target, mapping, or resource cannot be resolved safely, fail explicitly or enter a defined safe state. Do not silently fall back to a different authority or guessed behavior that can hide configuration errors.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-fail-explicitly-instead-of-silent-fallback",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "error-handling",
+                "authority",
+                "configuration",
+                "safety",
+                "validation"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Fail explicitly instead of silently falling back"
+        }
+    ],
+    "noChangeRequired": true,
+    "planFingerprint": "aba5bfa3574963762dbcdca148b68cb2bb7425283ff0d6193f234ab578ae2a95",
+    "planId": "update-802b31b6-6731-44a2-a483-2bdd47c65264",
+    "postExecutionGitStatus": " M .gitignore\n M ARAMF_WORKER/AGENTS.md\n M ARAMF_WORKER/PROJECT_STATUS.md\n M ARAMF_WORKER/memory/cold-start-validation.json\n M ARAMF_WORKER/memory/current-state.md\n M ARAMF_WORKER/memory/decisions.md\n M ARAMF_WORKER/memory/event-log.jsonl\n M ARAMF_WORKER/memory/framework-knowledge.json\n M ARAMF_WORKER/memory/memory-consistency-validation.json\n M ARAMF_WORKER/memory/memory-contract.json\n M ARAMF_WORKER/memory/memory-manifest.json\n M ARAMF_WORKER/memory/metrics.json\n M CMakeLists.txt\n M aramf_setup/PROJECT_STATUS.md\n M aramf_setup/docs/ui-architecture.md\n M src/core/AramfPaths.h\n M src/core/FrameworkKnowledge.cpp\n M src/core/FrameworkKnowledge.h\n M src/core/MemoryCommand.cpp\n M src/core/ProjectMemory.cpp\n M src/core/ProjectMemory.h\n M src/core/Services.cpp\n M src/ui/mainwindow/MainWindow.cpp\n M src/ui/mainwindow/MainWindow.h\n M src/ui/workflow/WorkflowPageId.h\n M src/ui/workflow/WorkflowWidget.cpp\n M tests/ProjectMemoryTests.cpp\n M tests/WorkflowNavigationTests.cpp\n?? ARAMF_WORKER/update/\n?? src/core/AgentExecutionAdapter.h\n?? src/core/CodexExecutableResolver.cpp\n?? src/core/CodexExecutableResolver.h\n?? src/core/CodexExecutionAdapter.cpp\n?? src/core/CodexExecutionAdapter.h\n?? src/core/UpdateExecutionService.cpp\n?? src/core/UpdateExecutionService.h\n?? src/core/UpdateService.cpp\n?? src/core/UpdateService.h\n?? src/ui/workflows/update/\n?? test_update/\n",
+    "postExecutionProjectFiles": [
+        ".gitignore",
+        "ARAMF_WORKER/AGENTS.md",
+        "ARAMF_WORKER/PROJECT_STATUS.md",
+        "ARAMF_WORKER/memory/cold-start-validation.json",
+        "ARAMF_WORKER/memory/current-state.md",
+        "ARAMF_WORKER/memory/decisions.md",
+        "ARAMF_WORKER/memory/event-log.jsonl",
+        "ARAMF_WORKER/memory/framework-knowledge.json",
+        "ARAMF_WORKER/memory/memory-consistency-validation.json",
+        "ARAMF_WORKER/memory/memory-contract.json",
+        "ARAMF_WORKER/memory/memory-manifest.json",
+        "ARAMF_WORKER/memory/metrics.json",
+        "CMakeLists.txt",
+        "aramf_setup/PROJECT_STATUS.md",
+        "aramf_setup/docs/ui-architecture.md",
+        "src/core/AramfPaths.h",
+        "src/core/FrameworkKnowledge.cpp",
+        "src/core/FrameworkKnowledge.h",
+        "src/core/MemoryCommand.cpp",
+        "src/core/ProjectMemory.cpp",
+        "src/core/ProjectMemory.h",
+        "src/core/Services.cpp",
+        "src/ui/mainwindow/MainWindow.cpp",
+        "src/ui/mainwindow/MainWindow.h",
+        "src/ui/workflow/WorkflowPageId.h",
+        "src/ui/workflow/WorkflowWidget.cpp",
+        "tests/ProjectMemoryTests.cpp",
+        "tests/WorkflowNavigationTests.cpp",
+        "ARAMF_WORKER/update/",
+        "src/core/AgentExecutionAdapter.h",
+        "src/core/CodexExecutableResolver.cpp",
+        "src/core/CodexExecutableResolver.h",
+        "src/core/CodexExecutionAdapter.cpp",
+        "src/core/CodexExecutionAdapter.h",
+        "src/core/UpdateExecutionService.cpp",
+        "src/core/UpdateExecutionService.h",
+        "src/core/UpdateService.cpp",
+        "src/core/UpdateService.h",
+        "src/ui/workflows/update/",
+        "test_update/"
+    ],
+    "preExistingGitStatus": "",
+    "preExistingProjectFiles": [
+    ],
+    "processId": 0,
+    "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+    "selectedFrameworkKnowledge": [
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "explicit-user-request",
+            "approvedAt": "2026-08-22T00:00:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "Repeated project iterations showed that a previously corrected implementation can regress when later work recreates an older assumption instead of preserving the verified baseline."
+            ],
+            "id": "fk-preserve-verified-corrections",
+            "implementationRequired": false,
+            "lesson": "When a correction has been explicitly accepted and subsequently verified, treat the corrected behavior as the current baseline. Do not reintroduce the superseded behavior unless newer evidence or a higher-priority instruction requires it.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-preserve-verified-corrections",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "implementation",
+                "instructions",
+                "regression"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Preserve verified corrections as the active baseline"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "explicit-user-approved-correction",
+            "approvedAt": "2026-08-22T00:00:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "The internal ARAMF directory rename was initially described from the wrong path perspective; inspecting the repository root showed that ./ARAMF/ was the actual directory to rename while generated <ProjectPath>/ARAMF/ had to remain unchanged."
+            ],
+            "id": "fk-resolve-paths-from-working-root",
+            "implementationRequired": false,
+            "lesson": "Before changing or documenting repository paths, inspect the actual tree and resolve paths relative to the agent's current repository working root. Keep repository-internal setup paths distinct from generated target-project control-plane paths.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-resolve-paths-from-working-root",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "paths",
+                "repository",
+                "generation"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Resolve repository paths from the actual working root"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T01:46:26Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ISSUE-001 — Selective generation blocked Finalize",
+                "TEST-198: Generate and Verify passed with Memory excluded; Finalize initially failed on unconditional memory validation.",
+                "TEST-204: Same selective-generation failure pattern; passed after the correction.",
+                "TEST-210: Same selective-generation failure pattern; passed after the correction.",
+                "Correction gated memory-related Finalize requirements on the selected Memory product; all three retests passed with no recurrence."
+            ],
+            "id": "fk-7a246faa4bc6ad74",
+            "implementationRequired": false,
+            "lesson": "Lifecycle preconditions must be derived from the explicitly selected product set. Optional products must not introduce mandatory lifecycle requirements when they were intentionally excluded.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-7a246faa4bc6ad74",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "lifecycle",
+                "selective-generation",
+                "optional-components",
+                "verification",
+                "finalization"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Selected products define lifecycle preconditions"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF configuration became more robust when persisted selections used centralized catalog IDs instead of visible labels or list positions.",
+                "Pico Visual Designer likewise depends on stable functional identities while workflow presentation continues to evolve."
+            ],
+            "id": "fk-persist-stable-domain-identifiers",
+            "implementationRequired": false,
+            "lesson": "Persist stable domain identifiers rather than UI labels, translated text, or visible list indexes. Presentation order and wording may change without corrupting saved configuration, routing, or migration behavior.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-persist-stable-domain-identifiers",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "persistence",
+                "configuration",
+                "ui",
+                "migration",
+                "routing"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Persist stable domain identifiers"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF's ProjectModel-centered workflow improved consistency between GUI selections, persistence, generation, review, and verification.",
+                "Pico Visual Designer reconstruction benefited from explicit system-level ownership instead of allowing individual UI components to become independent sources of truth."
+            ],
+            "id": "fk-one-authoritative-project-model",
+            "implementationRequired": false,
+            "lesson": "Keep one authoritative project model for persisted user configuration. UI pages, generators, review, verification, and automation should consume or update that model through defined services rather than maintain competing copies of project state.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-one-authoritative-project-model",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "architecture",
+                "configuration",
+                "persistence",
+                "generation",
+                "consistency"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Keep one authoritative project model"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF Setup required projectFilePath to remain distinct from projectPath so browsing for the managed project did not implicitly change or save the configuration file."
+            ],
+            "id": "fk-separate-target-and-config-paths",
+            "implementationRequired": false,
+            "lesson": "Treat the managed project root and the configuration-file location as separate concepts. Browsing, saving, loading, and generation must not implicitly conflate target paths with configuration paths.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-separate-target-and-config-paths",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "paths",
+                "persistence",
+                "configuration",
+                "ui",
+                "generation"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Separate target paths from configuration paths"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF self-hosting established that generated ARAMF_WORKER artifacts must be regenerated from saved project configuration and ProjectModel rather than manually edited to manufacture a desired state.",
+                "Pico Visual Designer code generation follows the same principle: correct the source configuration or generator when generated code is wrong."
+            ],
+            "id": "fk-regenerate-managed-artifacts-from-authority",
+            "implementationRequired": false,
+            "lesson": "Do not repair managed generated artifacts as if they were authoritative source files. Correct the authoritative configuration, model, template, or generator and regenerate the managed output so the fix remains reproducible.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-regenerate-managed-artifacts-from-authority",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "generation",
+                "source-of-truth",
+                "reproducibility",
+                "maintenance"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Regenerate managed artifacts from authority"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "Pico Visual Designer reconstruction became clearer when shared Workflow and Viewer infrastructure remained global while workflow-specific columns were separate objects.",
+                "ARAMF likewise became easier to maintain after workflow pages were split into dedicated folders while MainWindow and shared infrastructure stayed centralized."
+            ],
+            "id": "fk-separate-shared-and-feature-local-ownership",
+            "implementationRequired": false,
+            "lesson": "Keep genuinely shared infrastructure centralized and isolate feature- or workflow-specific behavior in dedicated components. Explicit ownership boundaries reduce coupling, file growth, accidental cross-feature state, and reconstruction cost.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-separate-shared-and-feature-local-ownership",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "architecture",
+                "modularity",
+                "ui",
+                "ownership",
+                "maintainability"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Separate shared and feature-local ownership"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF's validation routing was introduced after broad historical campaigns were being run for ordinary changes, causing unnecessary work.",
+                "The FOCUSED → SUBSYSTEM → FULL REGRESSION escalation model retained confidence while avoiding habitual full-suite execution."
+            ],
+            "id": "fk-validation-proportional-to-change-risk",
+            "implementationRequired": false,
+            "lesson": "Choose the minimum sufficient validation level from the scope, shared impact, uncertainty, and risk of the change. Escalate from focused to subsystem to full regression when evidence requires it rather than running the broadest campaign by habit.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-validation-proportional-to-change-risk",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "testing",
+                "validation",
+                "efficiency",
+                "risk",
+                "regression"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Make validation proportional to change risk"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF preserved the completed test_250 and test_550 campaigns as historical certification evidence and created test_update for later subsystem work.",
+                "Real intermediate failures were retained instead of rewriting old evidence to make later results appear clean."
+            ],
+            "id": "fk-preserve-historical-validation-evidence",
+            "implementationRequired": false,
+            "lesson": "Treat completed certification campaigns and recorded failures as immutable historical evidence. New work should create new validation evidence or a new campaign instead of rewriting old results, renumbering history, or erasing failed attempts that were later corrected.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-preserve-historical-validation-evidence",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "testing",
+                "certification",
+                "auditability",
+                "history",
+                "regression"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Preserve historical validation evidence"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF's Framework Knowledge approval was persisted correctly but initially failed to appear on the Apply page because page activation did not refresh the UI and applicability logic used incompatible exact scope matching.",
+                "Pico Visual Designer hardware certification repeatedly relied on end-to-end Generate → Configure → Build → Transfer → Debug validation rather than isolated generator calls alone."
+            ],
+            "id": "fk-validate-through-production-user-flow",
+            "implementationRequired": false,
+            "lesson": "For user-visible state, persistence, generation, or lifecycle behavior, validate the production user flow in addition to service-level logic. Correct backend state can still fail at page refresh, wiring, lifecycle transitions, or integration boundaries.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-validate-through-production-user-flow",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "ui",
+                "integration",
+                "testing",
+                "persistence",
+                "workflow"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Validate through the production user flow"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF separates Framework Knowledge review and approval from the later Apply workflow so approving reusable knowledge does not silently modify project implementation."
+            ],
+            "id": "fk-separate-approval-from-application",
+            "implementationRequired": false,
+            "lesson": "Keep human review and approval separate from execution. Approving knowledge, a rule, or a recommendation should make it eligible for use but must not silently modify a project; application requires its own explicit action, applicability analysis, and validation.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-separate-approval-from-application",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "approval",
+                "automation",
+                "governance",
+                "workflow",
+                "safety"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Separate approval from application"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF's authority hierarchy places explicit current instructions, current Sources of Truth, and current durable project decisions above reusable Framework Knowledge."
+            ],
+            "id": "fk-reusable-knowledge-never-overrides-project-authority",
+            "implementationRequired": false,
+            "lesson": "Reusable learned knowledge is advisory below the current project's explicit authority. Never let global knowledge, templates, defaults, or AI inference override explicit current user instructions, current Sources of Truth, or current durable project decisions.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-reusable-knowledge-never-overrides-project-authority",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "authority",
+                "source-of-truth",
+                "governance",
+                "knowledge",
+                "ai"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Protect current project authority from reusable knowledge"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF initially placed persistent global Framework Knowledge beside the build executable, which made learned knowledge vulnerable to a normal build reset.",
+                "The corrected design stores ARAMF_DATA at the resolved program root while treating build directories as disposable."
+            ],
+            "id": "fk-persistent-data-outside-disposable-builds",
+            "implementationRequired": false,
+            "lesson": "Persistent user-owned application data must not live inside disposable build, cache, temporary, or generated-output directories. Build cleanup and rebuild operations must be safe without risking accumulated user data.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-persistent-data-outside-disposable-builds",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "storage",
+                "build",
+                "persistence",
+                "data-integrity",
+                "portability"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Keep persistent data outside disposable builds"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF migrated global knowledge from AppData and legacy executable/build-local ARAMF_DATA into one root-level ARAMF_DATA library while keeping legacy locations as migration sources only.",
+                "Duplicate and downgrade handling were required so an older candidate could not override an explicitly approved global entry with the same stable ID."
+            ],
+            "id": "fk-migrations-converge-to-one-live-authority",
+            "implementationRequired": false,
+            "lesson": "When storage or schema locations change, migrate old data non-destructively into one canonical live authority. Legacy locations may be migration sources, but must not remain competing active stores after successful convergence.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-migrations-converge-to-one-live-authority",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "migration",
+                "persistence",
+                "data-integrity",
+                "deduplication",
+                "authority"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Migrations must converge to one live authority"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "Pico Visual Designer multicore and hardware certification showed that GPIO, PWM slices/channels, PIO blocks/state machines, buses, and related shared hardware need explicit ownership and conflict validation before safe generation or execution.",
+                "The scooter Hall/PWM work showed that multiple execution contexts touching the same hardware resource require a defined owner and arbitration model."
+            ],
+            "id": "fk-explicit-shared-resource-ownership",
+            "implementationRequired": false,
+            "lesson": "Model ownership of shared resources explicitly and validate conflicts before generation or execution. Resources with shared configuration or multiple potential writers need a defined owner, arbitration rule, and conflict policy rather than relying on call order.",
+            "origin": "project+global",
+            "originProjectId": "Pico Visual Designer",
+            "originalKnowledgeId": "fk-explicit-shared-resource-ownership",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "resources",
+                "ownership",
+                "concurrency",
+                "generation",
+                "validation"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Define shared resource ownership explicitly"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "Pico Visual Designer adopted the Pico SDK's native hardware types for PIO, GPIO, DMA, and IRQ while reserving custom enums for project-specific abstractions."
+            ],
+            "id": "fk-prefer-native-platform-types",
+            "implementationRequired": false,
+            "lesson": "When a platform or SDK already defines the correct type for a native concept, use that type directly. Introduce custom enums or wrappers only for project-domain concepts or when they add a real abstraction boundary.",
+            "origin": "project+global",
+            "originProjectId": "Pico Visual Designer",
+            "originalKnowledgeId": "fk-prefer-native-platform-types",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "code-generation",
+                "sdk",
+                "types",
+                "interoperability",
+                "maintainability"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Prefer native platform types for native concepts"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF's agent-entry-point design keeps ARAMF_WORKER/AGENTS.md canonical while provider-specific files such as CLAUDE.md, GEMINI.md, and .github/copilot-instructions.md act as adapters."
+            ],
+            "id": "fk-provider-entrypoints-adapt-canonical-rules",
+            "implementationRequired": false,
+            "lesson": "Maintain one canonical internal rule and context model, then generate provider-specific AI entry points as thin adapters. Provider files should route to canonical instructions rather than becoming independent Sources of Truth.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-provider-entrypoints-adapt-canonical-rules",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "ai-agents",
+                "routing",
+                "generation",
+                "source-of-truth",
+                "maintainability"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Use provider entry points as adapters"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF project memory became more robust after append-only history, derived current state, durable decisions, explicit checkpoints, and consistency/cold-start validation were kept as distinct concerns."
+            ],
+            "id": "fk-separate-memory-history-state-decisions-checkpoints",
+            "implementationRequired": false,
+            "lesson": "Do not collapse project memory into one mutable summary. Keep historical events, derived current state, durable decisions, and checkpoints as distinct artifacts with explicit ownership and consistency validation.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-separate-memory-history-state-decisions-checkpoints",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "memory",
+                "auditability",
+                "recovery",
+                "decisions",
+                "validation"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Separate memory history, state, decisions, and checkpoints"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF self-hosting exposed configuration and generation defects that service-only or synthetic test projects did not reveal.",
+                "Using the same production GUI, persistence, generation, and worker model for ARAMF itself made the product exercise its own rules."
+            ],
+            "id": "fk-self-host-through-production-workflow",
+            "implementationRequired": false,
+            "lesson": "When a framework can manage projects of its own type, self-host it through the same production workflow used by ordinary projects. Avoid privileged manual shortcuts that hide defects in configuration, persistence, generation, or agent routing.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF",
+            "originalKnowledgeId": "fk-self-host-through-production-workflow",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "self-hosting",
+                "integration",
+                "validation",
+                "generation",
+                "workflow"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Self-host through the production workflow"
+        },
+        {
+            "adoption": "will-adopt",
+            "approvalSource": "Morgan Lindbom",
+            "approvedAt": "2026-08-23T03:17:00Z",
+            "classification": "ALREADY_SATISFIED",
+            "evidence": [
+                "ARAMF root-level knowledge storage explicitly rejects silent fallback to AppData when the canonical program-local store cannot be written.",
+                "Pico Visual Designer hardware work used explicit safe handling for invalid or unmapped states instead of guessing an active output."
+            ],
+            "id": "fk-fail-explicitly-instead-of-silent-fallback",
+            "implementationRequired": false,
+            "lesson": "When a required authority, storage target, mapping, or resource cannot be resolved safely, fail explicitly or enter a defined safe state. Do not silently fall back to a different authority or guessed behavior that can hide configuration errors.",
+            "origin": "project+global",
+            "originProjectId": "ARAMF + Pico Visual Designer",
+            "originalKnowledgeId": "fk-fail-explicitly-instead-of-silent-fallback",
+            "portable": true,
+            "reviewStatus": "approved",
+            "scopes": [
+                "error-handling",
+                "authority",
+                "configuration",
+                "safety",
+                "validation"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "Fail explicitly instead of silently falling back"
+        }
+    ],
+    "startedAt": "2026-08-23T05:01:52Z",
+    "status": "READY",
+    "stderr": "",
+    "stdout": "",
+    "validationPerformed": true,
+    "validationResult": "PASS",
+    "validationSummary": "NO_CHANGE_REQUIRED: adopted knowledge is already satisfied; no implementation diff required."
+}

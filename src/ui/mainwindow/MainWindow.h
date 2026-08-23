@@ -40,6 +40,8 @@ class ReviewPage;
 class GeneratePage;
 class VerifyPage;
 class FinalizePage;
+class FrameworkKnowledgeReviewPage;
+class FrameworkKnowledgeApplyPage;
 class QEvent;
 
 class MainWindow final : public QMainWindow
@@ -111,6 +113,8 @@ private:
     GeneratePage* generatePage_ = nullptr;
     VerifyPage* verificationPage_ = nullptr;
     FinalizePage* finalizePage_ = nullptr;
+    FrameworkKnowledgeReviewPage* updateReviewPage_ = nullptr;
+    FrameworkKnowledgeApplyPage* updateApplyPage_ = nullptr;
 
     QMap<WorkflowPageId, int> pageStackIndices_;
 

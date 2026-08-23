@@ -3,9 +3,11 @@
 #include "FrameworkKnowledge.h"
 
 #include "AramfPaths.h"
+#include "ProjectModel.h"
 #include "ProjectMemory.h"
 
 #include <QCryptographicHash>
+#include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
@@ -14,10 +16,13 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
+#include <QStandardPaths>
 
 #include <algorithm>
 
 namespace {
+QString globalLibraryPathOverride;
+
 QJsonArray strings(const QStringList& values)
 {
     QJsonArray result;
@@ -54,6 +59,74 @@ QJsonObject emptyStore()
 QString storePath(const QString& projectRoot)
 {
     return QDir(projectRoot).filePath(AramfPaths::FrameworkKnowledge);
+}
+
+QString libraryPath()
+{
+    if (!globalLibraryPathOverride.isEmpty()) return globalLibraryPathOverride;
+    return QDir(AramfPaths::programRoot())
+        .filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json"));
+}
+
+QString legacyLibraryPath()
+{
+    return QDir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation))
+        .filePath(QStringLiteral("framework-knowledge-library.json"));
+}
+
+QString legacyExecutableLibraryPath()
+{
+    return QDir(AramfPaths::applicationDirectory())
+        .filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json"));
+}
+
+QString migrationMarkerPath()
+{
+    return QDir(QFileInfo(libraryPath()).absolutePath())
+        .filePath(QStringLiteral(".framework-knowledge-library-migrated.json"));
+}
+
+QJsonObject emptyLibrary()
+{
+    return QJsonObject{{QStringLiteral("_file"), QStringLiteral("framework-knowledge-library.json")},
+                       {QStringLiteral("version"), 1}, {QStringLiteral("entries"), QJsonArray{}}};
+}
+
+bool readObjectFile(const QString& path, QJsonObject* value, QString* error)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        if (error) *error = file.errorString();
+        return false;
+    }
+    QJsonParseError parseError;
+    const auto document = QJsonDocument::fromJson(file.readAll(), &parseError);
+    if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
+        if (error) *error = parseError.errorString();
+        return false;
+    }
+    *value = document.object();
+    return true;
+}
+
+bool writeObjectFile(const QString& path, const QJsonObject& value, QString* error)
+{
+    if (!QDir().mkpath(QFileInfo(path).absolutePath())) {
+        if (error) *error = QStringLiteral("Cannot create directory for Framework Knowledge library: %1")
+                                .arg(QFileInfo(path).absolutePath());
+        return false;
+    }
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        if (error) *error = file.errorString();
+        return false;
+    }
+    const auto data = QJsonDocument(value).toJson(QJsonDocument::Indented);
+    if (file.write(data) != data.size() || !file.commit()) {
+        if (error) *error = file.errorString();
+        return false;
+    }
+    return true;
 }
 
 bool readStore(const QString& projectRoot, QJsonObject* store, QString* error)
@@ -108,7 +181,11 @@ QJsonObject toJson(const FrameworkKnowledgeEntry& entry)
         {QStringLiteral("createdAt"), entry.createdAt},
         {QStringLiteral("approvedAt"), entry.approvedAt},
         {QStringLiteral("approvalSource"), entry.approvalSource},
-        {QStringLiteral("supersededBy"), entry.supersededBy}
+        {QStringLiteral("supersededBy"), entry.supersededBy},
+        {QStringLiteral("origin"), entry.origin},
+        {QStringLiteral("originProjectId"), entry.originProjectId},
+        {QStringLiteral("originalKnowledgeId"), entry.originalKnowledgeId},
+        {QStringLiteral("promotedAt"), entry.promotedAt}
     };
 }
 
@@ -130,6 +207,10 @@ FrameworkKnowledgeEntry fromJson(const QJsonObject& value)
     entry.approvedAt = value.value(QStringLiteral("approvedAt")).toString();
     entry.approvalSource = value.value(QStringLiteral("approvalSource")).toString();
     entry.supersededBy = value.value(QStringLiteral("supersededBy")).toString();
+    entry.origin = value.value(QStringLiteral("origin")).toString(QStringLiteral("project"));
+    entry.originProjectId = value.value(QStringLiteral("originProjectId")).toString();
+    entry.originalKnowledgeId = value.value(QStringLiteral("originalKnowledgeId")).toString();
+    entry.promotedAt = value.value(QStringLiteral("promotedAt")).toString();
     return entry;
 }
 
@@ -144,9 +225,63 @@ QString stableId(const QString& title, const QString& lesson, QStringList scopes
 
 bool scopeMatches(const FrameworkKnowledgeEntry& entry, const QStringList& requested)
 {
-    if (requested.isEmpty() || entry.scopes.isEmpty() || entry.scopes.contains(QStringLiteral("all"))) return true;
+    if (requested.isEmpty() || requested.contains(QStringLiteral("all")) || entry.scopes.isEmpty() || entry.scopes.contains(QStringLiteral("all"))) return true;
     for (const auto& scope : requested) if (entry.scopes.contains(scope)) return true;
     return false;
+}
+
+QList<FrameworkKnowledgeEntry> entriesFromStore(const QJsonObject& store)
+{
+    QList<FrameworkKnowledgeEntry> result;
+    for (const auto& value : store.value(QStringLiteral("entries")).toArray()) result.append(fromJson(value.toObject()));
+    return result;
+}
+
+QJsonObject storeFromEntries(const QList<FrameworkKnowledgeEntry>& entries, const QString& fileName)
+{
+    QJsonArray values;
+    for (const auto& entry : entries) values.append(toJson(entry));
+    return QJsonObject{{QStringLiteral("_file"), fileName}, {QStringLiteral("version"), 1}, {QStringLiteral("entries"), values}};
+}
+
+bool activeApplicable(const FrameworkKnowledgeEntry& entry, const QStringList& scopes)
+{
+    if (entry.status != QStringLiteral("approved") || entry.reviewStatus != QStringLiteral("approved") || !entry.supersededBy.isEmpty()) return false;
+    return scopeMatches(entry, scopes);
+}
+
+int knowledgeStateRank(const FrameworkKnowledgeEntry& entry)
+{
+    if (entry.status == QStringLiteral("superseded") || !entry.supersededBy.isEmpty()) return 4;
+    if (entry.status == QStringLiteral("approved")) return 3;
+    if (entry.status == QStringLiteral("candidate")) return 2;
+    return 1;
+}
+
+QList<FrameworkKnowledgeEntry> mergeLibraryEntries(const QList<FrameworkKnowledgeEntry>& primary,
+                                                    const QList<FrameworkKnowledgeEntry>& secondary)
+{
+    QList<FrameworkKnowledgeEntry> merged = primary;
+    for (const auto& incoming : secondary) {
+        auto existing = std::find_if(merged.begin(), merged.end(), [&incoming](const auto& value) {
+            return value.id == incoming.id;
+        });
+        if (existing == merged.end()) {
+            merged.append(incoming);
+            continue;
+        }
+        const bool replace = knowledgeStateRank(incoming) > knowledgeStateRank(*existing)
+            || (knowledgeStateRank(incoming) == knowledgeStateRank(*existing)
+                && existing->status != QStringLiteral("approved") && incoming.status == QStringLiteral("approved"));
+        FrameworkKnowledgeEntry selected = replace ? incoming : *existing;
+        for (const auto& evidence : existing->evidence) if (!selected.evidence.contains(evidence)) selected.evidence.append(evidence);
+        for (const auto& evidence : incoming.evidence) if (!selected.evidence.contains(evidence)) selected.evidence.append(evidence);
+        if (selected.originalKnowledgeId.isEmpty()) selected.originalKnowledgeId = existing->originalKnowledgeId;
+        if (selected.originProjectId.isEmpty()) selected.originProjectId = existing->originProjectId;
+        if (selected.promotedAt.isEmpty()) selected.promotedAt = existing->promotedAt;
+        *existing = selected;
+    }
+    return merged;
 }
 }
 
@@ -157,6 +292,16 @@ FrameworkKnowledgeService::FrameworkKnowledgeService(QObject* parent)
 
     The service stores candidates and approved reusable lessons inside the managed project's ARAMF memory.
     */
+}
+
+void FrameworkKnowledgeService::setGlobalLibraryPathForTests(const QString& path)
+{
+    globalLibraryPathOverride = QDir::cleanPath(path);
+}
+
+void FrameworkKnowledgeService::clearGlobalLibraryPathForTests()
+{
+    globalLibraryPathOverride.clear();
 }
 
 bool FrameworkKnowledgeService::ensureFile(const QString& projectRoot, QString* error) const
@@ -277,6 +422,34 @@ bool FrameworkKnowledgeService::approve(const QString& projectRoot,
                                           {QStringLiteral("approvalSource"), approvalSource.trimmed()}}, error);
 }
 
+bool FrameworkKnowledgeService::markMoreEvidence(const QString& projectRoot,
+                                                 const QString& entryId,
+                                                 QString* error) const
+{
+    QJsonObject store;
+    if (!readStore(projectRoot, &store, error)) return false;
+    QJsonArray values = store.value(QStringLiteral("entries")).toArray();
+    bool found = false;
+    for (qsizetype i = 0; i < values.size(); ++i) {
+        QJsonObject value = values.at(i).toObject();
+        if (value.value(QStringLiteral("id")).toString() != entryId) continue;
+        found = true;
+        if (value.value(QStringLiteral("status")).toString() != QStringLiteral("candidate")) {
+            if (error) *error = QStringLiteral("Only candidate Framework Knowledge can request more evidence.");
+            return false;
+        }
+        value.insert(QStringLiteral("reviewStatus"), QStringLiteral("more-evidence"));
+        values.replace(i, value);
+        break;
+    }
+    if (!found) {
+        if (error) *error = QStringLiteral("Framework Knowledge entry not found: %1").arg(entryId);
+        return false;
+    }
+    store.insert(QStringLiteral("entries"), values);
+    return writeStore(projectRoot, store, error);
+}
+
 bool FrameworkKnowledgeService::supersede(const QString& projectRoot,
                                            const QString& entryId,
                                            const QString& replacementId,
@@ -336,8 +509,300 @@ QList<FrameworkKnowledgeEntry> FrameworkKnowledgeService::approvedEntries(const 
     This is the runtime read path used when consumers need live approved framework lessons.
     */
     QList<FrameworkKnowledgeEntry> result;
-    for (const auto& entry : entries(projectRoot, error)) {
-        if (entry.status == QStringLiteral("approved") && scopeMatches(entry, scopes)) result.append(entry);
+    for (const auto& entry : effectiveKnowledgeForProject(projectRoot, error)) {
+        if (entry.status == QStringLiteral("approved") && entry.reviewStatus == QStringLiteral("approved") && scopeMatches(entry, scopes)) result.append(entry);
     }
     return result;
+}
+
+QList<FrameworkKnowledgeEntry> FrameworkKnowledgeService::effectiveKnowledgeForProject(const QString& projectRoot,
+                                                                                         QString* error) const
+{
+    const auto builtin = builtInEntries(error);
+    if (error && !error->isEmpty()) return {};
+    const auto global = globalEntries(error);
+    if (error && !error->isEmpty()) return {};
+    const auto project = entries(projectRoot, error);
+    if (error && !error->isEmpty()) return {};
+
+    QList<FrameworkKnowledgeEntry> result;
+    QStringList builtinIds;
+    QStringList globalIds;
+    QStringList projectIds;
+    auto mergeLayer = [&result](const QList<FrameworkKnowledgeEntry>& layer, const QString& origin,
+                                QStringList* ids) {
+        for (const auto& incoming : layer) {
+            if (ids) ids->append(incoming.id);
+            auto existing = std::find_if(result.begin(), result.end(), [&incoming](const auto& value) {
+                return value.id == incoming.id;
+            });
+            if (existing == result.end()) {
+                auto added = incoming;
+                added.origin = origin;
+                result.append(added);
+                continue;
+            }
+            const auto statePriority = [](const FrameworkKnowledgeEntry& value) {
+                if (value.status == QStringLiteral("approved") && value.supersededBy.isEmpty()) return 3;
+                if (value.status == QStringLiteral("candidate")) return 2;
+                if (value.status == QStringLiteral("superseded") || !value.supersededBy.isEmpty()) return 1;
+                return 0;
+            };
+            const bool projectSuppression = origin == QStringLiteral("project")
+                && (incoming.status == QStringLiteral("superseded") || !incoming.supersededBy.isEmpty());
+            const bool replace = projectSuppression
+                || statePriority(incoming) > statePriority(*existing)
+                || statePriority(incoming) == statePriority(*existing);
+            FrameworkKnowledgeEntry selected = replace ? incoming : *existing;
+            for (const auto& evidence : existing->evidence) if (!selected.evidence.contains(evidence)) selected.evidence.append(evidence);
+            for (const auto& evidence : incoming.evidence) if (!selected.evidence.contains(evidence)) selected.evidence.append(evidence);
+            if (selected.originalKnowledgeId.isEmpty()) selected.originalKnowledgeId = existing->originalKnowledgeId;
+            if (selected.originProjectId.isEmpty()) selected.originProjectId = existing->originProjectId;
+            if (selected.promotedAt.isEmpty()) selected.promotedAt = existing->promotedAt;
+            selected.origin = existing->origin;
+            if (origin == QStringLiteral("global") && (existing->origin == QStringLiteral("builtin") || existing->origin == QStringLiteral("global")))
+                selected.origin = QStringLiteral("global");
+            if (origin == QStringLiteral("project") && (existing->origin == QStringLiteral("global") || existing->origin == QStringLiteral("project")))
+                selected.origin = QStringLiteral("project+global");
+            *existing = selected;
+        }
+    };
+    mergeLayer(builtin, QStringLiteral("builtin"), &builtinIds);
+    mergeLayer(global, QStringLiteral("global"), &globalIds);
+    mergeLayer(project, QStringLiteral("project"), &projectIds);
+    for (auto& entry : result) {
+        const bool hasGlobal = globalIds.contains(entry.id);
+        const bool hasProject = projectIds.contains(entry.id);
+        if (hasProject && hasGlobal) entry.origin = QStringLiteral("project+global");
+        else if (hasGlobal) entry.origin = QStringLiteral("global");
+        else if (hasProject) entry.origin = QStringLiteral("project");
+        else entry.origin = QStringLiteral("builtin");
+    }
+    return result;
+}
+
+bool FrameworkKnowledgeService::adoptKnowledgeForProject(const QString& projectRoot,
+                                                          const QStringList& entryIds,
+                                                          QString* error) const
+{
+    QJsonObject store;
+    if (!readStore(projectRoot, &store, error)) return false;
+    const auto effective = effectiveKnowledgeForProject(projectRoot, error);
+    if (error && !error->isEmpty()) return false;
+    QList<FrameworkKnowledgeEntry> projectEntries = entriesFromStore(store);
+    for (const auto& id : entryIds) {
+        const auto source = std::find_if(effective.cbegin(), effective.cend(), [&id](const auto& entry) { return entry.id == id; });
+        if (source == effective.cend()) {
+            if (error) *error = QStringLiteral("Framework Knowledge entry is not available for adoption: %1").arg(id);
+            return false;
+        }
+        if (source->status != QStringLiteral("approved") || source->reviewStatus != QStringLiteral("approved") || !source->supersededBy.isEmpty()) {
+            if (error) *error = QStringLiteral("Only active approved Framework Knowledge can be adopted: %1").arg(id);
+            return false;
+        }
+        auto existing = std::find_if(projectEntries.begin(), projectEntries.end(), [&id](const auto& entry) { return entry.id == id; });
+        if (existing == projectEntries.end()) {
+            auto adopted = *source;
+            adopted.origin = source->origin == QStringLiteral("global") ? QStringLiteral("project+global") : QStringLiteral("project");
+            projectEntries.append(adopted);
+            continue;
+        }
+        for (const auto& evidence : source->evidence) if (!existing->evidence.contains(evidence)) existing->evidence.append(evidence);
+        if (existing->status != QStringLiteral("approved") || existing->reviewStatus != QStringLiteral("approved")) {
+            existing->status = source->status;
+            existing->reviewStatus = source->reviewStatus;
+        }
+        if (existing->title.isEmpty()) existing->title = source->title;
+        if (existing->lesson.isEmpty()) existing->lesson = source->lesson;
+        if (existing->scopes.isEmpty()) existing->scopes = source->scopes;
+        if (existing->approvedAt.isEmpty()) existing->approvedAt = source->approvedAt;
+        if (existing->approvalSource.isEmpty()) existing->approvalSource = source->approvalSource;
+        if (existing->originalKnowledgeId.isEmpty()) existing->originalKnowledgeId = source->originalKnowledgeId;
+        if (existing->originProjectId.isEmpty()) existing->originProjectId = source->originProjectId;
+        if (existing->promotedAt.isEmpty()) existing->promotedAt = source->promotedAt;
+        if (existing->origin == QStringLiteral("project") || source->origin == QStringLiteral("global")) existing->origin = QStringLiteral("project+global");
+    }
+    return writeStore(projectRoot, storeFromEntries(projectEntries, QStringLiteral("framework-knowledge.json")), error);
+}
+
+QString FrameworkKnowledgeService::globalLibraryPath() const
+{
+    return libraryPath();
+}
+
+QString FrameworkKnowledgeService::legacyGlobalLibraryPath() const
+{
+    return legacyLibraryPath();
+}
+
+QString FrameworkKnowledgeService::legacyExecutableGlobalLibraryPath() const
+{
+    return legacyExecutableLibraryPath();
+}
+
+bool FrameworkKnowledgeService::ensureGlobalLibrary(QString* error) const
+{
+    const QString path = libraryPath();
+    QJsonObject canonicalStore;
+    const bool canonicalExists = QFile::exists(path);
+    if (canonicalExists) {
+        if (!readObjectFile(path, &canonicalStore, error) || !canonicalStore.value(QStringLiteral("entries")).isArray()) {
+            if (error && error->isEmpty()) *error = QStringLiteral("Program-local Framework Knowledge library is invalid.");
+            return false;
+        }
+    }
+
+    const QStringList legacyPaths{legacyLibraryPath(), legacyExecutableLibraryPath()};
+    const QString markerPath = migrationMarkerPath();
+    if (!canonicalExists && QFile::exists(markerPath)) {
+        if (error) *error = QStringLiteral("Framework Knowledge migration marker exists but the program-local library is missing.");
+        return false;
+    }
+    bool hasLegacy = false;
+    QList<FrameworkKnowledgeEntry> legacyEntries;
+    QStringList migratedFrom;
+    if (!QFile::exists(markerPath)) {
+        for (const auto& legacyPath : legacyPaths) {
+            if (legacyPath == path || !QFile::exists(legacyPath)) continue;
+            hasLegacy = true;
+            QJsonObject legacyStore;
+            if (!readObjectFile(legacyPath, &legacyStore, error) || !legacyStore.value(QStringLiteral("entries")).isArray()) {
+                if (error && error->isEmpty()) *error = QStringLiteral("Legacy Framework Knowledge library is invalid: %1").arg(legacyPath);
+                return false;
+            }
+            legacyEntries = mergeLibraryEntries(legacyEntries, entriesFromStore(legacyStore));
+            migratedFrom.append(legacyPath);
+        }
+    }
+    if (hasLegacy) {
+        const auto merged = mergeLibraryEntries(canonicalExists ? entriesFromStore(canonicalStore) : QList<FrameworkKnowledgeEntry>{}, legacyEntries);
+        const auto mergedStore = storeFromEntries(merged, QStringLiteral("framework-knowledge-library.json"));
+        if (!writeObjectFile(path, mergedStore, error)) return false;
+        if (!writeObjectFile(markerPath, QJsonObject{{QStringLiteral("version"), 1}, {QStringLiteral("migratedFrom"), strings(migratedFrom)}}, error)) return false;
+        // The legacy file is intentionally retained as non-authoritative
+        // recovery evidence. The marker ensures all future reads use only the
+        // program-local file.
+        return true;
+    }
+
+    if (canonicalExists) return true;
+    return writeObjectFile(path, emptyLibrary(), error);
+}
+
+QList<FrameworkKnowledgeEntry> FrameworkKnowledgeService::builtInEntries(QString* error) const
+{
+    QStringList candidates;
+    candidates << QDir(AramfPaths::programRoot()).filePath(QStringLiteral("aramf_setup/memory/framework-knowledge.json"));
+    candidates << QDir(AramfPaths::applicationDirectory()).filePath(QStringLiteral("aramf_setup/memory/framework-knowledge.json"));
+    for (const auto& path : candidates) {
+        QJsonObject store;
+        if (!QFile::exists(path)) continue;
+        if (!readObjectFile(path, &store, error)) return {};
+        auto result = entriesFromStore(store);
+        for (auto& entry : result) entry.origin = QStringLiteral("builtin");
+        return result;
+    }
+    return {};
+}
+
+QList<FrameworkKnowledgeEntry> FrameworkKnowledgeService::globalEntries(QString* error) const
+{
+    if (!ensureGlobalLibrary(error)) return {};
+    QJsonObject store;
+    if (!readObjectFile(libraryPath(), &store, error)) return {};
+    auto result = entriesFromStore(store);
+    for (auto& entry : result) entry.origin = QStringLiteral("global");
+    return result;
+}
+
+QList<FrameworkKnowledgeEntry> FrameworkKnowledgeService::approvedGlobalEntries(const QStringList& scopes,
+                                                                                 QString* error) const
+{
+    QList<FrameworkKnowledgeEntry> result;
+    for (const auto& entry : globalEntries(error)) if (activeApplicable(entry, scopes)) result.append(entry);
+    return result;
+}
+
+bool FrameworkKnowledgeService::promoteToGlobal(const QString& projectRoot,
+                                                const QString& entryId,
+                                                QString* error) const
+{
+    const auto projectEntries = entries(projectRoot, error);
+    const auto it = std::find_if(projectEntries.cbegin(), projectEntries.cend(), [&entryId](const auto& entry) { return entry.id == entryId; });
+    if (it == projectEntries.cend()) {
+        if (error) *error = QStringLiteral("Framework Knowledge entry not found: %1").arg(entryId);
+        return false;
+    }
+    if (it->status != QStringLiteral("approved") || !it->supersededBy.isEmpty()) {
+        if (error) *error = QStringLiteral("Only approved, non-superseded knowledge can be promoted.");
+        return false;
+    }
+    if (!it->portable) {
+        if (error) *error = QStringLiteral("This knowledge is project-specific and is not portable.");
+        return false;
+    }
+    if (!ensureGlobalLibrary(error)) return false;
+    QJsonObject store;
+    if (!readObjectFile(libraryPath(), &store, error)) return false;
+    auto global = entriesFromStore(store);
+    auto existing = std::find_if(global.begin(), global.end(), [&entryId](const auto& entry) { return entry.id == entryId; });
+    if (existing != global.end()) {
+        if (existing->status == QStringLiteral("superseded")) {
+            if (error) *error = QStringLiteral("A superseded global entry cannot be reactivated automatically.");
+            return false;
+        }
+        for (const auto& evidence : it->evidence) if (!existing->evidence.contains(evidence)) existing->evidence.append(evidence);
+    } else {
+        FrameworkKnowledgeEntry promoted = *it;
+        promoted.origin = QStringLiteral("global");
+        promoted.originProjectId = projectRoot.isEmpty() ? QString() : QFileInfo(projectRoot).fileName();
+        promoted.originalKnowledgeId = it->id;
+        promoted.promotedAt = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+        global.append(promoted);
+    }
+    return writeObjectFile(libraryPath(), storeFromEntries(global, QStringLiteral("framework-knowledge-library.json")), error);
+}
+
+bool FrameworkKnowledgeService::supersedeGlobal(const QString& entryId,
+                                                const QString& replacementId,
+                                                QString* error) const
+{
+    if (!ensureGlobalLibrary(error)) return false;
+    QJsonObject store;
+    if (!readObjectFile(libraryPath(), &store, error)) return false;
+    auto global = entriesFromStore(store);
+    auto it = std::find_if(global.begin(), global.end(), [&entryId](const auto& entry) { return entry.id == entryId; });
+    if (it == global.end()) {
+        if (error) *error = QStringLiteral("Global Framework Knowledge entry not found: %1").arg(entryId);
+        return false;
+    }
+    it->status = QStringLiteral("superseded");
+    it->reviewStatus = QStringLiteral("superseded");
+    it->supersededBy = replacementId.trimmed();
+    return writeObjectFile(libraryPath(), storeFromEntries(global, QStringLiteral("framework-knowledge-library.json")), error);
+}
+
+bool FrameworkKnowledgeService::seedProject(const QString& projectRoot,
+                                            const ProjectModel* model,
+                                            QString* error) const
+{
+    if (!ensureFile(projectRoot, error)) return false;
+    QJsonObject store;
+    if (!readObjectFile(storePath(projectRoot), &store, error)) return false;
+    auto projectEntries = entriesFromStore(store);
+    QList<FrameworkKnowledgeEntry> candidates = builtInEntries(error);
+    // A new project may not yet expose enough semantic subsystem scopes to
+    // decide applicability. Seed approved global knowledge conservatively;
+    // runtime UPDATE applicability remains responsible for filtering it.
+    const auto global = approvedGlobalEntries({}, error);
+    for (const auto& entry : global) candidates.append(entry);
+    bool changed = false;
+    for (auto entry : candidates) {
+        if (entry.status != QStringLiteral("approved") || !entry.supersededBy.isEmpty()) continue;
+        if (std::any_of(projectEntries.cbegin(), projectEntries.cend(), [&entry](const auto& current) { return current.id == entry.id; })) continue;
+        entry.origin = entry.origin == QStringLiteral("builtin") ? QStringLiteral("builtin") : QStringLiteral("global");
+        projectEntries.append(entry);
+        changed = true;
+    }
+    return !changed || writeStore(projectRoot, storeFromEntries(projectEntries, QStringLiteral("framework-knowledge.json")), error);
 }

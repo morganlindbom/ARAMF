@@ -29,6 +29,8 @@
 #include "ui/workflows/output/generate/GeneratePage.h"
 #include "ui/workflows/output/verify/VerifyPage.h"
 #include "ui/workflows/output/finalize/FinalizePage.h"
+#include "ui/workflows/update/review/FrameworkKnowledgeReviewPage.h"
+#include "ui/workflows/update/apply/FrameworkKnowledgeApplyPage.h"
 
 #include <QFrame>
 #include <QApplication>
@@ -98,7 +100,9 @@ namespace
             WorkflowPageId::Review,
             WorkflowPageId::Generate,
             WorkflowPageId::Verify,
-            WorkflowPageId::Finalize};
+            WorkflowPageId::Finalize,
+            WorkflowPageId::UpdateReview,
+            WorkflowPageId::UpdateApply};
 
         return sequence;
     }
@@ -246,6 +250,9 @@ MainWindow::MainWindow(
             &agentEntryPointService_,
             stack_);
 
+    updateReviewPage_ = new FrameworkKnowledgeReviewPage(&projectModel_, stack_);
+    updateApplyPage_ = new FrameworkKnowledgeApplyPage(&projectModel_, stack_);
+
     const auto registerPage =
         [this](WorkflowPageId id, QWidget *page)
     {
@@ -277,6 +284,8 @@ MainWindow::MainWindow(
     registerPage(WorkflowPageId::Generate, generatePage_);
     registerPage(WorkflowPageId::Verify, verificationPage_);
     registerPage(WorkflowPageId::Finalize, finalizePage_);
+    registerPage(WorkflowPageId::UpdateReview, updateReviewPage_);
+    registerPage(WorkflowPageId::UpdateApply, updateApplyPage_);
 
     workflow_->setStepCount(stack_->count());
 

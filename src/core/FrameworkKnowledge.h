@@ -5,6 +5,8 @@
 #include <QObject>
 #include <QStringList>
 
+class ProjectModel;
+
 struct FrameworkKnowledgeEntry
 {
     QString id;
@@ -19,6 +21,10 @@ struct FrameworkKnowledgeEntry
     QString approvedAt;
     QString approvalSource;
     QString supersededBy;
+    QString origin = QStringLiteral("project");
+    QString originProjectId;
+    QString originalKnowledgeId;
+    QString promotedAt;
 };
 
 class FrameworkKnowledgeService final : public QObject
@@ -27,6 +33,11 @@ class FrameworkKnowledgeService final : public QObject
 
 public:
     explicit FrameworkKnowledgeService(QObject* parent = nullptr);
+
+    // Test-only storage seam; production leaves this unset and always uses
+    // AramfPaths::programRoot()/ARAMF_DATA.
+    static void setGlobalLibraryPathForTests(const QString& path);
+    static void clearGlobalLibraryPathForTests();
 
     bool ensureFile(const QString& projectRoot, QString* error = nullptr) const;
     QString propose(const QString& projectRoot,
@@ -40,13 +51,40 @@ public:
                  const QString& candidateId,
                  const QString& approvalSource,
                  QString* error = nullptr) const;
+    bool markMoreEvidence(const QString& projectRoot,
+                          const QString& entryId,
+                          QString* error = nullptr) const;
     bool supersede(const QString& projectRoot,
                    const QString& entryId,
                    const QString& replacementId,
                    QString* error = nullptr) const;
+    QString globalLibraryPath() const;
+    QString legacyGlobalLibraryPath() const;
+    QString legacyExecutableGlobalLibraryPath() const;
+    bool ensureGlobalLibrary(QString* error = nullptr) const;
+    QList<FrameworkKnowledgeEntry> builtInEntries(QString* error = nullptr) const;
+    QList<FrameworkKnowledgeEntry> globalEntries(QString* error = nullptr) const;
+    QList<FrameworkKnowledgeEntry> approvedGlobalEntries(const QStringList& scopes = {},
+                                                         QString* error = nullptr) const;
+    bool promoteToGlobal(const QString& projectRoot,
+                         const QString& entryId,
+                         QString* error = nullptr) const;
+    bool supersedeGlobal(const QString& entryId,
+                         const QString& replacementId,
+                         QString* error = nullptr) const;
+    bool seedProject(const QString& projectRoot,
+                     const ProjectModel* model = nullptr,
+                     QString* error = nullptr) const;
     QList<FrameworkKnowledgeEntry> entries(const QString& projectRoot,
                                            QString* error = nullptr) const;
     QList<FrameworkKnowledgeEntry> approvedEntries(const QString& projectRoot,
                                                    const QStringList& scopes = {},
                                                    QString* error = nullptr) const;
+    // Resolves the read-only effective catalog from built-in, global, and
+    // project layers without copying any entry between stores.
+    QList<FrameworkKnowledgeEntry> effectiveKnowledgeForProject(const QString& projectRoot,
+                                                                 QString* error = nullptr) const;
+    bool adoptKnowledgeForProject(const QString& projectRoot,
+                                  const QStringList& entryIds,
+                                  QString* error = nullptr) const;
 };

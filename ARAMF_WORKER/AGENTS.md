@@ -76,6 +76,8 @@ Read `memory/memory-contract.json` before recording development results. Do not 
 - Record task starts/completions, build results, test results, and validation outcomes when configured.
 - Record durable decisions only for genuine architecture or policy choices through the decision workflow.
 - Record a checkpoint only for a genuine stable recovery point with `aramf memory checkpoint --project <project-root> --title <title> --summary <summary>`; routine feedback does not create one.
+- Framework Knowledge has separate built-in, global, and project-local layers. The global user library is under `ARAMF_DATA/` at the resolved ARAMF program root; build directories are disposable. Promote an explicitly approved portable entry only through `aramf memory knowledge promote --project <project-root> --id <knowledge-id>`. Never edit the library or project knowledge files directly.
+- UPDATE is a deliberate human-controlled workflow: review approved knowledge, analyze the whole project, prepare a plan, and explicitly execute it through the configured agent. The managed project root is the implementation target; `ARAMF_WORKER/` is orchestration only. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes and validation are required. Read `update/update-plan.json` and `update/update-contract.json` when present. Candidates are never active.
 - Run the minimum validation required by `routing/validation-policy.json`; do not run full regression campaigns for ordinary isolated changes. Escalate when scope, risk, failure, or explicit milestone policy requires it.
 - Follow current durable decisions; explicitly superseded decisions remain historical and inactive.
 

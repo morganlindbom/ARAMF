@@ -53,6 +53,18 @@
         "preserve-append-only"
     ],
     "directEditing": "forbidden: use the ARAMF memory recorder; do not edit owned files directly.",
+    "frameworkKnowledgeLibrary": {
+        "globalLocation": "AramfPaths::programRoot()/ARAMF_DATA/framework-knowledge-library.json",
+        "layers": [
+            "built-in product knowledge",
+            "global user-approved portable knowledge",
+            "project-local knowledge"
+        ],
+        "legacyMigration": "Legacy AppData and executable-local ARAMF_DATA libraries are merged once into root ARAMF_DATA; legacy files are retained as non-authoritative recovery evidence and are never used as fallbacks.",
+        "promotionCommand": "aramf memory knowledge promote --project <project-root> --id <knowledge-id>",
+        "promotionPolicy": "Only explicitly approved portable entries may be promoted; direct editing of the global library and project framework-knowledge.json is forbidden.",
+        "seeding": "New managed projects seed approved global and built-in knowledge without replacing project-local entries."
+    },
     "ownedFiles": [
         "memory/event-log.jsonl",
         "memory/metrics.json",

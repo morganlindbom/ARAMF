@@ -5,7 +5,13 @@
 #include "ui/workflows/ai/integration/AiIntegrationPage.h"
 #include "ui/workflows/memory/maintenance/MemoryMaintenancePage.h"
 #include "core/ProjectModel.h"
+#include "core/ProjectMemory.h"
+#include "core/FrameworkKnowledge.h"
 #include "ui/workflows/resources/authority/ResourceAuthorityPage.h"
+#include "ui/workflows/update/review/FrameworkKnowledgeReviewPage.h"
+#include "ui/workflows/update/apply/FrameworkKnowledgeApplyPage.h"
+#include "core/CodexExecutionAdapter.h"
+#include "core/AramfPaths.h"
 
 #include <QApplication>
 #include <QCheckBox>
@@ -15,6 +21,9 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QListWidget>
+#include <QPlainTextEdit>
+#include <QTemporaryDir>
+#include <QStandardPaths>
 #include <cmath>
 #include <iostream>
 
@@ -32,8 +41,12 @@ bool require(bool condition, const char* message)
 int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
+    QStandardPaths::setTestModeEnabled(true);
+    QTemporaryDir globalData;
+    FrameworkKnowledgeService::setGlobalLibraryPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")));
+    QFile::remove(FrameworkKnowledgeService().legacyGlobalLibraryPath());
     WorkflowWidget workflow;
-    workflow.setStepCount(23);
+    workflow.setStepCount(25);
 
     auto* list = workflow.findChild<QListWidget*>();
     bool ok = require(list != nullptr, "workflow list must exist");
@@ -43,7 +56,7 @@ int main(int argc, char** argv)
     QObject::connect(&workflow, &WorkflowWidget::pageSelected,
                      [&selected](WorkflowPageId page) { selected << page; });
 
-    const QList<int> rows{1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 19, 20, 22, 23, 25, 26, 27, 28};
+    const QList<int> rows{1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 19, 20, 22, 23, 25, 26, 27, 28, 30, 31};
     const QList<WorkflowPageId> expected{
         WorkflowPageId::Setup,
         WorkflowPageId::Academic,
@@ -67,7 +80,9 @@ int main(int argc, char** argv)
         WorkflowPageId::Review,
         WorkflowPageId::Generate,
         WorkflowPageId::Verify,
-        WorkflowPageId::Finalize
+        WorkflowPageId::Finalize,
+        WorkflowPageId::UpdateReview,
+        WorkflowPageId::UpdateApply
     };
 
     for (int i = 0; i < rows.size(); ++i) {
@@ -281,6 +296,201 @@ int main(int argc, char** argv)
         if (hasAuthorityHelp) break;
     }
     ok &= require(hasAuthorityHelp, "resource authority selector must explain Source of Truth strength");
+
+    auto authorityAi = authorityModel.aiConfiguration();
+    authorityAi.primaryAgent = QStringLiteral("openai-codex");
+    authorityAi.permissions = {QStringLiteral("read-project-files"), QStringLiteral("modify-files")};
+    authorityModel.setAiConfiguration(authorityAi);
+    FrameworkKnowledgeReviewPage updateReviewPage(&authorityModel);
+    FrameworkKnowledgeApplyPage updateApplyPage(&authorityModel);
+    ok &= require(updateReviewPage.findChild<QListWidget*>(QStringLiteral("frameworkKnowledgeEntries")) != nullptr,
+                  "UPDATE review page must expose Framework Knowledge entries");
+    ok &= require(updateApplyPage.findChild<QListWidget*>(QStringLiteral("approvedFrameworkKnowledgeSelection")) != nullptr,
+                  "UPDATE apply page must expose explicit approved-knowledge selection");
+    auto* executionInfo = updateApplyPage.findChild<QLabel*>(QStringLiteral("updateExecutionInfo"));
+    ok &= require(executionInfo && executionInfo->text().contains(QStringLiteral("Codex status:")),
+                  "Page 25 must expose Codex discovery status");
+    if (CodexExecutionAdapter::resolution().available) {
+        ok &= require(executionInfo->text().contains(CodexExecutionAdapter::resolution().path),
+                      "Page 25 must display the resolved Codex executable");
+        ok &= require(executionInfo->text().contains(CodexExecutionAdapter::resolution().version),
+                      "Page 25 must display the resolved Codex version");
+    }
+
+    QTemporaryDir updateFixture;
+    ProjectModel updateModel;
+    updateModel.setProjectPath(updateFixture.path());
+    ProjectMemory updateMemory;
+    QString updateError;
+    ok &= require(updateFixture.isValid() && updateMemory.initialize(updateFixture.path(), &updateModel, &updateError),
+                  "UPDATE fixture memory must initialize");
+    QDir(updateFixture.path()).mkpath(QStringLiteral("src"));
+    QDir(updateFixture.path()).mkpath(QStringLiteral("aramf_setup"));
+    QFile updateCmake(QDir(updateFixture.path()).filePath(QStringLiteral("CMakeLists.txt")));
+    const bool updateCmakeOpened = updateCmake.open(QIODevice::WriteOnly);
+    updateCmake.close();
+    ok &= require(updateCmakeOpened, "UPDATE fixture baseline must be writable");
+    RuleConfiguration updateRules;
+    updateRules.projectScopes = {QStringLiteral("lifecycle"), QStringLiteral("selective-generation"), QStringLiteral("verification")};
+    updateModel.setRuleConfiguration(updateRules);
+    auto updateAi = updateModel.aiConfiguration();
+    updateAi.permissions = {QStringLiteral("read-project-files"), QStringLiteral("modify-files")};
+    updateModel.setAiConfiguration(updateAi);
+    FrameworkKnowledgeService updateKnowledge;
+    const QString updateId = updateKnowledge.propose(
+        updateFixture.path(), QStringLiteral("Workflow global promotion fixture %1").arg(updateFixture.path()),
+        QStringLiteral("A workflow-only portable lesson used to verify explicit global promotion at %1.").arg(updateFixture.path()),
+        {QStringLiteral("lifecycle"), QStringLiteral("selective-generation"), QStringLiteral("optional-components"), QStringLiteral("verification"), QStringLiteral("finalization")}, {}, true, &updateError);
+    FrameworkKnowledgeApplyPage liveApplyPage(&updateModel);
+    liveApplyPage.show();
+    app.processEvents();
+    auto* liveApplyList = liveApplyPage.findChild<QListWidget*>(QStringLiteral("approvedFrameworkKnowledgeSelection"));
+    const auto containsUpdateEntry = [liveApplyList, &updateId]() {
+        if (!liveApplyList) return false;
+        for (int row = 0; row < liveApplyList->count(); ++row)
+            if (liveApplyList->item(row)->data(Qt::UserRole).toString() == updateId) return true;
+        return false;
+    };
+    ok &= require(!containsUpdateEntry(),
+                  "UPDATE page must initially exclude the unapproved fixture knowledge");
+    ok &= require(updateKnowledge.approve(updateFixture.path(), updateId, QStringLiteral("test-user"), &updateError),
+                  "fixture approval must persist");
+    FrameworkKnowledgeReviewPage liveReviewPage(&updateModel);
+    liveReviewPage.show();
+    app.processEvents();
+    auto* globalLocation = liveReviewPage.findChild<QLabel*>(QStringLiteral("globalFrameworkKnowledgeLocation"));
+    ok &= require(globalLocation && globalLocation->text().contains(QStringLiteral("ARAMF_DATA")),
+                  "Page 24 must report the Global ARAMF storage location");
+    if (auto* reviewFilter = liveReviewPage.findChild<QComboBox*>()) reviewFilter->setCurrentIndex(2);
+    app.processEvents();
+    auto* liveReviewList = liveReviewPage.findChild<QListWidget*>(QStringLiteral("frameworkKnowledgeEntries"));
+    if (liveReviewList) {
+        for (int row = 0; row < liveReviewList->count(); ++row) {
+            if (liveReviewList->item(row)->data(Qt::UserRole).toString() == updateId) liveReviewList->setCurrentRow(row);
+        }
+    }
+    app.processEvents();
+    auto* promoteButton = liveReviewPage.findChild<QPushButton*>(QStringLiteral("promoteFrameworkKnowledge"));
+    ok &= require(promoteButton && promoteButton->isEnabled(),
+                  "approved portable knowledge must expose explicit global promotion");
+    QString promotionError;
+    if (promoteButton) promoteButton->click();
+    app.processEvents();
+    const auto clickedGlobalEntries = FrameworkKnowledgeService().globalEntries(&promotionError);
+    const bool clickedPromotion = std::any_of(clickedGlobalEntries.cbegin(), clickedGlobalEntries.cend(), [&updateId](const auto& entry) { return entry.id == updateId; });
+    ok &= require(clickedPromotion,
+                  qPrintable(QStringLiteral("explicit promotion must persist in the global library: %1").arg(promotionError)));
+    QTemporaryDir globalOnlySource;
+    ProjectModel globalOnlySourceModel;
+    globalOnlySourceModel.setProjectPath(globalOnlySource.path());
+    ProjectMemory globalOnlySourceMemory;
+    QString globalOnlySourceError;
+    const QString globalOnlyId = globalOnlySource.isValid() && globalOnlySourceMemory.initialize(globalOnlySource.path(), &globalOnlySourceModel, &globalOnlySourceError)
+        ? updateKnowledge.propose(globalOnlySource.path(), QStringLiteral("Global-only Page 25 fixture"), QStringLiteral("This approved entry must be visible without a project-local copy."), {QStringLiteral("lifecycle")}, {}, true, &globalOnlySourceError)
+        : QString();
+    const bool globalOnlyPromoted = !globalOnlyId.isEmpty()
+        && updateKnowledge.approve(globalOnlySource.path(), globalOnlyId, QStringLiteral("test-user"), &globalOnlySourceError)
+        && updateKnowledge.promoteToGlobal(globalOnlySource.path(), globalOnlyId, &globalOnlySourceError);
+    QTemporaryDir globalOnlyTarget;
+    ProjectModel globalOnlyTargetModel;
+    globalOnlyTargetModel.setProjectPath(globalOnlyTarget.path());
+    RuleConfiguration globalOnlyTargetRules;
+    globalOnlyTargetRules.projectScopes = {QStringLiteral("lifecycle")};
+    globalOnlyTargetModel.setRuleConfiguration(globalOnlyTargetRules);
+    ok &= require(globalOnlyPromoted && updateKnowledge.ensureFile(globalOnlyTarget.path(), &globalOnlySourceError),
+                  "global-only Page 25 fixture must be prepared without copying project knowledge");
+    FrameworkKnowledgeApplyPage globalOnlyApplyPage(&globalOnlyTargetModel);
+    globalOnlyApplyPage.show();
+    app.processEvents();
+    auto* globalOnlyList = globalOnlyApplyPage.findChild<QListWidget*>(QStringLiteral("approvedFrameworkKnowledgeSelection"));
+    bool globalOnlyVisible = false;
+    if (globalOnlyList) for (int row = 0; row < globalOnlyList->count(); ++row) {
+        const auto* item = globalOnlyList->item(row);
+        if (item->data(Qt::UserRole).toString() == globalOnlyId && item->text().contains(QStringLiteral("global"))) globalOnlyVisible = true;
+    }
+    ok &= require(globalOnlyVisible, "Page 25 must display an approved global-only entry as applicable");
+    liveApplyPage.hide();
+    liveApplyPage.show();
+    app.processEvents();
+    liveApplyList = liveApplyPage.findChild<QListWidget*>(QStringLiteral("approvedFrameworkKnowledgeSelection"));
+    int checkableCount = 0;
+    if (liveApplyList) for (int row = 0; row < liveApplyList->count(); ++row)
+        if (liveApplyList->item(row)->flags() & Qt::ItemIsUserCheckable) ++checkableCount;
+    ok &= require(checkableCount == liveApplyList->count(), "every active approved entry must have a selectable checkbox");
+    auto* selectAllButton = liveApplyPage.findChild<QPushButton*>(QStringLiteral("selectAllFrameworkKnowledge"));
+    auto* clearAllButton = liveApplyPage.findChild<QPushButton*>(QStringLiteral("clearAllFrameworkKnowledge"));
+    if (selectAllButton) selectAllButton->click();
+    bool allSelected = true;
+    if (liveApplyList) for (int row = 0; row < liveApplyList->count(); ++row) allSelected &= liveApplyList->item(row)->checkState() == Qt::Checked;
+    ok &= require(selectAllButton && allSelected, "Select All selects all active approved knowledge");
+    if (clearAllButton) clearAllButton->click();
+    bool allCleared = true;
+    if (liveApplyList) for (int row = 0; row < liveApplyList->count(); ++row) allCleared &= liveApplyList->item(row)->checkState() == Qt::Unchecked;
+    ok &= require(clearAllButton && allCleared, "Clear All clears knowledge selection");
+    QListWidgetItem* adoptItem = nullptr;
+    if (liveApplyList) for (int row = 0; row < liveApplyList->count(); ++row)
+        if (liveApplyList->item(row)->data(Qt::UserRole).toString() == updateId) adoptItem = liveApplyList->item(row);
+    if (adoptItem) adoptItem->setCheckState(Qt::Checked);
+    QFile updateKnowledgeFileBeforePrepare(QDir(updateFixture.path()).filePath(AramfPaths::FrameworkKnowledge));
+    QByteArray updateKnowledgeBeforePrepare;
+    if (updateKnowledgeFileBeforePrepare.open(QIODevice::ReadOnly)) updateKnowledgeBeforePrepare = updateKnowledgeFileBeforePrepare.readAll();
+    updateKnowledgeFileBeforePrepare.close();
+    auto* analyzeButton = liveApplyPage.findChild<QPushButton*>(QStringLiteral("analyzeFrameworkUpdate"));
+    auto* prepareButton = liveApplyPage.findChild<QPushButton*>(QStringLiteral("applyFrameworkUpdate"));
+    auto* updateStatus = liveApplyPage.findChild<QLabel*>(QStringLiteral("updateStatus"));
+    if (analyzeButton) analyzeButton->click();
+    app.processEvents();
+    if (prepareButton) prepareButton->click();
+    app.processEvents();
+    const auto preparedProjectEntries = updateKnowledge.entries(updateFixture.path(), &updateError);
+    QFile updateKnowledgeFileAfterPrepare(QDir(updateFixture.path()).filePath(AramfPaths::FrameworkKnowledge));
+    QByteArray updateKnowledgeAfterPrepare;
+    if (updateKnowledgeFileAfterPrepare.open(QIODevice::ReadOnly)) updateKnowledgeAfterPrepare = updateKnowledgeFileAfterPrepare.readAll();
+    updateKnowledgeFileAfterPrepare.close();
+    ok &= require(updateKnowledgeBeforePrepare == updateKnowledgeAfterPrepare && !preparedProjectEntries.isEmpty(),
+                  "Prepare must not mutate project Framework Knowledge");
+    QListWidgetItem* preparedItem = nullptr;
+    if (liveApplyList) for (int row = 0; row < liveApplyList->count(); ++row)
+        if (liveApplyList->item(row)->data(Qt::UserRole).toString() == updateId) preparedItem = liveApplyList->item(row);
+    ok &= require(preparedItem && preparedItem->checkState() == Qt::Checked,
+                  "Prepare must preserve the selected knowledge checkbox");
+    auto* analysisText = liveApplyPage.findChild<QPlainTextEdit*>(QStringLiteral("updateImpactAnalysis"));
+    ok &= require(analysisText && preparedItem && preparedItem->text().contains(QStringLiteral("ALREADY_SATISFIED")),
+                  "Prepare must preserve the completed applicability analysis");
+    auto* executionButton = liveApplyPage.findChild<QPushButton*>(QStringLiteral("executeFrameworkUpdate"));
+    ok &= require(updateStatus && updateStatus->text().contains(QStringLiteral("READY")) && executionButton && executionButton->isEnabled(),
+                  "Prepare must leave the page ready for explicit Execute");
+    if (executionButton) executionButton->click();
+    app.processEvents();
+    auto* validateButton = liveApplyPage.findChild<QPushButton*>(QStringLiteral("validateFrameworkUpdate"));
+    ok &= require(validateButton && validateButton->isEnabled(), "Execute must reach validation-ready state");
+    if (validateButton) validateButton->click();
+    app.processEvents();
+    const auto adoptedProjectEntries = updateKnowledge.entries(updateFixture.path(), &updateError);
+    ok &= require(std::any_of(adoptedProjectEntries.cbegin(), adoptedProjectEntries.cend(), [&updateId](const auto& entry) {
+        return entry.id == updateId && entry.origin == QStringLiteral("project+global") && entry.status == QStringLiteral("approved");
+    }), "explicit Execute adopts selected global knowledge into project memory");
+    globalOnlyApplyPage.hide();
+    bool originShown = false;
+    if (liveReviewList) for (int row = 0; row < liveReviewList->count(); ++row) {
+        const auto* item = liveReviewList->item(row);
+        if (item->data(Qt::UserRole).toString() == updateId && item->text().contains(QStringLiteral("project+global"))) originShown = true;
+    }
+    ok &= require(originShown, "Page 24 must show the promoted entry as project+global");
+    liveApplyPage.hide();
+    liveApplyPage.show();
+    app.processEvents();
+    ok &= require(containsUpdateEntry(),
+                  "UPDATE page activation must refresh newly approved knowledge");
+    QListWidgetItem* updateItem = nullptr;
+    if (liveApplyList) {
+        for (int row = 0; row < liveApplyList->count(); ++row)
+            if (liveApplyList->item(row)->data(Qt::UserRole).toString() == updateId) updateItem = liveApplyList->item(row);
+    }
+    ok &= require(updateItem && updateItem->checkState() == Qt::Unchecked,
+                  "approved knowledge must not be automatically selected");
+    ok &= require(updateStatus && updateStatus->text().contains(QStringLiteral("Approved and applicable:")),
+                  "UPDATE page must explain approved applicability counts");
     ok &= require(authorityModel.resources().at(0).authorityLevel == authorityA.authorityLevel
                   && authorityModel.resources().at(1).authorityLevel == authorityB.authorityLevel
                   && authorityModel.resources().at(2).authorityLevel == authorityC.authorityLevel,
