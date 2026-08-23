@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QObject>
 #include <QString>
+#include <QStringList>
 
 class ProjectModel;
 
@@ -22,6 +23,12 @@ public:
                      const QString& task,
                      const QJsonObject& fields = {},
                      QString* error = nullptr);
+    bool recordOperation(const QString& projectRoot,
+                         const QString& operation,
+                         const QJsonObject& fields,
+                         QJsonObject* result = nullptr,
+                         QString* error = nullptr);
+    static QStringList supportedRecordOperations();
     QJsonObject validate(const QString& projectRoot, QString* error = nullptr) const;
     qint64 memoryUsageBytes(const QString& projectRoot) const;
 

@@ -291,3 +291,9 @@ navigation, Save, Close/Open, Save without edits, second Close/Open, Save &
 Generate, Verify, Finalize, and final Close/Open. The generated resource
 manifest matched the persisted project state for all 10 resources; IDs,
 descriptions, scopes, and canonical identities were preserved.
+
+
+## Latest Agent Task
+
+- Task: Improve Resource Authority help text for applicable scopes
+- Status: PASS

@@ -12,6 +12,7 @@
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QGroupBox>
+#include <QLabel>
 #include <QPushButton>
 #include <QListWidget>
 #include <cmath>
@@ -274,6 +275,12 @@ int main(int argc, char** argv)
     auto* authorityList = authorityPage.findChild<QListWidget*>();
     auto* authorityCombo = authorityPage.findChild<QComboBox*>();
     ok &= require(authorityList && authorityCombo, "resource authority controls must exist");
+    bool hasAuthorityHelp = false;
+    for (auto* label : authorityPage.findChildren<QLabel*>()) {
+        hasAuthorityHelp = label->text().contains(QStringLiteral("within its applicable scopes"));
+        if (hasAuthorityHelp) break;
+    }
+    ok &= require(hasAuthorityHelp, "resource authority selector must explain Source of Truth strength");
     ok &= require(authorityModel.resources().at(0).authorityLevel == authorityA.authorityLevel
                   && authorityModel.resources().at(1).authorityLevel == authorityB.authorityLevel
                   && authorityModel.resources().at(2).authorityLevel == authorityC.authorityLevel,

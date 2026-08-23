@@ -1,4 +1,45 @@
 {
     "_file": "memory-config.json",
-    "maximumSizeBytes": 10737418240
+    "captureCategories": [
+        "current-project-status",
+        "project-capabilities",
+        "durable-decisions",
+        "completed-tasks",
+        "corrective-actions",
+        "validation-results",
+        "checkpoints",
+        "certification-knowledge"
+    ],
+    "historyOptions": [
+        "event-history",
+        "decision-history",
+        "validation-history",
+        "task-history",
+        "failure-history",
+        "milestone-history"
+    ],
+    "maintenanceOptions": [
+        "update-current-state",
+        "record-decisions",
+        "record-checkpoints",
+        "record-validation",
+        "record-build-results",
+        "record-test-results",
+        "record-task-completion",
+        "update-project-status",
+        "remove-stale-state",
+        "preserve-append-only"
+    ],
+    "maximumSizeBytes": 10737418240,
+    "retentionLevel": "standard",
+    "updateStrategy": "meaningful-task",
+    "validationOptions": [
+        "memory-consistency",
+        "cold-start-validation",
+        "sequence-continuity",
+        "conflicting-decisions",
+        "stale-current-state",
+        "referenced-resources",
+        "project-status-consistency"
+    ]
 }
