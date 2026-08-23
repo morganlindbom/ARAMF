@@ -72,14 +72,11 @@ project paths remain relative to their `ARAMF_WORKER/` control directory.
 
 ## Project Memory Feedback
 
-Read `memory/memory-contract.json` before recording development results. Do not edit `memory/event-log.jsonl`, `memory/metrics.json`, `memory/current-state.md`, `memory/memory-manifest.json`, validation state, or `PROJECT_STATUS.md` bookkeeping fields directly. Use the ARAMF recorder described by the contract: `aramf memory record --project <project-root> --operation <operation> ...`.
-- Record meaningful task starts and completions.
-- Record completed build attempts and their PASS/FAIL result.
-- Record completed test attempts and their PASS/FAIL result.
-- Record meaningful validation outcomes.
-- Let ProjectMemory refresh current-state from accepted events.
-- Allow meaningful completed tasks to update PROJECT_STATUS through the recorder policy.
-- Record a checkpoint only when an actual stable checkpoint is warranted.
+Read `memory/memory-contract.json` before recording development results. Do not edit ProjectMemory-owned bookkeeping files directly. Use `aramf memory record --project <project-root> --operation <operation> ...`.
+- Record task starts/completions, build results, test results, and validation outcomes when configured.
+- Record durable decisions only for genuine architecture or policy choices through the decision workflow.
+- Record a checkpoint only for a genuine stable recovery point with `aramf memory checkpoint --project <project-root> --title <title> --summary <summary>`; routine feedback does not create one.
+- Follow current durable decisions; explicitly superseded decisions remain historical and inactive.
 
 The recorder owns event IDs, timestamps, sequences, metrics, pruning, validation, and current-state pointers.
 

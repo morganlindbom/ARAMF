@@ -1,6 +1,6 @@
 {
     "_file": "cold-start-validation.json",
-    "checkedAt": "2026-08-22T23:42:39Z",
+    "checkedAt": "2026-08-23T00:50:33Z",
     "checks": [
         {
             "name": "ARAMF_WORKER/memory/decisions.md",
@@ -11,12 +11,35 @@
             "status": "PASS"
         },
         {
+            "name": "ARAMF_WORKER/memory/current-state.md",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/memory-config.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/memory-contract.json",
+            "status": "PASS"
+        },
+        {
             "name": "ARAMF_WORKER/memory/memory-manifest.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/AGENTS.md",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/PROJECT_STATUS.md",
             "status": "PASS"
         }
     ],
+    "contractConfigConsistent": true,
     "errors": [
     ],
+    "fingerprint": "5e6fce6cc1103228373912f1a351ca0d31f3bed1cd4fc0645b21c4c8aa66bc7b",
+    "recordingEnabled": true,
     "status": "PASS",
     "warnings": [
     ]

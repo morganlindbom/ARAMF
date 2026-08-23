@@ -1,1 +1,14 @@
-[]
+{
+    "_file": "checkpoints.json",
+    "checkpoints": [
+        {
+            "createdAt": "2026-08-23T00:41:33Z",
+            "id": "checkpoint-8dbd8b21-03db-4512-87fb-89b8fdbcafb9",
+            "latestEventId": "event-779be93d-5b0b-435b-81c0-f555b168bab3",
+            "productionSequence": 32,
+            "summary": "Stable verified baseline for autonomous Codex to ARAMF Project Memory feedback, with semantic validation and cold-start coverage.",
+            "title": "Autonomous agent memory feedback baseline",
+            "verificationStatus": "PASS"
+        }
+    ]
+}

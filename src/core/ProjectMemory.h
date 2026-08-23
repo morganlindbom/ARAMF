@@ -28,8 +28,26 @@ public:
                          const QJsonObject& fields,
                          QJsonObject* result = nullptr,
                          QString* error = nullptr);
+    bool recordDecision(const QString& projectRoot,
+                        const QString& decisionId,
+                        const QString& topic,
+                        const QString& summary,
+                        const QString& status = QStringLiteral("current"),
+                        const QString& supersededBy = {},
+                        QString* error = nullptr);
+    bool recordCheckpoint(const QString& projectRoot,
+                          const QString& title,
+                          const QString& summary,
+                          const QString& relatedTask = {},
+                          const QString& commit = {},
+                          const QString& verificationStatus = {},
+                          QJsonObject* result = nullptr,
+                          QString* error = nullptr);
     static QStringList supportedRecordOperations();
     QJsonObject validate(const QString& projectRoot, QString* error = nullptr) const;
+    QJsonObject validateColdStart(const QString& projectRoot, QString* error = nullptr) const;
+    bool refreshMemoryContract(const QString& projectRoot, QString* error = nullptr) const;
+    bool refreshMemoryInstructions(const QString& projectRoot, QString* error = nullptr) const;
     qint64 memoryUsageBytes(const QString& projectRoot) const;
 
 private:

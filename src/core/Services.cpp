@@ -444,6 +444,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             addInstruction(QStringLiteral("update-current-state"), QStringLiteral("Let ProjectMemory refresh current-state from accepted events."));
             addInstruction(QStringLiteral("update-project-status"), QStringLiteral("Allow meaningful completed tasks to update PROJECT_STATUS through the recorder policy."));
             addInstruction(QStringLiteral("record-checkpoints"), QStringLiteral("Record a checkpoint only when an actual stable checkpoint is warranted."));
+            memorySection += QStringLiteral("- Record durable decisions only for genuine architecture or policy choices through the decision workflow.\n");
+            memorySection += QStringLiteral("- Follow current durable decisions; explicitly superseded decisions remain historical and inactive.\n");
             memorySection += QStringLiteral("\nThe recorder owns event IDs, timestamps, sequences, metrics, pruning, validation, and current-state pointers.\n\n<!-- ARAMF-MEMORY-END -->\n");
             canonicalAgent += memorySection;
         }
