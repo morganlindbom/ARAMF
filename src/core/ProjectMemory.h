@@ -47,6 +47,19 @@ public:
                           const QString& verificationStatus = {},
                           QJsonObject* result = nullptr,
                           QString* error = nullptr);
+    bool isVerifiedAdministrativeOverride(const QString& instruction) const;
+    bool recordAdministrativeOverride(const QString& projectRoot,
+                                      const QString& instruction,
+                                      const QString& overriddenRule,
+                                      const QString& reason,
+                                      const QString& scope,
+                                      const QString& requestedAction,
+                                      const QStringList& affectedFiles = {},
+                                      const QStringList& affectedSystems = {},
+                                      bool persistentPolicy = false,
+                                      const QJsonObject& additionalFields = {},
+                                      QJsonObject* result = nullptr,
+                                      QString* error = nullptr);
     static QStringList supportedRecordOperations();
     QJsonObject validate(const QString& projectRoot, QString* error = nullptr) const;
     QJsonObject validateColdStart(const QString& projectRoot, QString* error = nullptr) const;

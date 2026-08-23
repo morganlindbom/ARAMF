@@ -314,7 +314,9 @@ descriptions, scopes, and canonical identities were preserved.
 
 
 
+
+
 ## Latest Agent Task
 
-- Task: Restore ARAMF self-host configuration after post-push PVD contamination
+- Task: Milestone: add admin override and destructive-operation safety
 - Status: PASS

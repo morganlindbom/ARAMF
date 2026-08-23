@@ -254,3 +254,13 @@ creating parallel lessons.
 - Superseded-By: none
 - Summary: Framework deficiencies discovered during managed-project work are recorded as global improvement backlog observations. Observation, TODO triage, durable decisions, implementation, validation, and Framework Knowledge remain separate lifecycle concepts; reporting must not automatically modify ARAMF source or create Framework Knowledge.
 <!-- /ARAMF-DECISION -->
+
+## Decision Record: top-priority-no-recursive-shell-delete
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: top-priority-no-recursive-shell-delete
+- Topic: destructive-cleanup-safety
+- Status: current
+- Superseded-By: none
+- Summary: TOP PRIORITY: ARAMF agents and tools must never use recursive shell deletion for cleanup or fixture removal, including cmd.exe rmdir /s /q, rd /s /q, PowerShell Remove-Item -Recurse, Unix rm -rf, or equivalents. The 2026-08-23 incident demonstrated that malformed Windows quoting can widen scope and destroy unrelated repositories. Preserve state, verify exact targets, and use non-destructive alternatives.
+<!-- /ARAMF-DECISION -->

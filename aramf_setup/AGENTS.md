@@ -61,6 +61,23 @@ Update `PROJECT_STATUS.md` after every meaningful implementation task. Keep thes
 - Prefer atomic writes for managed state.
 - Keep generated state deterministic and portable between AI agents.
 
+## TOP PRIORITY: Destructive cleanup prohibition
+
+- Never use recursive shell deletion for cleanup or fixture removal. This
+  prohibition specifically includes `cmd.exe /c rmdir /s /q`, `rd /s /q`,
+  PowerShell `Remove-Item -Recurse`, Unix `rm -rf`, and equivalent commands.
+- Never delete a repository, project root, `ARAMF_WORKER/`, build tree, or
+  generated state to clean up temporary work. Malformed Windows quoting can
+  widen a deletion target and destroy unrelated repositories.
+- Do not translate paths between shells or compose quoted destructive commands.
+  Any exceptional file operation must use a narrow target with boundary
+  validation and an exact resolved file list.
+  If removal is genuinely required and explicitly authorized, stop and request
+  confirmation of the exact resolved file list first; otherwise leave temporary
+  fixtures in a uniquely named directory and report them.
+- Prefer additive, recoverable, non-destructive alternatives. Cleanup must
+  never outrank preservation of source, memory, history, or control-plane state.
+
 ## Scope
 
 This file describes product/bootstrap source under `aramf_setup/`; it is not
