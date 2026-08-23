@@ -47,6 +47,14 @@ public:
                     const QStringList& evidence,
                     bool portable = true,
                     QString* error = nullptr) const;
+    QString proposeApprovedByAdministrator(const QString& projectRoot,
+                                           const QString& title,
+                                           const QString& lesson,
+                                           const QStringList& scopes,
+                                           const QStringList& evidence,
+                                           const QString& administrator,
+                                           bool portable = true,
+                                           QString* error = nullptr) const;
     bool approve(const QString& projectRoot,
                  const QString& candidateId,
                  const QString& approvalSource,

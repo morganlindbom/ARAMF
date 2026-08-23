@@ -19,7 +19,11 @@ void printUsage(QTextStream& stream)
     stream << "Usage: aramf memory record --project <project-root> --operation <operation> [options]\n"
             << "       aramf memory decision record --project <project-root> --id <id> --topic <topic> --summary <summary> [options]\n"
             << "       aramf memory decision supersede --project <project-root> --id <id> --replacement <id>\n"
-            << "       aramf memory knowledge promote --project <project-root> --id <id>\n"
+       << "       aramf memory knowledge promote --project <project-root> --id <id>\n"
+            << "       aramf memory knowledge propose --project <project-root> --title <title> --lesson <lesson> --scopes <csv> --evidence <text> [--portable true|false]\n"
+            << "       aramf memory knowledge approve --project <project-root> --id <id> --source <source>\n"
+            << "       aramf memory override --project <project-root> --instruction <text> --rule <rule> --reason <reason> --scope <scope> --action <action> [--affected-files <csv>] [--affected-systems <csv>] [--persistent-policy true|false]\n"
+            << "       aramf memory override knowledge --project <project-root> --instruction <text> --title <title> --lesson <lesson> --scopes <csv> --evidence <text> --scope project [--portable true|false]\n"
             << "       aramf memory checkpoint --project <project-root> --title <title> --summary <summary> [options]\n"
             << "       aramf memory validate --project <project-root>\n"
             << "       aramf memory cold-start --project <project-root>\n"
@@ -270,6 +274,188 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
             return 2;
         }
         output << "promoted knowledge=" << arguments.at(6) << " path=" << service.globalLibraryPath() << "\n";
+        return 0;
+    }
+
+    if (arguments.size() >= 3 && arguments.at(0) == QStringLiteral("memory")
+        && arguments.at(1) == QStringLiteral("knowledge") && arguments.at(2) == QStringLiteral("propose")) {
+        const QSet<QString> valueOptions{QStringLiteral("--project"), QStringLiteral("--title"),
+                                         QStringLiteral("--lesson"), QStringLiteral("--scopes"),
+                                         QStringLiteral("--evidence"), QStringLiteral("--portable")};
+        QHash<QString, QString> options;
+        for (int index = 3; index < arguments.size(); ++index) {
+            const QString name = arguments.at(index);
+            if (!valueOptions.contains(name) || index + 1 >= arguments.size()) {
+                error << "error=invalid-argument:" << name << "\n";
+                return 2;
+            }
+            options.insert(name, arguments.at(++index));
+        }
+        for (const QString& required : {QStringLiteral("--project"), QStringLiteral("--title"),
+                                        QStringLiteral("--lesson"), QStringLiteral("--scopes"),
+                                        QStringLiteral("--evidence")}) {
+            if (!options.contains(required)) {
+                error << "error=missing-argument:" << required << "\n";
+                return 2;
+            }
+        }
+        FrameworkKnowledgeService service;
+        QString knowledgeError;
+        const QString id = service.propose(
+            QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath()),
+            options.value(QStringLiteral("--title")), options.value(QStringLiteral("--lesson")),
+            options.value(QStringLiteral("--scopes")).split(',', Qt::SkipEmptyParts),
+            QStringList{options.value(QStringLiteral("--evidence"))},
+            options.value(QStringLiteral("--portable"), QStringLiteral("true")).compare(QStringLiteral("false"), Qt::CaseInsensitive) != 0,
+            &knowledgeError);
+        if (id.isEmpty()) {
+            error << "error=" << knowledgeError << "\n";
+            return 2;
+        }
+        output << "proposed knowledge=" << id << "\n";
+        return 0;
+    }
+
+    if (arguments.size() >= 3 && arguments.at(0) == QStringLiteral("memory")
+        && arguments.at(1) == QStringLiteral("override") && arguments.at(2) == QStringLiteral("knowledge")) {
+        const QSet<QString> valueOptions{QStringLiteral("--project"), QStringLiteral("--instruction"),
+                                         QStringLiteral("--title"), QStringLiteral("--lesson"),
+                                         QStringLiteral("--scopes"), QStringLiteral("--evidence"),
+                                         QStringLiteral("--scope"),
+                                         QStringLiteral("--portable")};
+        QHash<QString, QString> options;
+        for (int index = 3; index < arguments.size(); ++index) {
+            const QString name = arguments.at(index);
+            if (!valueOptions.contains(name) || index + 1 >= arguments.size()) {
+                error << "error=invalid-argument:" << name << "\n";
+                return 2;
+            }
+            options.insert(name, arguments.at(++index));
+        }
+        for (const QString& required : {QStringLiteral("--project"), QStringLiteral("--instruction"),
+                                        QStringLiteral("--title"), QStringLiteral("--lesson"),
+                                        QStringLiteral("--scopes"), QStringLiteral("--evidence"),
+                                        QStringLiteral("--scope")}) {
+            if (!options.contains(required)) {
+                error << "error=missing-argument:" << required << "\n";
+                return 2;
+            }
+        }
+        ProjectMemory memory;
+        const QString projectRoot = QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath());
+        if (!memory.isVerifiedAdministrativeOverride(options.value(QStringLiteral("--instruction")))) {
+            error << "error=administrative-identity-and-override-intent-required\n";
+            return 2;
+        }
+        QJsonObject audit;
+        QString operationError;
+        const QString requestedScope = options.value(QStringLiteral("--scope")).trimmed().toLower();
+        if (requestedScope != QStringLiteral("project")) {
+            error << "error=admin-override-knowledge-is-project-local-only\n";
+            return 2;
+        }
+        FrameworkKnowledgeService service;
+        const bool portable = options.value(QStringLiteral("--portable"), QStringLiteral("true"))
+            .compare(QStringLiteral("false"), Qt::CaseInsensitive) != 0;
+        const QString id = service.proposeApprovedByAdministrator(
+            projectRoot, options.value(QStringLiteral("--title")), options.value(QStringLiteral("--lesson")),
+            options.value(QStringLiteral("--scopes")).split(',', Qt::SkipEmptyParts),
+            QStringList{options.value(QStringLiteral("--evidence"))}, QStringLiteral("Admin Morgan Lindbom"), portable, &operationError);
+        if (id.isEmpty()) {
+            error << "error=" << operationError << "\n";
+            return 2;
+        }
+        if (!memory.recordAdministrativeOverride(
+                projectRoot, options.value(QStringLiteral("--instruction")),
+                QStringLiteral("Framework Knowledge requires explicit approval before activation."),
+                QStringLiteral("Verified administrator explicitly authorized adding and approving this reusable knowledge."),
+                QStringLiteral("Create and approve one project Framework Knowledge entry: %1").arg(options.value(QStringLiteral("--title"))),
+                QStringLiteral("Add and approve Framework Knowledge"), {}, {}, false,
+                QJsonObject{{QStringLiteral("knowledgeId"), id},
+                            {QStringLiteral("resultingStatus"), QStringLiteral("approved")},
+                            {QStringLiteral("scope"), QStringLiteral("project")},
+                            {QStringLiteral("projectId"), QFileInfo(projectRoot).fileName()},
+                            {QStringLiteral("projectName"), QFileInfo(projectRoot).fileName()},
+                            {QStringLiteral("projectPath"), QDir::cleanPath(projectRoot)}},
+                &audit, &operationError)) {
+            error << "error=" << operationError << "\n";
+            return 2;
+        }
+        output << "accepted ADMIN_OVERRIDE knowledge=" << id << " status=approved scope=project"
+               << " administrator=Admin-Morgan-Lindbom validation=PASS\n";
+        return 0;
+    }
+
+    if (arguments.size() >= 2 && arguments.at(0) == QStringLiteral("memory")
+        && arguments.at(1) == QStringLiteral("override")) {
+        const QSet<QString> valueOptions{QStringLiteral("--project"), QStringLiteral("--instruction"),
+                                         QStringLiteral("--rule"), QStringLiteral("--reason"),
+                                         QStringLiteral("--scope"), QStringLiteral("--action"),
+                                         QStringLiteral("--affected-files"), QStringLiteral("--affected-systems"),
+                                         QStringLiteral("--persistent-policy")};
+        QHash<QString, QString> options;
+        for (int index = 2; index < arguments.size(); ++index) {
+            const QString name = arguments.at(index);
+            if (!valueOptions.contains(name) || index + 1 >= arguments.size()) {
+                error << "error=invalid-argument:" << name << "\n";
+                return 2;
+            }
+            options.insert(name, arguments.at(++index));
+        }
+        for (const QString& required : {QStringLiteral("--project"), QStringLiteral("--instruction"),
+                                        QStringLiteral("--rule"), QStringLiteral("--reason"),
+                                        QStringLiteral("--scope"), QStringLiteral("--action")}) {
+            if (!options.contains(required)) {
+                error << "error=missing-argument:" << required << "\n";
+                return 2;
+            }
+        }
+        ProjectMemory memory;
+        QJsonObject result;
+        QString overrideError;
+        const bool persistent = options.value(QStringLiteral("--persistent-policy"), QStringLiteral("false"))
+            .compare(QStringLiteral("true"), Qt::CaseInsensitive) == 0;
+        if (!memory.recordAdministrativeOverride(
+                QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath()),
+                options.value(QStringLiteral("--instruction")), options.value(QStringLiteral("--rule")),
+                options.value(QStringLiteral("--reason")), options.value(QStringLiteral("--scope")),
+                options.value(QStringLiteral("--action")),
+                options.value(QStringLiteral("--affected-files")).split(',', Qt::SkipEmptyParts),
+                options.value(QStringLiteral("--affected-systems")).split(',', Qt::SkipEmptyParts),
+                persistent, {}, &result, &overrideError)) {
+            error << "error=" << overrideError << "\n";
+            return 2;
+        }
+        output << "accepted ADMIN_OVERRIDE administrator=Morgan Lindbom scope=" << options.value(QStringLiteral("--scope")) << " validation=PASS\n";
+        return 0;
+    }
+
+    if (arguments.size() >= 3 && arguments.at(0) == QStringLiteral("memory")
+        && arguments.at(1) == QStringLiteral("knowledge") && arguments.at(2) == QStringLiteral("approve")) {
+        const QSet<QString> valueOptions{QStringLiteral("--project"), QStringLiteral("--id"), QStringLiteral("--source")};
+        QHash<QString, QString> options;
+        for (int index = 3; index < arguments.size(); ++index) {
+            const QString name = arguments.at(index);
+            if (!valueOptions.contains(name) || index + 1 >= arguments.size()) {
+                error << "error=invalid-argument:" << name << "\n";
+                return 2;
+            }
+            options.insert(name, arguments.at(++index));
+        }
+        for (const QString& required : {QStringLiteral("--project"), QStringLiteral("--id"), QStringLiteral("--source")}) {
+            if (!options.contains(required)) {
+                error << "error=missing-argument:" << required << "\n";
+                return 2;
+            }
+        }
+        FrameworkKnowledgeService service;
+        QString knowledgeError;
+        if (!service.approve(QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath()),
+                             options.value(QStringLiteral("--id")), options.value(QStringLiteral("--source")), &knowledgeError)) {
+            error << "error=" << knowledgeError << "\n";
+            return 2;
+        }
+        output << "approved knowledge=" << options.value(QStringLiteral("--id")) << "\n";
         return 0;
     }
 

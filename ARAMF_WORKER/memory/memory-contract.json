@@ -1,5 +1,15 @@
 {
     "_file": "memory-contract.json",
+    "administrativeOverride": {
+        "administrator": "Admin Morgan Lindbom",
+        "antiReplay": true,
+        "audit": "Durable ADMIN_OVERRIDE event with pre/post memory and cold-start validation",
+        "authority": "ADMIN_OVERRIDE",
+        "command": "aramf memory override --project <project-root> --instruction <text> --rule <rule> --reason <reason> --scope <scope> --action <action>",
+        "knowledgeCommand": "aramf memory override knowledge --project <project-root> --instruction <text> --title <title> --lesson <lesson> --scopes <csv> --evidence <text> --scope project",
+        "scope": "Project-local only; global promotion is a separate normal workflow",
+        "verification": "Exact Admin Morgan Lindbom identity + explicit ARAMF override intent required"
+    },
     "arguments": {
         "optional": [
             "--status",

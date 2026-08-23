@@ -376,6 +376,63 @@ QString FrameworkKnowledgeService::propose(const QString& projectRoot,
     return id;
 }
 
+QString FrameworkKnowledgeService::proposeApprovedByAdministrator(const QString& projectRoot,
+                                                                    const QString& title,
+                                                                    const QString& lesson,
+                                                                    const QStringList& scopes,
+                                                                    const QStringList& evidence,
+                                                                    const QString& administrator,
+                                                                    bool portable,
+                                                                    QString* error) const
+{
+    if (administrator != QStringLiteral("Admin Morgan Lindbom")) {
+        if (error) *error = QStringLiteral("Administrative knowledge approval requires Admin Morgan Lindbom.");
+        return {};
+    }
+    if (title.trimmed().isEmpty() || lesson.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("Framework Knowledge requires a title and lesson.");
+        return {};
+    }
+    if (!ensureFile(projectRoot, error)) return {};
+    QJsonObject store;
+    if (!readStore(projectRoot, &store, error)) return {};
+    QJsonArray values = store.value(QStringLiteral("entries")).toArray();
+    const QString id = stableId(title, lesson, scopes);
+    for (qsizetype i = 0; i < values.size(); ++i) {
+        QJsonObject value = values.at(i).toObject();
+        if (value.value(QStringLiteral("id")).toString() != id) continue;
+        if (value.value(QStringLiteral("status")).toString() == QStringLiteral("superseded")) {
+            if (error) *error = QStringLiteral("Superseded Framework Knowledge cannot be approved.");
+            return {};
+        }
+        QJsonArray mergedEvidence = value.value(QStringLiteral("evidence")).toArray();
+        for (const auto& item : evidence) if (!item.trimmed().isEmpty() && !strings(mergedEvidence).contains(item.trimmed())) mergedEvidence.append(item.trimmed());
+        value.insert(QStringLiteral("evidence"), mergedEvidence);
+        value.insert(QStringLiteral("status"), QStringLiteral("approved"));
+        value.insert(QStringLiteral("reviewStatus"), QStringLiteral("approved"));
+        value.insert(QStringLiteral("approvedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+        value.insert(QStringLiteral("approvalSource"), administrator);
+        values.replace(i, value);
+        store.insert(QStringLiteral("entries"), values);
+        return writeStore(projectRoot, store, error) ? id : QString();
+    }
+    FrameworkKnowledgeEntry entry;
+    entry.id = id;
+    entry.title = title.trimmed();
+    entry.lesson = lesson.trimmed();
+    entry.status = QStringLiteral("approved");
+    entry.reviewStatus = QStringLiteral("approved");
+    entry.scopes = scopes;
+    entry.evidence = evidence;
+    entry.portable = portable;
+    entry.createdAt = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
+    entry.approvedAt = entry.createdAt;
+    entry.approvalSource = administrator;
+    values.append(toJson(entry));
+    store.insert(QStringLiteral("entries"), values);
+    return writeStore(projectRoot, store, error) ? id : QString();
+}
+
 bool FrameworkKnowledgeService::approve(const QString& projectRoot,
                                          const QString& candidateId,
                                          const QString& approvalSource,

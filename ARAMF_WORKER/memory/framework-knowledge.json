@@ -557,6 +557,33 @@
             "status": "approved",
             "supersededBy": "",
             "title": "Fail explicitly instead of silently falling back"
+        },
+        {
+            "approvalSource": "Admin Morgan Lindbom explicit approval",
+            "approvedAt": "2026-08-23T12:19:38Z",
+            "createdAt": "2026-08-23T12:19:32Z",
+            "evidence": [
+                "2026-08-23: felciterad Windows cmd.exe rmdir /s /q-operation breddade målomfattningen och raderade orelaterade ARAMF- och PVD-arbetsytor; återställning från GitHub krävdes. Regeln har därefter lagts i AGENTS.md och den kanoniska instruktionstexten."
+            ],
+            "id": "fk-47734af783aaa62e",
+            "lesson": "TOP PRIORITY: ARAMF-agenter och verktyg får aldrig använda rekursiv shell-radering för städning eller borttagning av fixtures. Detta inkluderar cmd.exe /c rmdir /s /q, rd /s /q, PowerShell Remove-Item -Recurse, Unix rm -rf och motsvarande. Repositories, projektro¨tter, ARAMF_WORKER, build-träd och genererad persistent state får aldrig raderas för cleanup. Vid behov ska exakta mål verifieras och en icke-destruktiv, återställningsbar metod användas.",
+            "origin": "project",
+            "originProjectId": "",
+            "originalKnowledgeId": "",
+            "portable": true,
+            "promotedAt": "",
+            "reviewStatus": "approved",
+            "scopes": [
+                "safety",
+                "cleanup",
+                "windows",
+                "paths",
+                "persistence",
+                "agents"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "TOP PRIORITY: Förbud mot destruktiv rekursiv städning"
         }
     ],
     "version": 1

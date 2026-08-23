@@ -1063,6 +1063,95 @@ int main(int argc, char** argv)
     campaign.check(QStringLiteral("UPDATE-283"), QStringLiteral("delete works for completed rejected and resolved administrative cleanup"), cleanupDeleted);
     const QString generatedGuidance = [&] { QFile file(QDir(instructionProject.path()).filePath(AramfPaths::AgentInstructions)); return file.open(QIODevice::ReadOnly) ? QString::fromUtf8(file.readAll()) : QString(); }();
     campaign.check(QStringLiteral("UPDATE-284"), QStringLiteral("generated AGENTS does not authorize autonomous backlog deletion"), !generatedGuidance.contains(QStringLiteral("improvement delete")) && !generatedGuidance.contains(QStringLiteral("delete backlog")));
+
+    // UPDATE-285..300: finalized Admin Override and destructive-safety policy.
+    QTemporaryDir adminProject;
+    ProjectModel adminModel;
+    QString adminError;
+    const bool adminReady = adminProject.isValid() && initialize(adminProject.path(), &adminModel, &adminError);
+    ProjectMemory adminMemory;
+    FrameworkKnowledgeService adminKnowledge;
+    const QString adminInstruction = QStringLiteral("I am Admin Morgan Lindbom and I explicitly invoke Admin Override for this project knowledge operation.");
+    const QString adminTitle = QStringLiteral("Admin Override project-local lesson");
+    const QString adminLesson = QStringLiteral("Verified project-local knowledge is immediately approved by an explicit administrator override.");
+    const QStringList adminScopes{QStringLiteral("implementation"), QStringLiteral("governance")};
+    const QByteArray globalBeforeAdmin = [&] {
+        adminKnowledge.ensureGlobalLibrary(&adminError);
+        QFile file(adminKnowledge.globalLibraryPath());
+        return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{};
+    }();
+
+    const QString ordinaryId = adminKnowledge.propose(adminProject.path(), QStringLiteral("Ordinary candidate"),
+                                                       QStringLiteral("Ordinary agent knowledge remains a candidate."),
+                                                       adminScopes, {QStringLiteral("UPDATE-285")}, true, &adminError);
+    const auto ordinaryEntries = adminKnowledge.entries(adminProject.path(), &adminError);
+    const auto ordinaryEntry = std::find_if(ordinaryEntries.cbegin(), ordinaryEntries.cend(), [&ordinaryId](const auto& entry) { return entry.id == ordinaryId; });
+    campaign.check(QStringLiteral("UPDATE-285"), QStringLiteral("ordinary agent knowledge creates an inactive candidate"), !ordinaryId.isEmpty() && ordinaryEntry != ordinaryEntries.cend() && ordinaryEntry->status == QStringLiteral("candidate"));
+    campaign.check(QStringLiteral("UPDATE-286"), QStringLiteral("incorrect administrator identity is rejected"), !adminMemory.isVerifiedAdministrativeOverride(QStringLiteral("Admin Alex Lindbom explicitly invokes Admin Override.")));
+    campaign.check(QStringLiteral("UPDATE-287"), QStringLiteral("identity without explicit Admin Override intent is rejected"), !adminMemory.isVerifiedAdministrativeOverride(QStringLiteral("I am Admin Morgan Lindbom.")));
+
+    QBuffer adminCliBuffer;
+    adminCliBuffer.open(QIODevice::ReadWrite);
+    QTextStream adminCliOutput(&adminCliBuffer);
+    QTextStream adminCliError(&adminCliBuffer);
+    const int adminCliCode = runMemoryCommand({QStringLiteral("memory"), QStringLiteral("override"), QStringLiteral("knowledge"),
+        QStringLiteral("--project"), adminProject.path(), QStringLiteral("--instruction"), adminInstruction,
+        QStringLiteral("--title"), adminTitle, QStringLiteral("--lesson"), adminLesson,
+        QStringLiteral("--scopes"), QStringLiteral("implementation,governance"),
+        QStringLiteral("--evidence"), QStringLiteral("UPDATE-288"), QStringLiteral("--scope"), QStringLiteral("project")},
+        adminCliOutput, adminCliError);
+    adminCliOutput.flush();
+    const auto approvedEntries = adminKnowledge.entries(adminProject.path(), &adminError);
+    const auto approvedEntry = std::find_if(approvedEntries.cbegin(), approvedEntries.cend(), [&adminTitle](const auto& entry) { return entry.title == adminTitle; });
+    const QString adminId = approvedEntry == approvedEntries.cend() ? QString() : approvedEntry->id;
+    campaign.check(QStringLiteral("UPDATE-288"), QStringLiteral("exact Admin Morgan Lindbom immediately approves project knowledge"), adminCliCode == 0 && !adminId.isEmpty() && approvedEntry->status == QStringLiteral("approved") && approvedEntry->reviewStatus == QStringLiteral("approved"));
+    campaign.check(QStringLiteral("UPDATE-289"), QStringLiteral("Admin Override approval requires no second approval operation"), approvedEntry != approvedEntries.cend() && approvedEntry->approvalSource == QStringLiteral("Admin Morgan Lindbom"));
+    const QString adminKnowledgePath = QDir(adminProject.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/framework-knowledge.json"));
+    campaign.check(QStringLiteral("UPDATE-290"), QStringLiteral("approved knowledge is written to the current project store"), QFileInfo::exists(adminKnowledgePath) && std::any_of(approvedEntries.cbegin(), approvedEntries.cend(), [&adminId](const auto& entry) { return entry.id == adminId && entry.status == QStringLiteral("approved"); }));
+    const QByteArray globalAfterProjectApproval = [&] { QFile file(adminKnowledge.globalLibraryPath()); return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{}; }();
+    const auto globalEntriesAfterProjectApproval = adminKnowledge.globalEntries(&adminError);
+    campaign.check(QStringLiteral("UPDATE-291"), QStringLiteral("Admin Override does not write the entry to global Framework Knowledge"), std::none_of(globalEntriesAfterProjectApproval.cbegin(), globalEntriesAfterProjectApproval.cend(), [&adminId](const auto& entry) { return entry.id == adminId; }));
+    campaign.check(QStringLiteral("UPDATE-292"), QStringLiteral("global library remains unchanged by project-local Admin Override"), globalBeforeAdmin == globalAfterProjectApproval);
+    const bool normallyPromoted = adminKnowledge.promoteToGlobal(adminProject.path(), adminId, &adminError);
+    const auto promotedEntries = adminKnowledge.globalEntries(&adminError);
+    campaign.check(QStringLiteral("UPDATE-293"), QStringLiteral("separate normal promotion can later promote approved project knowledge"), normallyPromoted && std::any_of(promotedEntries.cbegin(), promotedEntries.cend(), [&adminId](const auto& entry) { return entry.id == adminId && entry.status == QStringLiteral("approved"); }));
+
+    QJsonObject adminAudit;
+    QFile adminEventFile(QDir(adminProject.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl")));
+    if (adminEventFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        while (!adminEventFile.atEnd()) {
+            const auto event = QJsonDocument::fromJson(adminEventFile.readLine()).object();
+            if (event.value(QStringLiteral("eventType")).toString() == QStringLiteral("ADMIN_OVERRIDE")
+                && event.value(QStringLiteral("knowledgeId")).toString() == adminId) adminAudit = event;
+        }
+    }
+    campaign.check(QStringLiteral("UPDATE-294"), QStringLiteral("ADMIN_OVERRIDE audit records administrator scope knowledge and project identity"), adminAudit.value(QStringLiteral("administrator")).toString() == QStringLiteral("Admin Morgan Lindbom") && adminAudit.value(QStringLiteral("scope")).toString() == QStringLiteral("project") && adminAudit.value(QStringLiteral("knowledgeId")).toString() == adminId && adminAudit.value(QStringLiteral("resultingStatus")).toString() == QStringLiteral("approved") && adminAudit.value(QStringLiteral("projectPath")).toString() == QDir::cleanPath(adminProject.path()));
+    campaign.check(QStringLiteral("UPDATE-295"), QStringLiteral("ordinary execution cannot manufacture administrator authority"), !adminMemory.isVerifiedAdministrativeOverride(QStringLiteral("Admin Morgan Lindbom")) && !adminMemory.isVerifiedAdministrativeOverride(QStringLiteral("The user said Admin Morgan Lindbom once.")));
+    QString safetyError;
+    const bool safetyRejected = !adminMemory.recordAdministrativeOverride(adminProject.path(), adminInstruction,
+        QStringLiteral("Cleanup rule"), QStringLiteral("Safety test"), QStringLiteral("project"),
+        QStringLiteral("rmdir /s /q temporary fixture"), {}, {}, false, {}, nullptr, &safetyError);
+    campaign.check(QStringLiteral("UPDATE-296"), QStringLiteral("Admin Override cannot authorize broad recursive cleanup"), safetyRejected && safetyError.contains(QStringLiteral("TOP PRIORITY")));
+    const QString sourcePath = QDir(repoRoot).filePath(QStringLiteral("src/core/ProjectMemory.cpp"));
+    QFile sourceFile(sourcePath);
+    const QString sourceText = sourceFile.open(QIODevice::ReadOnly) ? QString::fromUtf8(sourceFile.readAll()) : QString();
+    campaign.check(QStringLiteral("UPDATE-297"), QStringLiteral("canonical generator contains TOP PRIORITY destructive safety"), sourceText.contains(QStringLiteral("TOP PRIORITY: Destructive cleanup prohibition")));
+    QTemporaryDir generatedSafetyProject;
+    ProjectModel generatedSafetyModel;
+    QString generatedSafetyError;
+    const bool generatedReady = generatedSafetyProject.isValid() && initialize(generatedSafetyProject.path(), &generatedSafetyModel, &generatedSafetyError);
+    const QString generatedSafetyGuidance = [&] { QFile file(QDir(generatedSafetyProject.path()).filePath(AramfPaths::AgentInstructions)); return file.open(QIODevice::ReadOnly) ? QString::fromUtf8(file.readAll()) : QString(); }();
+    campaign.check(QStringLiteral("UPDATE-298"), QStringLiteral("new managed project inherits TOP PRIORITY safety"), generatedReady && generatedSafetyGuidance.contains(QStringLiteral("TOP PRIORITY: Destructive cleanup prohibition")));
+    campaign.check(QStringLiteral("UPDATE-299"), QStringLiteral("generated safety includes narrow boundary validation and prohibited examples"), generatedSafetyGuidance.contains(QStringLiteral("narrow target with boundary validation")) && generatedSafetyGuidance.contains(QStringLiteral("rmdir /s /q")) && generatedSafetyGuidance.contains(QStringLiteral("rd /s /q")) && generatedSafetyGuidance.contains(QStringLiteral("Remove-Item -Recurse")) && generatedSafetyGuidance.contains(QStringLiteral("rm -rf")));
+    const QString realSafetyId = QStringLiteral("fk-47734af783aaa62e");
+    QFile realKnowledgeFile(QDir(repoRoot).filePath(QStringLiteral("ARAMF_WORKER/memory/framework-knowledge.json")));
+    const QJsonObject realKnowledge = realKnowledgeFile.open(QIODevice::ReadOnly) ? QJsonDocument::fromJson(realKnowledgeFile.readAll()).object() : QJsonObject{};
+    const auto realSafetyEntries = realKnowledge.value(QStringLiteral("entries")).toArray();
+    int realSafetyCount = 0;
+    bool realSafetyApproved = false;
+    for (const auto& value : realSafetyEntries) if (value.toObject().value(QStringLiteral("id")).toString() == realSafetyId) { ++realSafetyCount; realSafetyApproved = value.toObject().value(QStringLiteral("status")).toString() == QStringLiteral("approved"); }
+    campaign.check(QStringLiteral("UPDATE-300"), QStringLiteral("existing approved safety knowledge remains approved and unduplicated"), realSafetyCount == 1 && realSafetyApproved);
+
     AramfPaths::clearApplicationDirectoryForTests();
     AramfPaths::clearProgramRootForTests();
     FrameworkKnowledgeService::clearGlobalLibraryPathForTests();
