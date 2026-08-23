@@ -3,5 +3,4 @@
 Scenario: plan recommends subsystem validation
 
 Result: PASS
-
 SUBSYSTEM

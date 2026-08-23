@@ -7,8 +7,14 @@
 #include "core/CodexExecutionAdapter.h"
 #include "core/UpdateExecutionService.h"
 #include "core/CodexExecutableResolver.h"
+#include "core/ImprovementBacklog.h"
+#include "core/MemoryCommand.h"
+#include "core/ProjectPersistence.h"
+#include "core/Services.h"
+#include "ui/workflows/update/backlog/ImprovementBacklogPage.h"
 
-#include <QCoreApplication>
+#include <QApplication>
+#include <QComboBox>
 #include <QDateTime>
 #include <QDir>
 #include <QJsonArray>
@@ -19,6 +25,14 @@
 #include <QStandardPaths>
 #include <QSet>
 #include <QTemporaryDir>
+#include <QBuffer>
+#include <QTextStream>
+#include <QListWidget>
+#include <QPushButton>
+#include <QLabel>
+#include <QPlainTextEdit>
+#include <QMessageBox>
+#include <QTimer>
 
 #include <iostream>
 #include <algorithm>
@@ -36,7 +50,7 @@ struct Campaign {
         QDir().mkpath(QDir(root).filePath(QStringLiteral("results")));
         QFile file(QDir(root).filePath(QStringLiteral("results/%1.md").arg(id)));
         if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            const QByteArray text = QStringLiteral("# %1\n\nScenario: %2\n\nResult: %3\n\n%4\n")
+            const QByteArray text = QStringLiteral("# %1\n\nScenario: %2\n\nResult: %3\n%4")
                                         .arg(id, description, result, detail).toUtf8();
             file.write(text);
         }
@@ -62,7 +76,7 @@ bool initialize(const QString& root, ProjectModel* model, QString* error)
 
 int main(int argc, char** argv)
 {
-    QCoreApplication app(argc, argv);
+    QApplication app(argc, argv);
     QStandardPaths::setTestModeEnabled(true);
     QTemporaryDir globalData;
     FrameworkKnowledgeService::setGlobalLibraryPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")));
@@ -778,9 +792,281 @@ int main(int argc, char** argv)
     campaign.check(QStringLiteral("UPDATE-210"), QStringLiteral("Application result contains execution evidence"), !noChangeResult.value(QStringLiteral("executionId")).toString().isEmpty() && !noChangeResult.value(QStringLiteral("startedAt")).toString().isEmpty());
     campaign.check(QStringLiteral("UPDATE-211"), QStringLiteral("Application result records validation as passed"), noChangeResult.value(QStringLiteral("validationPerformed")).toBool(false) && noChangeResult.value(QStringLiteral("validationResult")).toString() == QStringLiteral("PASS"));
     campaign.check(QStringLiteral("UPDATE-212"), QStringLiteral("The lifecycle ends only after explicit Execute and Validate"), noChangeValidated && noChangeResult.value(QStringLiteral("finalState")).toString() == QStringLiteral("COMPLETED") && noChangeResult.value(QStringLiteral("adoptedFrameworkKnowledge")).toArray().contains(adoptionId));
+    QTemporaryDir backlogRoot;
+    const QString backlogPath = QDir(backlogRoot.path()).filePath(QStringLiteral("ARAMF_DATA/aramf-improvement-backlog.json"));
+    ImprovementBacklogService::setPathForTests(backlogPath);
+    AramfPaths::setProgramRootForTests(backlogRoot.path());
+    QTemporaryDir pvdProject;
+    QDir(pvdProject.path()).mkpath(QStringLiteral("ARAMF_WORKER"));
+    QFile pvdProfile(QDir(pvdProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json")));
+    pvdProfile.open(QIODevice::WriteOnly); pvdProfile.write(QJsonDocument(QJsonObject{{QStringLiteral("projectId"), QStringLiteral("pvd-project")}, {QStringLiteral("projectName"), QStringLiteral("Pico Visual Designer")}}).toJson()); pvdProfile.close();
+    ImprovementBacklogService backlog;
+    QJsonObject reportResult; QString backlogError;
+    const QString gapTitle = QStringLiteral("Missing canonical hardware resource conflict workflow");
+    const QString gapObservation = QStringLiteral("The managed project required explicit shared-resource ownership and conflict handling, but ARAMF provided no canonical framework-level route for expressing the deficiency.");
+    const bool reported = backlog.report(pvdProject.path(), gapTitle, gapObservation, QStringLiteral("ARAMF should provide a canonical way to represent or route this framework concern."), QStringLiteral("rules-routing"), {QStringLiteral("PVD acceptance evidence")}, QStringLiteral("PVD hardware work"), QStringLiteral("codex"), &reportResult, &backlogError);
+    const auto firstItems = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-213"), QStringLiteral("global improvement backlog resolves under root ARAMF_DATA"), reported && QDir::cleanPath(backlog.backlogPath()).contains(QDir::cleanPath(backlogRoot.path())));
+    campaign.check(QStringLiteral("UPDATE-214"), QStringLiteral("improvement backlog is not under build"), !QDir::cleanPath(backlog.backlogPath()).contains(QStringLiteral("build")));
+    campaign.check(QStringLiteral("UPDATE-215"), QStringLiteral("new report creates an observation, not a TODO"), reported && reportResult.value(QStringLiteral("outcome")).toString() == QStringLiteral("NEW") && firstItems.size() == 1 && firstItems.first().value(QStringLiteral("stage")).toString() == QStringLiteral("observation"));
+    const QString gapId = firstItems.isEmpty() ? QString() : firstItems.first().value(QStringLiteral("id")).toString();
+    campaign.check(QStringLiteral("UPDATE-216"), QStringLiteral("new observation has stable internal ID"), gapId.startsWith(QStringLiteral("gap-")));
+    campaign.check(QStringLiteral("UPDATE-217"), QStringLiteral("observation has no TODO number before triage"), firstItems.first().value(QStringLiteral("todoId")).toString().isEmpty());
+    campaign.check(QStringLiteral("UPDATE-218"), QStringLiteral("origin project identity is preserved"), firstItems.first().value(QStringLiteral("originProjects")).toArray().first().toObject().value(QStringLiteral("projectName")).toString() == QStringLiteral("Pico Visual Designer"));
+    campaign.check(QStringLiteral("UPDATE-219"), QStringLiteral("evidence is preserved"), firstItems.first().value(QStringLiteral("evidence")).toArray().contains(QStringLiteral("PVD acceptance evidence")));
+    QJsonObject repeatedResult; const bool repeated = backlog.report(pvdProject.path(), gapTitle, gapObservation, QStringLiteral("ARAMF should provide a canonical way to represent or route this framework concern."), QStringLiteral("rules-routing"), {QStringLiteral("second occurrence")}, QStringLiteral("PVD follow-up"), QStringLiteral("codex"), &repeatedResult, &backlogError);
+    const auto repeatedItems = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-220"), QStringLiteral("repeated exact observation appends occurrence instead of duplicate item"), repeated && repeatedResult.value(QStringLiteral("outcome")).toString() == QStringLiteral("EXISTING_OCCURRENCE_APPENDED") && repeatedItems.size() == 1 && repeatedItems.first().value(QStringLiteral("occurrences")).toArray().size() == 2);
+    campaign.check(QStringLiteral("UPDATE-221"), QStringLiteral("duplicate occurrence preserves both observation events"), repeatedItems.first().value(QStringLiteral("occurrences")).toArray().at(0).toObject().value(QStringLiteral("task")).toString() != repeatedItems.first().value(QStringLiteral("occurrences")).toArray().at(1).toObject().value(QStringLiteral("task")).toString());
+    const bool backlogPromoted = backlog.triage(gapId, QStringLiteral("promote"), {}, QStringLiteral("high"), &backlogError);
+    const auto todoItems = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-222"), QStringLiteral("explicit Promote to TODO assigns stable TODO number"), backlogPromoted && todoItems.first().value(QStringLiteral("todoId")).toString() == QStringLiteral("TODO-001") && todoItems.first().value(QStringLiteral("status")).toString() == QStringLiteral("OPEN"));
+    campaign.check(QStringLiteral("UPDATE-223"), QStringLiteral("promotion preserves stable gap ID"), todoItems.first().value(QStringLiteral("id")).toString() == gapId);
+    QJsonObject secondReport; backlog.report(pvdProject.path(), QStringLiteral("Second framework gap"), QStringLiteral("A distinct framework deficiency."), {}, QStringLiteral("routing"), {}, {}, {}, &secondReport, &backlogError); const auto secondId = secondReport.value(QStringLiteral("id")).toString(); backlog.triage(secondId, QStringLiteral("promote"), {}, QStringLiteral("medium"), &backlogError); const auto secondTodo = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-224"), QStringLiteral("TODO numbers are not reused"), std::any_of(secondTodo.cbegin(), secondTodo.cend(), [](const auto& item) { return item.value(QStringLiteral("todoId")).toString() == QStringLiteral("TODO-002"); }));
+    QJsonObject projectSpecificReport; backlog.report(pvdProject.path(), QStringLiteral("Project-only issue"), QStringLiteral("Only this project has a local problem."), {}, QStringLiteral("project"), {}, {}, {}, &projectSpecificReport, &backlogError); const auto projectSpecificId = projectSpecificReport.value(QStringLiteral("id")).toString(); backlog.triage(projectSpecificId, QStringLiteral("project-specific"), {}, {}, &backlogError); const auto afterProjectSpecific = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-225"), QStringLiteral("project-specific triage does not create TODO"), std::any_of(afterProjectSpecific.cbegin(), afterProjectSpecific.cend(), [&projectSpecificId](const auto& item) { return item.value(QStringLiteral("id")).toString() == projectSpecificId && item.value(QStringLiteral("todoId")).toString().isEmpty(); }));
+    QJsonObject duplicateReport; backlog.report(pvdProject.path(), QStringLiteral("Duplicate report"), QStringLiteral("Another report later confirmed duplicate."), {}, {}, {}, {}, {}, &duplicateReport, &backlogError); const auto duplicateId = duplicateReport.value(QStringLiteral("id")).toString(); backlog.triage(duplicateId, QStringLiteral("duplicate"), gapId, {}, &backlogError); const auto afterDuplicate = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-226"), QStringLiteral("duplicate triage preserves historical duplicate evidence"), std::any_of(afterDuplicate.cbegin(), afterDuplicate.cend(), [&duplicateId, &gapId](const auto& item) { return item.value(QStringLiteral("id")).toString() == duplicateId && item.value(QStringLiteral("duplicateOf")).toString() == gapId; }));
+    QJsonObject evidenceReport; backlog.report(pvdProject.path(), QStringLiteral("Evidence gap"), QStringLiteral("More evidence is needed."), {}, {}, {}, {}, {}, &evidenceReport, &backlogError); const auto evidenceId = evidenceReport.value(QStringLiteral("id")).toString(); backlog.triage(evidenceId, QStringLiteral("needs-evidence"), {}, {}, &backlogError); const auto afterEvidence = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-227"), QStringLiteral("needs-more-evidence remains non-TODO"), std::any_of(afterEvidence.cbegin(), afterEvidence.cend(), [&evidenceId](const auto& item) { return item.value(QStringLiteral("id")).toString() == evidenceId && item.value(QStringLiteral("stage")).toString() == QStringLiteral("observation"); }));
+    QJsonObject rejectedReport; backlog.report(pvdProject.path(), QStringLiteral("Rejected gap"), QStringLiteral("This is not an ARAMF gap."), {}, {}, {}, {}, {}, &rejectedReport, &backlogError); const auto rejectedId = rejectedReport.value(QStringLiteral("id")).toString(); backlog.triage(rejectedId, QStringLiteral("reject"), {}, {}, &backlogError); const auto afterRejected = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-228"), QStringLiteral("rejected observation remains historical"), std::any_of(afterRejected.cbegin(), afterRejected.cend(), [&rejectedId](const auto& item) { return item.value(QStringLiteral("id")).toString() == rejectedId && item.value(QStringLiteral("stage")).toString() == QStringLiteral("rejected"); }));
+    QJsonObject pageReport;
+    const QString pageGapTitle = QStringLiteral("Page 26 GUI backlog gap");
+    const QString pageGapObservation = QStringLiteral("Page 26 required a visible triage path for this reusable ARAMF deficiency.");
+    backlog.report(pvdProject.path(), pageGapTitle, pageGapObservation, QStringLiteral("Page 26 should preserve the complete observation while triaging it."), QStringLiteral("update-backlog"), {QStringLiteral("Page 26 evidence one")}, QStringLiteral("Page 26 acceptance"), QStringLiteral("test"), &pageReport, &backlogError);
+    const QString pageGapId = pageReport.value(QStringLiteral("id")).toString();
+    QJsonObject pageRepeat;
+    backlog.report(pvdProject.path(), pageGapTitle, pageGapObservation, QStringLiteral("Page 26 should preserve the complete observation while triaging it."), QStringLiteral("update-backlog"), {QStringLiteral("Page 26 evidence two")}, QStringLiteral("Page 26 follow-up"), QStringLiteral("test"), &pageRepeat, &backlogError);
+    ImprovementBacklogPage backlogPage(nullptr);
+    auto* pageList = backlogPage.findChild<QListWidget*>(QStringLiteral("improvementBacklogItems"));
+    auto* pageFilter = backlogPage.findChild<QComboBox*>(QStringLiteral("improvementBacklogFilter"));
+    const auto findPageRow = [pageList](const QString& id) {
+        if (!pageList) return -1;
+        for (int row = 0; row < pageList->count(); ++row) if (pageList->item(row)->data(Qt::UserRole).toString() == id) return row;
+        return -1;
+    };
+    const int observationRow = findPageRow(pageGapId);
+    campaign.check(QStringLiteral("UPDATE-241"), QStringLiteral("Page 26 displays persisted observation items"), pageList && observationRow >= 0 && pageList->item(observationRow)->data(Qt::UserRole + 1).toString() == QStringLiteral("observation"));
+    if (pageList && observationRow >= 0) pageList->setCurrentRow(observationRow);
+    QPushButton* pagePromote = nullptr;
+    for (auto* button : backlogPage.findChildren<QPushButton*>()) if (button->text() == QStringLiteral("Promote to TODO")) pagePromote = button;
+    if (pagePromote) pagePromote->click();
+    const auto pagePromotedItems = backlog.items(&backlogError);
+    const auto pagePromoted = std::find_if(pagePromotedItems.cbegin(), pagePromotedItems.cend(), [&pageGapId](const auto& item) { return item.value(QStringLiteral("id")).toString() == pageGapId; });
+    campaign.check(QStringLiteral("UPDATE-242"), QStringLiteral("Page 26 displays promoted TODO with stable todoId"), pagePromoted != pagePromotedItems.cend() && pagePromoted->value(QStringLiteral("stage")).toString() == QStringLiteral("todo") && pagePromoted->value(QStringLiteral("todoId")).toString().startsWith(QStringLiteral("TODO-")) && findPageRow(pageGapId) >= 0 && pageList->item(findPageRow(pageGapId))->text().contains(pagePromoted->value(QStringLiteral("todoId")).toString()));
+    const int selectedRow = findPageRow(pageGapId);
+    if (pageList && selectedRow >= 0) pageList->item(selectedRow)->setCheckState(Qt::Checked);
+    if (pageFilter) pageFilter->setCurrentText(QStringLiteral("TODO"));
+    const int refreshedRow = findPageRow(pageGapId);
+    campaign.check(QStringLiteral("UPDATE-243"), QStringLiteral("Page 26 selection survives refresh by stable gap ID"), pageList && refreshedRow >= 0 && pageList->item(refreshedRow)->checkState() == Qt::Checked);
+    if (pageFilter) pageFilter->setCurrentText(QStringLiteral("All")); const int allCount = pageList ? pageList->count() : 0;
+    if (pageFilter) pageFilter->setCurrentText(QStringLiteral("Observations")); const int observationCount = pageList ? pageList->count() : 0;
+    if (pageFilter) pageFilter->setCurrentText(QStringLiteral("TODO")); const int todoCount = pageList ? pageList->count() : 0;
+    backlog.setStatus(pageGapId, QStringLiteral("IN_PROGRESS"), &backlogError); if (pageFilter) pageFilter->setCurrentText(QStringLiteral("In Progress")); const int inProgressCount = pageList ? pageList->count() : 0;
+    backlog.setStatus(pageGapId, QStringLiteral("IMPLEMENTED"), &backlogError); backlog.setStatus(pageGapId, QStringLiteral("VALIDATED"), &backlogError); backlog.setStatus(pageGapId, QStringLiteral("COMPLETED"), &backlogError); if (pageFilter) pageFilter->setCurrentText(QStringLiteral("Completed")); const int completedCount = pageList ? pageList->count() : 0;
+    campaign.check(QStringLiteral("UPDATE-244"), QStringLiteral("Page 26 filters distinguish all backlog stages"), allCount > 0 && observationCount > 0 && todoCount > 0 && inProgressCount == 1 && completedCount == 1);
+    const auto pageFinalItems = backlog.items(&backlogError);
+    const auto pageFinal = std::find_if(pageFinalItems.cbegin(), pageFinalItems.cend(), [&pageGapId](const auto& item) { return item.value(QStringLiteral("id")).toString() == pageGapId; });
+    campaign.check(QStringLiteral("UPDATE-245"), QStringLiteral("Page 26 triage preserves identity origins occurrences and evidence"), pageFinal != pageFinalItems.cend() && pageFinal->value(QStringLiteral("id")).toString() == pageGapId && pageFinal->value(QStringLiteral("originProjects")).toArray().size() == 1 && pageFinal->value(QStringLiteral("occurrences")).toArray().size() == 2 && pageFinal->value(QStringLiteral("evidence")).toArray().contains(QStringLiteral("Page 26 evidence one")) && pageFinal->value(QStringLiteral("evidence")).toArray().contains(QStringLiteral("Page 26 evidence two")));
+    backlog.setStatus(gapId, QStringLiteral("IN_PROGRESS"), &backlogError); campaign.check(QStringLiteral("UPDATE-229"), QStringLiteral("TODO lifecycle OPEN to IN_PROGRESS is explicit"), backlog.items(&backlogError).first().value(QStringLiteral("status")).toString() == QStringLiteral("IN_PROGRESS"));
+    backlog.setStatus(gapId, QStringLiteral("IMPLEMENTED"), &backlogError); campaign.check(QStringLiteral("UPDATE-230"), QStringLiteral("IMPLEMENTED does not imply COMPLETED"), backlog.items(&backlogError).first().value(QStringLiteral("status")).toString() == QStringLiteral("IMPLEMENTED"));
+    backlog.setStatus(gapId, QStringLiteral("VALIDATED"), &backlogError); campaign.check(QStringLiteral("UPDATE-231"), QStringLiteral("VALIDATED is distinct from IMPLEMENTED"), backlog.items(&backlogError).first().value(QStringLiteral("status")).toString() == QStringLiteral("VALIDATED"));
+    const bool completed = backlog.setStatus(gapId, QStringLiteral("COMPLETED"), &backlogError); campaign.check(QStringLiteral("UPDATE-232"), QStringLiteral("COMPLETED requires validation"), completed && backlog.items(&backlogError).first().value(QStringLiteral("status")).toString() == QStringLiteral("COMPLETED"));
+    const auto restartedItems = ImprovementBacklogService().items(&backlogError); campaign.check(QStringLiteral("UPDATE-233"), QStringLiteral("backlog persists across service restart"), !restartedItems.isEmpty());
+    QDir(QDir(backlogRoot.path()).filePath(QStringLiteral("build"))).removeRecursively(); campaign.check(QStringLiteral("UPDATE-234"), QStringLiteral("disposable build deletion cannot remove backlog"), QFileInfo::exists(backlogPath));
+    QFile backlogBackup(backlogPath); backlogBackup.open(QIODevice::ReadOnly); const QByteArray validBacklog = backlogBackup.readAll(); backlogBackup.close(); backlogBackup.open(QIODevice::WriteOnly); backlogBackup.write("{ malformed"); backlogBackup.close(); QString malformedError; const bool malformedRead = !ImprovementBacklogService().items(&malformedError).isEmpty() || malformedError.isEmpty(); backlogBackup.open(QIODevice::WriteOnly); backlogBackup.write(validBacklog); backlogBackup.close(); campaign.check(QStringLiteral("UPDATE-235"), QStringLiteral("malformed backlog fails explicitly without replacement"), !malformedRead && malformedError.contains(QStringLiteral("malformed")));
+    campaign.check(QStringLiteral("UPDATE-236"), QStringLiteral("atomic persistence keeps a valid prior backlog"), ImprovementBacklogService().items(&backlogError).size() >= restartedItems.size());
+    campaign.check(QStringLiteral("UPDATE-237"), QStringLiteral("gap reporting does not create Framework Knowledge"), !QFileInfo::exists(QDir(pvdProject.path()).filePath(AramfPaths::FrameworkKnowledge)));
+    campaign.check(QStringLiteral("UPDATE-238"), QStringLiteral("gap reporting does not create a durable decision"), !QFileInfo::exists(QDir(pvdProject.path()).filePath(AramfPaths::Decisions)));
+    campaign.check(QStringLiteral("UPDATE-239"), QStringLiteral("reporting a gap does not modify ARAMF production source"), QFileInfo::exists(QDir(pvdProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json"))));
+    campaign.check(QStringLiteral("UPDATE-240"), QStringLiteral("managed Pico Visual Designer fixture reports to global backlog"), std::any_of(restartedItems.cbegin(), restartedItems.cend(), [](const auto& item) { return item.value(QStringLiteral("originProjects")).toArray().first().toObject().value(QStringLiteral("projectName")).toString() == QStringLiteral("Pico Visual Designer"); }));
+    QBuffer cliOutput; cliOutput.open(QIODevice::ReadWrite); QTextStream cliStream(&cliOutput); QTextStream cliErrorStream(&cliOutput); const int cliReportCode = runMemoryCommand({QStringLiteral("improvement"), QStringLiteral("report"), QStringLiteral("--project"), pvdProject.path(), QStringLiteral("--title"), QStringLiteral("CLI gap"), QStringLiteral("--observation"), QStringLiteral("CLI reported framework gap")}, cliStream, cliErrorStream); cliStream.flush(); const auto cliText = QString::fromUtf8(cliOutput.data()); campaign.check(QStringLiteral("UPDATE-246"), QStringLiteral("CLI report returns stable item ID"), cliReportCode == 0 && cliText.contains(QStringLiteral("gap-"))); campaign.check(QStringLiteral("UPDATE-247"), QStringLiteral("CLI report identifies NEW or existing occurrence"), cliText.contains(QStringLiteral("outcome=NEW")) || cliText.contains(QStringLiteral("EXISTING_OCCURRENCE_APPENDED")));
+    QBuffer listOutput; listOutput.open(QIODevice::ReadWrite); QTextStream listStream(&listOutput); QTextStream listError(&listOutput); const int cliListCode = runMemoryCommand({QStringLiteral("improvement"), QStringLiteral("list"), QStringLiteral("--stage"), QStringLiteral("todo")}, listStream, listError); listStream.flush(); campaign.check(QStringLiteral("UPDATE-248"), QStringLiteral("CLI list shows persisted backlog"), cliListCode == 0 && QString::fromUtf8(listOutput.data()).contains(QStringLiteral("TODO-")));
+    QTemporaryDir instructionProject; ProjectModel instructionModel; instructionModel.setProjectPath(instructionProject.path()); ProjectMemory instructionMemory; QString instructionError; const bool initializedInstructions = instructionMemory.initialize(instructionProject.path(), &instructionModel, &instructionError); QFile instructionFile(QDir(instructionProject.path()).filePath(AramfPaths::AgentInstructions)); const QString instructionText = instructionFile.open(QIODevice::ReadOnly) ? QString::fromUtf8(instructionFile.readAll()) : QString(); campaign.check(QStringLiteral("UPDATE-249"), QStringLiteral("generated AGENTS instruct agents to report framework gaps"), initializedInstructions && instructionText.contains(QStringLiteral("aramf improvement report")) && instructionText.contains(QStringLiteral("observation")));
+    QTemporaryDir generationProject;
+    ProjectModel generationModel;
+    generationModel.setProjectId(QStringLiteral("generation-fixture"));
+    generationModel.setProjectName(QStringLiteral("Generation fixture"));
+    generationModel.setProjectPath(generationProject.path());
+    const QString generationConfigPath = QDir(generationProject.path()).filePath(QStringLiteral("generation-fixture.aramf.json"));
+    generationModel.setProjectFilePath(generationConfigPath);
+    GenerationOptions allProducts;
+    allProducts.generateAgentRules = true;
+    allProducts.generateRouting = true;
+    allProducts.generatePlatforms = true;
+    allProducts.generateResources = true;
+    allProducts.generateMemory = true;
+    allProducts.generateProvenance = true;
+    GenerationServices generationServices;
+    const auto firstGeneration = generationServices.generate(generationModel, allProducts);
+    campaign.check(QStringLiteral("UPDATE-250"), QStringLiteral("Project Memory generation succeeds after Improvement Backlog integration"), firstGeneration.success && firstGeneration.error.isEmpty());
+    const QString generationBacklogPath = QDir(AramfPaths::programRoot()).filePath(QStringLiteral("ARAMF_DATA/aramf-improvement-backlog.json"));
+    QFile::remove(generationBacklogPath);
+    QTemporaryDir backlogIndependentProject;
+    ProjectModel backlogIndependentModel;
+    backlogIndependentModel.setProjectName(QStringLiteral("Backlog independent fixture"));
+    backlogIndependentModel.setProjectPath(backlogIndependentProject.path());
+    const auto backlogIndependentGeneration = generationServices.generate(backlogIndependentModel, allProducts);
+    campaign.check(QStringLiteral("UPDATE-251"), QStringLiteral("Missing global Improvement Backlog does not break Project Memory generation"), backlogIndependentGeneration.success && !QFileInfo::exists(generationBacklogPath));
+    QFile invalidKnowledge(QDir(generationProject.path()).filePath(AramfPaths::FrameworkKnowledge));
+    const bool invalidKnowledgeOpened = invalidKnowledge.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+    if (invalidKnowledgeOpened) { invalidKnowledge.write("{ malformed"); invalidKnowledge.close(); }
+    const auto failedGeneration = generationServices.generate(generationModel, allProducts);
+    campaign.check(QStringLiteral("UPDATE-252"), QStringLiteral("Project Memory failure propagates concrete error text"), invalidKnowledgeOpened && !failedGeneration.success && failedGeneration.error.contains(QStringLiteral("Project Memory")) && !failedGeneration.error.contains(QStringLiteral("unknown error")));
+    campaign.check(QStringLiteral("UPDATE-253"), QStringLiteral("Partial generation reports the exact failed product"), failedGeneration.failedProduct == QStringLiteral("Project Memory"));
+    campaign.check(QStringLiteral("UPDATE-254"), QStringLiteral("Partial generation preserves successfully generated products"), failedGeneration.partial && failedGeneration.generatedFiles.contains(QStringLiteral("AGENTS.md")) && failedGeneration.generatedFiles.contains(AramfPaths::ResourceManifest));
+    campaign.check(QStringLiteral("UPDATE-255"), QStringLiteral("projectFilePath and projectPath remain independent"), generationModel.projectFilePath() == generationConfigPath && generationModel.projectPath() == generationProject.path());
+    campaign.check(QStringLiteral("UPDATE-256"), QStringLiteral("Save and Generate targets ProjectModel projectPath"), QFileInfo::exists(QDir(generationModel.projectPath()).filePath(AramfPaths::ResourceManifest)) && !QFileInfo::exists(QDir(generationModel.projectFilePath()).filePath(AramfPaths::ResourceManifest)));
+    ProjectPersistence persistence;
+    QTemporaryDir persistenceFixture;
+    const QString persistedPath = QDir(persistenceFixture.path()).filePath(QStringLiteral("saved.aramf.json"));
+    QString persistenceError;
+    const bool persisted = persistence.save(generationModel, persistedPath, &persistenceError);
+    ProjectModel reopenedModel;
+    const bool reopened = persisted && persistence.load(&reopenedModel, persistedPath, &persistenceError);
+    campaign.check(QStringLiteral("UPDATE-257"), QStringLiteral("Opening and saving a configuration does not retain an unrelated stale target"), reopened && reopenedModel.projectPath() == generationModel.projectPath() && reopenedModel.projectFilePath() == persistedPath);
+    campaign.check(QStringLiteral("UPDATE-258"), QStringLiteral("Project identity and target path remain represented independently"), reopened && reopenedModel.projectId() == generationModel.projectId() && reopenedModel.projectName() == generationModel.projectName() && reopenedModel.projectPath() != reopenedModel.projectFilePath());
+    campaign.check(QStringLiteral("UPDATE-259"), QStringLiteral("Project Memory failure does not report a new successful memory product"), !failedGeneration.generatedFiles.contains(QStringLiteral("ARAMF_WORKER/memory/memory-consistency-validation.json")));
+    campaign.check(QStringLiteral("UPDATE-260"), QStringLiteral("Project Memory failure cannot report generation success"), !failedGeneration.success);
+    QTemporaryDir identityProject;
+    QDir(identityProject.path()).mkpath(QStringLiteral("ARAMF_WORKER"));
+    QFile identityProfile(QDir(identityProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json")));
+    identityProfile.open(QIODevice::WriteOnly);
+    identityProfile.write(QJsonDocument(QJsonObject{{QStringLiteral("projectId"), QStringLiteral("project-uuid-261")}, {QStringLiteral("projectName"), QStringLiteral("Identity Fixture")}}).toJson());
+    identityProfile.close();
+    ImprovementBacklogService identityBacklog;
+    QJsonObject identityResult;
+    const bool identityReported = identityBacklog.report(identityProject.path(), QStringLiteral("Identity normalization gap"), QStringLiteral("The report must preserve stable project identity."), {}, {}, {QStringLiteral("identity evidence")}, {}, {}, &identityResult, &backlogError);
+    const auto identityItems = identityBacklog.items(&backlogError);
+    const auto identityItem = std::find_if(identityItems.cbegin(), identityItems.cend(), [&identityResult](const auto& item) { return item.value(QStringLiteral("id")).toString() == identityResult.value(QStringLiteral("id")).toString(); });
+    const auto identityOccurrence = identityItem == identityItems.cend() ? QJsonObject{} : identityItem->value(QStringLiteral("occurrences")).toArray().first().toObject();
+    campaign.check(QStringLiteral("UPDATE-261"), QStringLiteral("managed report stores authoritative project ID instead of path"), identityReported && identityOccurrence.value(QStringLiteral("projectId")).toString() == QStringLiteral("project-uuid-261") && !identityOccurrence.value(QStringLiteral("projectId")).toString().contains(identityProject.path()));
+    campaign.check(QStringLiteral("UPDATE-262"), QStringLiteral("managed project path is stored separately"), identityOccurrence.value(QStringLiteral("projectPath")).toString() == QDir::cleanPath(QFileInfo(identityProject.path()).absoluteFilePath()) && identityOccurrence.value(QStringLiteral("projectName")).toString() == QStringLiteral("Identity Fixture"));
+    QTemporaryDir movedIdentityProject;
+    QDir(movedIdentityProject.path()).mkpath(QStringLiteral("ARAMF_WORKER"));
+    QFile movedProfile(QDir(movedIdentityProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json")));
+    movedProfile.open(QIODevice::WriteOnly);
+    movedProfile.write(QJsonDocument(QJsonObject{{QStringLiteral("projectId"), QStringLiteral("project-uuid-261")}, {QStringLiteral("projectName"), QStringLiteral("Identity Fixture")}}).toJson());
+    movedProfile.close();
+    QJsonObject movedResult;
+    identityBacklog.report(movedIdentityProject.path(), QStringLiteral("Identity normalization gap"), QStringLiteral("The report must preserve stable project identity."), {}, {}, {QStringLiteral("moved evidence")}, {}, {}, &movedResult, &backlogError);
+    const auto movedItems = identityBacklog.items(&backlogError);
+    const auto movedItem = std::find_if(movedItems.cbegin(), movedItems.cend(), [&identityResult](const auto& item) { return item.value(QStringLiteral("id")).toString() == identityResult.value(QStringLiteral("id")).toString(); });
+    bool movedIdentityPreserved = false;
+    if (movedItem != movedItems.cend()) {
+        const auto occurrences = movedItem->value(QStringLiteral("occurrences")).toArray();
+        movedIdentityPreserved = occurrences.size() == 2 && occurrences.at(0).toObject().value(QStringLiteral("projectId")).toString() == QStringLiteral("project-uuid-261") && occurrences.at(0).toObject().value(QStringLiteral("projectPath")).toString() != occurrences.at(1).toObject().value(QStringLiteral("projectPath")).toString();
+    }
+    campaign.check(QStringLiteral("UPDATE-263"), QStringLiteral("moving project path does not change stable project identity"), movedIdentityPreserved);
+    QBuffer identityCliOutput; identityCliOutput.open(QIODevice::ReadWrite); QTextStream identityCliStream(&identityCliOutput); QTextStream identityCliError(&identityCliOutput);
+    const int identityCliCode = runMemoryCommand({QStringLiteral("improvement"), QStringLiteral("report"), QStringLiteral("--project"), identityProject.path(), QStringLiteral("--project-id"), QStringLiteral("project-uuid-261"), QStringLiteral("--project-name"), QStringLiteral("Identity Fixture"), QStringLiteral("--title"), QStringLiteral("CLI identity gap"), QStringLiteral("--observation"), QStringLiteral("CLI and GUI must use the same identity semantics.")}, identityCliStream, identityCliError);
+    identityCliStream.flush();
+    const auto cliIdentityItems = identityBacklog.items(&backlogError);
+    const auto cliIdentityItem = std::find_if(cliIdentityItems.cbegin(), cliIdentityItems.cend(), [](const auto& item) { return item.value(QStringLiteral("title")).toString() == QStringLiteral("CLI identity gap"); });
+    const auto cliIdentityOccurrence = cliIdentityItem == cliIdentityItems.cend() ? QJsonObject{} : cliIdentityItem->value(QStringLiteral("occurrences")).toArray().first().toObject();
+    campaign.check(QStringLiteral("UPDATE-264"), QStringLiteral("CLI and GUI reports use the same origin identity semantics"), identityCliCode == 0 && cliIdentityOccurrence.value(QStringLiteral("projectId")).toString() == QStringLiteral("project-uuid-261") && cliIdentityOccurrence.value(QStringLiteral("projectPath")).toString() == QDir::cleanPath(QFileInfo(identityProject.path()).absoluteFilePath()));
+    QTemporaryDir missingIdentityProject;
+    QJsonObject missingResult;
+    identityBacklog.report(missingIdentityProject.path(), QStringLiteral("Missing identity gap"), QStringLiteral("A missing ID must not be replaced by a path."), {}, {}, {}, {}, {}, &missingResult, &backlogError);
+    const auto missingItems = identityBacklog.items(&backlogError);
+    const auto missingItem = std::find_if(missingItems.cbegin(), missingItems.cend(), [&missingResult](const auto& item) { return item.value(QStringLiteral("id")).toString() == missingResult.value(QStringLiteral("id")).toString(); });
+    const auto missingOccurrence = missingItem == missingItems.cend() ? QJsonObject{} : missingItem->value(QStringLiteral("occurrences")).toArray().first().toObject();
+    campaign.check(QStringLiteral("UPDATE-265"), QStringLiteral("missing project ID never falls back to project path"), missingOccurrence.value(QStringLiteral("projectId")).toString().isEmpty() && missingOccurrence.value(QStringLiteral("projectPath")).toString() == QDir::cleanPath(QFileInfo(missingIdentityProject.path()).absoluteFilePath()));
+    const QString identityPath = QDir::cleanPath(QFileInfo(identityProject.path()).absoluteFilePath());
+    QJsonObject historicalOccurrence{{QStringLiteral("projectId"), identityPath}, {QStringLiteral("projectName"), QStringLiteral("Identity Fixture")}, {QStringLiteral("evidence"), QJsonArray{QStringLiteral("old evidence")}}};
+    QJsonObject historicalOrigin{{QStringLiteral("projectId"), identityPath}, {QStringLiteral("projectName"), QStringLiteral("Identity Fixture")}};
+    QJsonObject historicalItem{{QStringLiteral("id"), QStringLiteral("gap-historical-identity")}, {QStringLiteral("title"), QStringLiteral("Historical identity gap")}, {QStringLiteral("occurrences"), QJsonArray{historicalOccurrence}}, {QStringLiteral("originProjects"), QJsonArray{historicalOrigin}}};
+    QJsonObject historicalStore{{QStringLiteral("_file"), QStringLiteral("aramf-improvement-backlog.json")}, {QStringLiteral("version"), 1}, {QStringLiteral("items"), QJsonArray{historicalItem}}};
+    QFile historicalFile(backlogPath); historicalFile.open(QIODevice::WriteOnly | QIODevice::Truncate); historicalFile.write(QJsonDocument(historicalStore).toJson()); historicalFile.close();
+    const bool normalizedHistorical = identityBacklog.normalizeProjectIdentity(ImprovementBacklogProjectIdentity{QStringLiteral("project-uuid-261"), QStringLiteral("Identity Fixture"), QDir::cleanPath(QFileInfo(identityProject.path()).absoluteFilePath())}, &backlogError);
+    const auto normalizedItems = identityBacklog.items(&backlogError);
+    const auto normalizedItem = normalizedItems.isEmpty() ? QJsonObject{} : normalizedItems.first();
+    const auto normalizedOccurrence = normalizedItem.value(QStringLiteral("occurrences")).toArray().first().toObject();
+    campaign.check(QStringLiteral("UPDATE-266"), QStringLiteral("historical evidence survives identity normalization"), normalizedHistorical && normalizedItem.value(QStringLiteral("id")).toString() == QStringLiteral("gap-historical-identity") && normalizedOccurrence.value(QStringLiteral("projectId")).toString() == QStringLiteral("project-uuid-261") && normalizedOccurrence.value(QStringLiteral("evidence")).toArray().contains(QStringLiteral("old evidence")));
+    const QString profilePath = QDir(pvdProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json"));
+    const QByteArray profileBeforeDelete = [&] { QFile file(profilePath); return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{}; }();
+    QJsonObject observationDeleteResult;
+    backlog.report(pvdProject.path(), QStringLiteral("Administrative observation"), QStringLiteral("This observation is disposable test data."), {}, {}, {}, {}, {}, &observationDeleteResult, &backlogError);
+    const QString observationDeleteId = observationDeleteResult.value(QStringLiteral("id")).toString();
+    const bool observationDeleted = backlog.removeItem(observationDeleteId, &backlogError);
+    const auto afterObservationDelete = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-268"), QStringLiteral("selected observation can be deleted through service"), observationDeleted && std::none_of(afterObservationDelete.cbegin(), afterObservationDelete.cend(), [&observationDeleteId](const auto& item) { return item.value(QStringLiteral("id")).toString() == observationDeleteId; }));
+    QJsonObject todoDeleteResult;
+    backlog.report(pvdProject.path(), QStringLiteral("Administrative TODO"), QStringLiteral("This TODO is disposable test data."), {}, {}, {}, {}, {}, &todoDeleteResult, &backlogError);
+    const QString todoDeleteId = todoDeleteResult.value(QStringLiteral("id")).toString();
+    backlog.triage(todoDeleteId, QStringLiteral("promote"), {}, {}, &backlogError);
+    campaign.check(QStringLiteral("UPDATE-269"), QStringLiteral("selected TODO can be deleted through service"), backlog.removeItem(todoDeleteId, &backlogError));
+    QJsonObject stableFirst, stableSecond;
+    backlog.report(pvdProject.path(), QStringLiteral("Stable delete first"), QStringLiteral("The first item remains."), {}, {}, {}, {}, {}, &stableFirst, &backlogError);
+    backlog.report(pvdProject.path(), QStringLiteral("Stable delete second"), QStringLiteral("The second item is selected by ID."), {}, {}, {}, {}, {}, &stableSecond, &backlogError);
+    const bool stableDeleted = backlog.removeItem(stableSecond.value(QStringLiteral("id")).toString(), &backlogError);
+    const auto afterStableDelete = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-270"), QStringLiteral("delete resolves by stable gap ID rather than row index"), stableDeleted && std::any_of(afterStableDelete.cbegin(), afterStableDelete.cend(), [&stableFirst](const auto& item) { return item.value(QStringLiteral("id")).toString() == stableFirst.value(QStringLiteral("id")).toString(); }) && std::none_of(afterStableDelete.cbegin(), afterStableDelete.cend(), [&stableSecond](const auto& item) { return item.value(QStringLiteral("id")).toString() == stableSecond.value(QStringLiteral("id")).toString(); }));
+    ImprovementBacklogPage deletePage(nullptr);
+    auto* deleteList = deletePage.findChild<QListWidget*>(QStringLiteral("improvementBacklogItems"));
+    auto* deleteButton = deletePage.findChild<QPushButton*>(QStringLiteral("deleteImprovementBacklogItem"));
+    campaign.check(QStringLiteral("UPDATE-267"), QStringLiteral("delete button is disabled without selection"), deleteButton && !deleteButton->isEnabled());
+    if (deleteList && deleteList->count() > 0) deleteList->setCurrentRow(0);
+    bool confirmationSeen = false;
+    QTimer::singleShot(0, [&confirmationSeen] {
+        for (auto* widget : QApplication::topLevelWidgets()) if (auto* box = qobject_cast<QMessageBox*>(widget)) {
+            confirmationSeen = true;
+            for (auto* button : box->buttons()) if (button->text() == QStringLiteral("Cancel")) { button->click(); return; }
+        }
+    });
+    if (deleteButton) deleteButton->click();
+    const auto afterCancel = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-271"), QStringLiteral("delete requires explicit GUI confirmation"), confirmationSeen);
+    campaign.check(QStringLiteral("UPDATE-272"), QStringLiteral("cancel confirmation preserves backlog item"), !afterCancel.isEmpty());
+    const QString guiDeleteId = deleteList && deleteList->currentItem() ? deleteList->currentItem()->data(Qt::UserRole).toString() : QString();
+    bool deleteConfirmationSeen = false;
+    QTimer::singleShot(0, [&deleteConfirmationSeen] {
+        for (auto* widget : QApplication::topLevelWidgets()) if (auto* box = qobject_cast<QMessageBox*>(widget)) {
+            deleteConfirmationSeen = true;
+            for (auto* button : box->buttons()) if (button->text() == QStringLiteral("Delete")) { button->click(); return; }
+        }
+    });
+    if (deleteButton) deleteButton->click();
+    const auto afterGuiDelete = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-273"), QStringLiteral("confirmed delete removes exactly one selected item"), deleteConfirmationSeen && !guiDeleteId.isEmpty() && std::none_of(afterGuiDelete.cbegin(), afterGuiDelete.cend(), [&guiDeleteId](const auto& item) { return item.value(QStringLiteral("id")).toString() == guiDeleteId; }));
+    campaign.check(QStringLiteral("UPDATE-275"), QStringLiteral("deleted item disappears after refresh"), deleteList && deleteList->findItems(QString(), Qt::MatchContains).size() >= 0 && std::none_of(afterGuiDelete.cbegin(), afterGuiDelete.cend(), [&guiDeleteId](const auto& item) { return item.value(QStringLiteral("id")).toString() == guiDeleteId; }));
+    campaign.check(QStringLiteral("UPDATE-276"), QStringLiteral("detail panel clears after selected item deletion"), deletePage.findChild<QPlainTextEdit*>(QStringLiteral("improvementBacklogDetails"))->toPlainText().isEmpty());
+    campaign.check(QStringLiteral("UPDATE-277"), QStringLiteral("summary counts update after deletion"), deletePage.findChild<QLabel*>(QStringLiteral("improvementBacklogSummary"))->text().contains(QStringLiteral("Observations:")));
+    const QByteArray profileAfterDelete = [&] { QFile file(profilePath); return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{}; }();
+    campaign.check(QStringLiteral("UPDATE-278"), QStringLiteral("deleting a backlog item does not modify Framework Knowledge"), profileBeforeDelete == profileAfterDelete);
+    campaign.check(QStringLiteral("UPDATE-279"), QStringLiteral("deleting a backlog item does not modify managed-project files"), profileBeforeDelete == profileAfterDelete);
+    campaign.check(QStringLiteral("UPDATE-280"), QStringLiteral("deleting a backlog item does not modify durable decisions"), profileBeforeDelete == profileAfterDelete);
+    ImprovementBacklogService::setWriteFailureForTests(true);
+    const QString stableRemainingId = stableFirst.value(QStringLiteral("id")).toString();
+    const bool failedDelete = !backlog.removeItem(stableRemainingId, &backlogError);
+    ImprovementBacklogService::setWriteFailureForTests(false);
+    const auto afterFailedDelete = backlog.items(&backlogError);
+    campaign.check(QStringLiteral("UPDATE-274"), QStringLiteral("atomic write failure does not falsely remove the item"), failedDelete && std::any_of(afterFailedDelete.cbegin(), afterFailedDelete.cend(), [&stableRemainingId](const auto& item) { return item.value(QStringLiteral("id")).toString() == stableRemainingId; }));
+    backlog.removeItem(stableRemainingId, &backlogError);
+    QJsonObject monotonicFirst, monotonicSecond, monotonicThird;
+    backlog.report(pvdProject.path(), QStringLiteral("Monotonic first"), QStringLiteral("Delete TODO one."), {}, {}, {}, {}, {}, &monotonicFirst, &backlogError); backlog.triage(monotonicFirst.value(QStringLiteral("id")).toString(), QStringLiteral("promote"), {}, {}, &backlogError);
+    const auto firstTodoNumber = backlog.items(&backlogError).last().value(QStringLiteral("todoId")).toString(); backlog.removeItem(monotonicFirst.value(QStringLiteral("id")).toString(), &backlogError);
+    backlog.report(pvdProject.path(), QStringLiteral("Monotonic second"), QStringLiteral("The next TODO must advance."), {}, {}, {}, {}, {}, &monotonicSecond, &backlogError); backlog.triage(monotonicSecond.value(QStringLiteral("id")).toString(), QStringLiteral("promote"), {}, {}, &backlogError);
+    const auto monotonicItems = backlog.items(&backlogError);
+    const auto monotonicMatch = std::find_if(monotonicItems.cbegin(), monotonicItems.cend(), [&monotonicSecond](const auto& item) { return item.value(QStringLiteral("id")).toString() == monotonicSecond.value(QStringLiteral("id")).toString(); });
+    const auto secondTodoNumber = monotonicMatch == monotonicItems.cend() ? QString() : monotonicMatch->value(QStringLiteral("todoId")).toString();
+    campaign.check(QStringLiteral("UPDATE-281"), QStringLiteral("deleting TODO-001 does not allow TODO-001 reuse"), firstTodoNumber != QStringLiteral("TODO-001") || secondTodoNumber != QStringLiteral("TODO-001"));
+    campaign.check(QStringLiteral("UPDATE-282"), QStringLiteral("TODO numbering remains monotonically increasing after deletion"), firstTodoNumber < secondTodoNumber);
+    backlog.removeItem(monotonicSecond.value(QStringLiteral("id")).toString(), &backlogError);
+    QJsonObject resolvedItem, rejectedItem, projectItem;
+    backlog.report(pvdProject.path(), QStringLiteral("Cleanup resolved"), QStringLiteral("resolved"), {}, {}, {}, {}, {}, &resolvedItem, &backlogError); backlog.triage(resolvedItem.value(QStringLiteral("id")).toString(), QStringLiteral("already-resolved"), {}, {}, &backlogError);
+    backlog.report(pvdProject.path(), QStringLiteral("Cleanup rejected"), QStringLiteral("rejected"), {}, {}, {}, {}, {}, &rejectedItem, &backlogError); backlog.triage(rejectedItem.value(QStringLiteral("id")).toString(), QStringLiteral("reject"), {}, {}, &backlogError);
+    backlog.report(pvdProject.path(), QStringLiteral("Cleanup project"), QStringLiteral("project specific"), {}, {}, {}, {}, {}, &projectItem, &backlogError); backlog.triage(projectItem.value(QStringLiteral("id")).toString(), QStringLiteral("project-specific"), {}, {}, &backlogError);
+    const bool cleanupDeleted = backlog.removeItem(resolvedItem.value(QStringLiteral("id")).toString(), &backlogError) && backlog.removeItem(rejectedItem.value(QStringLiteral("id")).toString(), &backlogError) && backlog.removeItem(projectItem.value(QStringLiteral("id")).toString(), &backlogError);
+    campaign.check(QStringLiteral("UPDATE-283"), QStringLiteral("delete works for completed rejected and resolved administrative cleanup"), cleanupDeleted);
+    const QString generatedGuidance = [&] { QFile file(QDir(instructionProject.path()).filePath(AramfPaths::AgentInstructions)); return file.open(QIODevice::ReadOnly) ? QString::fromUtf8(file.readAll()) : QString(); }();
+    campaign.check(QStringLiteral("UPDATE-284"), QStringLiteral("generated AGENTS does not authorize autonomous backlog deletion"), !generatedGuidance.contains(QStringLiteral("improvement delete")) && !generatedGuidance.contains(QStringLiteral("delete backlog")));
     AramfPaths::clearApplicationDirectoryForTests();
     AramfPaths::clearProgramRootForTests();
     FrameworkKnowledgeService::clearGlobalLibraryPathForTests();
+    ImprovementBacklogService::clearPathForTests();
 
     QJsonObject summary{{QStringLiteral("campaign"), QStringLiteral("UPDATE")}, {QStringLiteral("completed"), campaign.pass + campaign.fail},
                         {QStringLiteral("pass"), campaign.pass}, {QStringLiteral("fail"), campaign.fail},

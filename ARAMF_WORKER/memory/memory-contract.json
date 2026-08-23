@@ -65,6 +65,14 @@
         "promotionPolicy": "Only explicitly approved portable entries may be promoted; direct editing of the global library and project framework-knowledge.json is forbidden.",
         "seeding": "New managed projects seed approved global and built-in knowledge without replacing project-local entries."
     },
+    "improvementBacklog": {
+        "directEditing": "forbidden",
+        "listCommand": "aramf improvement list --project <project-root> [--stage <stage>] [--status <status>]",
+        "observationOnly": true,
+        "path": "AramfPaths::programRoot()/ARAMF_DATA/aramf-improvement-backlog.json",
+        "reportCommand": "aramf improvement report --project <project-root> --title <title> --observation <observation> [--expected <behavior>] [--area <area>] [--evidence <evidence>]",
+        "triageCommand": "aramf improvement triage --project <project-root> --id <gap-id> --action <promote|project-specific|duplicate|needs-evidence|already-resolved|reject> [--duplicate-of <gap-id>] [--priority <priority>]"
+    },
     "ownedFiles": [
         "memory/event-log.jsonl",
         "memory/metrics.json",

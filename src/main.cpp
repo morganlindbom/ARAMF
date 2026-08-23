@@ -9,7 +9,9 @@
 
 int main(int argc, char **argv)
 {
-    if (argc > 1 && QString::fromLocal8Bit(argv[1]) == QStringLiteral("memory")) {
+    if (argc > 1 && (QString::fromLocal8Bit(argv[1]) == QStringLiteral("--help")
+                     || QString::fromLocal8Bit(argv[1]) == QStringLiteral("memory")
+                     || QString::fromLocal8Bit(argv[1]) == QStringLiteral("improvement"))) {
         QCoreApplication app(argc, argv);
         QTextStream output(stdout);
         QTextStream error(stderr);

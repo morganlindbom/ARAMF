@@ -3,5 +3,4 @@
 Scenario: validation pass permits completion
 
 Result: PASS
-
  state=COMPLETED

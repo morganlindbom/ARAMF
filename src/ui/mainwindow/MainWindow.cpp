@@ -31,6 +31,7 @@
 #include "ui/workflows/output/finalize/FinalizePage.h"
 #include "ui/workflows/update/review/FrameworkKnowledgeReviewPage.h"
 #include "ui/workflows/update/apply/FrameworkKnowledgeApplyPage.h"
+#include "ui/workflows/update/backlog/ImprovementBacklogPage.h"
 
 #include <QFrame>
 #include <QApplication>
@@ -102,7 +103,8 @@ namespace
             WorkflowPageId::Verify,
             WorkflowPageId::Finalize,
             WorkflowPageId::UpdateReview,
-            WorkflowPageId::UpdateApply};
+            WorkflowPageId::UpdateApply,
+            WorkflowPageId::ImprovementBacklog};
 
         return sequence;
     }
@@ -252,6 +254,7 @@ MainWindow::MainWindow(
 
     updateReviewPage_ = new FrameworkKnowledgeReviewPage(&projectModel_, stack_);
     updateApplyPage_ = new FrameworkKnowledgeApplyPage(&projectModel_, stack_);
+    improvementBacklogPage_ = new ImprovementBacklogPage(&projectModel_, stack_);
 
     const auto registerPage =
         [this](WorkflowPageId id, QWidget *page)
@@ -286,6 +289,7 @@ MainWindow::MainWindow(
     registerPage(WorkflowPageId::Finalize, finalizePage_);
     registerPage(WorkflowPageId::UpdateReview, updateReviewPage_);
     registerPage(WorkflowPageId::UpdateApply, updateApplyPage_);
+    registerPage(WorkflowPageId::ImprovementBacklog, improvementBacklogPage_);
 
     workflow_->setStepCount(stack_->count());
 

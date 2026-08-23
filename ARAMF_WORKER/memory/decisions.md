@@ -244,3 +244,13 @@ creating parallel lessons.
 - Superseded-By: none
 - Summary: ARAMF global user-approved portable Framework Knowledge is stored under ARAMF_DATA at the resolved ARAMF program root. Build directories are disposable and must never own persistent ARAMF knowledge.
 <!-- /ARAMF-DECISION -->
+
+## Decision Record: decision-global-improvement-backlog
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: decision-global-improvement-backlog
+- Topic: Global improvement backlog boundaries
+- Status: current
+- Superseded-By: none
+- Summary: Framework deficiencies discovered during managed-project work are recorded as global improvement backlog observations. Observation, TODO triage, durable decisions, implementation, validation, and Framework Knowledge remain separate lifecycle concepts; reporting must not automatically modify ARAMF source or create Framework Knowledge.
+<!-- /ARAMF-DECISION -->

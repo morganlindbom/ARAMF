@@ -19,8 +19,7 @@
     },
     "ai": {
         "additionalAgents": [
-            "chatgpt",
-            "github-copilot"
+            "chatgpt"
         ],
         "aramfIntegrations": [
             "agents-md",
@@ -62,7 +61,9 @@
             "rename-files",
             "move-files",
             "copy-files",
+            "delete-files",
             "modify-generated-files",
+            "modify-protected-files",
             "run-builds",
             "run-tests",
             "run-linters",
@@ -72,6 +73,7 @@
             "run-generated-executables",
             "run-debugging-tools",
             "run-package-managers",
+            "run-database-migrations",
             "start-local-services",
             "stop-local-services",
             "modify-build-configuration",
@@ -79,9 +81,22 @@
             "modify-project-configuration",
             "modify-ci-cd-configuration",
             "modify-aramf-generated-files",
+            "install-dependencies",
+            "update-dependencies",
+            "remove-dependencies",
             "modify-environment-configuration",
             "create-branch",
-            "stage-changes"
+            "stage-changes",
+            "create-commit",
+            "amend-commit",
+            "merge-changes",
+            "push-changes",
+            "create-pull-request",
+            "rebase",
+            "resolve-merge-conflicts",
+            "create-tag",
+            "delete-branch",
+            "force-push"
         ],
         "primaryAgent": "openai-codex",
         "responsibilities": [
@@ -91,6 +106,8 @@
             "technical-design",
             "task-breakdown",
             "specification-writing",
+            "api-design",
+            "database-design",
             "ui-ux-design",
             "data-model-design",
             "coding",
@@ -100,6 +117,9 @@
             "configuration",
             "migration",
             "data-transformation",
+            "infrastructure-configuration",
+            "database-implementation",
+            "api-implementation",
             "code-review",
             "testing",
             "debugging",
@@ -126,13 +146,10 @@
     },
     "aiPlatforms": [
         "openai-codex",
-        "chatgpt",
-        "github-copilot"
+        "chatgpt"
     ],
     "capabilities": {
         "automationCapabilities": [
-            "automated-build",
-            "automated-testing"
         ],
         "buildConfigurations": [
             "debug",
@@ -147,55 +164,66 @@
         "dependencyManagers": [
         ],
         "developmentTools": [
+            "debugger",
+            "hardware-debug-probe"
         ],
         "frameworks": [
-            "qt"
+            "qt",
+            "pico-sdk"
         ],
         "hardwareTargets": [
+            "raspberry-pi-pico-2-w"
         ],
         "hostOperatingSystems": [
+            "windows"
         ],
         "ides": [
             "visual-studio-code"
         ],
         "languages": [
-            "cpp"
+            "cpp",
+            "c",
+            "pio-assembly"
         ],
         "processorFamilies": [
+            "rp2350"
         ],
         "qualityCapabilities": [
         ],
         "targetArchitectures": [
-            "x86_64"
+            "x86_64",
+            "rp2350",
+            "cortex-m"
         ],
         "targetPlatforms": [
-            "desktop",
-            "windows-desktop"
+            "windows-desktop",
+            "microcontroller"
         ],
         "testingCapabilities": [
-            "unit-testing",
-            "integration-testing"
+            "unit-testing"
         ],
         "toolchains": [
-            "msys2-ucrt64-gcc"
+            "msys2-ucrt64-gcc",
+            "arm-gnu",
+            "pico-sdk-toolchain"
         ],
         "versionControlSystems": [
             "git"
         ]
     },
-    "context": "desktop-application",
+    "context": "embedded-firmware",
     "description": "AI Rules And Memory Framework - self-hosted development project.",
     "environment": {
         "buildSystem": "cmake",
         "compiler": "msys2-ucrt64-gcc",
-        "framework": "qt",
+        "framework": "pico-sdk",
         "ide": "visual-studio-code",
         "language": "cpp",
-        "operatingSystem": "",
+        "operatingSystem": "windows",
         "packageManager": "none",
-        "targetArchitecture": "x86_64",
-        "targetPlatform": "desktop",
-        "versionControl": "none"
+        "targetArchitecture": "cortex-m",
+        "targetPlatform": "embedded",
+        "versionControl": "git"
     },
     "generationOptions": {
         "agentRules": true,
@@ -208,13 +236,41 @@
     "memory": {
         "captureCategories": [
             "current-project-status",
+            "current-workflow-state",
+            "selected-template",
             "project-capabilities",
+            "current-build-state",
+            "current-test-state",
+            "current-verification-state",
             "durable-decisions",
+            "architecture-decisions",
+            "tooling-decisions",
+            "dependency-decisions",
+            "resource-decisions",
+            "ai-configuration-decisions",
+            "user-approved-exceptions",
             "completed-tasks",
+            "failed-attempts",
             "corrective-actions",
+            "build-attempts",
+            "test-attempts",
             "validation-results",
             "checkpoints",
-            "certification-knowledge"
+            "reusable-project-knowledge",
+            "certification-knowledge",
+            "source-references",
+            "learned-constraints",
+            "known-limitations",
+            "known-workarounds",
+            "human-time",
+            "ai-time",
+            "autonomous-time",
+            "waiting-time",
+            "diagnosis-time",
+            "iteration-count",
+            "build-count",
+            "test-count",
+            "failure-count"
         ],
         "historyOptions": [
             "event-history",
@@ -255,8 +311,8 @@
     ],
     "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF-self-host.aramf.json",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
-    "projectName": "ARAMF",
-    "projectPath": "D:\\ON DESCTOP\\HKR KURSER\\C++\\ARAMF2\\ARAMF",
+    "projectName": "-Cplusplus-Summer-2026-Project",
+    "projectPath": "D:/ON DESCTOP/HKR KURSER/C++/C++Summer 2026 Project 6/-Cplusplus-Summer-2026-Project",
     "resourcePolicy": {
         "loadingStrategy": "relevant",
         "options": [
@@ -268,184 +324,6 @@
         ]
     },
     "resources": [
-        {
-            "authorityLevel": "supporting-reference",
-            "description": "Historical 250-scenario validation campaign and executable regression material.",
-            "enabled": true,
-            "fingerprint": "",
-            "id": "d6ba3523-c781-4897-9ffa-144cae535632",
-            "lastModified": "",
-            "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250",
-            "locationMode": "referenced",
-            "name": "test_250",
-            "scopes": [
-                "architecture",
-                "software",
-                "build-system",
-                "testing"
-            ],
-            "status": "available",
-            "type": "folder"
-        },
-        {
-            "authorityLevel": "supporting-reference",
-            "description": "Historical 550-test campaign and release-validation evidence.",
-            "enabled": true,
-            "fingerprint": "",
-            "id": "47cf373a-e57b-49fa-b876-c21d975986e8",
-            "lastModified": "",
-            "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550",
-            "locationMode": "referenced",
-            "name": "test_550",
-            "scopes": [
-                "testing"
-            ],
-            "status": "available",
-            "type": "folder"
-        },
-        {
-            "authorityLevel": "primary-source-of-truth",
-            "description": "Authoritative CMake build configuration, C++ standard, targets and Qt dependencies.",
-            "enabled": true,
-            "fingerprint": "",
-            "id": "769b24cd-ace8-482f-8f96-05c09a1a4cb8",
-            "lastModified": "",
-            "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/CMakeLists.txt",
-            "locationMode": "referenced",
-            "name": "CMakeLists.txt",
-            "scopes": [
-                "software",
-                "build-system"
-            ],
-            "status": "available",
-            "type": "file"
-        },
-        {
-            "authorityLevel": "supporting-reference",
-            "description": "Historical 250-scenario validation summary and evidence.",
-            "enabled": true,
-            "fingerprint": "",
-            "id": "1e352162-a59b-4e73-89fb-a35072a97cfd",
-            "lastModified": "",
-            "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/info.md",
-            "locationMode": "referenced",
-            "name": "info.md",
-            "scopes": [
-            ],
-            "status": "available",
-            "type": "file"
-        },
-        {
-            "authorityLevel": "authoritative",
-            "description": "ARAMF product-owned setup, bootstrap, templates, documentation and source material; not the live worker.",
-            "enabled": true,
-            "fingerprint": "",
-            "id": "eb45af79-6ae2-43df-aafa-a41b80ba8f2b",
-            "lastModified": "",
-            "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/aramf_setup",
-            "locationMode": "referenced",
-            "name": "aramf_setup",
-            "scopes": [
-                "software"
-            ],
-            "status": "available",
-            "type": "folder"
-        },
-        {
-            "authorityLevel": "primary-source-of-truth",
-            "description": "Production ARAMF C++/Qt source code and architecture authority.",
-            "enabled": true,
-            "fingerprint": "",
-            "id": "226c31e8-233e-4bcb-acf0-f1f853c04cbf",
-            "lastModified": "",
-            "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/src",
-            "locationMode": "referenced",
-            "name": "src",
-            "scopes": [
-                "architecture",
-                "software"
-            ],
-            "status": "available",
-            "type": "folder"
-        },
-        {
-            "authorityLevel": "supporting-reference",
-            "description": "Historical 550-test campaign and release-validation evidence.",
-            "enabled": true,
-            "fingerprint": "",
-            "id": "ad17b8ba-7dfb-4fed-998b-ca0a66a9ab48",
-            "lastModified": "",
-            "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550/info.md",
-            "locationMode": "referenced",
-            "name": "info.md",
-            "scopes": [
-            ],
-            "status": "available",
-            "type": "file"
-        },
-        {
-            "authorityLevel": "primary-source-of-truth",
-            "description": "Generated live self-hosted ARAMF control plane: status, memory, rules, routing and Framework Knowledge.",
-            "enabled": true,
-            "fingerprint": "",
-            "id": "04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3",
-            "lastModified": "",
-            "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER",
-            "locationMode": "referenced",
-            "name": "ARAMF_WORKER",
-            "scopes": [
-                "project-requirements",
-                "current-project-state"
-            ],
-            "status": "available",
-            "type": "folder"
-        },
-        {
-            "authorityLevel": "authoritative",
-            "description": "Current ARAMF core and regression tests.",
-            "enabled": true,
-            "fingerprint": "",
-            "id": "be17deda-e75e-47bc-afd8-5c83472af077",
-            "lastModified": "",
-            "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/tests",
-            "locationMode": "referenced",
-            "name": "tests",
-            "scopes": [
-                "testing"
-            ],
-            "status": "available",
-            "type": "folder"
-        },
-        {
-            "authorityLevel": "primary-source-of-truth",
-            "description": "Repository bootstrap directing AI agents to ARAMF_WORKER/AGENTS.md.",
-            "enabled": true,
-            "fingerprint": "",
-            "id": "c693014c-27ef-4ce1-9291-6fb37ff0c375",
-            "lastModified": "",
-            "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/AGENTS.md",
-            "locationMode": "referenced",
-            "name": "AGENTS.md",
-            "scopes": [
-                "project-requirements",
-                "architecture",
-                "software",
-                "testing",
-                "current-project-state"
-            ],
-            "status": "available",
-            "type": "url"
-        }
     ],
     "rules": {
         "activeCategories": [
@@ -528,6 +406,8 @@
             "generated-files",
             "configuration",
             "ci-cd",
+            "hardware-firmware",
+            "database-data",
             "ui-ux"
         ],
         "workScopes": [
@@ -546,5 +426,5 @@
             "project-status"
         ]
     },
-    "templateId": ""
+    "templateId": "pico-2w-visual-designer"
 }
