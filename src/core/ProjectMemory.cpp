@@ -4,6 +4,7 @@
 
 #include "AramfPaths.h"
 #include "ControlPlaneMigration.h"
+#include "FrameworkKnowledge.h"
 #include "ProjectModel.h"
 #include "ValidationRouting.h"
 
@@ -343,6 +344,8 @@ bool ProjectMemory::initialize(const QString& projectRoot, const ProjectModel* m
     if (!ensureDirectories(projectRoot, error) || !writeInitialFiles(projectRoot, model, error)) {
         return false;
     }
+    FrameworkKnowledgeService knowledge;
+    if (!knowledge.seedProject(projectRoot, model, error)) return false;
 
     const QString eventPath = absolutePath(projectRoot, AramfPaths::EventLog);
     if (!QFile::exists(eventPath) || QFileInfo(eventPath).size() == 0) {
@@ -377,6 +380,8 @@ bool ProjectMemory::initializeMemory(const QString& projectRoot, const ProjectMo
         || !writeMemoryFiles(projectRoot, model, error)) {
         return false;
     }
+    FrameworkKnowledgeService knowledge;
+    if (!knowledge.seedProject(projectRoot, model, error)) return false;
 
     const QString eventPath = absolutePath(projectRoot, AramfPaths::EventLog);
     if (!QFile::exists(eventPath) || QFileInfo(eventPath).size() == 0) {
@@ -519,6 +524,57 @@ bool ProjectMemory::recordDecision(const QString& projectRoot,
         {QStringLiteral("supersededBy"), supersededBy}
     };
     if (!appendEvent(projectRoot, QStringLiteral("DECISION_RECORDED"), summary, fields, error)) {
+        restoreSnapshots(snapshots, nullptr);
+        return false;
+    }
+    generateColdStartValidation(projectRoot, error);
+    const auto report = validate(projectRoot, error);
+    if (report.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
+        restoreSnapshots(snapshots, nullptr);
+        return false;
+    }
+    return true;
+}
+
+bool ProjectMemory::supersedeDecision(const QString& projectRoot,
+                                      const QString& decisionId,
+                                      const QString& replacementId,
+                                      QString* error)
+{
+    if (decisionId.trimmed().isEmpty() || replacementId.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("Decision IDs are required.");
+        return false;
+    }
+    const QString decisionsPath = absolutePath(projectRoot, AramfPaths::Decisions);
+    QFile file(decisionsPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        if (error) *error = file.errorString();
+        return false;
+    }
+    QString content = QString::fromUtf8(file.readAll());
+    file.close();
+    const QString heading = QStringLiteral("## Decision Record: %1").arg(decisionId);
+    const int start = content.indexOf(heading);
+    if (start < 0) {
+        if (error) *error = QStringLiteral("Decision ID not found: %1").arg(decisionId);
+        return false;
+    }
+    const int end = content.indexOf(QStringLiteral("<!-- /ARAMF-DECISION -->"), start);
+    if (end < 0) {
+        if (error) *error = QStringLiteral("Decision record is malformed: %1").arg(decisionId);
+        return false;
+    }
+    QString record = content.mid(start, end - start);
+    record.replace(QStringLiteral("- Status: current"), QStringLiteral("- Status: superseded"));
+    record.replace(QStringLiteral("- Superseded-By: none"), QStringLiteral("- Superseded-By: %1").arg(replacementId));
+    content.replace(start, end - start, record);
+    const auto snapshots = snapshotFiles(projectRoot, {AramfPaths::Decisions, AramfPaths::EventLog,
+                                                        AramfPaths::Manifest, AramfPaths::CurrentState,
+                                                        AramfPaths::ConsistencyValidation});
+    if (!writeTextFile(decisionsPath, content.toUtf8(), error)) return false;
+    if (!appendEvent(projectRoot, QStringLiteral("DECISION_SUPERSEDED"),
+                     QStringLiteral("Durable decision superseded"),
+                     QJsonObject{{QStringLiteral("decisionId"), decisionId}, {QStringLiteral("supersededBy"), replacementId}}, error)) {
         restoreSnapshots(snapshots, nullptr);
         return false;
     }
@@ -775,6 +831,8 @@ bool ProjectMemory::recordOperation(const QString& projectRoot,
         }
         QString status = QString::fromUtf8(statusFile.readAll());
         statusFile.close();
+        status.replace(QStringLiteral("Repository development uses the same live model in `aramf_setup/memory/framework-knowledge.json`."),
+                       QStringLiteral("For ARAMF itself, live Framework Knowledge is `ARAMF_WORKER/memory/framework-knowledge.json`; `aramf_setup/` remains product/bootstrap source."));
         const QString marker = QStringLiteral("## Latest Agent Task");
         const QString section = QStringLiteral("%1\n\n- Task: %2\n- Status: %3\n")
                                     .arg(marker, task, fields.value(QStringLiteral("status")).toString());
@@ -1176,6 +1234,8 @@ bool ProjectMemory::ensureDirectories(const QString& projectRoot, QString* error
         QStringLiteral("ARAMF_WORKER/memory"),
         QStringLiteral("ARAMF_WORKER/rules"),
         QStringLiteral("ARAMF_WORKER/routing"),
+        QStringLiteral("ARAMF_WORKER/update"),
+        QStringLiteral("ARAMF_WORKER/update/history"),
         QStringLiteral("ARAMF_WORKER/resources"),
         QStringLiteral("ARAMF_WORKER/templates"),
         QStringLiteral("ARAMF_WORKER/platforms"),
@@ -1246,7 +1306,7 @@ bool ProjectMemory::writeMemoryFiles(const QString& projectRoot, const ProjectMo
                                                      QStringLiteral("--failed"), QStringLiteral("--total")}}}},
         {QStringLiteral("ownedFiles"), QJsonArray{
             QStringLiteral("memory/event-log.jsonl"), QStringLiteral("memory/metrics.json"),
-            QStringLiteral("memory/current-state.md"), QStringLiteral("memory/memory-manifest.json"),
+            QStringLiteral("memory/current-state.md"), QStringLiteral("memory/memory-manifest.json"), QStringLiteral("memory/checkpoints.json"),
             QStringLiteral("memory/memory-consistency-validation.json"), QStringLiteral("PROJECT_STATUS.md")}},
         {QStringLiteral("directEditing"), QStringLiteral("forbidden: use the ARAMF memory recorder; do not edit owned files directly.")}
     };
@@ -1315,6 +1375,8 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         "6. Treat `custom/` as user-owned content and never modify it automatically.\n\n"
         "## Project status contract\n\n"
         "Update `PROJECT_STATUS.md` after every meaningful implementation task. Keep it current with what exists, what was changed, verified results, known issues, and the next concrete work. Do not use it as an append-only history.\n\n"
+        "## UPDATE workflow\n\n"
+        "UPDATE is a deliberate human-controlled workflow. Review approved Framework Knowledge, analyze the whole project, prepare a plan, and explicitly execute it through the configured agent. The managed project root is the implementation target; `ARAMF_WORKER/` is orchestration only. Read `update/update-plan.json` and `update/update-contract.json` when present. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes and validation are required. Preserve higher-authority instructions and follow `routing/validation-policy.json`. Do not treat candidates as approved and do not create routine update noise.\n\n"
         "## Memory contract\n\n"
         "Record durable architectural choices in `memory/decisions.md`. Keep observations, TODOs, decisions, implementation, and validation separate. Never claim validation without evidence.\n\n"
         "For routine task, build, test, and validation feedback, read `memory/memory-contract.json` and use `aramf memory record --project <project-root> --operation <operation> ...`. Do not edit ProjectMemory-owned bookkeeping files directly. Durable decisions and checkpoints are deliberate separate workflows. Follow current decisions and ignore explicitly superseded decisions.\n\n"
@@ -1525,6 +1587,13 @@ bool ProjectMemory::refreshMemoryContract(const QString& projectRoot, QString* e
         {QStringLiteral("optional"), QJsonArray{QStringLiteral("--task"), QStringLiteral("--commit"), QStringLiteral("--verification-status")}},
         {QStringLiteral("deliberate"), true},
         {QStringLiteral("configuredOption"), QStringLiteral("record-checkpoints")}});
+    contract.insert(QStringLiteral("frameworkKnowledgeLibrary"), QJsonObject{
+        {QStringLiteral("layers"), QJsonArray{QStringLiteral("built-in product knowledge"), QStringLiteral("global user-approved portable knowledge"), QStringLiteral("project-local knowledge")}},
+        {QStringLiteral("globalLocation"), QStringLiteral("AramfPaths::programRoot()/ARAMF_DATA/framework-knowledge-library.json")},
+        {QStringLiteral("legacyMigration"), QStringLiteral("Legacy AppData and executable-local ARAMF_DATA libraries are merged once into root ARAMF_DATA; legacy files are retained as non-authoritative recovery evidence and are never used as fallbacks.")},
+        {QStringLiteral("promotionCommand"), QStringLiteral("aramf memory knowledge promote --project <project-root> --id <knowledge-id>")},
+        {QStringLiteral("promotionPolicy"), QStringLiteral("Only explicitly approved portable entries may be promoted; direct editing of the global library and project framework-knowledge.json is forbidden.")},
+        {QStringLiteral("seeding"), QStringLiteral("New managed projects seed approved global and built-in knowledge without replacing project-local entries.")}});
     return writeJsonFile(path, contract, error);
 }
 
@@ -1554,6 +1623,8 @@ bool ProjectMemory::refreshMemoryInstructions(const QString& projectRoot, QStrin
         "- Record task starts/completions, build results, test results, and validation outcomes when configured.\n"
         "- Record durable decisions only for genuine architecture or policy choices through the decision workflow.\n"
         "- Record a checkpoint only for a genuine stable recovery point with `aramf memory checkpoint --project <project-root> --title <title> --summary <summary>`; routine feedback does not create one.\n"
+        "- Framework Knowledge has separate built-in, global, and project-local layers. The global user library is under `ARAMF_DATA/` at the resolved ARAMF program root; build directories are disposable. Promote an explicitly approved portable entry only through `aramf memory knowledge promote --project <project-root> --id <knowledge-id>`. Never edit the library or project knowledge files directly.\n"
+        "- UPDATE is a deliberate human-controlled workflow: review approved knowledge, analyze the whole project, prepare a plan, and explicitly execute it through the configured agent. The managed project root is the implementation target; `ARAMF_WORKER/` is orchestration only. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes and validation are required. Read `update/update-plan.json` and `update/update-contract.json` when present. Candidates are never active.\n"
         "- Run the minimum validation required by `routing/validation-policy.json`; do not run full regression campaigns for ordinary isolated changes. Escalate when scope, risk, failure, or explicit milestone policy requires it.\n"
         "- Follow current durable decisions; explicitly superseded decisions remain historical and inactive.\n\n"
         "The recorder owns event IDs, timestamps, sequences, metrics, pruning, validation, and current-state pointers.\n\n"

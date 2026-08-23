@@ -1,6 +1,7 @@
 #include "MemoryCommand.h"
 
 #include "AramfPaths.h"
+#include "FrameworkKnowledge.h"
 #include "ProjectMemory.h"
 
 #include <QDir>
@@ -15,6 +16,8 @@ void printUsage(QTextStream& stream)
 {
     stream << "Usage: aramf memory record --project <project-root> --operation <operation> [options]\n"
             << "       aramf memory decision record --project <project-root> --id <id> --topic <topic> --summary <summary> [options]\n"
+            << "       aramf memory decision supersede --project <project-root> --id <id> --replacement <id>\n"
+            << "       aramf memory knowledge promote --project <project-root> --id <id>\n"
             << "       aramf memory checkpoint --project <project-root> --title <title> --summary <summary> [options]\n"
             << "       aramf memory validate --project <project-root>\n"
             << "       aramf memory cold-start --project <project-root>\n"
@@ -126,6 +129,42 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
             return 2;
         }
         output << "recorded decision=" << options.value(QStringLiteral("--id")) << "\n";
+        return 0;
+    }
+
+    if (arguments.size() >= 3 && arguments.at(0) == QStringLiteral("memory")
+        && arguments.at(1) == QStringLiteral("decision") && arguments.at(2) == QStringLiteral("supersede")) {
+        QHash<QString, QString> options;
+        for (int index = 3; index + 1 < arguments.size(); index += 2) options.insert(arguments.at(index), arguments.at(index + 1));
+        if (!options.contains(QStringLiteral("--project")) || !options.contains(QStringLiteral("--id"))
+            || !options.contains(QStringLiteral("--replacement"))) {
+            error << "error=project-id-and-replacement-are-required\n";
+            return 2;
+        }
+        ProjectMemory memory;
+        QString decisionError;
+        if (!memory.supersedeDecision(QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath()),
+                                      options.value(QStringLiteral("--id")), options.value(QStringLiteral("--replacement")), &decisionError)) {
+            error << "error=" << decisionError << "\n";
+            return 2;
+        }
+        output << "superseded decision=" << options.value(QStringLiteral("--id")) << "\n";
+        return 0;
+    }
+
+    if (arguments.size() >= 3 && arguments.at(0) == QStringLiteral("memory")
+        && arguments.at(1) == QStringLiteral("knowledge") && arguments.at(2) == QStringLiteral("promote")) {
+        if (arguments.size() != 7 || arguments.at(3) != QStringLiteral("--project") || arguments.at(5) != QStringLiteral("--id")) {
+            error << "error=project-and-id-are-required\n";
+            return 2;
+        }
+        FrameworkKnowledgeService service;
+        QString promotionError;
+        if (!service.promoteToGlobal(QDir::cleanPath(QFileInfo(arguments.at(4)).absoluteFilePath()), arguments.at(6), &promotionError)) {
+            error << "error=" << promotionError << "\n";
+            return 2;
+        }
+        output << "promoted knowledge=" << arguments.at(6) << " path=" << service.globalLibraryPath() << "\n";
         return 0;
     }
 

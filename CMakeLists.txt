@@ -39,6 +39,15 @@ set(ARAMF_CORE_SOURCES
     src/core/Services.cpp
     src/core/ValidationRouting.h
     src/core/ValidationRouting.cpp
+    src/core/UpdateService.h
+    src/core/UpdateService.cpp
+    src/core/AgentExecutionAdapter.h
+    src/core/CodexExecutionAdapter.h
+    src/core/CodexExecutionAdapter.cpp
+    src/core/CodexExecutableResolver.h
+    src/core/CodexExecutableResolver.cpp
+    src/core/UpdateExecutionService.h
+    src/core/UpdateExecutionService.cpp
 )
 
 set(ARAMF_UI_SOURCES
@@ -99,6 +108,10 @@ set(ARAMF_UI_SOURCES
     src/ui/workflows/output/verify/VerifyPage.cpp
     src/ui/workflows/output/finalize/FinalizePage.h
     src/ui/workflows/output/finalize/FinalizePage.cpp
+    src/ui/workflows/update/review/FrameworkKnowledgeReviewPage.h
+    src/ui/workflows/update/review/FrameworkKnowledgeReviewPage.cpp
+    src/ui/workflows/update/apply/FrameworkKnowledgeApplyPage.h
+    src/ui/workflows/update/apply/FrameworkKnowledgeApplyPage.cpp
 )
 
 add_executable(aramf
@@ -130,8 +143,19 @@ if(BUILD_TESTING)
         src/core/RuleCatalog.cpp
         src/core/MemoryCatalog.h
         src/core/MemoryCatalog.cpp
+        src/core/FrameworkKnowledge.h
+        src/core/FrameworkKnowledge.cpp
         src/core/ValidationRouting.h
         src/core/ValidationRouting.cpp
+        src/core/UpdateService.h
+        src/core/UpdateService.cpp
+        src/core/AgentExecutionAdapter.h
+        src/core/CodexExecutionAdapter.h
+        src/core/CodexExecutionAdapter.cpp
+        src/core/CodexExecutableResolver.h
+        src/core/CodexExecutableResolver.cpp
+        src/core/UpdateExecutionService.h
+        src/core/UpdateExecutionService.cpp
         src/core/ProjectPersistence.h
         src/core/ProjectPersistence.cpp
         src/core/ProjectModel.h
@@ -146,6 +170,8 @@ if(BUILD_TESTING)
     add_executable(aramf_workflow_tests
         tests/WorkflowNavigationTests.cpp
         src/core/AramfPaths.h
+        src/core/FrameworkKnowledge.h
+        src/core/FrameworkKnowledge.cpp
         src/core/ProjectModel.h
         src/core/ProjectModel.cpp
         src/core/ProjectMemory.h
@@ -162,6 +188,15 @@ if(BUILD_TESTING)
         src/core/MemoryCatalog.cpp
         src/core/ValidationRouting.h
         src/core/ValidationRouting.cpp
+        src/core/UpdateService.h
+        src/core/UpdateService.cpp
+        src/core/AgentExecutionAdapter.h
+        src/core/CodexExecutionAdapter.h
+        src/core/CodexExecutionAdapter.cpp
+        src/core/CodexExecutableResolver.h
+        src/core/CodexExecutableResolver.cpp
+        src/core/UpdateExecutionService.h
+        src/core/UpdateExecutionService.cpp
         src/ui/shared/CapabilityCheckGroup.h
         src/ui/shared/CapabilityCheckGroup.cpp
         src/ui/workflows/resources/authority/ResourceAuthorityPage.h
@@ -176,6 +211,10 @@ if(BUILD_TESTING)
         src/ui/workflows/ai/integration/AiIntegrationPage.cpp
         src/ui/workflows/memory/maintenance/MemoryMaintenancePage.h
         src/ui/workflows/memory/maintenance/MemoryMaintenancePage.cpp
+        src/ui/workflows/update/review/FrameworkKnowledgeReviewPage.h
+        src/ui/workflows/update/review/FrameworkKnowledgeReviewPage.cpp
+        src/ui/workflows/update/apply/FrameworkKnowledgeApplyPage.h
+        src/ui/workflows/update/apply/FrameworkKnowledgeApplyPage.cpp
         src/ui/workflow/WorkflowWidget.h
         src/ui/workflow/WorkflowWidget.cpp
         src/ui/workflow/WorkflowPageId.h
@@ -183,6 +222,14 @@ if(BUILD_TESTING)
     target_include_directories(aramf_workflow_tests PRIVATE src)
     target_link_libraries(aramf_workflow_tests PRIVATE Qt6::Core Qt6::Widgets)
     add_test(NAME aramf_workflow_tests COMMAND aramf_workflow_tests)
+
+    add_executable(aramf_update_campaign_runner
+        test_update/runner/main.cpp
+        ${ARAMF_CORE_SOURCES}
+    )
+    target_include_directories(aramf_update_campaign_runner PRIVATE src)
+    target_link_libraries(aramf_update_campaign_runner PRIVATE Qt6::Core)
+    add_test(NAME aramf_update_campaign COMMAND aramf_update_campaign_runner)
 endif()
 
 if(WIN32)

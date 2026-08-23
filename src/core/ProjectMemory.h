@@ -35,6 +35,10 @@ public:
                         const QString& status = QStringLiteral("current"),
                         const QString& supersededBy = {},
                         QString* error = nullptr);
+    bool supersedeDecision(const QString& projectRoot,
+                           const QString& decisionId,
+                           const QString& replacementId,
+                           QString* error = nullptr);
     bool recordCheckpoint(const QString& projectRoot,
                           const QString& title,
                           const QString& summary,

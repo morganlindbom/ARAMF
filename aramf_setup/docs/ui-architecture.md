@@ -182,4 +182,12 @@ current project immediately, without reopening the ARAMF desktop application.
 Agents may add evidence-backed candidates during normal work after verified
 corrections, but promotion to `approved` requires explicit user approval.
 `FrameworkKnowledgeService` provides the C++ read/propose/approve/supersede API
-for application and test use; direct agent maintenance follows the same schema.
+for application and test use. The product separates read-only built-in
+knowledge, the user-owned global library at the resolved ARAMF program root's
+`ARAMF_DATA/framework-knowledge-library.json`, and project-local knowledge. The
+build directory is disposable and never owns this data. An
+explicitly approved portable entry may be promoted to the global library
+through the ARAMF memory command; new managed projects seed approved global
+entries without replacing project-local or Source-of-Truth authority. A legacy
+AppData library may be merged once during migration, but is retained only as
+non-authoritative recovery evidence and is never used as a fallback.

@@ -224,7 +224,7 @@ application was started normally, but those interactions remain manual checks.
 - Approved lessons are read directly by AI agents through the canonical `ARAMF_WORKER/AGENTS.md` startup contract and therefore become useful immediately without reopening ARAMF.
 - The lifecycle supports evidence-backed candidates, explicit user approval, deduplication, scope filtering and non-destructive superseding.
 - AI agents are explicitly forbidden from self-approving candidates.
-- Repository development uses the same live model in `aramf_setup/memory/framework-knowledge.json`.
+- For ARAMF itself, live Framework Knowledge is `ARAMF_WORKER/memory/framework-knowledge.json`; `aramf_setup/` remains product/bootstrap source.
 - Two approved development lessons currently preserve verified corrections and correct repository-root path interpretation.
 - The 250-scenario campaign produced candidate `fk-7a246faa4bc6ad74` with
   `reviewStatus: more-evidence`. It generalizes ISSUE-001 across lifecycle,

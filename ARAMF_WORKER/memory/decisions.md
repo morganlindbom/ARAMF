@@ -204,3 +204,43 @@ creating parallel lessons.
 - Superseded-By: none
 - Summary: Validation is proportional to changed scope and risk: start at FOCUSED, escalate to SUBSYSTEM or FULL REGRESSION only for relevant impact, failure, uncertainty, milestone, release, migration, or explicit certification.
 <!-- /ARAMF-DECISION -->
+
+## Decision Record: framework-knowledge-update-workflow
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: framework-knowledge-update-workflow
+- Topic: framework-knowledge-update
+- Status: current
+- Superseded-By: none
+- Summary: Framework Knowledge UPDATE is a deliberate human-controlled workflow: review candidates separately, analyze the whole project, apply only explicitly selected approved knowledge to affected areas, preserve higher authority, and hand off a traceable plan and contract for AI work.
+<!-- /ARAMF-DECISION -->
+
+## Decision Record: global-framework-knowledge-library
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: global-framework-knowledge-library
+- Topic: framework-knowledge-library
+- Status: current
+- Superseded-By: none
+- Summary: ARAMF maintains a persistent global library of explicitly user-approved portable Framework Knowledge. New managed projects inherit approved global knowledge while project-specific and Source-of-Truth authority remains higher.
+<!-- /ARAMF-DECISION -->
+
+## Decision Record: portable-global-framework-knowledge-storage
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: portable-global-framework-knowledge-storage
+- Topic: framework-knowledge-library-storage
+- Status: superseded
+- Superseded-By: root-global-framework-knowledge-storage
+- Summary: ARAMF global user-approved portable Framework Knowledge is stored in ARAMF_DATA beside the running ARAMF program so the program and its accumulated knowledge can move together. Legacy AppData data may be merged once but is never an active fallback.
+<!-- /ARAMF-DECISION -->
+
+## Decision Record: root-global-framework-knowledge-storage
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: root-global-framework-knowledge-storage
+- Topic: framework-knowledge-library-storage
+- Status: current
+- Superseded-By: none
+- Summary: ARAMF global user-approved portable Framework Knowledge is stored under ARAMF_DATA at the resolved ARAMF program root. Build directories are disposable and must never own persistent ARAMF knowledge.
+<!-- /ARAMF-DECISION -->

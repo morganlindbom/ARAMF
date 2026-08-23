@@ -43,6 +43,8 @@ int main(int argc, char** argv)
     The test proves initialization, uppercase ARAMF layout, root agent bootstrap, and consistency validation without Python.
     */
     QCoreApplication app(argc, argv);
+    QTemporaryDir globalData;
+    FrameworkKnowledgeService::setGlobalLibraryPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")));
     QTemporaryDir temporaryProject;
     if (!require(temporaryProject.isValid(), "temporary project directory must be valid")) {
         return 1;
@@ -148,9 +150,10 @@ int main(int argc, char** argv)
         true, &error);
     ok &= require(!candidateId.isEmpty(), "Framework Knowledge candidate must be created");
     const auto proposedEntries = frameworkKnowledge.entries(temporaryProject.path(), &error);
-    ok &= require(proposedEntries.size() == 1
-                  && proposedEntries.first().status == QStringLiteral("candidate")
-                  && proposedEntries.first().reviewStatus == QStringLiteral("more-evidence"),
+    const auto proposedCandidate = std::find_if(proposedEntries.cbegin(), proposedEntries.cend(), [&candidateId](const auto& entry) { return entry.id == candidateId; });
+    ok &= require(proposedCandidate != proposedEntries.cend()
+                  && proposedCandidate->status == QStringLiteral("candidate")
+                  && proposedCandidate->reviewStatus == QStringLiteral("more-evidence"),
                   "Framework Knowledge candidate must remain reviewable and inactive");
     const QString repeatedCandidateId = frameworkKnowledge.propose(
         temporaryProject.path(),
@@ -160,7 +163,8 @@ int main(int argc, char** argv)
         {QStringLiteral("Second evidence item.")},
         true, &error);
     ok &= require(repeatedCandidateId == candidateId, "matching Framework Knowledge proposals must deduplicate");
-    ok &= require(frameworkKnowledge.approvedEntries(temporaryProject.path(), {QStringLiteral("implementation")}, &error).isEmpty(),
+    const auto beforeApproval = frameworkKnowledge.approvedEntries(temporaryProject.path(), {QStringLiteral("implementation")}, &error);
+    ok &= require(std::none_of(beforeApproval.cbegin(), beforeApproval.cend(), [&candidateId](const auto& entry) { return entry.id == candidateId; }),
                   "candidate Framework Knowledge must not be active before approval");
     ok &= require(!frameworkKnowledge.approve(temporaryProject.path(), candidateId, QString(), &error),
                   "Framework Knowledge approval must require an explicit approval source");
@@ -168,14 +172,16 @@ int main(int argc, char** argv)
     ok &= require(frameworkKnowledge.approve(temporaryProject.path(), candidateId, QStringLiteral("explicit-user-approval"), &error),
                   "Framework Knowledge candidate must be approvable after explicit user approval");
     const auto approvedEntries = frameworkKnowledge.entries(temporaryProject.path(), &error);
-    ok &= require(approvedEntries.size() == 1 && approvedEntries.first().reviewStatus == QStringLiteral("approved"),
+    const auto approvedCandidate = std::find_if(approvedEntries.cbegin(), approvedEntries.cend(), [&candidateId](const auto& entry) { return entry.id == candidateId; });
+    ok &= require(approvedCandidate != approvedEntries.cend() && approvedCandidate->reviewStatus == QStringLiteral("approved"),
                   "Framework Knowledge approval must update review status");
     const auto activeKnowledge = frameworkKnowledge.approvedEntries(temporaryProject.path(), {QStringLiteral("implementation")}, &error);
-    ok &= require(activeKnowledge.size() == 1 && activeKnowledge.first().id == candidateId,
+    ok &= require(std::any_of(activeKnowledge.cbegin(), activeKnowledge.cend(), [&candidateId](const auto& entry) { return entry.id == candidateId; }),
                   "approved Framework Knowledge must become active immediately");
     ok &= require(frameworkKnowledge.supersede(temporaryProject.path(), candidateId, QStringLiteral("replacement-entry"), &error),
                   "Framework Knowledge must support non-destructive superseding");
-    ok &= require(frameworkKnowledge.approvedEntries(temporaryProject.path(), {QStringLiteral("implementation")}, &error).isEmpty(),
+    const auto afterSupersede = frameworkKnowledge.approvedEntries(temporaryProject.path(), {QStringLiteral("implementation")}, &error);
+    ok &= require(std::none_of(afterSupersede.cbegin(), afterSupersede.cend(), [&candidateId](const auto& entry) { return entry.id == candidateId; }),
                   "superseded Framework Knowledge must no longer be active");
 
     QJsonObject recordingResult;
