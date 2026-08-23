@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <QDateTime>
+#include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -17,6 +18,7 @@
 #include <QSaveFile>
 #include <QSet>
 #include <QStack>
+#include <QRegularExpression>
 #include <QVariant>
 #include <QUuid>
 
@@ -241,6 +243,74 @@ bool restoreSnapshot(const FileSnapshot& snapshot, QString* error)
     }
     return true;
 }
+
+struct DecisionRecord {
+    QString id;
+    QString topic;
+    QString status;
+    QString supersededBy;
+};
+
+QList<DecisionRecord> readDecisionRecords(const QString& path, QString* error)
+{
+    QList<DecisionRecord> records;
+    QFile file(path);
+    if (!file.exists()) return records;
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        if (error) *error = file.errorString();
+        return records;
+    }
+    DecisionRecord current;
+    bool inRecord = false;
+    const auto lines = QString::fromUtf8(file.readAll()).split(QRegularExpression(QStringLiteral("\\r?\\n")));
+    for (const QString& line : lines) {
+        const QString trimmed = line.trimmed();
+        if (trimmed == QStringLiteral("<!-- ARAMF-DECISION -->")) {
+            current = {};
+            inRecord = true;
+        } else if (trimmed == QStringLiteral("<!-- /ARAMF-DECISION -->")) {
+            if (inRecord && !current.id.isEmpty()) records.append(current);
+            inRecord = false;
+        } else if (inRecord) {
+            const int separator = trimmed.indexOf(QLatin1Char(':'));
+            if (separator < 0) continue;
+            const QString key = trimmed.left(separator).remove(QLatin1Char('-')).trimmed().toLower();
+            const QString value = trimmed.mid(separator + 1).trimmed();
+            if (key == QStringLiteral("decisionid")) current.id = value;
+            else if (key == QStringLiteral("topic")) current.topic = value;
+            else if (key == QStringLiteral("status")) current.status = value;
+            else if (key == QStringLiteral("supersededby")) current.supersededBy = value;
+        }
+    }
+    return records;
+}
+
+QString coldStartFingerprint(const QString& projectRoot, const QStringList& relativePaths)
+{
+    QCryptographicHash hash(QCryptographicHash::Sha256);
+    for (const QString& relative : relativePaths) {
+        QFile file(absolutePath(projectRoot, relative));
+        hash.addData(relative.toUtf8());
+        hash.addData(QByteArray("\0", 1));
+        if (file.open(QIODevice::ReadOnly)) hash.addData(file.readAll());
+        hash.addData(QByteArray("\0", 1));
+    }
+    return QString::fromLatin1(hash.result().toHex());
+}
+
+QStringList coldStartPaths(bool requireControlPlane)
+{
+    QStringList paths {
+        AramfPaths::Decisions,
+        AramfPaths::FrameworkKnowledge,
+        AramfPaths::CurrentState,
+        AramfPaths::MemoryConfiguration,
+        AramfPaths::MemoryContract,
+        AramfPaths::Manifest
+    };
+    if (requireControlPlane) paths << AramfPaths::AgentInstructions << AramfPaths::ProjectStatus;
+    return paths;
+}
 }
 
 ProjectMemory::ProjectMemory(QObject* parent)
@@ -381,6 +451,230 @@ QStringList ProjectMemory::supportedRecordOperations()
             QStringLiteral("test-result"), QStringLiteral("validation-result")};
 }
 
+bool ProjectMemory::recordDecision(const QString& projectRoot,
+                                   const QString& decisionId,
+                                   const QString& topic,
+                                   const QString& summary,
+                                   const QString& status,
+                                   const QString& supersededBy,
+                                   QString* error)
+{
+    if (decisionId.trimmed().isEmpty() || decisionId.size() > 128
+        || topic.trimmed().isEmpty() || topic.size() > 128
+        || summary.trimmed().isEmpty() || summary.size() > 2048
+        || (status != QStringLiteral("current") && status != QStringLiteral("superseded")
+            && status != QStringLiteral("historical"))) {
+        if (error) *error = QStringLiteral("Decision fields are invalid.");
+        return false;
+    }
+    QString configError;
+    const QJsonObject config = readJsonObject(absolutePath(projectRoot, AramfPaths::MemoryConfiguration), &configError);
+    if (!configError.isEmpty() || !config.value(QStringLiteral("maintenanceOptions")).toArray().contains(QStringLiteral("record-decisions"))) {
+        if (error) *error = QStringLiteral("Decision recording is disabled by configuration.");
+        return false;
+    }
+    QString decisionsError;
+    const QString decisionsPath = absolutePath(projectRoot, AramfPaths::Decisions);
+    const auto existing = readDecisionRecords(decisionsPath, &decisionsError);
+    if (!decisionsError.isEmpty()) {
+        if (error) *error = decisionsError;
+        return false;
+    }
+    for (const auto& decision : existing) {
+        if (decision.id == decisionId) {
+            if (error) *error = QStringLiteral("Decision ID already exists: %1").arg(decisionId);
+            return false;
+        }
+    }
+
+    QFile original(decisionsPath);
+    if (!original.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        if (error) *error = original.errorString();
+        return false;
+    }
+    const QByteArray previous = original.readAll();
+    original.close();
+    const auto snapshots = snapshotFiles(projectRoot, {
+        AramfPaths::Decisions, AramfPaths::EventLog, AramfPaths::Manifest,
+        AramfPaths::CurrentState, AramfPaths::ConsistencyValidation
+    });
+    const QByteArray block = QStringLiteral(
+        "\n## Decision Record: %1\n\n"
+        "<!-- ARAMF-DECISION -->\n"
+        "- Decision-ID: %1\n"
+        "- Topic: %2\n"
+        "- Status: %3\n"
+        "- Superseded-By: %4\n"
+        "- Summary: %5\n"
+        "<!-- /ARAMF-DECISION -->\n")
+                                  .arg(decisionId, topic, status, supersededBy.isEmpty() ? QStringLiteral("none") : supersededBy, summary)
+                                  .toUtf8();
+    if (!writeTextFile(decisionsPath, previous + block, error)) return false;
+
+    const QJsonObject fields {
+        {QStringLiteral("decisionId"), decisionId},
+        {QStringLiteral("topic"), topic},
+        {QStringLiteral("decisionStatus"), status},
+        {QStringLiteral("supersededBy"), supersededBy}
+    };
+    if (!appendEvent(projectRoot, QStringLiteral("DECISION_RECORDED"), summary, fields, error)) {
+        restoreSnapshots(snapshots, nullptr);
+        return false;
+    }
+    generateColdStartValidation(projectRoot, error);
+    const auto report = validate(projectRoot, error);
+    if (report.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
+        restoreSnapshots(snapshots, nullptr);
+        return false;
+    }
+    return true;
+}
+
+bool ProjectMemory::recordCheckpoint(const QString& projectRoot,
+                                     const QString& title,
+                                     const QString& summary,
+                                     const QString& relatedTask,
+                                     const QString& commit,
+                                     const QString& verificationStatus,
+                                     QJsonObject* result,
+                                     QString* error)
+{
+    if (title.trimmed().isEmpty() || title.size() > 256
+        || summary.trimmed().isEmpty() || summary.size() > 2048
+        || relatedTask.size() > 512 || commit.size() > 128 || verificationStatus.size() > 64) {
+        if (error) *error = QStringLiteral("Checkpoint fields are invalid.");
+        return false;
+    }
+    QString configError;
+    const QJsonObject config = readJsonObject(absolutePath(projectRoot, AramfPaths::MemoryConfiguration), &configError);
+    if (!configError.isEmpty() || !config.value(QStringLiteral("maintenanceOptions")).toArray().contains(QStringLiteral("record-checkpoints"))) {
+        if (error) *error = QStringLiteral("Checkpoint recording is disabled by configuration.");
+        return false;
+    }
+
+    QString checkpointError;
+    QJsonObject checkpointFile;
+    QJsonArray existing;
+    QFile checkpointInput(absolutePath(projectRoot, AramfPaths::Checkpoints));
+    if (!checkpointInput.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        if (error) *error = checkpointInput.errorString();
+        return false;
+    }
+    QJsonParseError checkpointParseError;
+    const QJsonDocument checkpointDocument = QJsonDocument::fromJson(checkpointInput.readAll(), &checkpointParseError);
+    if (checkpointParseError.error != QJsonParseError::NoError
+        || (!checkpointDocument.isArray() && !checkpointDocument.isObject())) {
+        if (error) *error = checkpointParseError.errorString();
+        return false;
+    }
+    if (checkpointDocument.isArray()) {
+        existing = checkpointDocument.array();
+        checkpointFile.insert(QStringLiteral("_file"), QStringLiteral("checkpoints.json"));
+    } else {
+        checkpointFile = checkpointDocument.object();
+        if (!checkpointFile.value(QStringLiteral("checkpoints")).isArray()) {
+            if (error) *error = QStringLiteral("Checkpoint file is malformed.");
+            return false;
+        }
+        existing = checkpointFile.value(QStringLiteral("checkpoints")).toArray();
+    }
+    checkpointInput.close();
+    QSet<QString> checkpointIds;
+    for (const auto& value : existing) {
+        const QString id = value.toObject().value(QStringLiteral("id")).toString();
+        if (id.isEmpty() || checkpointIds.contains(id)) {
+            if (error) *error = QStringLiteral("Checkpoint file contains duplicate or invalid IDs.");
+            return false;
+        }
+        checkpointIds.insert(id);
+    }
+
+    QString eventError;
+    const QList<QJsonObject> events = readEvents(absolutePath(projectRoot, AramfPaths::EventLog), &eventError);
+    if (!eventError.isEmpty()) {
+        if (error) *error = eventError;
+        return false;
+    }
+    qint64 productionSequence = 0;
+    QString latestProductionEvent;
+    for (const auto& event : events) {
+        const qint64 sequence = event.value(QStringLiteral("sequenceNumber")).toVariant().toLongLong();
+        if (!isControlPlaneEvent(event.value(QStringLiteral("eventType")).toString()) && sequence >= productionSequence) {
+            productionSequence = sequence;
+            latestProductionEvent = event.value(QStringLiteral("eventId")).toString();
+        }
+    }
+
+    const QString checkpointId = QStringLiteral("checkpoint-%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+    QJsonObject fields {
+        {QStringLiteral("checkpointId"), checkpointId},
+        {QStringLiteral("productionSequence"), productionSequence},
+        {QStringLiteral("latestProductionEventId"), latestProductionEvent}
+    };
+    if (!relatedTask.isEmpty()) fields.insert(QStringLiteral("relatedTask"), relatedTask);
+    if (!commit.isEmpty()) fields.insert(QStringLiteral("commit"), commit);
+    if (!verificationStatus.isEmpty()) fields.insert(QStringLiteral("verificationStatus"), verificationStatus);
+
+    const auto snapshots = snapshotFiles(projectRoot, {
+        AramfPaths::Checkpoints, AramfPaths::EventLog, AramfPaths::Manifest,
+        AramfPaths::CurrentState, AramfPaths::ConsistencyValidation, AramfPaths::ColdStartValidation
+    });
+    if (!appendEvent(projectRoot, QStringLiteral("CHECKPOINT_CREATED"), summary, fields, error)) {
+        restoreSnapshots(snapshots, nullptr);
+        return false;
+    }
+
+    const QList<QJsonObject> updatedEvents = readEvents(absolutePath(projectRoot, AramfPaths::EventLog), error);
+    if (error && !error->isEmpty()) {
+        restoreSnapshots(snapshots, nullptr);
+        return false;
+    }
+    QString checkpointEventId;
+    for (auto it = updatedEvents.crbegin(); it != updatedEvents.crend(); ++it) {
+        if (it->value(QStringLiteral("eventType")).toString() == QStringLiteral("CHECKPOINT_CREATED")
+            && it->value(QStringLiteral("checkpointId")).toString() == checkpointId) {
+            checkpointEventId = it->value(QStringLiteral("eventId")).toString();
+            break;
+        }
+    }
+    if (checkpointEventId.isEmpty()) {
+        restoreSnapshots(snapshots, nullptr);
+        if (error) *error = QStringLiteral("Checkpoint event was not written.");
+        return false;
+    }
+
+    QJsonObject checkpoint {
+        {QStringLiteral("id"), checkpointId},
+        {QStringLiteral("title"), title.trimmed()},
+        {QStringLiteral("summary"), summary.trimmed()},
+        {QStringLiteral("createdAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+        {QStringLiteral("productionSequence"), productionSequence},
+        {QStringLiteral("latestEventId"), checkpointEventId}
+    };
+    if (!relatedTask.isEmpty()) checkpoint.insert(QStringLiteral("relatedTask"), relatedTask);
+    if (!commit.isEmpty()) checkpoint.insert(QStringLiteral("commit"), commit);
+    if (!verificationStatus.isEmpty()) checkpoint.insert(QStringLiteral("verificationStatus"), verificationStatus);
+    QJsonArray checkpoints = existing;
+    checkpoints.append(checkpoint);
+    checkpointFile.insert(QStringLiteral("checkpoints"), checkpoints);
+    checkpointFile.insert(QStringLiteral("_file"), QStringLiteral("checkpoints.json"));
+    if (!withinConfiguredLimit(projectRoot, QJsonDocument(checkpoint).toJson(QJsonDocument::Compact).size(), error)
+        || !writeJsonFile(absolutePath(projectRoot, AramfPaths::Checkpoints), checkpointFile, error)) {
+        restoreSnapshots(snapshots, nullptr);
+        return false;
+    }
+    generateColdStartValidation(projectRoot, error);
+    const auto report = validate(projectRoot, error);
+    if (report.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
+        restoreSnapshots(snapshots, nullptr);
+        return false;
+    }
+    if (result) {
+        *result = checkpoint;
+    }
+    return true;
+}
+
 bool ProjectMemory::recordOperation(const QString& projectRoot,
                                     const QString& operation,
                                     const QJsonObject& fields,
@@ -419,7 +713,8 @@ bool ProjectMemory::recordOperation(const QString& projectRoot,
     }
     const QStringList protectedFiles {
         AramfPaths::EventLog, AramfPaths::Manifest, AramfPaths::CurrentState,
-        AramfPaths::Metrics, AramfPaths::ConsistencyValidation, AramfPaths::ProjectStatus
+        AramfPaths::Metrics, AramfPaths::ConsistencyValidation, AramfPaths::ColdStartValidation,
+        AramfPaths::ProjectStatus
     };
     const auto snapshots = snapshotFiles(projectRoot, protectedFiles);
     QJsonObject eventFields = fields;
@@ -492,6 +787,11 @@ bool ProjectMemory::recordOperation(const QString& projectRoot,
         }
     }
 
+    if (!generateColdStartValidation(projectRoot, error)) {
+        QString rollbackError;
+        restoreSnapshots(snapshots, &rollbackError);
+        return false;
+    }
     QString validationError;
     const auto validation = validate(projectRoot, &validationError);
     if (!validationError.isEmpty() || validation.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
@@ -658,6 +958,191 @@ QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error) 
              manifest.value(QStringLiteral("eventCount")).toInt() == events.size(),
              QStringLiteral("Manifest eventCount does not match the event log."));
 
+    QString checkpointReadError;
+    QJsonValue checkpointValue;
+    QFile checkpointInput(absolutePath(projectRoot, AramfPaths::Checkpoints));
+    QJsonParseError checkpointParseError;
+    if (checkpointInput.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QJsonDocument checkpointDocument = QJsonDocument::fromJson(checkpointInput.readAll(), &checkpointParseError);
+        checkpointValue = checkpointDocument.isArray() ? QJsonValue(checkpointDocument.array())
+                                                        : checkpointDocument.object().value(QStringLiteral("checkpoints"));
+        checkpointInput.close();
+    } else {
+        checkpointReadError = checkpointInput.errorString();
+    }
+    bool checkpointShapeOk = checkpointReadError.isEmpty()
+        && checkpointParseError.error == QJsonParseError::NoError && checkpointValue.isArray();
+    bool checkpointIdsOk = checkpointShapeOk;
+    bool checkpointFieldsOk = checkpointShapeOk;
+    bool checkpointReferencesOk = checkpointShapeOk;
+    QSet<QString> checkpointIds;
+    if (checkpointShapeOk) {
+        for (const auto& value : checkpointValue.toArray()) {
+            const QJsonObject checkpoint = value.toObject();
+            const QString id = checkpoint.value(QStringLiteral("id")).toString();
+            const QString title = checkpoint.value(QStringLiteral("title")).toString();
+            const QString summary = checkpoint.value(QStringLiteral("summary")).toString();
+            const QString createdAt = checkpoint.value(QStringLiteral("createdAt")).toString();
+            const qint64 productionSequenceReference = checkpoint.value(QStringLiteral("productionSequence")).toVariant().toLongLong();
+            const QString eventId = checkpoint.value(QStringLiteral("latestEventId")).toString();
+            if (id.isEmpty() || checkpointIds.contains(id)) checkpointIdsOk = false;
+            checkpointIds.insert(id);
+            if (title.trimmed().isEmpty() || summary.trimmed().isEmpty()
+                || QDateTime::fromString(createdAt, Qt::ISODate).isValid()
+                == false || productionSequenceReference < 0) checkpointFieldsOk = false;
+            if (productionSequenceReference > productionMaximum || (!eventId.isEmpty() && !ids.contains(eventId))) {
+                checkpointReferencesOk = false;
+            }
+        }
+    }
+    addCheck(QStringLiteral("checkpoint-identifiers-unique"), checkpointIdsOk,
+             QStringLiteral("Checkpoint IDs must be present and unique."));
+    addCheck(QStringLiteral("checkpoint-fields-valid"), checkpointFieldsOk,
+             QStringLiteral("Checkpoint records contain invalid required fields."));
+    addCheck(QStringLiteral("checkpoint-references-valid"), checkpointReferencesOk,
+             QStringLiteral("Checkpoint references must point to current production state and existing events."));
+
+    QString configError;
+    const QJsonObject config = readJsonObject(absolutePath(projectRoot, AramfPaths::MemoryConfiguration), &configError);
+    const QJsonArray validationOptions = config.value(QStringLiteral("validationOptions")).toArray();
+    QJsonArray warnings;
+    auto addWarning = [&warnings](const QString& name, const QString& message) {
+        warnings.append(QJsonObject{{QStringLiteral("name"), name},
+                                    {QStringLiteral("status"), QStringLiteral("WARN")},
+                                    {QStringLiteral("message"), message}});
+    };
+
+    if (validationOptions.contains(QStringLiteral("conflicting-decisions"))) {
+        QString decisionsError;
+        const auto decisions = readDecisionRecords(absolutePath(projectRoot, AramfPaths::Decisions), &decisionsError);
+        QHash<QString, QString> activeTopics;
+        bool conflictFree = decisionsError.isEmpty();
+        QString conflictMessage;
+        for (const auto& decision : decisions) {
+            if (decision.status != QStringLiteral("current")) continue;
+            if (activeTopics.contains(decision.topic) && activeTopics.value(decision.topic) != decision.id) {
+                conflictFree = false;
+                conflictMessage = QStringLiteral("Active decisions conflict for topic '%1': %2 and %3.")
+                                      .arg(decision.topic, activeTopics.value(decision.topic), decision.id);
+                break;
+            }
+            activeTopics.insert(decision.topic, decision.id);
+        }
+        addCheck(QStringLiteral("conflicting-decisions"), conflictFree,
+                 conflictMessage.isEmpty() ? decisionsError : conflictMessage);
+    }
+
+    if (validationOptions.contains(QStringLiteral("stale-current-state"))) {
+        QFile stateFile(absolutePath(projectRoot, AramfPaths::CurrentState));
+        QString stateText;
+        if (stateFile.open(QIODevice::ReadOnly | QIODevice::Text)) stateText = QString::fromUtf8(stateFile.readAll());
+        const auto stateField = [&stateText](const QString& heading) {
+            const QString marker = QStringLiteral("## ") + heading;
+            const int start = stateText.indexOf(marker);
+            if (start < 0) return QString();
+            const int valueStart = stateText.indexOf(QLatin1Char('\n'), start);
+            if (valueStart < 0) return QString();
+            const int nextHeading = stateText.indexOf(QStringLiteral("\n## "), valueStart + 1);
+            const int end = nextHeading >= 0 ? nextHeading : stateText.size();
+            return stateText.mid(valueStart + 1, end - valueStart - 1).trimmed();
+        };
+        qint64 expectedProduction = 0;
+        QString expectedProductionId;
+        for (const auto& event : events) {
+            if (isControlPlaneEvent(event.value(QStringLiteral("eventType")).toString())) continue;
+            const qint64 sequence = event.value(QStringLiteral("sequenceNumber")).toVariant().toLongLong();
+            if (sequence >= expectedProduction) {
+                expectedProduction = sequence;
+                expectedProductionId = event.value(QStringLiteral("eventId")).toString();
+            }
+        }
+        const QString durableValue = stateField(QStringLiteral("Latest Durable Sequence"));
+        const QString productionValue = stateField(QStringLiteral("Latest Production Sequence"));
+        const QString stateEvent = stateField(QStringLiteral("Latest Production Development Event"));
+        const qint64 stateDurable = durableValue.toLongLong();
+        const qint64 stateProduction = productionValue.toLongLong();
+        const bool currentStateOk = stateDurable == maximum && stateProduction == expectedProduction
+            && stateEvent == expectedProductionId;
+        addCheck(QStringLiteral("stale-current-state"), currentStateOk,
+                 QStringLiteral("current-state.md does not match the latest accepted event state."));
+    }
+
+    if (validationOptions.contains(QStringLiteral("project-status-consistency"))) {
+        QFile statusFile(absolutePath(projectRoot, AramfPaths::ProjectStatus));
+        QString statusText;
+        const bool readable = statusFile.open(QIODevice::ReadOnly | QIODevice::Text);
+        if (readable) statusText = QString::fromUtf8(statusFile.readAll());
+        const bool taskMetadataValid = !statusText.contains(QStringLiteral("## Latest Agent Task"))
+            || (statusText.contains(QStringLiteral("- Task:")) && statusText.contains(QStringLiteral("- Status:")));
+        const bool staleAuthority = statusText.contains(QStringLiteral("aramf_setup/PROJECT_STATUS.md is the live"), Qt::CaseInsensitive)
+            || statusText.contains(QStringLiteral("aramf_setup/AGENTS.md is the canonical"), Qt::CaseInsensitive);
+        addCheck(QStringLiteral("project-status-consistency"), readable && taskMetadataValid && !staleAuthority,
+                 QStringLiteral("PROJECT_STATUS.md is missing, malformed, or contains superseded authority wording."));
+    }
+
+    if (validationOptions.contains(QStringLiteral("referenced-resources"))) {
+        bool referencesOk = true;
+        for (const QString& relative : coldStartPaths(true)) {
+            if (!QFileInfo::exists(absolutePath(projectRoot, relative))) referencesOk = false;
+        }
+        addCheck(QStringLiteral("referenced-resources"), referencesOk,
+                 QStringLiteral("A required worker memory/control-plane reference is missing."));
+    }
+
+    QJsonArray unsupportedOptions;
+    if (!configError.isEmpty()) {
+        addCheck(QStringLiteral("configured-validation-coverage"), false, configError);
+    } else {
+        const QSet<QString> supported {
+            QStringLiteral("memory-consistency"), QStringLiteral("cold-start-validation"),
+            QStringLiteral("sequence-continuity"), QStringLiteral("conflicting-decisions"),
+            QStringLiteral("stale-current-state"), QStringLiteral("referenced-resources"),
+            QStringLiteral("project-status-consistency")};
+        for (const auto& option : validationOptions) {
+            if (!supported.contains(option.toString())) unsupportedOptions.append(option);
+        }
+        if (!unsupportedOptions.isEmpty()) {
+            addCheck(QStringLiteral("configured-validation-coverage"), false,
+                     QStringLiteral("Unsupported validation options are configured."));
+        } else {
+            addCheck(QStringLiteral("configured-validation-coverage"), true,
+                     QStringLiteral("All configured validation options are executed."));
+        }
+    }
+
+    if (validationOptions.contains(QStringLiteral("cold-start-validation"))) {
+        const QString coldPath = absolutePath(projectRoot, AramfPaths::ColdStartValidation);
+        const QJsonObject cold = readJsonObject(coldPath, nullptr);
+        const QString currentFingerprint = coldStartFingerprint(projectRoot, coldStartPaths(true));
+        addCheck(QStringLiteral("cold-start-fresh"), cold.value(QStringLiteral("status")).toString() == QStringLiteral("PASS")
+                     && cold.value(QStringLiteral("fingerprint")).toString() == currentFingerprint,
+                 QStringLiteral("Persisted cold-start validation is missing, failed, or stale."));
+    }
+
+    auto mirrorConfiguredCheck = [&checks](const QString& option, const QString& checkName, const QString& message) {
+        bool found = false;
+        QString status = QStringLiteral("FAIL");
+        for (const auto& value : checks) {
+            const auto check = value.toObject();
+            if (check.value(QStringLiteral("name")).toString() == checkName) {
+                found = true;
+                status = check.value(QStringLiteral("status")).toString();
+                break;
+            }
+        }
+        if (found) checks.append(QJsonObject{{QStringLiteral("name"), option},
+                                             {QStringLiteral("status"), status},
+                                             {QStringLiteral("message"), message}});
+    };
+    if (validationOptions.contains(QStringLiteral("memory-consistency"))) {
+        mirrorConfiguredCheck(QStringLiteral("memory-consistency"), QStringLiteral("manifest-event-count"),
+                              QStringLiteral("Structural memory consistency checks executed."));
+    }
+    if (validationOptions.contains(QStringLiteral("sequence-continuity"))) {
+        mirrorConfiguredCheck(QStringLiteral("sequence-continuity"), QStringLiteral("sequence-order"),
+                              QStringLiteral("Sequence continuity check executed."));
+    }
+
     QJsonObject report;
     report.insert(QStringLiteral("_file"), QStringLiteral("memory-consistency-validation.json"));
     report.insert(QStringLiteral("status"), errors.isEmpty() ? QStringLiteral("PASS") : QStringLiteral("FAIL"));
@@ -666,7 +1151,8 @@ QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error) 
     report.insert(QStringLiteral("productionSequence"), productionMaximum);
     report.insert(QStringLiteral("checks"), checks);
     report.insert(QStringLiteral("errors"), errors);
-    report.insert(QStringLiteral("warnings"), QJsonArray {});
+    report.insert(QStringLiteral("warnings"), warnings);
+    report.insert(QStringLiteral("unsupportedValidations"), unsupportedOptions);
 
     QString writeError;
     writeValidationReport(projectRoot, report, &writeError);
@@ -741,6 +1227,15 @@ bool ProjectMemory::writeMemoryFiles(const QString& projectRoot, const ProjectMo
             {QStringLiteral("syntax"), QStringLiteral("aramf memory record --project <project-root> --operation <operation> ...")},
             {QStringLiteral("projectArgument"), QStringLiteral("--project <project-root>")}}},
         {QStringLiteral("supportedOperations"), operationNames},
+        {QStringLiteral("separateOperations"), QJsonObject{
+            {QStringLiteral("checkpoints"), QStringLiteral("deliberate stable recovery points; use the checkpoint operation; not created by routine feedback")},
+            {QStringLiteral("durableDecisions"), QStringLiteral("deliberate architecture/policy records through the decision workflow")}}},
+        {QStringLiteral("checkpointOperation"), QJsonObject{
+            {QStringLiteral("command"), QStringLiteral("aramf memory checkpoint --project <project-root> --title <title> --summary <summary> [--task <task>] [--commit <sha>] [--verification-status <status>]")},
+            {QStringLiteral("required"), QJsonArray{QStringLiteral("--project"), QStringLiteral("--title"), QStringLiteral("--summary")}},
+            {QStringLiteral("optional"), QJsonArray{QStringLiteral("--task"), QStringLiteral("--commit"), QStringLiteral("--verification-status")}},
+            {QStringLiteral("deliberate"), true},
+            {QStringLiteral("configuredOption"), QStringLiteral("record-checkpoints")}}},
         {QStringLiteral("configuredMaintenanceOptions"), stringListToJson(memory.maintenanceOptions)},
         {QStringLiteral("arguments"), QJsonObject{
             {QStringLiteral("required"), QJsonArray{QStringLiteral("--project"), QStringLiteral("--operation"), QStringLiteral("--task")}},
@@ -821,6 +1316,7 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         "Update `PROJECT_STATUS.md` after every meaningful implementation task. Keep it current with what exists, what was changed, verified results, known issues, and the next concrete work. Do not use it as an append-only history.\n\n"
         "## Memory contract\n\n"
         "Record durable architectural choices in `memory/decisions.md`. Keep observations, TODOs, decisions, implementation, and validation separate. Never claim validation without evidence.\n\n"
+        "For routine task, build, test, and validation feedback, read `memory/memory-contract.json` and use `aramf memory record --project <project-root> --operation <operation> ...`. Do not edit ProjectMemory-owned bookkeeping files directly. Durable decisions and checkpoints are deliberate separate workflows. Follow current decisions and ignore explicitly superseded decisions.\n\n"
         "## Live Framework Knowledge contract\n\n"
         "`memory/framework-knowledge.json` is live project memory. Approved entries apply immediately in this project and do not require ARAMF regeneration. The authority order is: explicit current user instruction, current Source of Truth, current durable project decisions, approved Framework Knowledge, templates/defaults, then AI inference. When a corrected approach is verified and appears reusable, add or enrich a `candidate` entry with evidence instead of silently changing framework behavior. Never self-approve a candidate. Only after explicit user approval may its status become `approved`; once approved, use it immediately. Keep superseded entries for auditability but do not apply them.\n\n"
         "## Scope\n\n"
@@ -943,25 +1439,12 @@ bool ProjectMemory::generateCurrentState(const QString& projectRoot, QString* er
 
 bool ProjectMemory::generateColdStartValidation(const QString& projectRoot, QString* error, bool requireControlPlane) const
 {
-    /**Write a lightweight cold-start validation report.
-
-    This confirms the canonical ARAMF root and mandatory startup files are present for a fresh agent session.
-    */
-    QStringList mandatory {
-        AramfPaths::Decisions,
-        AramfPaths::FrameworkKnowledge,
-        AramfPaths::Manifest
-    };
-    if (requireControlPlane) {
-        mandatory << AramfPaths::AgentInstructions
-                  << AramfPaths::ProjectStatus
-                  << AramfPaths::GeneratedRules;
-    }
-
+    const QStringList mandatory = coldStartPaths(requireControlPlane);
     QJsonArray checks;
     QJsonArray errors;
     for (const QString& relativePath : mandatory) {
-        const bool exists = QFile::exists(absolutePath(projectRoot, relativePath));
+        QFile file(absolutePath(projectRoot, relativePath));
+        const bool exists = file.exists() && file.open(QIODevice::ReadOnly);
         checks.append(QJsonObject {
             {QStringLiteral("name"), relativePath},
             {QStringLiteral("status"), exists ? QStringLiteral("PASS") : QStringLiteral("FAIL")}
@@ -971,14 +1454,109 @@ bool ProjectMemory::generateColdStartValidation(const QString& projectRoot, QStr
         }
     }
 
+    const QJsonObject config = readJsonObject(absolutePath(projectRoot, AramfPaths::MemoryConfiguration), nullptr);
+    const QJsonObject contract = readJsonObject(absolutePath(projectRoot, AramfPaths::MemoryContract), nullptr);
+    const bool recordingEnabled = !config.value(QStringLiteral("maintenanceOptions")).toArray().isEmpty();
+    QFile agentFile(absolutePath(projectRoot, AramfPaths::AgentInstructions));
+    QString agentText;
+    if (agentFile.open(QIODevice::ReadOnly | QIODevice::Text)) agentText = QString::fromUtf8(agentFile.readAll());
+    const bool contractDiscoverable = !recordingEnabled || !requireControlPlane
+        || (agentText.contains(QStringLiteral("memory/memory-contract.json"))
+            && agentText.contains(QStringLiteral("aramf memory record")));
+    if (!contractDiscoverable) errors.append(QStringLiteral("Memory contract is not discoverable from AGENTS.md."));
+
+    const QSet<QString> supportedOperations {
+        QStringLiteral("task-start"), QStringLiteral("task-complete"), QStringLiteral("build-result"),
+        QStringLiteral("test-result"), QStringLiteral("validation-result")};
+    const QJsonArray contractOperations = contract.value(QStringLiteral("supportedOperations")).toArray();
+    QSet<QString> configuredOptions;
+    for (const auto& option : config.value(QStringLiteral("maintenanceOptions")).toArray()) {
+        configuredOptions.insert(option.toString());
+    }
+    const bool contractConfigConsistent = !recordingEnabled || (!contract.isEmpty()
+        && ((configuredOptions.contains(QStringLiteral("record-task-completion")) && contractOperations.contains(QStringLiteral("task-complete")))
+            || !configuredOptions.contains(QStringLiteral("record-task-completion")))
+        && ((!configuredOptions.contains(QStringLiteral("record-build-results")))
+            || contractOperations.contains(QStringLiteral("build-result")))
+        && ((!configuredOptions.contains(QStringLiteral("record-test-results")))
+            || contractOperations.contains(QStringLiteral("test-result")))
+        && ((!configuredOptions.contains(QStringLiteral("record-validation")))
+            || contractOperations.contains(QStringLiteral("validation-result")))
+        && supportedOperations.contains(QStringLiteral("task-start"))
+        && (!configuredOptions.contains(QStringLiteral("record-checkpoints"))
+            || contract.value(QStringLiteral("checkpointOperation")).toObject().value(QStringLiteral("deliberate")).toBool()));
+    if (!contractConfigConsistent) errors.append(QStringLiteral("Memory configuration and contract disagree."));
+
     QJsonObject report {
         {QStringLiteral("status"), errors.isEmpty() ? QStringLiteral("PASS") : QStringLiteral("FAIL")},
         {QStringLiteral("checkedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+        {QStringLiteral("fingerprint"), coldStartFingerprint(projectRoot, mandatory)},
         {QStringLiteral("checks"), checks},
         {QStringLiteral("errors"), errors},
-        {QStringLiteral("warnings"), QJsonArray {}}
+        {QStringLiteral("warnings"), QJsonArray {}},
+        {QStringLiteral("recordingEnabled"), recordingEnabled},
+        {QStringLiteral("contractConfigConsistent"), contractConfigConsistent}
     };
     return writeJsonFile(absolutePath(projectRoot, AramfPaths::ColdStartValidation), report, error);
+}
+
+QJsonObject ProjectMemory::validateColdStart(const QString& projectRoot, QString* error) const
+{
+    if (!generateColdStartValidation(projectRoot, error)) return {};
+    return readJsonObject(absolutePath(projectRoot, AramfPaths::ColdStartValidation), error);
+}
+
+bool ProjectMemory::refreshMemoryContract(const QString& projectRoot, QString* error) const
+{
+    const QString path = absolutePath(projectRoot, AramfPaths::MemoryContract);
+    QJsonObject contract = readJsonObject(path, error);
+    if (contract.isEmpty()) {
+        if (error && error->isEmpty()) *error = QStringLiteral("Memory contract is unavailable.");
+        return false;
+    }
+    contract.insert(QStringLiteral("separateOperations"), QJsonObject{
+        {QStringLiteral("checkpoints"), QStringLiteral("deliberate stable recovery points; use aramf memory checkpoint --project <project-root> --title <title> --summary <summary>; not created by routine feedback")},
+        {QStringLiteral("durableDecisions"), QStringLiteral("deliberate architecture/policy records through the decision workflow")}});
+    contract.insert(QStringLiteral("checkpointOperation"), QJsonObject{
+        {QStringLiteral("command"), QStringLiteral("aramf memory checkpoint --project <project-root> --title <title> --summary <summary> [--task <task>] [--commit <sha>] [--verification-status <status>]")},
+        {QStringLiteral("required"), QJsonArray{QStringLiteral("--project"), QStringLiteral("--title"), QStringLiteral("--summary")}},
+        {QStringLiteral("optional"), QJsonArray{QStringLiteral("--task"), QStringLiteral("--commit"), QStringLiteral("--verification-status")}},
+        {QStringLiteral("deliberate"), true},
+        {QStringLiteral("configuredOption"), QStringLiteral("record-checkpoints")}});
+    return writeJsonFile(path, contract, error);
+}
+
+bool ProjectMemory::refreshMemoryInstructions(const QString& projectRoot, QString* error) const
+{
+    const QString path = absolutePath(projectRoot, AramfPaths::AgentInstructions);
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        if (error) *error = file.errorString();
+        return false;
+    }
+    QString content = QString::fromUtf8(file.readAll());
+    file.close();
+    const QString begin = QStringLiteral("<!-- ARAMF-MEMORY-BEGIN -->");
+    const QString end = QStringLiteral("<!-- ARAMF-MEMORY-END -->");
+    const int beginAt = content.indexOf(begin);
+    const int endAt = content.indexOf(end, beginAt + begin.size());
+    if (beginAt < 0 || endAt < 0) {
+        if (error) *error = QStringLiteral("Managed memory instruction section is missing.");
+        return false;
+    }
+    const QString section = QStringLiteral(
+        "<!-- ARAMF-MEMORY-BEGIN -->\n\n"
+        "## Project Memory Feedback\n\n"
+        "Read `memory/memory-contract.json` before recording development results. Do not edit ProjectMemory-owned "
+        "bookkeeping files directly. Use `aramf memory record --project <project-root> --operation <operation> ...`.\n"
+        "- Record task starts/completions, build results, test results, and validation outcomes when configured.\n"
+        "- Record durable decisions only for genuine architecture or policy choices through the decision workflow.\n"
+        "- Record a checkpoint only for a genuine stable recovery point with `aramf memory checkpoint --project <project-root> --title <title> --summary <summary>`; routine feedback does not create one.\n"
+        "- Follow current durable decisions; explicitly superseded decisions remain historical and inactive.\n\n"
+        "The recorder owns event IDs, timestamps, sequences, metrics, pruning, validation, and current-state pointers.\n\n"
+        "<!-- ARAMF-MEMORY-END -->");
+    content.replace(beginAt, endAt + end.size() - beginAt, section);
+    return writeTextFile(path, content.toUtf8(), error);
 }
 
 bool ProjectMemory::writeValidationReport(const QString& projectRoot, const QJsonObject& report, QString* error) const

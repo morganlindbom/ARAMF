@@ -1,6 +1,6 @@
 {
     "_file": "memory-consistency-validation.json",
-    "checkedAt": "2026-08-22T23:57:45Z",
+    "checkedAt": "2026-08-23T00:50:33Z",
     "checks": [
         {
             "name": "event-identifiers-unique",
@@ -17,13 +17,61 @@
         {
             "name": "manifest-event-count",
             "status": "PASS"
+        },
+        {
+            "name": "checkpoint-identifiers-unique",
+            "status": "PASS"
+        },
+        {
+            "name": "checkpoint-fields-valid",
+            "status": "PASS"
+        },
+        {
+            "name": "checkpoint-references-valid",
+            "status": "PASS"
+        },
+        {
+            "name": "conflicting-decisions",
+            "status": "PASS"
+        },
+        {
+            "name": "stale-current-state",
+            "status": "PASS"
+        },
+        {
+            "name": "project-status-consistency",
+            "status": "PASS"
+        },
+        {
+            "name": "referenced-resources",
+            "status": "PASS"
+        },
+        {
+            "name": "configured-validation-coverage",
+            "status": "PASS"
+        },
+        {
+            "name": "cold-start-fresh",
+            "status": "PASS"
+        },
+        {
+            "message": "Structural memory consistency checks executed.",
+            "name": "memory-consistency",
+            "status": "PASS"
+        },
+        {
+            "message": "Sequence continuity check executed.",
+            "name": "sequence-continuity",
+            "status": "PASS"
         }
     ],
-    "durableSequence": 19,
+    "durableSequence": 39,
     "errors": [
     ],
-    "productionSequence": 19,
+    "productionSequence": 39,
     "status": "PASS",
+    "unsupportedValidations": [
+    ],
     "warnings": [
     ]
 }

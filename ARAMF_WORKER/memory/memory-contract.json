@@ -1,22 +1,5 @@
 {
     "_file": "memory-contract.json",
-    "command": {
-        "executable": "aramf",
-        "projectArgument": "--project <project-root>",
-        "syntax": "aramf memory record --project <project-root> --operation <operation> ..."
-    },
-    "configuredMaintenanceOptions": [
-        "update-current-state",
-        "record-decisions",
-        "record-checkpoints",
-        "record-validation",
-        "record-build-results",
-        "record-test-results",
-        "record-task-completion",
-        "update-project-status",
-        "remove-stale-state",
-        "preserve-append-only"
-    ],
     "arguments": {
         "optional": [
             "--status",
@@ -37,6 +20,38 @@
             "--task"
         ]
     },
+    "checkpointOperation": {
+        "command": "aramf memory checkpoint --project <project-root> --title <title> --summary <summary> [--task <task>] [--commit <sha>] [--verification-status <status>]",
+        "configuredOption": "record-checkpoints",
+        "deliberate": true,
+        "optional": [
+            "--task",
+            "--commit",
+            "--verification-status"
+        ],
+        "required": [
+            "--project",
+            "--title",
+            "--summary"
+        ]
+    },
+    "command": {
+        "executable": "aramf",
+        "projectArgument": "--project <project-root>",
+        "syntax": "aramf memory record --project <project-root> --operation <operation> ..."
+    },
+    "configuredMaintenanceOptions": [
+        "update-current-state",
+        "record-decisions",
+        "record-checkpoints",
+        "record-validation",
+        "record-build-results",
+        "record-test-results",
+        "record-task-completion",
+        "update-project-status",
+        "remove-stale-state",
+        "preserve-append-only"
+    ],
     "directEditing": "forbidden: use the ARAMF memory recorder; do not edit owned files directly.",
     "ownedFiles": [
         "memory/event-log.jsonl",
@@ -47,6 +62,10 @@
         "PROJECT_STATUS.md"
     ],
     "recordingEnabled": true,
+    "separateOperations": {
+        "checkpoints": "deliberate stable recovery points; use aramf memory checkpoint --project <project-root> --title <title> --summary <summary>; not created by routine feedback",
+        "durableDecisions": "deliberate architecture/policy records through the decision workflow"
+    },
     "supportedOperations": [
         "task-start",
         "task-complete",

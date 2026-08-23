@@ -513,6 +513,136 @@ int main(int argc, char** argv)
     const QJsonObject report = memory.validate(temporaryProject.path(), &error);
     ok &= require(report.value(QStringLiteral("status")).toString() == QStringLiteral("PASS"), "memory validation must pass");
 
+    QTemporaryDir decisionProject;
+    ProjectModel decisionModel;
+    decisionModel.setProjectPath(decisionProject.path());
+    MemoryConfiguration decisionConfiguration;
+    decisionConfiguration.maintenanceOptions = {QStringLiteral("record-decisions"), QStringLiteral("update-current-state")};
+    decisionConfiguration.validationOptions = {QStringLiteral("memory-consistency"), QStringLiteral("conflicting-decisions"),
+                                               QStringLiteral("stale-current-state"), QStringLiteral("referenced-resources"),
+                                               QStringLiteral("project-status-consistency")};
+    decisionModel.setMemoryConfiguration(decisionConfiguration);
+    ProjectMemory decisionMemory;
+    const bool decisionInitialized = decisionMemory.initialize(decisionProject.path(), &decisionModel, &error);
+    ok &= require(decisionInitialized,
+                  "decision validation fixture must initialize");
+    ok &= require(decisionMemory.recordDecision(decisionProject.path(), QStringLiteral("legacy-worker-authority"),
+                                                QStringLiteral("worker-authority"),
+                                                QStringLiteral("Legacy path authority retained for historical context."),
+                                                QStringLiteral("superseded"), QStringLiteral("self-host-worker-authority"), &error),
+                  "superseded durable decision must be recordable");
+    ok &= require(decisionMemory.recordDecision(decisionProject.path(), QStringLiteral("self-host-worker-authority"),
+                                                QStringLiteral("worker-authority"),
+                                                QStringLiteral("ARAMF_WORKER is the live self-host control plane; aramf_setup is product source."),
+                                                QStringLiteral("current"), {}, &error),
+                  "replacement durable decision must be recordable");
+    error.clear();
+    ok &= require(!decisionMemory.recordDecision(decisionProject.path(), QStringLiteral("conflicting-worker-authority"),
+                                                 QStringLiteral("worker-authority"),
+                                                 QStringLiteral("A conflicting active authority."),
+                                                 QStringLiteral("current"), {}, &error),
+                  "conflicting active durable decisions must be rejected");
+    const QJsonObject decisionReport = decisionMemory.validate(decisionProject.path(), &error);
+    ok &= require(decisionReport.value(QStringLiteral("status")).toString() == QStringLiteral("PASS")
+                  && !decisionReport.value(QStringLiteral("checks")).toArray().isEmpty(),
+                  "superseded decisions must be excluded from active conflict validation");
+    QFile decisionFile(decisionProject.path() + QStringLiteral("/ARAMF_WORKER/memory/decisions.md"));
+    QString decisionText;
+    if (decisionFile.open(QIODevice::ReadOnly | QIODevice::Text)) decisionText = QString::fromUtf8(decisionFile.readAll());
+    decisionFile.close();
+    ok &= require(decisionText.contains(QStringLiteral("Status: superseded")), "superseded decision history must remain visible");
+
+    QTemporaryDir coldProject;
+    ProjectModel coldModel;
+    coldModel.setProjectPath(coldProject.path());
+    MemoryConfiguration coldConfiguration;
+    coldConfiguration.maintenanceOptions = {QStringLiteral("update-current-state")};
+    coldConfiguration.validationOptions = {QStringLiteral("memory-consistency"), QStringLiteral("cold-start-validation"),
+                                           QStringLiteral("sequence-continuity"), QStringLiteral("stale-current-state"),
+                                           QStringLiteral("referenced-resources"), QStringLiteral("project-status-consistency")};
+    coldModel.setMemoryConfiguration(coldConfiguration);
+    ProjectMemory coldMemory;
+    const bool coldInitialized = coldMemory.initialize(coldProject.path(), &coldModel, &error);
+    ok &= require(coldInitialized, "cold-start fixture must initialize");
+    const auto coldPass = coldMemory.validate(coldProject.path(), &error);
+    ok &= require(coldPass.value(QStringLiteral("status")).toString() == QStringLiteral("PASS"),
+                  "fresh cold-start fixture must validate");
+    QFile coldAgent(coldProject.path() + QStringLiteral("/ARAMF_WORKER/AGENTS.md"));
+    ok &= require(coldAgent.open(QIODevice::Append | QIODevice::Text), "cold-start fixture agent must be writable");
+    coldAgent.write("\nchanged-for-stale-test\n");
+    coldAgent.close();
+    const auto staleCold = coldMemory.validate(coldProject.path(), &error);
+    ok &= require(staleCold.value(QStringLiteral("status")).toString() == QStringLiteral("FAIL"),
+                  "changed cold-start input must invalidate the persisted validation");
+    ok &= require(coldMemory.validateColdStart(coldProject.path(), &error).value(QStringLiteral("status")).toString() == QStringLiteral("PASS"),
+                  "cold-start validation must refresh its fingerprint");
+
+    QTemporaryDir checkpointProject;
+    ProjectModel checkpointModel;
+    checkpointModel.setProjectPath(checkpointProject.path());
+    MemoryConfiguration checkpointConfiguration;
+    checkpointConfiguration.maintenanceOptions = {QStringLiteral("record-checkpoints"), QStringLiteral("update-current-state")};
+    checkpointConfiguration.validationOptions = {QStringLiteral("memory-consistency"), QStringLiteral("sequence-continuity")};
+    checkpointModel.setMemoryConfiguration(checkpointConfiguration);
+    ProjectMemory checkpointMemory;
+    ok &= require(checkpointMemory.initialize(checkpointProject.path(), &checkpointModel, &error),
+                  "checkpoint fixture must initialize with empty checkpoint history");
+    const QJsonObject emptyCheckpointReport = checkpointMemory.validate(checkpointProject.path(), &error);
+    ok &= require(emptyCheckpointReport.value(QStringLiteral("status")).toString() == QStringLiteral("PASS"),
+                  "empty checkpoint history must validate");
+    QJsonObject checkpointResult;
+    const bool checkpointRecorded = checkpointMemory.recordCheckpoint(checkpointProject.path(),
+                                                                       QStringLiteral("Stable memory baseline"),
+                                                                       QStringLiteral("Verified Project Memory baseline."),
+                                                                       QStringLiteral("checkpoint capability task"), {}, QStringLiteral("PASS"),
+                                                                       &checkpointResult, &error);
+    ok &= require(checkpointRecorded, QStringLiteral("deliberate checkpoint must be recordable: %1").arg(error).toUtf8().constData());
+    ok &= require(checkpointResult.value(QStringLiteral("id")).toString().startsWith(QStringLiteral("checkpoint-"))
+                  && !checkpointResult.value(QStringLiteral("createdAt")).toString().isEmpty()
+                  && checkpointResult.value(QStringLiteral("productionSequence")).toInt() == 0
+                  && !checkpointResult.value(QStringLiteral("latestEventId")).toString().isEmpty(),
+                  "checkpoint identity and state references must be ARAMF-generated");
+    QJsonObject secondCheckpoint;
+    ok &= require(checkpointMemory.recordCheckpoint(checkpointProject.path(),
+                                                    QStringLiteral("Second stable baseline"),
+                                                    QStringLiteral("A second deliberate recovery point."), {}, {}, {},
+                                                    &secondCheckpoint, &error),
+                  "multiple deliberate checkpoints must append");
+    ok &= require(secondCheckpoint.value(QStringLiteral("id")).toString() != checkpointResult.value(QStringLiteral("id")).toString(),
+                  "checkpoint IDs must be unique");
+    QFile checkpointFile(checkpointProject.path() + QStringLiteral("/ARAMF_WORKER/memory/checkpoints.json"));
+    QJsonDocument checkpointHistoryDocument;
+    if (checkpointFile.open(QIODevice::ReadOnly)) checkpointHistoryDocument = QJsonDocument::fromJson(checkpointFile.readAll());
+    checkpointFile.close();
+    ok &= require(checkpointHistoryDocument.object().value(QStringLiteral("checkpoints")).toArray().size() == 2,
+                  "checkpoint history must preserve both records");
+    QTemporaryDir disabledCheckpointProject;
+    ProjectModel disabledCheckpointModel;
+    disabledCheckpointModel.setProjectPath(disabledCheckpointProject.path());
+    ProjectMemory disabledCheckpointMemory;
+    ok &= require(disabledCheckpointMemory.initialize(disabledCheckpointProject.path(), &disabledCheckpointModel, &error),
+                  "disabled checkpoint fixture must initialize");
+    error.clear();
+    ok &= require(!disabledCheckpointMemory.recordCheckpoint(disabledCheckpointProject.path(),
+                                                             QStringLiteral("Should be rejected"),
+                                                             QStringLiteral("Checkpoint recording is disabled."), {}, {}, {}, nullptr, &error)
+                  && error.contains(QStringLiteral("disabled")),
+                  "disabled checkpoint recording must be rejected");
+    QTemporaryDir malformedCheckpointProject;
+    ProjectModel malformedCheckpointModel;
+    malformedCheckpointModel.setProjectPath(malformedCheckpointProject.path());
+    ProjectMemory malformedCheckpointMemory;
+    ok &= require(malformedCheckpointMemory.initialize(malformedCheckpointProject.path(), &malformedCheckpointModel, &error),
+                  "malformed checkpoint fixture must initialize");
+    QFile malformedCheckpointFile(malformedCheckpointProject.path() + QStringLiteral("/ARAMF_WORKER/memory/checkpoints.json"));
+    ok &= require(malformedCheckpointFile.open(QIODevice::WriteOnly | QIODevice::Text),
+                  "malformed checkpoint fixture must be writable");
+    malformedCheckpointFile.write("{\"checkpoints\":[{\"id\":\"duplicate\"},{\"id\":\"duplicate\"}]}\n");
+    malformedCheckpointFile.close();
+    ok &= require(malformedCheckpointMemory.validate(malformedCheckpointProject.path(), &error)
+                      .value(QStringLiteral("status")).toString() == QStringLiteral("FAIL"),
+                  "malformed checkpoint history must fail validation");
+
     QTemporaryDir limitedProject;
     ProjectModel limitedModel;
     auto limitedMemory = limitedModel.memoryConfiguration();

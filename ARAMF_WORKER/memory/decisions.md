@@ -164,3 +164,33 @@ user instruction → current Source of Truth → current durable project decisio
 approved Framework Knowledge → templates/defaults → AI inference. Repeated
 matching proposals are deduplicated and evidence is accumulated rather than
 creating parallel lessons.
+
+## Decision Record: legacy-framework-knowledge-location
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: legacy-framework-knowledge-location
+- Topic: framework-knowledge-location
+- Status: superseded
+- Superseded-By: self-host-framework-knowledge-location
+- Summary: Historical repository setup location is retained only as historical context.
+<!-- /ARAMF-DECISION -->
+
+## Decision Record: self-host-framework-knowledge-location
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: self-host-framework-knowledge-location
+- Topic: framework-knowledge-location
+- Status: current
+- Superseded-By: none
+- Summary: For ARAMF itself, live Framework Knowledge is ARAMF_WORKER/memory/framework-knowledge.json; aramf_setup remains product/bootstrap source.
+<!-- /ARAMF-DECISION -->
+
+## Decision Record: project-memory-feedback-ownership
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: project-memory-feedback-ownership
+- Topic: project-memory-feedback-ownership
+- Status: current
+- Superseded-By: none
+- Summary: External agents use the ARAMF headless recorder; ProjectMemory solely owns IDs, timestamps, sequences, metrics, current-state, manifests, pruning, and consistency. Checkpoints and decisions remain deliberate separate workflows.
+<!-- /ARAMF-DECISION -->
