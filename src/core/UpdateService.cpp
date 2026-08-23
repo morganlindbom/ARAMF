@@ -65,6 +65,10 @@ QStringList projectScopes(const ProjectModel& model)
 QStringList frameworkScopesForProject(const ProjectModel& model)
 {
     QStringList scopes = projectScopes(model);
+    if (model.templateId() == QStringLiteral("pico-2w-visual-designer")
+        && !scopes.contains(QStringLiteral("pico-visual-designer"))) {
+        scopes.append(QStringLiteral("pico-visual-designer"));
+    }
     const QString root = QDir(model.projectPath()).absolutePath();
     const bool aramfProject = QFileInfo::exists(QDir(root).filePath(QStringLiteral("CMakeLists.txt")))
         && QFileInfo::exists(QDir(root).filePath(QStringLiteral("aramf_setup")))

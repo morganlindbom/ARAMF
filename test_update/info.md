@@ -10,7 +10,7 @@ stale-plan rejection, explicit external-agent handoff, asynchronous Codex
 execution boundaries, validation-gated completion, and separation from
 Project Memory bookkeeping.
 
-Scenario namespace: `UPDATE-001` through `UPDATE-260`.
+Scenario namespace: `UPDATE-001` through `UPDATE-310`.
 
 The extension also validates the three Framework Knowledge layers: built-in
 product knowledge, the persistent user-owned global ARAMF library, and
@@ -20,3 +20,8 @@ project. The global library is stored beside the running ARAMF executable under
 `ARAMF_DATA/` and is not part of the project worker or repository source tree.
 Legacy AppData migration is tested as a one-time compatibility path only; it
 never remains an active fallback authority.
+
+The current extension also validates PVD-scoped mandatory GUI end-to-end
+certification knowledge, including template applicability, GUI-driven
+application certification boundaries, physical-evidence distinction, and
+TOP PRIORITY destructive-cleanup safety.

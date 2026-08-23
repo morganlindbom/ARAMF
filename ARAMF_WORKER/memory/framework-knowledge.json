@@ -584,6 +584,34 @@
             "status": "approved",
             "supersededBy": "",
             "title": "TOP PRIORITY: Förbud mot destruktiv rekursiv städning"
+        },
+        {
+            "approvalSource": "explicit-user-approved-policy",
+            "approvedAt": "2026-08-23T13:14:44Z",
+            "createdAt": "2026-08-23T13:14:39Z",
+            "evidence": [
+                "Explicit user-approved PVD mandatory GUI end-to-end testing policy; normal Framework Knowledge workflow."
+            ],
+            "id": "fk-2120c0dac197dc46",
+            "lesson": "For Pico Visual Designer functionality exposed through the GUI, core, unit, service, generator, backend, and build PASS results remain valuable but are not application-level certification. Core PASS != GUI PASS and Build PASS != Application Certification PASS. Application certification must use the real visible PVD user workflow to the furthest supported stage: launch the actual executable where practical, wait for MainWindow, navigate workflow, select component and physical pin, select function, configure visible controls, verify transitions and stale-state absence, Generate, Configure, Build, Transfer, Runtime, and Debug where technically possible. Do not substitute project-model, backend, service, or generator calls for GUI actions; GUI Build, Transfer, and Debug must use normal application controls when available. Verify each transition and report the earliest failure boundary; later stages are NOT RUN after a blocking failure. Use distinct results PASS-CORE, PASS-GUI, PASS-GENERATE, PASS-CONFIGURE, PASS-BUILD, PASS-TRANSFER, PASS-RUNTIME, PASS-DEBUG, PASS-AUTOMATED, PASS-PHYSICAL, NOT-TESTED, NOT-APPLICABLE, REQUIRES-EXTERNAL-HARDWARE, and FAIL. Software or debugger evidence must not claim physical or electrical certification. Current automation must not require new wiring or external hardware; physical certification is later. Include periodic real cold-start coverage and deterministic safe isolation. Cleanup remains subject to the TOP PRIORITY prohibition on broad recursive deletion, including rmdir /s /q, rd /s /q, Remove-Item -Recurse, rm -rf, and equivalents; use narrow recoverable cleanup. Keep unrelated future improvements in the ARAMF Improvement Backlog. This policy is PVD-specific and does not make unrelated projects subject to GUI certification.",
+            "origin": "project",
+            "originProjectId": "",
+            "originalKnowledgeId": "",
+            "portable": true,
+            "promotedAt": "",
+            "reviewStatus": "approved",
+            "scopes": [
+                "pico-visual-designer",
+                "gui-end-to-end-testing",
+                "application-certification",
+                "hardware-certification",
+                "build-transfer-debug",
+                "qt-gui-testing",
+                "embedded-development"
+            ],
+            "status": "approved",
+            "supersededBy": "",
+            "title": "PVD mandatory GUI end-to-end certification"
         }
     ],
     "version": 1

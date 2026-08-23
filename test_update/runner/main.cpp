@@ -1152,6 +1152,55 @@ int main(int argc, char** argv)
     for (const auto& value : realSafetyEntries) if (value.toObject().value(QStringLiteral("id")).toString() == realSafetyId) { ++realSafetyCount; realSafetyApproved = value.toObject().value(QStringLiteral("status")).toString() == QStringLiteral("approved"); }
     campaign.check(QStringLiteral("UPDATE-300"), QStringLiteral("existing approved safety knowledge remains approved and unduplicated"), realSafetyCount == 1 && realSafetyApproved);
 
+    // UPDATE-301..310: normal global Framework Knowledge workflow for the
+    // PVD-specific mandatory GUI end-to-end certification policy.
+    const QString pvdPolicyTitle = QStringLiteral("PVD mandatory GUI end-to-end certification");
+    const QString pvdPolicyLesson = QStringLiteral(
+        "For Pico Visual Designer functionality exposed through the GUI, core/unit/service/generator/backend PASS is not sufficient for application-level certification. Core tests remain valuable and must be preserved, but the authoritative application-level test must use the real visible GUI workflow to the furthest supported stage: launch the actual PVD executable where practical, wait for MainWindow, navigate workflow, select component and physical pin, select function, configure through visible controls, verify transitions and stale-state removal, Generate, Configure, Build, Transfer, Runtime, and Debug where possible. Do not substitute project-model setters, generator calls, backend calls, or non-UI Build/Transfer/Debug calls for GUI certification. Verify each transition and report the earliest failure boundary with expected, actual, and later stages NOT RUN. Preserve distinct results PASS-CORE, PASS-GUI, PASS-GENERATE, PASS-CONFIGURE, PASS-BUILD, PASS-TRANSFER, PASS-RUNTIME, PASS-DEBUG, PASS-AUTOMATED, PASS-PHYSICAL, NOT-TESTED, NOT-APPLICABLE, REQUIRES-EXTERNAL-HARDWARE, and FAIL. Never infer physical certification from software or debugger evidence; physical/electrical evidence remains separate and may be pending. Do not require new wiring or external hardware unless explicitly requested. Include periodic cold-start coverage, isolate test state safely, preserve backlog separation, and keep the TOP PRIORITY prohibition on rmdir /s /q, rd /s /q, Remove-Item -Recurse, rm -rf, and equivalent broad recursive cleanup.");
+    const QStringList pvdPolicyScopes{QStringLiteral("pico-visual-designer"), QStringLiteral("gui-end-to-end-testing"), QStringLiteral("application-certification"), QStringLiteral("hardware-certification"), QStringLiteral("build-transfer-debug"), QStringLiteral("qt-gui-testing"), QStringLiteral("embedded-development")};
+    QTemporaryDir policySourceProject;
+    ProjectModel policySourceModel;
+    TemplateManager().applyTemplate(&policySourceModel, QStringLiteral("pico-2w-visual-designer"));
+    QString policyError;
+    const bool policyReady = policySourceProject.isValid() && initialize(policySourceProject.path(), &policySourceModel, &policyError);
+    FrameworkKnowledgeService policyKnowledge;
+    const QString pvdPolicyId = policyKnowledge.propose(policySourceProject.path(), pvdPolicyTitle, pvdPolicyLesson, pvdPolicyScopes, {QStringLiteral("User-approved PVD GUI certification policy")}, true, &policyError);
+    const bool policyApproved = !pvdPolicyId.isEmpty() && policyKnowledge.approve(policySourceProject.path(), pvdPolicyId, QStringLiteral("explicit-user-approved-policy"), &policyError);
+    const bool policyPromoted = policyApproved && policyKnowledge.promoteToGlobal(policySourceProject.path(), pvdPolicyId, &policyError);
+    const auto globalPolicyEntries = policyKnowledge.globalEntries(&policyError);
+    const auto globalPolicy = std::find_if(globalPolicyEntries.cbegin(), globalPolicyEntries.cend(), [&pvdPolicyId](const auto& entry) { return entry.id == pvdPolicyId; });
+    campaign.check(QStringLiteral("UPDATE-301"), QStringLiteral("PVD GUI E2E knowledge is approved and promoted through the normal workflow"), policyReady && policyPromoted && globalPolicy != globalPolicyEntries.cend() && globalPolicy->status == QStringLiteral("approved"));
+    campaign.check(QStringLiteral("UPDATE-302"), QStringLiteral("PVD policy is scoped and not unrestricted"), globalPolicy != globalPolicyEntries.cend() && globalPolicy->scopes.contains(QStringLiteral("pico-visual-designer")) && !globalPolicy->scopes.contains(QStringLiteral("all")) && globalPolicy->scopes.size() == pvdPolicyScopes.size());
+
+    QTemporaryDir generatedPvdProject;
+    ProjectModel generatedPvdModel;
+    TemplateManager().applyTemplate(&generatedPvdModel, QStringLiteral("pico-2w-visual-designer"));
+    QString generatedPvdError;
+    const bool generatedPvdReady = generatedPvdProject.isValid() && initialize(generatedPvdProject.path(), &generatedPvdModel, &generatedPvdError);
+    UpdateService pvdUpdateService;
+    const auto pvdApplicable = pvdUpdateService.applicableApprovedKnowledge(generatedPvdProject.path(), generatedPvdModel, &generatedPvdError);
+    const auto pvdMatch = std::find_if(pvdApplicable.cbegin(), pvdApplicable.cend(), [&pvdPolicyId](const auto& entry) { return entry.id == pvdPolicyId; });
+    campaign.check(QStringLiteral("UPDATE-303"), QStringLiteral("new Pico 2 W Visual Designer project resolves PVD policy as applicable"), generatedPvdReady && pvdMatch != pvdApplicable.cend());
+
+    QTemporaryDir pvdUnrelatedProject;
+    ProjectModel pvdUnrelatedModel;
+    TemplateManager().applyTemplate(&pvdUnrelatedModel, QStringLiteral("qt-desktop-application"));
+    QString pvdUnrelatedError;
+    const bool pvdUnrelatedReady = pvdUnrelatedProject.isValid() && initialize(pvdUnrelatedProject.path(), &pvdUnrelatedModel, &pvdUnrelatedError);
+    const auto pvdUnrelatedApplicable = pvdUpdateService.applicableApprovedKnowledge(pvdUnrelatedProject.path(), pvdUnrelatedModel, &pvdUnrelatedError);
+    campaign.check(QStringLiteral("UPDATE-304"), QStringLiteral("unrelated managed projects do not activate PVD policy"), pvdUnrelatedReady && std::none_of(pvdUnrelatedApplicable.cbegin(), pvdUnrelatedApplicable.cend(), [&pvdPolicyId](const auto& entry) { return entry.id == pvdPolicyId; }));
+    const auto generatedPvdEntries = policyKnowledge.entries(generatedPvdProject.path(), &generatedPvdError);
+    const auto generatedPvdPolicy = std::find_if(generatedPvdEntries.cbegin(), generatedPvdEntries.cend(), [&pvdPolicyId](const auto& entry) { return entry.id == pvdPolicyId; });
+    QFile generatedPvdAgentFile(QDir(generatedPvdProject.path()).filePath(AramfPaths::AgentInstructions));
+    const QString generatedPvdAgent = generatedPvdAgentFile.open(QIODevice::ReadOnly) ? QString::fromUtf8(generatedPvdAgentFile.readAll()) : QString();
+    const QString policyText = generatedPvdPolicy == generatedPvdEntries.cend() ? QString() : generatedPvdPolicy->lesson;
+    campaign.check(QStringLiteral("UPDATE-305"), QStringLiteral("generated PVD agent context preserves Core PASS != GUI PASS"), generatedPvdAgent.contains(QStringLiteral("framework-knowledge.json")) && policyText.contains(QStringLiteral("core/unit/service/generator/backend PASS is not sufficient")));
+    campaign.check(QStringLiteral("UPDATE-306"), QStringLiteral("PVD guidance requires GUI-driven Build Transfer and Debug"), policyText.contains(QStringLiteral("Build, Transfer, Runtime, and Debug")) && policyText.contains(QStringLiteral("visible GUI workflow")));
+    campaign.check(QStringLiteral("UPDATE-307"), QStringLiteral("PVD policy preserves existing core and service tests"), policyText.contains(QStringLiteral("Core tests remain valuable and must be preserved")));
+    campaign.check(QStringLiteral("UPDATE-308"), QStringLiteral("physical certification remains distinct from software evidence"), policyText.contains(QStringLiteral("PASS-PHYSICAL")) && policyText.contains(QStringLiteral("NOT-TESTED")) && policyText.contains(QStringLiteral("Never infer physical certification")));
+    campaign.check(QStringLiteral("UPDATE-309"), QStringLiteral("current external-hardware limitation is preserved"), policyText.contains(QStringLiteral("Do not require new wiring or external hardware")));
+    campaign.check(QStringLiteral("UPDATE-310"), QStringLiteral("policy cleanup remains under TOP PRIORITY safety"), policyText.contains(QStringLiteral("TOP PRIORITY")) && policyText.contains(QStringLiteral("rmdir /s /q")) && policyText.contains(QStringLiteral("rd /s /q")) && policyText.contains(QStringLiteral("Remove-Item -Recurse")) && policyText.contains(QStringLiteral("rm -rf")));
+
     AramfPaths::clearApplicationDirectoryForTests();
     AramfPaths::clearProgramRootForTests();
     FrameworkKnowledgeService::clearGlobalLibraryPathForTests();
