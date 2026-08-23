@@ -37,6 +37,8 @@ set(ARAMF_CORE_SOURCES
     src/core/ProjectModel.cpp
     src/core/Services.h
     src/core/Services.cpp
+    src/core/ValidationRouting.h
+    src/core/ValidationRouting.cpp
 )
 
 set(ARAMF_UI_SOURCES
@@ -128,6 +130,8 @@ if(BUILD_TESTING)
         src/core/RuleCatalog.cpp
         src/core/MemoryCatalog.h
         src/core/MemoryCatalog.cpp
+        src/core/ValidationRouting.h
+        src/core/ValidationRouting.cpp
         src/core/ProjectPersistence.h
         src/core/ProjectPersistence.cpp
         src/core/ProjectModel.h
@@ -156,6 +160,8 @@ if(BUILD_TESTING)
         src/core/EnvironmentCatalog.cpp
         src/core/MemoryCatalog.h
         src/core/MemoryCatalog.cpp
+        src/core/ValidationRouting.h
+        src/core/ValidationRouting.cpp
         src/ui/shared/CapabilityCheckGroup.h
         src/ui/shared/CapabilityCheckGroup.cpp
         src/ui/workflows/resources/authority/ResourceAuthorityPage.h

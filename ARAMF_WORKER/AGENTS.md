@@ -76,6 +76,7 @@ Read `memory/memory-contract.json` before recording development results. Do not 
 - Record task starts/completions, build results, test results, and validation outcomes when configured.
 - Record durable decisions only for genuine architecture or policy choices through the decision workflow.
 - Record a checkpoint only for a genuine stable recovery point with `aramf memory checkpoint --project <project-root> --title <title> --summary <summary>`; routine feedback does not create one.
+- Run the minimum validation required by `routing/validation-policy.json`; do not run full regression campaigns for ordinary isolated changes. Escalate when scope, risk, failure, or explicit milestone policy requires it.
 - Follow current durable decisions; explicitly superseded decisions remain historical and inactive.
 
 The recorder owns event IDs, timestamps, sequences, metrics, pruning, validation, and current-state pointers.

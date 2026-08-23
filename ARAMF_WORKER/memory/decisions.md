@@ -194,3 +194,13 @@ creating parallel lessons.
 - Superseded-By: none
 - Summary: External agents use the ARAMF headless recorder; ProjectMemory solely owns IDs, timestamps, sequences, metrics, current-state, manifests, pruning, and consistency. Checkpoints and decisions remain deliberate separate workflows.
 <!-- /ARAMF-DECISION -->
+
+## Decision Record: proportional-validation-routing
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: proportional-validation-routing
+- Topic: validation-policy
+- Status: current
+- Superseded-By: none
+- Summary: Validation is proportional to changed scope and risk: start at FOCUSED, escalate to SUBSYSTEM or FULL REGRESSION only for relevant impact, failure, uncertainty, milestone, release, migration, or explicit certification.
+<!-- /ARAMF-DECISION -->

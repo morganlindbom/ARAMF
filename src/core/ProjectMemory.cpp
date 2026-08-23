@@ -5,6 +5,7 @@
 #include "AramfPaths.h"
 #include "ControlPlaneMigration.h"
 #include "ProjectModel.h"
+#include "ValidationRouting.h"
 
 #include <algorithm>
 #include <QDateTime>
@@ -1375,6 +1376,7 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
     const QList<QPair<QString, QJsonObject>> defaults {
         {AramfPaths::TaskRoutes, QJsonObject {{QStringLiteral("routes"), QJsonArray {}}}},
         {AramfPaths::ScopeRoutes, QJsonObject {{QStringLiteral("routes"), QJsonArray {}}}},
+        {AramfPaths::ValidationPolicy, ValidationRouting::policy()},
         {AramfPaths::ResourceManifest, QJsonObject {{QStringLiteral("resources"), QJsonArray {}}}},
         {AramfPaths::CustomTemplates, QJsonObject {{QStringLiteral("templates"), QJsonArray {}}}},
         {AramfPaths::Provenance, QJsonObject {{QStringLiteral("status"), QStringLiteral("managed")}, {QStringLiteral("implementation"), QStringLiteral("C++")}}},
@@ -1552,11 +1554,13 @@ bool ProjectMemory::refreshMemoryInstructions(const QString& projectRoot, QStrin
         "- Record task starts/completions, build results, test results, and validation outcomes when configured.\n"
         "- Record durable decisions only for genuine architecture or policy choices through the decision workflow.\n"
         "- Record a checkpoint only for a genuine stable recovery point with `aramf memory checkpoint --project <project-root> --title <title> --summary <summary>`; routine feedback does not create one.\n"
+        "- Run the minimum validation required by `routing/validation-policy.json`; do not run full regression campaigns for ordinary isolated changes. Escalate when scope, risk, failure, or explicit milestone policy requires it.\n"
         "- Follow current durable decisions; explicitly superseded decisions remain historical and inactive.\n\n"
         "The recorder owns event IDs, timestamps, sequences, metrics, pruning, validation, and current-state pointers.\n\n"
         "<!-- ARAMF-MEMORY-END -->");
     content.replace(beginAt, endAt + end.size() - beginAt, section);
-    return writeTextFile(path, content.toUtf8(), error);
+    if (!writeTextFile(path, content.toUtf8(), error)) return false;
+    return writeJsonFile(absolutePath(projectRoot, AramfPaths::ValidationPolicy), ValidationRouting::policy(), error);
 }
 
 bool ProjectMemory::writeValidationReport(const QString& projectRoot, const QJsonObject& report, QString* error) const

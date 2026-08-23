@@ -7,6 +7,7 @@
 #include "AiCatalog.h"
 #include "ProjectMemory.h"
 #include "RuleCatalog.h"
+#include "ValidationRouting.h"
 
 #include <QDir>
 #include <QFile>
@@ -424,6 +425,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "When a corrected approach is verified and reusable, record a Framework Knowledge candidate with evidence. Never self-approve it; explicit user approval is required before changing its status to `approved`. Superseded entries remain auditable but are not active.\n"
             "Keep project status current and use project memory when configured.\n"
             "The generated control directory is `ARAMF_WORKER/`.\n");
+        canonicalAgent += QStringLiteral(
+            "Run the minimum validation required by `routing/validation-policy.json`; do not run full regression campaigns for ordinary isolated changes. Escalate when scope, risk, failure, or explicit milestone policy requires it.\n");
         if (options.generateMemory) {
             const auto memory = model.memoryConfiguration();
             QString memorySection = QStringLiteral(
@@ -515,7 +518,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         };
         const QJsonObject scopeRoutes{{QStringLiteral("scopes"), toJsonArray(rules.projectScopes)}};
         if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::TaskRoutes), taskRoutes, &error)
-            || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::ScopeRoutes), scopeRoutes, &error)) {
+            || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::ScopeRoutes), scopeRoutes, &error)
+            || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::ValidationPolicy), ValidationRouting::policy(), &error)) {
             return fail(QStringLiteral("Routing"), error);
         }
         const QString readme = QStringLiteral(
@@ -528,7 +532,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/routing/README.md")), readme.toUtf8(), &error)) {
             return fail(QStringLiteral("Routing"), error);
         }
-        addGeneratedFiles(result, {AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes, QStringLiteral("ARAMF_WORKER/routing/README.md")});
+        addGeneratedFiles(result, {AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes, AramfPaths::ValidationPolicy, QStringLiteral("ARAMF_WORKER/routing/README.md")});
     }
 
     if (options.generatePlatforms) {

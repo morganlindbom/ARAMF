@@ -1,0 +1,71 @@
+{
+    "_file": "validation-policy.json",
+    "escalation": [
+        "FOCUSED -> SUBSYSTEM on failure or cross-impact",
+        "SUBSYSTEM -> FULL REGRESSION on failure or broad uncertainty"
+    ],
+    "fullRegressionTriggers": [
+        "release preparation",
+        "explicit milestone or certification",
+        "major architecture or control-plane migration",
+        "broad cross-system impact",
+        "unbounded shared impact",
+        "failed lower-level validation with wider risk"
+    ],
+    "levels": {
+        "focused": {
+            "default": true,
+            "excludesByDefault": [
+                "test_250",
+                "test_550-automated",
+                "aramf-worker-migration",
+                "cold-start"
+            ],
+            "required": [
+                "affected-focused-tests",
+                "affected-target-build",
+                "git-diff-check"
+            ]
+        },
+        "full-regression": {
+            "required": [
+                "production-build",
+                "ctest",
+                "test_250",
+                "test_550-automated",
+                "aramf-worker-migration",
+                "application-startup",
+                "memory-consistency",
+                "cold-start",
+                "git-diff-check"
+            ]
+        },
+        "subsystem": {
+            "conditional": [
+                "cold-start when bootstrap, contract, or discovery changes"
+            ],
+            "excludesByDefault": [
+                "test_250",
+                "test_550-automated",
+                "aramf-worker-migration"
+            ],
+            "required": [
+                "affected-focused-tests",
+                "ctest",
+                "memory-consistency"
+            ]
+        }
+    },
+    "principle": "Validation is proportional to changed scope, task type, affected subsystem, and risk; use the minimum sufficient validation and escalate when evidence requires it.",
+    "routes": {
+        "control-plane": "full-regression",
+        "generation": "subsystem; full only for broad architecture or explicit certification",
+        "migration": "full-regression",
+        "persistence": "subsystem",
+        "project-memory": "subsystem; cold-start only for contract/bootstrap/discovery impact",
+        "resources": "subsystem when persistence, generation, or verification is affected",
+        "ui": "focused unless shared workflow behavior changes",
+        "workflow": "focused or subsystem according to shared impact"
+    },
+    "version": 1
+}
