@@ -10,8 +10,10 @@
 #include "ui/workflows/resources/authority/ResourceAuthorityPage.h"
 #include "ui/workflows/update/review/FrameworkKnowledgeReviewPage.h"
 #include "ui/workflows/update/apply/FrameworkKnowledgeApplyPage.h"
+#include "ui/workflows/update/backlog/ImprovementBacklogPage.h"
 #include "core/CodexExecutionAdapter.h"
 #include "core/AramfPaths.h"
+#include "core/ImprovementBacklog.h"
 
 #include <QApplication>
 #include <QCheckBox>
@@ -44,9 +46,10 @@ int main(int argc, char** argv)
     QStandardPaths::setTestModeEnabled(true);
     QTemporaryDir globalData;
     FrameworkKnowledgeService::setGlobalLibraryPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")));
+    ImprovementBacklogService::setPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/aramf-improvement-backlog.json")));
     QFile::remove(FrameworkKnowledgeService().legacyGlobalLibraryPath());
     WorkflowWidget workflow;
-    workflow.setStepCount(25);
+    workflow.setStepCount(26);
 
     auto* list = workflow.findChild<QListWidget*>();
     bool ok = require(list != nullptr, "workflow list must exist");
@@ -56,7 +59,7 @@ int main(int argc, char** argv)
     QObject::connect(&workflow, &WorkflowWidget::pageSelected,
                      [&selected](WorkflowPageId page) { selected << page; });
 
-    const QList<int> rows{1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 19, 20, 22, 23, 25, 26, 27, 28, 30, 31};
+    const QList<int> rows{1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 19, 20, 22, 23, 25, 26, 27, 28, 30, 31, 32};
     const QList<WorkflowPageId> expected{
         WorkflowPageId::Setup,
         WorkflowPageId::Academic,
@@ -82,7 +85,8 @@ int main(int argc, char** argv)
         WorkflowPageId::Verify,
         WorkflowPageId::Finalize,
         WorkflowPageId::UpdateReview,
-        WorkflowPageId::UpdateApply
+        WorkflowPageId::UpdateApply,
+        WorkflowPageId::ImprovementBacklog
     };
 
     for (int i = 0; i < rows.size(); ++i) {
@@ -317,6 +321,29 @@ int main(int argc, char** argv)
                       "Page 25 must display the resolved Codex version");
     }
 
+    QTemporaryDir backlogProject;
+    QJsonObject backlogReport;
+    QString backlogError;
+    const bool backlogReported = ImprovementBacklogService().report(backlogProject.path(), QStringLiteral("Page 26 fixture gap"), QStringLiteral("A framework capability was missing during managed-project work."), QStringLiteral("ARAMF should provide a canonical route."), QStringLiteral("workflow"), {QStringLiteral("workflow-test")}, QStringLiteral("backlog acceptance"), QStringLiteral("test"), &backlogReport, &backlogError);
+    ImprovementBacklogPage backlogPage(&model);
+    backlogPage.show();
+    app.processEvents();
+    auto* backlogList = backlogPage.findChild<QListWidget*>(QStringLiteral("improvementBacklogItems"));
+    auto* backlogSummary = backlogPage.findChild<QLabel*>(QStringLiteral("improvementBacklogSummary"));
+    ok &= require(backlogReported && backlogList && backlogList->count() == 1, "Page 26 must display reported observations");
+    ok &= require(backlogSummary && backlogSummary->text().contains(QStringLiteral("Observations: 1")), "Page 26 must display backlog summary counts");
+    if (backlogList) backlogList->setCurrentRow(0);
+    QPushButton* promoteBacklog = nullptr;
+    const auto buttons = backlogPage.findChildren<QPushButton*>();
+    for (auto* button : buttons) if (button->text() == QStringLiteral("Promote to TODO")) promoteBacklog = button;
+    if (promoteBacklog) promoteBacklog->click();
+    app.processEvents();
+    ok &= require(backlogList && backlogList->item(0)->text().contains(QStringLiteral("TODO-001")), "Page 26 must explicitly promote an observation to TODO");
+    auto* backlogFilter = backlogPage.findChild<QComboBox*>(QStringLiteral("improvementBacklogFilter"));
+    if (backlogFilter) backlogFilter->setCurrentText(QStringLiteral("TODO"));
+    app.processEvents();
+    ok &= require(backlogList && backlogList->count() == 1, "Page 26 TODO filter must show accepted TODOs");
+
     QTemporaryDir updateFixture;
     ProjectModel updateModel;
     updateModel.setProjectPath(updateFixture.path());
@@ -526,5 +553,7 @@ int main(int argc, char** argv)
                       "constructing a second authority page must be read-only");
     }
 
+    ImprovementBacklogService::clearPathForTests();
+    FrameworkKnowledgeService::clearGlobalLibraryPathForTests();
     return ok ? 0 : 1;
 }

@@ -10,7 +10,7 @@ stale-plan rejection, explicit external-agent handoff, asynchronous Codex
 execution boundaries, validation-gated completion, and separation from
 Project Memory bookkeeping.
 
-Scenario namespace: `UPDATE-001` through `UPDATE-212`.
+Scenario namespace: `UPDATE-001` through `UPDATE-260`.
 
 The extension also validates the three Framework Knowledge layers: built-in
 product knowledge, the persistent user-owned global ARAMF library, and

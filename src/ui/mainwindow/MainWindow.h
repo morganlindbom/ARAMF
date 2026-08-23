@@ -42,6 +42,7 @@ class VerifyPage;
 class FinalizePage;
 class FrameworkKnowledgeReviewPage;
 class FrameworkKnowledgeApplyPage;
+class ImprovementBacklogPage;
 class QEvent;
 
 class MainWindow final : public QMainWindow
@@ -115,6 +116,7 @@ private:
     FinalizePage* finalizePage_ = nullptr;
     FrameworkKnowledgeReviewPage* updateReviewPage_ = nullptr;
     FrameworkKnowledgeApplyPage* updateApplyPage_ = nullptr;
+    ImprovementBacklogPage* improvementBacklogPage_ = nullptr;
 
     QMap<WorkflowPageId, int> pageStackIndices_;
 

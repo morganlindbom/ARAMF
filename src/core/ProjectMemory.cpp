@@ -358,11 +358,17 @@ bool ProjectMemory::initialize(const QString& projectRoot, const ProjectModel* m
         }
     }
 
-    if (!generateCurrentState(projectRoot, error) || !generateColdStartValidation(projectRoot, error)) {
+    if (!generateCurrentState(projectRoot, error) || !generateColdStartValidation(projectRoot, error, true)) {
         return false;
     }
     const QJsonObject report = validate(projectRoot, error);
-    return report.value(QStringLiteral("status")).toString() == QStringLiteral("PASS");
+    if (report.value(QStringLiteral("status")).toString() == QStringLiteral("PASS")) return true;
+    if (error && error->isEmpty()) {
+        QStringList failures;
+        for (const auto& value : report.value(QStringLiteral("errors")).toArray()) failures.append(value.toString());
+        *error = failures.isEmpty() ? QStringLiteral("Project Memory consistency validation failed.") : failures.join(QStringLiteral("; "));
+    }
+    return false;
 }
 
 bool ProjectMemory::initializeMemory(const QString& projectRoot, const ProjectModel* model, QString* error)
@@ -391,12 +397,18 @@ bool ProjectMemory::initializeMemory(const QString& projectRoot, const ProjectMo
         }
     }
 
-    if (!generateCurrentState(projectRoot, error)
-        || !generateColdStartValidation(projectRoot, error, false)) {
-        return false;
-    }
+    if (!generateCurrentState(projectRoot, error)) return false;
+    const bool controlPlaneReady = QFileInfo::exists(absolutePath(projectRoot, AramfPaths::AgentInstructions))
+        && QFileInfo::exists(absolutePath(projectRoot, AramfPaths::ProjectStatus));
+    if (!generateColdStartValidation(projectRoot, error, controlPlaneReady)) return false;
     const QJsonObject report = validate(projectRoot, error);
-    return report.value(QStringLiteral("status")).toString() == QStringLiteral("PASS");
+    if (report.value(QStringLiteral("status")).toString() == QStringLiteral("PASS")) return true;
+    if (error && error->isEmpty()) {
+        QStringList failures;
+        for (const auto& value : report.value(QStringLiteral("errors")).toArray()) failures.append(value.toString());
+        *error = failures.isEmpty() ? QStringLiteral("Project Memory consistency validation failed.") : failures.join(QStringLiteral("; "));
+    }
+    return false;
 }
 
 bool ProjectMemory::appendEvent(const QString& projectRoot,
@@ -1377,6 +1389,8 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         "Update `PROJECT_STATUS.md` after every meaningful implementation task. Keep it current with what exists, what was changed, verified results, known issues, and the next concrete work. Do not use it as an append-only history.\n\n"
         "## UPDATE workflow\n\n"
         "UPDATE is a deliberate human-controlled workflow. Review approved Framework Knowledge, analyze the whole project, prepare a plan, and explicitly execute it through the configured agent. The managed project root is the implementation target; `ARAMF_WORKER/` is orchestration only. Read `update/update-plan.json` and `update/update-contract.json` when present. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes and validation are required. Preserve higher-authority instructions and follow `routing/validation-policy.json`. Do not treat candidates as approved and do not create routine update noise.\n\n"
+        "## ARAMF improvement backlog\n\n"
+        "When work reveals that ARAMF itself lacks a canonical workflow, rule, representation, validation path, resource model, or other framework capability, do not abandon the managed project to redesign ARAMF. If the current work can safely continue under existing authority, report the gap with `aramf improvement report --project <project-root> --title <title> --observation <observation> ...` and continue. A report is an observation, not an approved TODO or Framework Knowledge. Do not report ordinary project bugs as ARAMF gaps.\n\n"
         "## Memory contract\n\n"
         "Record durable architectural choices in `memory/decisions.md`. Keep observations, TODOs, decisions, implementation, and validation separate. Never claim validation without evidence.\n\n"
         "For routine task, build, test, and validation feedback, read `memory/memory-contract.json` and use `aramf memory record --project <project-root> --operation <operation> ...`. Do not edit ProjectMemory-owned bookkeeping files directly. Durable decisions and checkpoints are deliberate separate workflows. Follow current decisions and ignore explicitly superseded decisions.\n\n"
@@ -1594,6 +1608,13 @@ bool ProjectMemory::refreshMemoryContract(const QString& projectRoot, QString* e
         {QStringLiteral("promotionCommand"), QStringLiteral("aramf memory knowledge promote --project <project-root> --id <knowledge-id>")},
         {QStringLiteral("promotionPolicy"), QStringLiteral("Only explicitly approved portable entries may be promoted; direct editing of the global library and project framework-knowledge.json is forbidden.")},
         {QStringLiteral("seeding"), QStringLiteral("New managed projects seed approved global and built-in knowledge without replacing project-local entries.")}});
+    contract.insert(QStringLiteral("improvementBacklog"), QJsonObject{
+        {QStringLiteral("path"), QStringLiteral("AramfPaths::programRoot()/ARAMF_DATA/aramf-improvement-backlog.json")},
+        {QStringLiteral("reportCommand"), QStringLiteral("aramf improvement report --project <project-root> --title <title> --observation <observation> [--expected <behavior>] [--area <area>] [--evidence <evidence>]")},
+        {QStringLiteral("listCommand"), QStringLiteral("aramf improvement list --project <project-root> [--stage <stage>] [--status <status>]")},
+        {QStringLiteral("triageCommand"), QStringLiteral("aramf improvement triage --project <project-root> --id <gap-id> --action <promote|project-specific|duplicate|needs-evidence|already-resolved|reject> [--duplicate-of <gap-id>] [--priority <priority>]")},
+        {QStringLiteral("observationOnly"), true},
+        {QStringLiteral("directEditing"), QStringLiteral("forbidden")}});
     return writeJsonFile(path, contract, error);
 }
 
@@ -1625,6 +1646,7 @@ bool ProjectMemory::refreshMemoryInstructions(const QString& projectRoot, QStrin
         "- Record a checkpoint only for a genuine stable recovery point with `aramf memory checkpoint --project <project-root> --title <title> --summary <summary>`; routine feedback does not create one.\n"
         "- Framework Knowledge has separate built-in, global, and project-local layers. The global user library is under `ARAMF_DATA/` at the resolved ARAMF program root; build directories are disposable. Promote an explicitly approved portable entry only through `aramf memory knowledge promote --project <project-root> --id <knowledge-id>`. Never edit the library or project knowledge files directly.\n"
         "- UPDATE is a deliberate human-controlled workflow: review approved knowledge, analyze the whole project, prepare a plan, and explicitly execute it through the configured agent. The managed project root is the implementation target; `ARAMF_WORKER/` is orchestration only. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes and validation are required. Read `update/update-plan.json` and `update/update-contract.json` when present. Candidates are never active.\n"
+        "- When work reveals a deficiency in ARAMF's own canonical workflow, rules, representations, validation, resource model, or control plane, report it with `aramf improvement report --project <project-root> --title <title> --observation <observation> ...` and continue the managed project when safe. This creates an observation only; it does not create a TODO, durable decision, or Framework Knowledge. Do not report ordinary project bugs as ARAMF gaps. Use `aramf improvement list` to inspect the global backlog.\n"
         "- Run the minimum validation required by `routing/validation-policy.json`; do not run full regression campaigns for ordinary isolated changes. Escalate when scope, risk, failure, or explicit milestone policy requires it.\n"
         "- Follow current durable decisions; explicitly superseded decisions remain historical and inactive.\n\n"
         "The recorder owns event IDs, timestamps, sequences, metrics, pruning, validation, and current-state pointers.\n\n"

@@ -2,12 +2,14 @@
 
 #include "AramfPaths.h"
 #include "FrameworkKnowledge.h"
+#include "ImprovementBacklog.h"
 #include "ProjectMemory.h"
 
 #include <QDir>
 #include <QFileInfo>
 #include <QHash>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QSet>
 #include <QTextStream>
 
@@ -21,6 +23,10 @@ void printUsage(QTextStream& stream)
             << "       aramf memory checkpoint --project <project-root> --title <title> --summary <summary> [options]\n"
             << "       aramf memory validate --project <project-root>\n"
             << "       aramf memory cold-start --project <project-root>\n"
+            << "       aramf improvement report --project <project-root> --title <title> --observation <observation> [options]\n"
+            << "       aramf improvement normalize --project <project-root> --project-id <id> --project-name <name>\n"
+            << "       aramf improvement list [--stage <stage>] [--status <status>] [--project <project>]\n"
+            << "       aramf improvement triage --id <gap-id> --action <action> [options]\n"
             << "       aramf memory refresh-contract --project <project-root>\n"
             << "Operations: task-start, task-complete, build-result, test-result, validation-result\n"
             << "Common options: --task <title> --status PASS|FAIL --summary <text> --detail <text>\n"
@@ -60,6 +66,34 @@ bool boundedIntegerOption(const QHash<QString, QString>& options,
     fields.insert(name.mid(2), value);
     return true;
 }
+
+QHash<QString, QString> parseImprovementOptions(const QStringList& arguments, int start, QTextStream& error)
+{
+    const QSet<QString> allowed{QStringLiteral("--project"), QStringLiteral("--title"), QStringLiteral("--observation"),
+                                QStringLiteral("--expected"), QStringLiteral("--area"), QStringLiteral("--evidence"),
+                                QStringLiteral("--task"), QStringLiteral("--agent"), QStringLiteral("--project-id"), QStringLiteral("--project-name"), QStringLiteral("--stage"),
+                                QStringLiteral("--status"), QStringLiteral("--id"), QStringLiteral("--action"),
+                                QStringLiteral("--duplicate-of"), QStringLiteral("--priority")};
+    QHash<QString, QString> options;
+    for (int index = start; index < arguments.size(); ++index) {
+        const auto name = arguments.at(index);
+        if (!allowed.contains(name) || index + 1 >= arguments.size() || arguments.at(index + 1).startsWith(QStringLiteral("--"))) {
+            error << "error=invalid-argument:" << name << "\n";
+            return {};
+        }
+        options.insert(name, arguments.at(++index));
+    }
+    return options;
+}
+
+void printImprovementItem(QTextStream& output, const QJsonObject& item)
+{
+    output << item.value(QStringLiteral("id")).toString() << " "
+           << item.value(QStringLiteral("todoId")).toString() << " "
+           << item.value(QStringLiteral("stage")).toString() << " "
+           << item.value(QStringLiteral("status")).toString() << " "
+           << item.value(QStringLiteral("title")).toString() << "\n";
+}
 }
 
 int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStream& error)
@@ -67,6 +101,77 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
     if (arguments.size() == 1 && arguments.first() == QStringLiteral("--help")) {
         printUsage(output);
         return 0;
+    }
+    if (!arguments.isEmpty() && arguments.first() == QStringLiteral("improvement")) {
+        if (arguments.size() == 2 && arguments.at(1) == QStringLiteral("--help")) {
+            output << "Usage: aramf improvement report --project <root> --title <title> --observation <observation> [options]\n"
+                    << "       aramf improvement normalize --project <root> --project-id <id> --project-name <name>\n"
+                    << "       aramf improvement list [--stage <stage>] [--status <status>] [--project <project>]\n"
+                    << "       aramf improvement triage --id <gap-id> --action promote|project-specific|duplicate|needs-evidence|already-resolved|reject [options]\n";
+            return 0;
+        }
+        if (arguments.size() < 2) { printUsage(error); return 2; }
+        ImprovementBacklogService service;
+        const auto operation = arguments.at(1);
+        if (operation == QStringLiteral("report")) {
+            const auto options = parseImprovementOptions(arguments, 2, error);
+            for (const auto& required : {QStringLiteral("--project"), QStringLiteral("--title"), QStringLiteral("--observation")})
+                if (!options.contains(required)) { error << "error=missing-argument:" << required << "\n"; return 2; }
+            QStringList evidence;
+            if (options.contains(QStringLiteral("--evidence"))) evidence.append(options.value(QStringLiteral("--evidence")));
+            QJsonObject result;
+            QString operationError;
+            auto projectIdentity = service.projectIdentity(options.value(QStringLiteral("--project")));
+            if (options.contains(QStringLiteral("--project-id"))) projectIdentity.projectId = options.value(QStringLiteral("--project-id")).trimmed();
+            if (options.contains(QStringLiteral("--project-name"))) projectIdentity.projectName = options.value(QStringLiteral("--project-name")).trimmed();
+            if (!service.reportWithIdentity(projectIdentity, options.value(QStringLiteral("--title")), options.value(QStringLiteral("--observation")),
+                                             options.value(QStringLiteral("--expected")), options.value(QStringLiteral("--area")), evidence,
+                                             options.value(QStringLiteral("--task")), options.value(QStringLiteral("--agent")), &result, &operationError)) {
+                error << "error=" << operationError << "\n"; return 2;
+            }
+            output << "reported improvement=" << result.value(QStringLiteral("id")).toString()
+                   << " outcome=" << result.value(QStringLiteral("outcome")).toString() << " path=" << service.backlogPath() << "\n";
+            return 0;
+        }
+        if (operation == QStringLiteral("normalize")) {
+            const auto options = parseImprovementOptions(arguments, 2, error);
+            for (const auto& required : {QStringLiteral("--project"), QStringLiteral("--project-id"), QStringLiteral("--project-name")})
+                if (!options.contains(required)) { error << "error=missing-argument:" << required << "\n"; return 2; }
+            const ImprovementBacklogProjectIdentity projectIdentity{options.value(QStringLiteral("--project-id")).trimmed(), options.value(QStringLiteral("--project-name")).trimmed(), options.value(QStringLiteral("--project"))};
+            QString operationError;
+            if (!service.normalizeProjectIdentity(projectIdentity, &operationError)) { error << "error=" << operationError << "\n"; return 2; }
+            output << "normalized project=" << projectIdentity.projectId << " path=" << service.backlogPath() << "\n";
+            return 0;
+        }
+        if (operation == QStringLiteral("list")) {
+            const auto options = parseImprovementOptions(arguments, 2, error);
+            QString operationError;
+            const auto allItems = service.items(&operationError);
+            if (!operationError.isEmpty()) { error << "error=" << operationError << "\n"; return 2; }
+            for (const auto& item : allItems) {
+                if (options.contains(QStringLiteral("--stage")) && item.value(QStringLiteral("stage")).toString() != options.value(QStringLiteral("--stage"))) continue;
+                if (options.contains(QStringLiteral("--status")) && item.value(QStringLiteral("status")).toString() != options.value(QStringLiteral("--status"))) continue;
+                if (options.contains(QStringLiteral("--project"))) {
+                    bool found = false;
+                    for (const auto& project : item.value(QStringLiteral("originProjects")).toArray())
+                        if (project.toObject().value(QStringLiteral("projectId")).toString() == options.value(QStringLiteral("--project"))
+                            || project.toObject().value(QStringLiteral("projectName")).toString() == options.value(QStringLiteral("--project"))) found = true;
+                    if (!found) continue;
+                }
+                printImprovementItem(output, item);
+            }
+            return 0;
+        }
+        if (operation == QStringLiteral("triage")) {
+            const auto options = parseImprovementOptions(arguments, 2, error);
+            if (!options.contains(QStringLiteral("--id")) || !options.contains(QStringLiteral("--action"))) { error << "error=id-and-action-are-required\n"; return 2; }
+            QString operationError;
+            if (!service.triage(options.value(QStringLiteral("--id")), options.value(QStringLiteral("--action")), options.value(QStringLiteral("--duplicate-of")), options.value(QStringLiteral("--priority")), &operationError)) { error << "error=" << operationError << "\n"; return 2; }
+            output << "triaged improvement=" << options.value(QStringLiteral("--id")) << " action=" << options.value(QStringLiteral("--action")) << "\n";
+            return 0;
+        }
+        error << "error=unknown-improvement-operation:" << operation << "\n";
+        return 2;
     }
     if (arguments.size() >= 2 && arguments.at(0) == QStringLiteral("memory")
         && (arguments.at(1) == QStringLiteral("validate") || arguments.at(1) == QStringLiteral("cold-start")

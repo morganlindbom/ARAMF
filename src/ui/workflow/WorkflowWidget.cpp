@@ -61,7 +61,7 @@ void WorkflowWidget::setStepCount(int)
         {tr("RULES"), {{tr("Which rules should apply?"), WorkflowPageId::RuleSelection}, {tr("How should rules be routed?"), WorkflowPageId::RuleRouting}}},
         {tr("MEMORY"), {{tr("What should ARAMF remember?"), WorkflowPageId::MemoryCapture}, {tr("How should project memory be maintained?"), WorkflowPageId::MemoryMaintenance}}},
         {tr("GENERATE"), {{tr("Review"), WorkflowPageId::Review}, {tr("Generate"), WorkflowPageId::Generate}, {tr("Verify"), WorkflowPageId::Verify}, {tr("Finalize"), WorkflowPageId::Finalize}}},
-        {tr("UPDATE"), {{tr("Review Framework Knowledge"), WorkflowPageId::UpdateReview}, {tr("Apply Framework Knowledge"), WorkflowPageId::UpdateApply}}}
+        {tr("UPDATE"), {{tr("Review Framework Knowledge"), WorkflowPageId::UpdateReview}, {tr("Apply Framework Knowledge"), WorkflowPageId::UpdateApply}, {tr("ARAMF Improvement Backlog"), WorkflowPageId::ImprovementBacklog}}}
     };
     for (const auto& group : groups) {
         auto* heading = new QListWidgetItem(group.first, steps_);

@@ -135,6 +135,8 @@ void GeneratePage::showResult(const GenerationResult& result)
     QString text;
     if (result.success) {
         text += tr("Save: PASS\nGenerate: PASS\n\n");
+    } else if (result.partial) {
+        text += tr("Save: PASS\nGenerate: PARTIAL\n\n");
     } else {
         text += tr("Save: PASS\nGenerate: FAIL\n\n");
     }
@@ -145,6 +147,12 @@ void GeneratePage::showResult(const GenerationResult& result)
     text += tr("Generated products:\n");
     if (result.generatedFiles.isEmpty()) text += tr("- None\n");
     for (const auto& file : result.generatedFiles) text += QStringLiteral("- %1\n").arg(file);
+    if (!result.failedProduct.isEmpty()) {
+        text += tr("\nFailed product:\n- %1\n").arg(result.failedProduct);
+        text += tr("\nNot attempted after failure:\n");
+        if (result.notAttemptedProducts.isEmpty()) text += tr("- None\n");
+        for (const auto& product : result.notAttemptedProducts) text += QStringLiteral("- %1\n").arg(product);
+    }
     text += tr("\nSkipped products:\n");
     if (result.skippedProducts.isEmpty()) text += tr("- None\n");
     for (const auto& product : result.skippedProducts) text += QStringLiteral("- %1\n").arg(product);

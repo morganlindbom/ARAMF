@@ -10,9 +10,12 @@
 struct GenerationResult
 {
     bool success = false;
+    bool partial = false;
     QString fingerprint;
     QStringList generatedFiles;
     QStringList skippedProducts;
+    QString failedProduct;
+    QStringList notAttemptedProducts;
     QStringList warnings;
     QString error;
 };

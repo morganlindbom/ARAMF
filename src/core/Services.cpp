@@ -394,7 +394,24 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
     }
     result.warnings.append(preparation.warnings);
 
-    auto fail = [&result](const QString& product, const QString& error) {
+    const QList<QPair<bool, QString>> productOrder{
+        {options.generateAgentRules, QStringLiteral("Agent rules")},
+        {options.generateRouting, QStringLiteral("Routing")},
+        {options.generatePlatforms, QStringLiteral("Platform and environment metadata")},
+        {options.generateResources, QStringLiteral("Resource manifest")},
+        {options.generateMemory, QStringLiteral("Project Memory")},
+        {options.generateProvenance, QStringLiteral("Provenance and selection effects")}};
+    auto fail = [&result, &productOrder](const QString& product, const QString& error) {
+        result.failedProduct = product;
+        result.partial = !result.generatedFiles.isEmpty();
+        bool afterFailure = false;
+        for (const auto& [selected, name] : productOrder) {
+            if (name == product) {
+                afterFailure = true;
+                continue;
+            }
+            if (afterFailure && selected) result.notAttemptedProducts.append(name);
+        }
         result.error = QStringLiteral("Generation failed in %1: %2")
                            .arg(product, error.isEmpty() ? QStringLiteral("unknown error") : error);
         return result;

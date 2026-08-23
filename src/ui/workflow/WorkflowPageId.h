@@ -25,5 +25,6 @@ enum class WorkflowPageId {
     Verify,
     Finalize,
     UpdateReview,
-    UpdateApply
+    UpdateApply,
+    ImprovementBacklog
 };
