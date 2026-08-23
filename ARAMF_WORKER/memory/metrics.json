@@ -1,7 +1,7 @@
 {
     "_file": "metrics.json",
-    "buildAttempts": 7,
+    "buildAttempts": 8,
     "failures": 2,
-    "iterations": 4,
-    "testAttempts": 7
+    "iterations": 5,
+    "testAttempts": 8
 }

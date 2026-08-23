@@ -30,6 +30,7 @@ inline const QString MemoryContract = QStringLiteral("ARAMF_WORKER/memory/memory
 inline const QString FrameworkKnowledge = QStringLiteral("ARAMF_WORKER/memory/framework-knowledge.json");
 inline const QString TaskRoutes = QStringLiteral("ARAMF_WORKER/routing/task-routes.json");
 inline const QString ScopeRoutes = QStringLiteral("ARAMF_WORKER/routing/scope-routes.json");
+inline const QString ValidationPolicy = QStringLiteral("ARAMF_WORKER/routing/validation-policy.json");
 inline const QString ResourceManifest = QStringLiteral("ARAMF_WORKER/resources/resources.json");
 inline const QString CustomTemplates = QStringLiteral("ARAMF_WORKER/templates/custom-templates.json");
 inline const QString Provenance = QStringLiteral("ARAMF_WORKER/provenance.json");

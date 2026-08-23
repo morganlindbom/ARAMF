@@ -7,6 +7,7 @@
 #include "core/ProjectModel.h"
 #include "core/ProjectPersistence.h"
 #include "core/Services.h"
+#include "core/ValidationRouting.h"
 
 #include <QCoreApplication>
 #include <QBuffer>
@@ -69,6 +70,41 @@ int main(int argc, char** argv)
 
     const QDir root(temporaryProject.path());
     bool ok = true;
+
+    const auto focusedPlan = ValidationRouting::route({QStringLiteral("src/ui/workflows/resources/authority/ResourceAuthorityPage.cpp"),
+                                                       QStringLiteral("tests/WorkflowNavigationTests.cpp")},
+                                                      QStringLiteral("ordinary UI maintenance"));
+    ok &= require(focusedPlan.level == ValidationLevel::Focused, "isolated UI help-text work must route to FOCUSED");
+    ok &= require(!focusedPlan.requiredChecks.contains(QStringLiteral("test_250"))
+                  && !focusedPlan.requiredChecks.contains(QStringLiteral("test_550-automated")),
+                  "focused routing must exclude broad historical campaigns");
+    const auto projectMemoryPlan = ValidationRouting::route({QStringLiteral("src/core/ProjectMemory.cpp"),
+                                                             QStringLiteral("tests/ProjectMemoryTests.cpp")},
+                                                            QStringLiteral("bug fix"));
+    ok &= require(projectMemoryPlan.level == ValidationLevel::Subsystem
+                  && projectMemoryPlan.requiredChecks.contains(QStringLiteral("ctest"))
+                  && projectMemoryPlan.requiredChecks.contains(QStringLiteral("memory-consistency")),
+                  "ProjectMemory behavior must route to SUBSYSTEM validation");
+    const auto contractPlan = ValidationRouting::route({QStringLiteral("src/core/ProjectMemory.cpp"),
+                                                        QStringLiteral("src/core/Services.cpp")},
+                                                       QStringLiteral("memory contract change"));
+    ok &= require(contractPlan.level == ValidationLevel::Subsystem
+                  && contractPlan.optionalChecks.join(QStringLiteral(" ")).contains(QStringLiteral("cold-start")),
+                  "memory contract changes must make cold-start validation conditional");
+    const auto migrationPlan = ValidationRouting::route({QStringLiteral("src/core/ControlPlaneMigration.cpp")},
+                                                        QStringLiteral("architecture migration"));
+    ok &= require(migrationPlan.level == ValidationLevel::FullRegression
+                  && migrationPlan.requiredChecks.contains(QStringLiteral("test_250"))
+                  && migrationPlan.requiredChecks.contains(QStringLiteral("test_550-automated")),
+                  "control-plane migration must route to FULL REGRESSION");
+    const auto explicitPlan = ValidationRouting::route({QStringLiteral("docs/release.md")}, QStringLiteral("milestone"));
+    ok &= require(explicitPlan.level == ValidationLevel::FullRegression, "explicit milestones must route to FULL REGRESSION");
+    const auto escalatedPlan = ValidationRouting::route({QStringLiteral("src/ui/Widget.cpp")}, {}, false, true);
+    ok &= require(escalatedPlan.level == ValidationLevel::Subsystem, "focused failure must escalate to SUBSYSTEM");
+    const auto policy = ValidationRouting::policy();
+    ok &= require(policy.value(QStringLiteral("levels")).toObject().contains(QStringLiteral("focused"))
+                  && policy.value(QStringLiteral("routes")).toObject().contains(QStringLiteral("project-memory")),
+                  "validation policy must expose machine-readable levels and routes");
     ok &= require(root.exists(QStringLiteral("ARAMF_WORKER/AGENTS.md")), "canonical ARAMF_WORKER/AGENTS.md must exist");
     ok &= require(root.exists(QStringLiteral("ARAMF_WORKER/PROJECT_STATUS.md")), "ARAMF_WORKER/PROJECT_STATUS.md must exist");
     ok &= require(root.exists(QStringLiteral("ARAMF_WORKER/memory/decisions.md")), "durable decisions must live under ARAMF_WORKER/memory");
@@ -688,6 +724,7 @@ int main(int argc, char** argv)
     ok &= require(generationResult.success, "selective generation must succeed");
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/rules/generated-rules.md")), "generated rules must exist");
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/routing/task-routes.json")), "task routes must exist");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/routing/validation-policy.json")), "validation policy must exist");
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/resources/resources.json")), "resource manifest must exist");
     ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/memory/memory-config.json")), "disabled memory must not initialize memory");
     ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/platforms/platform-metadata.json")), "disabled platforms must not generate metadata");
