@@ -45,6 +45,44 @@ Build/
 build-*/
 acceptance_*/build*/
 
+# Android Studio / IntelliJ local state
+.idea/
+*.iml
+
+# Gradle local state
+.gradle/
+
+# Android local machine configuration
+local.properties
+
+# Android native/generated build state
+.cxx/
+.externalNativeBuild/
+captures/
+
+# JVM / Kotlin compiled output
+*.class
+out/
+
+# Ninja generated files
+.ninja_deps
+.ninja_log
+build.ninja
+rules.ninja
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+keystore.properties
+*.jks
+*.keystore
+
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
 # User-owned portable ARAMF knowledge; preserved beside the program but not
 # committed with repository source.
 ARAMF_DATA/
