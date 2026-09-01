@@ -1,9 +1,13 @@
 {
     "_file": "memory-consistency-validation.json",
-    "checkedAt": "2026-08-23T13:15:34Z",
+    "checkedAt": "2026-09-01T18:50:01Z",
     "checks": [
         {
             "name": "event-identifiers-unique",
+            "status": "PASS"
+        },
+        {
+            "name": "legacy-event-id-integrity-exceptions",
             "status": "PASS"
         },
         {

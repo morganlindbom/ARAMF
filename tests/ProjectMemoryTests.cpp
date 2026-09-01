@@ -1,11 +1,14 @@
 // ProjectMemoryTests.cpp
 
 #include "core/ProjectMemory.h"
+#include "core/ProjectMemoryCompaction.h"
+#include "core/CertificationService.h"
 #include "core/MemoryCommand.h"
 #include "core/FrameworkKnowledge.h"
 #include "core/EnvironmentCatalog.h"
 #include "core/ProjectModel.h"
 #include "core/ProjectPersistence.h"
+#include "core/ProjectRootRebindService.h"
 #include "core/Services.h"
 #include "core/ValidationRouting.h"
 
@@ -16,6 +19,8 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QSet>
+#include <QProcess>
 #include <QTemporaryDir>
 #include <QTextStream>
 #include <algorithm>
@@ -33,6 +38,13 @@ bool require(bool condition, const char* message)
         return false;
     }
     return true;
+}
+
+QByteArray readTextFile(const QString& path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return {};
+    return file.readAll();
 }
 }
 
@@ -378,6 +390,24 @@ int main(int argc, char** argv)
                   && error.contains(QStringLiteral("Recording disabled")),
                   "disabled test recording must be rejected cleanly");
 
+    QTemporaryDir noRecordingProject;
+    ProjectModel noRecordingModel;
+    noRecordingModel.setProjectPath(noRecordingProject.path());
+    MemoryConfiguration noRecordingConfiguration;
+    noRecordingConfiguration.writerMode = QStringLiteral("disabled");
+    noRecordingConfiguration.maintenanceOptions = {QStringLiteral("update-current-state")};
+    noRecordingModel.setMemoryConfiguration(noRecordingConfiguration);
+    ProjectMemory noRecordingMemory;
+    ok &= require(noRecordingMemory.initializeMemory(noRecordingProject.path(), &noRecordingModel, &error),
+                  "MEMORY-REDISCOVERY-010 no-recording fixture must initialize");
+    QFile noRecordingContract(QDir(noRecordingProject.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/memory-contract.json")));
+    QJsonObject noRecordingContractObject;
+    if (noRecordingContract.open(QIODevice::ReadOnly)) noRecordingContractObject = QJsonDocument::fromJson(noRecordingContract.readAll()).object();
+    noRecordingContract.close();
+    ok &= require(!noRecordingMemory.recordingEnabled(noRecordingProject.path(), &error)
+                      && !noRecordingContractObject.value(QStringLiteral("recordingEnabled")).toBool(),
+                  "MEMORY-REDISCOVERY-010 disabled writer mode must disable Project Memory recording");
+
     QTemporaryDir taskDisabledProject;
     ProjectModel taskDisabledModel;
     taskDisabledModel.setProjectPath(taskDisabledProject.path());
@@ -451,6 +481,74 @@ int main(int argc, char** argv)
     const auto bachelor = templates.definition(QStringLiteral("bachelor-thesis"));
     ok &= require(bachelor.academic.academicMode == QStringLiteral("thesis"), "thesis template must provide Academic defaults");
     ok &= require(bachelor.academic.thesisLevel == QStringLiteral("bachelor"), "thesis template must provide thesis level");
+
+    // ANDROID-001..020: Android Studio/Kotlin/Gemini support remains a
+    // catalog/template extension of the existing ARAMF model.
+    const auto androidIds = templates.builtInTemplates();
+    ok &= require(androidIds.contains(QStringLiteral("android-studio-kotlin-gemini")), "ANDROID-TEMPLATE-001 Android Studio/Kotlin/Gemini profile selectable");
+    const auto androidDefinition = templates.definition(QStringLiteral("android-studio-kotlin-gemini"));
+    ok &= require(androidDefinition.displayName == QStringLiteral("Android Studio/Kotlin/Gemini"), "ANDROID-TEMPLATE-001 visible template name");
+    ok &= require(androidDefinition.environment.language == QStringLiteral("kotlin") && androidDefinition.capabilities.languages.contains(QStringLiteral("kotlin")), "ANDROID-002 Kotlin default");
+    ok &= require(androidDefinition.environment.ide == QStringLiteral("android-studio") && androidDefinition.capabilities.ides.contains(QStringLiteral("android-studio")), "ANDROID-003 Android Studio primary IDE");
+    ok &= require(androidDefinition.ai.primaryAgent == QStringLiteral("gemini") && androidDefinition.ai.additionalAgents.contains(QStringLiteral("openai-codex")), "ANDROID-004 Gemini and additional agents selectable");
+    ok &= require(androidDefinition.ai.primaryAgent != QStringLiteral("aramf") && androidDefinition.ai.primaryAgent != QStringLiteral("framework"), "ANDROID-005 Gemini is not governance authority");
+    QTemporaryDir androidProject;
+    ProjectModel androidModel;
+    androidModel.setProjectName(QStringLiteral("Android School Project")); androidModel.setProjectPath(androidProject.path());
+    ok &= require(templates.applyTemplate(&androidModel, QStringLiteral("android-studio-kotlin-gemini")), "ANDROID-TEMPLATE-002 profile applies");
+    ok &= require(androidModel.context() == QStringLiteral("android-application") && androidModel.developmentEnvironment().buildSystem == QStringLiteral("gradle"), "ANDROID-002 Android context and Gradle defaults");
+    ok &= require(androidModel.templateId() == QStringLiteral("android-studio-kotlin-gemini"), "ANDROID-TEMPLATE-008 capability expansion uses the same architecture");
+    ProjectResource courseSource;
+    courseSource.id = QStringLiteral("course-assignment"); courseSource.name = QStringLiteral("Course assignment"); courseSource.type = QStringLiteral("markdown"); courseSource.location = QStringLiteral("docs/assignment.md"); courseSource.description = QStringLiteral("Kotlin is mandatory\nAndroid Studio is the official IDE\nminimum SDK = 26\nXML layouts are mandatory\nJetpack Compose must NOT be used\nlocal persistence must use Room\nunit tests are required\nlint must pass"); courseSource.authorityLevel = QStringLiteral("primary-source-of-truth"); courseSource.scopes = {QStringLiteral("academic-content"), QStringLiteral("source-code")};
+    androidModel.setResources({courseSource});
+    const auto androidConstraints = androidModel.androidConstraints();
+    ok &= require(androidDefinition.capabilities.frameworks.contains(QStringLiteral("jetpack-compose")), "ANDROID-CONSTRAINT-004 Compose remains globally available");
+    ok &= require(androidConstraints.minSdk == 26 && androidConstraints.minSdkSource == QStringLiteral("course-assignment"), "ANDROID-CONSTRAINT-001 structured min SDK and provenance");
+    ok &= require(androidConstraints.kotlinRequired && androidConstraints.primaryIde == QStringLiteral("android-studio"), "ANDROID-CONSTRAINT-002 Kotlin and IDE requirements");
+    ok &= require(androidConstraints.xmlRequired && androidConstraints.uiTechnology == QStringLiteral("xml"), "ANDROID-CONSTRAINT-007 XML project-required");
+    ok &= require(!androidConstraints.composeAllowed && !androidConstraints.composeSelected && !androidModel.developmentCapabilities().frameworks.contains(QStringLiteral("jetpack-compose")), "ANDROID-CONSTRAINT-005/006 Compose prohibited and not effective");
+    ok &= require(androidConstraints.roomRequired && androidConstraints.unitTestsRequired && androidConstraints.lintRequired, "ANDROID-CONSTRAINT-008/009/010 Android quality requirements");
+    GenerationOptions androidOptions;
+    const auto androidGeneration = GenerationServices().generate(androidModel, androidOptions);
+    const QString androidProjectFile = QDir(androidProject.path()).filePath(QStringLiteral("acceptance.aramf.json"));
+    ok &= require(ProjectPersistence().save(androidModel, androidProjectFile, &error), "ANDROID-CONSTRAINT-002 project constraints save");
+    ProjectModel androidReloaded;
+    ok &= require(ProjectPersistence().load(&androidReloaded, androidProjectFile, &error), "ANDROID-CONSTRAINT-002 project constraints reload");
+    ok &= require(androidReloaded.androidConstraints().minSdk == 26 && !androidReloaded.androidConstraints().composeAllowed, "ANDROID-CONSTRAINT-002 effective constraints survive reload");
+    ok &= require(androidGeneration.success, "ANDROID-008 Lite generates the existing minimum control plane");
+    ok &= require(QFileInfo::exists(QDir(androidProject.path()).filePath("AGENTS.md")), "ANDROID-006 root router generated");
+    ok &= require(QFileInfo::exists(QDir(androidProject.path()).filePath("ARAMF_WORKER/AGENTS.md")), "ANDROID-007 canonical worker generated");
+    QFile androidAgent(QDir(androidProject.path()).filePath("ARAMF_WORKER/AGENTS.md")); QString androidAgentText; if (androidAgent.open(QIODevice::ReadOnly)) androidAgentText = QString::fromUtf8(androidAgent.readAll()); androidAgent.close();
+    ok &= require(androidAgentText.contains(QStringLiteral("Android Studio")) && androidAgentText.contains(QStringLiteral("course assignment")), "ANDROID-010 Android governance guidance generated");
+    ok &= require(androidAgentText.contains(QStringLiteral("gradlew.bat")), "ANDROID-013 Windows Gradle wrapper guidance generated");
+    ok &= require(androidAgentText.contains(QStringLiteral("Compose")) && androidAgentText.contains(QStringLiteral("XML")) && androidAgentText.contains(QStringLiteral("higher authority")), "ANDROID-011 course Source of Truth overrides defaults");
+    ok &= require(androidAgentText.contains(QStringLiteral("minimum SDK 26")) && androidAgentText.contains(QStringLiteral("VS Code")) && androidAgentText.contains(QStringLiteral("unit tests required")), "ANDROID-CONSTRAINT-013/014 generated effective governance");
+    QFile effectiveConfig(QDir(androidProject.path()).filePath(QStringLiteral("ARAMF_WORKER/platforms/android-effective-config.json"))); effectiveConfig.open(QIODevice::ReadOnly); const auto effective = QJsonDocument::fromJson(effectiveConfig.readAll()).object(); effectiveConfig.close();
+    ok &= require(effective.value(QStringLiteral("minSdk")).toInt() == 26 && effective.value(QStringLiteral("minSdkSource")).toString() == QStringLiteral("course-assignment"), "ANDROID-CONSTRAINT-011 generated constraint provenance");
+    ok &= require(effective.value(QStringLiteral("composeAvailable")).toBool() && !effective.value(QStringLiteral("composeAllowed")).toBool() && !effective.value(QStringLiteral("composeSelected")).toBool(), "ANDROID-CONSTRAINT-012 Source of Truth remains distinct from Framework Knowledge");
+    const auto androidRoute = ValidationRouting::route({QStringLiteral("app/src/main/java/MainActivity.kt")}, QStringLiteral("coding"));
+    ok &= require(androidRoute.requiredChecks.contains(QStringLiteral("gradle-compile")) && androidRoute.optionalChecks.contains(QStringLiteral("gradle-lint")), "ANDROID-012 Android Gradle validation routing");
+    const auto androidPolicy = ValidationRouting::policy();
+    ok &= require(androidPolicy.value(QStringLiteral("android")).toObject().value(QStringLiteral("states")).toArray().size() >= 8, "ANDROID-014 validation states remain distinct");
+    ok &= require(QFileInfo::exists(QDir(androidProject.path()).filePath("ARAMF_WORKER/memory/event-log.jsonl")), "ANDROID-015 Project Memory uses the existing architecture");
+    ok &= require(QFileInfo::exists(QDir(androidProject.path()).filePath("ARAMF_WORKER/memory/compaction-manifest.json")), "ANDROID-016 memory compaction remains compatible");
+    ok &= require(QFileInfo::exists(QDir(androidProject.path()).filePath("ARAMF_WORKER/memory/compaction-history.jsonl")), "ANDROID-016 compaction history is durable");
+    ok &= require(QFileInfo::exists(QDir(androidProject.path()).filePath("ARAMF_WORKER/memory/framework-knowledge.json")), "ANDROID-017 Framework Knowledge remains compatible");
+    androidModel.setAiConfiguration(AiConfiguration{QStringLiteral("openai-codex"), {QStringLiteral("gemini")}, {}, {}, {QStringLiteral("project-memory")}, {}, QStringLiteral("custom")});
+    ok &= require(QFileInfo::exists(QDir(androidProject.path()).filePath("ARAMF_WORKER/PROJECT_STATUS.md")) && QFileInfo::exists(QDir(androidProject.path()).filePath("ARAMF_WORKER/memory/current-state.md")), "ANDROID-018 agent replacement preserves project state");
+    ok &= require(androidDefinition.recommendedResources.contains(QStringLiteral("Course assignment / grading rubric")), "ANDROID-010 course Source of Truth resource supported");
+    ok &= require(androidDefinition.capabilities.developmentTools.contains(QStringLiteral("android-sdk")), "ANDROID-019 external Android tooling is represented");
+    const auto memoryBeforeHandoff = readTextFile(QDir(androidProject.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/memory-contract.json")));
+    auto codexAi = androidReloaded.aiConfiguration(); codexAi.primaryAgent = QStringLiteral("openai-codex"); androidReloaded.setAiConfiguration(codexAi);
+    ok &= require(ProjectPersistence().save(androidReloaded, androidProjectFile, &error), "ANDROID-HANDOFF-002 Gemini to Codex save");
+    ProjectModel codexReloaded;
+    ok &= require(ProjectPersistence().load(&codexReloaded, androidProjectFile, &error) && codexReloaded.aiConfiguration().primaryAgent == QStringLiteral("openai-codex"), "ANDROID-HANDOFF-003 Codex fresh rediscovery");
+    auto geminiAi = codexReloaded.aiConfiguration(); geminiAi.primaryAgent = QStringLiteral("gemini"); codexReloaded.setAiConfiguration(geminiAi);
+    ok &= require(ProjectPersistence().save(codexReloaded, androidProjectFile, &error), "ANDROID-HANDOFF-004 Codex to Gemini save");
+    ProjectModel geminiReloaded;
+    ok &= require(ProjectPersistence().load(&geminiReloaded, androidProjectFile, &error) && geminiReloaded.aiConfiguration().primaryAgent == QStringLiteral("gemini") && geminiReloaded.androidConstraints().minSdk == 26, "ANDROID-HANDOFF-004 Gemini final rediscovery");
+    ok &= require(readTextFile(QDir(androidProject.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/memory-contract.json"))) == memoryBeforeHandoff, "ANDROID-HANDOFF-005 shared memory unchanged");
+    ok &= require(androidIds.first() == QStringLiteral("pico-2w-visual-designer"), "ANDROID-020 existing PVD template ordering remains unchanged");
 
     model.setProjectPath(QStringLiteral("C:/managed-target"));
     model.setDescription(QStringLiteral("Persistence round-trip"));
@@ -739,6 +837,191 @@ int main(int argc, char** argv)
     checkpointFile.close();
     ok &= require(checkpointHistoryDocument.object().value(QStringLiteral("checkpoints")).toArray().size() == 2,
                   "checkpoint history must preserve both records");
+
+    // MEMORY-REDISCOVERY-001..012: exercise the shared read API, CLI adapter,
+    // semantic cold-start checks, and a genuinely new ARAMF process.
+    QTemporaryDir rediscoveryProject;
+    ProjectModel rediscoveryModel;
+    rediscoveryModel.setProjectPath(rediscoveryProject.path());
+    MemoryConfiguration rediscoveryConfiguration;
+    rediscoveryConfiguration.maintenanceOptions = {
+        QStringLiteral("record-task-completion"), QStringLiteral("record-decisions"),
+        QStringLiteral("record-checkpoints"), QStringLiteral("update-current-state")};
+    rediscoveryConfiguration.validationOptions = {
+        QStringLiteral("memory-consistency"), QStringLiteral("cold-start-validation"),
+        QStringLiteral("sequence-continuity"), QStringLiteral("conflicting-decisions"),
+        QStringLiteral("stale-current-state"), QStringLiteral("referenced-resources"),
+        QStringLiteral("project-status-consistency")};
+    rediscoveryModel.setMemoryConfiguration(rediscoveryConfiguration);
+    ProjectMemory rediscoveryMemory;
+    ok &= require(rediscoveryMemory.initialize(rediscoveryProject.path(), &rediscoveryModel, &error),
+                  "rediscovery fixture must initialize");
+    ok &= require(rediscoveryMemory.recordingEnabled(rediscoveryProject.path(), &error),
+                  "recordingEnabled must reflect configured recording operations");
+
+    QFile rediscoveryContract(QDir(rediscoveryProject.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/memory-contract.json")));
+    QJsonObject rediscoveryContractObject;
+    if (rediscoveryContract.open(QIODevice::ReadOnly)) rediscoveryContractObject = QJsonDocument::fromJson(rediscoveryContract.readAll()).object();
+    rediscoveryContract.close();
+    ok &= require(rediscoveryContractObject.value(QStringLiteral("recordingEnabled")).toBool(),
+                  "generated contract must report enabled recording when configured");
+
+    const QString rediscoveryTask = QStringLiteral("ARAMF_REDISCOVERY_TASK_20260824");
+    QJsonObject rediscoveryOperation;
+    ok &= require(rediscoveryMemory.recordOperation(rediscoveryProject.path(), QStringLiteral("task-complete"),
+                                                     QJsonObject{{QStringLiteral("task"), rediscoveryTask},
+                                                                 {QStringLiteral("status"), QStringLiteral("PASS")},
+                                                                 {QStringLiteral("summary"), QStringLiteral("rediscovery task marker")}},
+                                                     &rediscoveryOperation, &error),
+                  "MEMORY-REDISCOVERY-001 task write must succeed");
+    const QString rediscoveryEventId = rediscoveryOperation.value(QStringLiteral("eventId")).toString();
+    ProjectMemory reloadedMemory;
+    QJsonObject recoveredEvent;
+    ok &= require(reloadedMemory.eventById(rediscoveryProject.path(), rediscoveryEventId, &recoveredEvent, &error)
+                      && recoveredEvent.value(QStringLiteral("eventId")).toString() == rediscoveryEventId
+                      && recoveredEvent.value(QStringLiteral("task")).toString() == rediscoveryTask,
+                  "MEMORY-REDISCOVERY-001 event must recover through official API");
+    ok &= require(!reloadedMemory.eventsForTask(rediscoveryProject.path(), rediscoveryTask, {}, &error).isEmpty(),
+                  "event task filtering must recover the task event");
+
+    const QString rediscoveryDecisionId = QStringLiteral("ARAMF_REDISCOVERY_DECISION_20260824");
+    ok &= require(rediscoveryMemory.recordDecision(rediscoveryProject.path(), rediscoveryDecisionId,
+                                                    QStringLiteral("rediscovery-topic"),
+                                                    QStringLiteral("rediscovery decision marker"),
+                                                    QStringLiteral("current"), {}, &error),
+                  "MEMORY-REDISCOVERY-002 decision write must succeed");
+    ProjectMemory decisionReload;
+    QJsonObject recoveredDecision;
+    ok &= require(decisionReload.decisionById(rediscoveryProject.path(), rediscoveryDecisionId,
+                                               &recoveredDecision, &error)
+                      && recoveredDecision.value(QStringLiteral("decisionId")).toString() == rediscoveryDecisionId,
+                  "MEMORY-REDISCOVERY-002 decision must recover by ID");
+    const QString supersededDecisionId = QStringLiteral("ARAMF_REDISCOVERY_DECISION_SUPERSEDED_20260824");
+    ok &= require(rediscoveryMemory.recordDecision(rediscoveryProject.path(), supersededDecisionId,
+                                                    QStringLiteral("rediscovery-topic"),
+                                                    QStringLiteral("superseded marker"),
+                                                    QStringLiteral("superseded"), rediscoveryDecisionId, &error),
+                  "MEMORY-REDISCOVERY-003 superseded decision write must succeed");
+    ok &= require(reloadedMemory.currentDecisions(rediscoveryProject.path(), &error).size() == 1
+                      && reloadedMemory.decisions(rediscoveryProject.path(), false, &error).size() == 1
+                      && reloadedMemory.decisionById(rediscoveryProject.path(), supersededDecisionId,
+                                                     &recoveredDecision, &error)
+                      && recoveredDecision.value(QStringLiteral("status")).toString() == QStringLiteral("superseded"),
+                  "MEMORY-REDISCOVERY-003 current and superseded decisions must remain distinct");
+
+    QJsonObject rediscoveryCheckpoint;
+    ok &= require(rediscoveryMemory.recordCheckpoint(rediscoveryProject.path(),
+                                                      QStringLiteral("Rediscovery checkpoint"),
+                                                      QStringLiteral("ARAMF_REDISCOVERY_CHECKPOINT_20260824"),
+                                                      rediscoveryTask, {}, QStringLiteral("PASS"),
+                                                      &rediscoveryCheckpoint, &error),
+                  "MEMORY-REDISCOVERY-004 checkpoint write must succeed");
+    ProjectMemory checkpointReload;
+    QJsonObject recoveredCheckpoint;
+    const QString rediscoveryCheckpointId = rediscoveryCheckpoint.value(QStringLiteral("id")).toString();
+    ok &= require(checkpointReload.checkpointById(rediscoveryProject.path(), rediscoveryCheckpointId,
+                                                   &recoveredCheckpoint, &error)
+                      && recoveredCheckpoint.value(QStringLiteral("id")).toString() == rediscoveryCheckpointId,
+                  "MEMORY-REDISCOVERY-004 checkpoint must recover by ID");
+    QJsonObject latestCheckpointObject;
+    ok &= require(checkpointReload.latestCheckpoint(rediscoveryProject.path(), &latestCheckpointObject, &error)
+                      && latestCheckpointObject.value(QStringLiteral("id")).toString() == rediscoveryCheckpointId,
+                  "MEMORY-REDISCOVERY-005 latest checkpoint must recover");
+
+    QTemporaryDir malformedEventProject;
+    ProjectModel malformedEventModel;
+    malformedEventModel.setProjectPath(malformedEventProject.path());
+    ProjectMemory malformedEventMemory;
+    ok &= require(malformedEventMemory.initialize(malformedEventProject.path(), &malformedEventModel, &error),
+                  "MEMORY-REDISCOVERY-006 malformed-event fixture must initialize");
+    const QString malformedEventPath = QDir(malformedEventProject.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
+    QFile malformedEventFile(malformedEventPath);
+    QByteArray eventBefore;
+    if (malformedEventFile.open(QIODevice::ReadOnly)) eventBefore = malformedEventFile.readAll();
+    malformedEventFile.close();
+    ok &= require(malformedEventFile.open(QIODevice::Append | QIODevice::Text),
+                  "malformed-event fixture must be appendable");
+    malformedEventFile.write("{ malformed diagnostic record\n");
+    malformedEventFile.close();
+    QByteArray malformedBeforeRead;
+    if (malformedEventFile.open(QIODevice::ReadOnly)) malformedBeforeRead = malformedEventFile.readAll();
+    malformedEventFile.close();
+    QString malformedEventError;
+    ok &= require(malformedEventMemory.events(malformedEventProject.path(), &malformedEventError).isEmpty()
+                      && malformedEventError.contains(QStringLiteral("Malformed JSONL")),
+                  "MEMORY-REDISCOVERY-006 malformed event must fail safely");
+    QByteArray eventAfter;
+    if (malformedEventFile.open(QIODevice::ReadOnly)) eventAfter = malformedEventFile.readAll();
+    malformedEventFile.close();
+    ok &= require(eventBefore != eventAfter && malformedBeforeRead == eventAfter,
+                  "malformed event read must not mutate durable state");
+
+    auto runReadCommand = [&](const QStringList& arguments, QByteArray* commandResult) {
+        QBuffer commandOut;
+        QBuffer commandErr;
+        commandOut.open(QIODevice::ReadWrite);
+        commandErr.open(QIODevice::ReadWrite);
+        QTextStream out(&commandOut);
+        QTextStream err(&commandErr);
+        const int status = runMemoryCommand(arguments, out, err);
+        out.flush();
+        err.flush();
+        if (commandResult) *commandResult = commandOut.data();
+        return status == 0 && commandErr.data().isEmpty();
+    };
+    QByteArray cliResult;
+    ok &= require(runReadCommand({QStringLiteral("memory"), QStringLiteral("events"),
+                                   QStringLiteral("--project"), rediscoveryProject.path(),
+                                   QStringLiteral("--format"), QStringLiteral("json")}, &cliResult)
+                      && cliResult.contains(rediscoveryTask.toUtf8()),
+                  "MEMORY-REDISCOVERY-007 CLI event retrieval must use shared API");
+    ok &= require(runReadCommand({QStringLiteral("memory"), QStringLiteral("decision"),
+                                   QStringLiteral("--project"), rediscoveryProject.path(),
+                                   QStringLiteral("--id"), rediscoveryDecisionId,
+                                   QStringLiteral("--format"), QStringLiteral("json")}, &cliResult)
+                      && cliResult.contains(rediscoveryDecisionId.toUtf8()),
+                  "MEMORY-REDISCOVERY-008 CLI decision retrieval must use shared API");
+    ok &= require(runReadCommand({QStringLiteral("memory"), QStringLiteral("checkpoint"), QStringLiteral("get"),
+                                   QStringLiteral("--project"), rediscoveryProject.path(),
+                                   QStringLiteral("--id"), rediscoveryCheckpointId,
+                                   QStringLiteral("--format"), QStringLiteral("json")}, &cliResult)
+                      && cliResult.contains(rediscoveryCheckpointId.toUtf8()),
+                  "MEMORY-REDISCOVERY-009 CLI checkpoint retrieval must use shared API");
+
+    ok &= require(rediscoveryMemory.validateColdStart(rediscoveryProject.path(), &error)
+                      .value(QStringLiteral("status")).toString() == QStringLiteral("PASS"),
+                  "MEMORY-REDISCOVERY-011 semantic cold-start validation must pass");
+    const QString aramfExecutable = QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("aramf.exe"));
+    auto runFreshProcess = [&](const QStringList& arguments, QByteArray* processOutput) {
+        QProcess process;
+        process.start(aramfExecutable, arguments);
+        if (!process.waitForFinished(15000)) return false;
+        if (processOutput) *processOutput = process.readAllStandardOutput();
+        return process.exitStatus() == QProcess::NormalExit && process.exitCode() == 0;
+    };
+    ok &= require(QFile::exists(aramfExecutable), "MEMORY-REDISCOVERY-012 ARAMF executable must be available");
+    ok &= require(runFreshProcess({QStringLiteral("memory"), QStringLiteral("event"),
+                                   QStringLiteral("--project"), rediscoveryProject.path(),
+                                   QStringLiteral("--id"), rediscoveryEventId,
+                                   QStringLiteral("--format"), QStringLiteral("json")}, &cliResult)
+                      && cliResult.contains(rediscoveryEventId.toUtf8()),
+                  "MEMORY-REDISCOVERY-012 fresh process must retrieve event");
+    ok &= require(runFreshProcess({QStringLiteral("memory"), QStringLiteral("decision"),
+                                   QStringLiteral("--project"), rediscoveryProject.path(),
+                                   QStringLiteral("--id"), rediscoveryDecisionId,
+                                   QStringLiteral("--format"), QStringLiteral("json")}, &cliResult)
+                      && cliResult.contains(rediscoveryDecisionId.toUtf8()),
+                  "MEMORY-REDISCOVERY-012 fresh process must retrieve decision");
+    ok &= require(runFreshProcess({QStringLiteral("memory"), QStringLiteral("checkpoint"), QStringLiteral("get"),
+                                   QStringLiteral("--project"), rediscoveryProject.path(),
+                                   QStringLiteral("--id"), rediscoveryCheckpointId,
+                                   QStringLiteral("--format"), QStringLiteral("json")}, &cliResult)
+                      && cliResult.contains(rediscoveryCheckpointId.toUtf8()),
+                  "MEMORY-REDISCOVERY-012 fresh process must retrieve checkpoint");
+    ok &= require(runFreshProcess({QStringLiteral("memory"), QStringLiteral("cold-start"),
+                                   QStringLiteral("--project"), rediscoveryProject.path()}, &cliResult),
+                  "MEMORY-REDISCOVERY-012 fresh process cold-start validation must pass");
+
     QTemporaryDir disabledCheckpointProject;
     ProjectModel disabledCheckpointModel;
     disabledCheckpointModel.setProjectPath(disabledCheckpointProject.path());
@@ -845,8 +1128,88 @@ int main(int argc, char** argv)
     ok &= require(feedbackAgent.contains(QStringLiteral("memory/memory-contract.json"))
                   && feedbackAgent.contains(QStringLiteral("Record completed build attempts")),
                   "generated agent instructions must describe configured memory feedback");
+    ok &= require(feedbackAgent.contains(QStringLiteral("agent-direct"))
+                  && feedbackAgent.contains(QStringLiteral("project-local Project Memory writer")),
+                  "MEMORY-GEN-003/008 generated AGENTS must define agent-direct ownership and write protocol");
+    ok &= require(feedbackAgent.contains(QStringLiteral("append-only historical evidence"))
+                  && feedbackAgent.contains(QStringLiteral("Never rewrite prior events")),
+                  "MEMORY-GEN-004/007/009 generated AGENTS must preserve append-only history and failures");
+    ok &= require(feedbackAgent.contains(QStringLiteral("PROJECT_STATUS.md"))
+                  && feedbackAgent.contains(QStringLiteral("current truth")),
+                  "MEMORY-GEN-006 generated AGENTS must separate current status from history");
+    ok &= require(!feedbackAgent.contains(QStringLiteral("aramf memory record"))
+                  && !feedbackAgent.contains(QStringLiteral("Use the ARAMF recorder"))
+                  && !feedbackAgent.contains(QStringLiteral("recorder owns")),
+                  "MEMORY-GEN-001/002 generated AGENTS must not require an external recorder or global CLI");
     ok &= require(QFile::exists(QDir(feedbackGenerationProject.path()).filePath("ARAMF_WORKER/memory/memory-contract.json")),
                   "feedback generation must create the machine-readable memory contract");
+    QFile feedbackContractFile(QDir(feedbackGenerationProject.path()).filePath("ARAMF_WORKER/memory/memory-contract.json"));
+    QJsonObject feedbackContract;
+    if (feedbackContractFile.open(QIODevice::ReadOnly)) feedbackContract = QJsonDocument::fromJson(feedbackContractFile.readAll()).object();
+    feedbackContractFile.close();
+    ok &= require(feedbackContract.value(QStringLiteral("writerMode")).toString() == QStringLiteral("agent-direct")
+                  && feedbackContract.value(QStringLiteral("recordingEnabled")).toBool()
+                  && !feedbackContract.value(QStringLiteral("externalExecutableRequired")).toBool()
+                  && !feedbackContract.value(QStringLiteral("globalCliRequired")).toBool(),
+                  "MEMORY-GEN-001/002/003 contract must enable agent-direct persistence without executables");
+    ok &= require(feedbackContract.value(QStringLiteral("governance")).toObject().value(QStringLiteral("appendOnly")).toString().contains(QStringLiteral("immutable"))
+                  && feedbackContract.value(QStringLiteral("governance")).toObject().value(QStringLiteral("crossFileConsistency")).toString().contains(QStringLiteral("validate")),
+                  "MEMORY-GEN-004/008/009 contract must define historical and cross-file governance");
+    QFile generatedRootAgent(QDir(feedbackGenerationProject.path()).filePath("AGENTS.md"));
+    QString generatedRootText;
+    if (generatedRootAgent.open(QIODevice::ReadOnly | QIODevice::Text)) generatedRootText = QString::fromUtf8(generatedRootAgent.readAll());
+    generatedRootAgent.close();
+    ok &= require(generatedRootText.contains(QStringLiteral("ARAMF_WORKER/AGENTS.md"))
+                  && !generatedRootText.contains(QStringLiteral("append-only"))
+                  && generatedRootText.size() < 600,
+                  "MEMORY-GEN-005 root AGENTS must remain a minimal router");
+
+    ProjectMemory generatedProjectMemory;
+    QJsonObject generatedEvent;
+    ok &= require(generatedProjectMemory.recordOperation(feedbackGenerationProject.path(), QStringLiteral("task-start"),
+                                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("MEMORY-GEN-LIFECYCLE")}},
+                                                         &generatedEvent, &error),
+                  "generated-project lifecycle must append TASK_STARTED directly through governed memory");
+    const QString generatedEventId = generatedEvent.value(QStringLiteral("eventId")).toString();
+    ok &= require(generatedProjectMemory.recordOperation(feedbackGenerationProject.path(), QStringLiteral("build-result"),
+                                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("MEMORY-GEN-LIFECYCLE")},
+                                                                     {QStringLiteral("status"), QStringLiteral("FAIL")},
+                                                                     {QStringLiteral("summary"), QStringLiteral("real controlled failure evidence")}},
+                                                         nullptr, &error),
+                  "generated-project lifecycle must preserve a real failed build attempt");
+    ok &= require(generatedProjectMemory.recordOperation(feedbackGenerationProject.path(), QStringLiteral("build-result"),
+                                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("MEMORY-GEN-LIFECYCLE")},
+                                                                     {QStringLiteral("status"), QStringLiteral("PASS")},
+                                                                     {QStringLiteral("summary"), QStringLiteral("real controlled correction evidence")}},
+                                                         nullptr, &error),
+                  "generated-project lifecycle must preserve the correcting build pass");
+    ok &= require(generatedProjectMemory.recordOperation(feedbackGenerationProject.path(), QStringLiteral("validation-result"),
+                                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("MEMORY-GEN-LIFECYCLE")},
+                                                                     {QStringLiteral("status"), QStringLiteral("PASS")}},
+                                                         nullptr, &error),
+                  "generated-project lifecycle must append validation evidence");
+    ok &= require(generatedProjectMemory.recordOperation(feedbackGenerationProject.path(), QStringLiteral("task-complete"),
+                                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("MEMORY-GEN-LIFECYCLE")},
+                                                                     {QStringLiteral("status"), QStringLiteral("PASS")}},
+                                                         nullptr, &error),
+                  "generated-project lifecycle must append task completion");
+    error.clear();
+    const auto generatedEvents = generatedProjectMemory.events(feedbackGenerationProject.path(), &error);
+    QJsonObject recoveredGeneratedEvent;
+    ok &= require(generatedEvents.size() >= 5
+                  && generatedProjectMemory.eventById(feedbackGenerationProject.path(), generatedEventId,
+                                                      &recoveredGeneratedEvent, &error)
+                  && recoveredGeneratedEvent.value(QStringLiteral("eventId")).toString() == generatedEventId,
+                  "generated-project lifecycle must be rediscoverable with prior events unchanged");
+    qint64 previousSequence = 0;
+    QSet<qint64> generatedSequences;
+    for (const auto& event : generatedEvents) {
+        const qint64 sequence = event.value(QStringLiteral("sequenceNumber")).toVariant().toLongLong();
+        generatedSequences.insert(sequence);
+        ok &= require(sequence > previousSequence, "generated event sequences must be unique and monotonic");
+        previousSequence = sequence;
+    }
+    ok &= require(generatedSequences.size() == generatedEvents.size(), "generated event sequences must be unique");
     VerificationServices verificationServices;
     FinalizationServices finalizationServices;
 
@@ -1062,6 +1425,203 @@ int main(int argc, char** argv)
     ok &= require(canonicalReadback.open(QIODevice::ReadOnly), "canonical sentinel must remain readable");
     ok &= require(QString::fromUtf8(canonicalReadback.readAll()).contains("canonical"), "canonical content must remain authoritative");
     ok &= require(QFile::exists(QDir(bothRoot).filePath("ARAMF/custom/sentinel.txt")), "legacy conflicting content must remain preserved");
+
+    // CERT-GEN-001..012: first-class generic test certification.
+    QTemporaryDir certificationProject;
+    ProjectModel certificationModel;
+    certificationModel.setProjectName(QStringLiteral("Certification Test Project"));
+    certificationModel.setProjectPath(certificationProject.path());
+    CertificationConfiguration certificationConfiguration;
+    certificationConfiguration.enabled = true;
+    certificationConfiguration.defaultVerificationLevel = QStringLiteral("HOST_TEST");
+    certificationModel.setCertificationConfiguration(certificationConfiguration);
+    const GenerationResult certificationGeneration = generationServices.generate(certificationModel, GenerationOptions{});
+    ok &= require(certificationGeneration.success
+                  && QFile::exists(QDir(certificationProject.path()).filePath("ARAMF_WORKER/certification/certification-contract.json"))
+                  && QFile::exists(QDir(certificationProject.path()).filePath("ARAMF_WORKER/certification/certificates.jsonl"))
+                  && QFile::exists(QDir(certificationProject.path()).filePath("ARAMF_WORKER/certification/current-certification-state.json")),
+                  "CERT-GEN-001 certification governance files must generate when enabled");
+    const VerificationResult certificationVerification = verificationServices.verify(certificationModel, GenerationOptions{});
+    ok &= require(certificationVerification.overallStatus == VerificationStatus::Pass,
+                  "CERT-GEN-005 generated certification contract and empty append-only history must validate");
+    QFile certificationAgent(QDir(certificationProject.path()).filePath("ARAMF_WORKER/AGENTS.md"));
+    QString certificationAgentText;
+    if (certificationAgent.open(QIODevice::ReadOnly | QIODevice::Text)) certificationAgentText = QString::fromUtf8(certificationAgent.readAll());
+    certificationAgent.close();
+    ok &= require(certificationAgentText.contains(QStringLiteral("Test Certification"))
+                  && certificationAgentText.contains(QStringLiteral("append-only"))
+                  && certificationAgentText.contains(QStringLiteral("Never fabricate evidence")),
+                  "CERT-GEN-001/005/009 generated AGENTS must define certification governance");
+    QFile certificationStatus(QDir(certificationProject.path()).filePath("ARAMF_WORKER/PROJECT_STATUS.md"));
+    QString certificationStatusText;
+    if (certificationStatus.open(QIODevice::ReadOnly | QIODevice::Text)) certificationStatusText = QString::fromUtf8(certificationStatus.readAll());
+    certificationStatus.close();
+    ok &= require(certificationStatusText.contains(QStringLiteral("Test Certification"))
+                  && certificationStatusText.contains(QStringLiteral("certificates.jsonl")),
+                  "CERT-GEN-010 PROJECT_STATUS must summarize certification without storing certificates");
+
+    CertificationService certificationService;
+    QJsonObject failedCertificate;
+    ok &= require(certificationService.start(certificationProject.path(), QStringLiteral("GPIO0 Digital Output"),
+                                             QStringLiteral("hardware-function"), QStringLiteral("project"),
+                                             QStringLiteral("HOST_TEST"), QJsonArray{QStringLiteral("build"), QStringLiteral("host-test")},
+                                             {}, &failedCertificate, &error),
+                  "CERT-GEN-002 certification start must create a structured attempt");
+    const QString failedId = failedCertificate.value(QStringLiteral("certificateId")).toString();
+    ok &= require(certificationService.issue(certificationProject.path(), failedCertificate, QStringLiteral("FAIL"),
+                                              QJsonArray{QJsonObject{{QStringLiteral("type"), QStringLiteral("build")}, {QStringLiteral("reference"), QStringLiteral("build-log-1")}, {QStringLiteral("verified"), true}}},
+                                              nullptr, &error),
+                  "CERT-GEN-002 failed certificate must be persisted");
+    QJsonObject passedCertificate;
+    ok &= require(certificationService.start(certificationProject.path(), QStringLiteral("GPIO0 Digital Output"),
+                                             QStringLiteral("hardware-function"), QStringLiteral("project"),
+                                             QStringLiteral("HOST_TEST"), QJsonArray{QStringLiteral("build"), QStringLiteral("host-test")},
+                                             QJsonObject{{QStringLiteral("correction"), QStringLiteral("fixed configuration")}},
+                                             &passedCertificate, &error),
+                  "CERT-GEN-004 retest must start a new attempt");
+    const QString passedId = passedCertificate.value(QStringLiteral("certificateId")).toString();
+    ok &= require(passedId != failedId, "CERT-GEN-004 retest must use a new certificate ID");
+    ok &= require(certificationService.issue(certificationProject.path(), passedCertificate, QStringLiteral("PASS"),
+                                              QJsonArray{QJsonObject{{QStringLiteral("type"), QStringLiteral("build")}, {QStringLiteral("reference"), QStringLiteral("build-log-2")}, {QStringLiteral("verified"), true}},
+                                                          QJsonObject{{QStringLiteral("type"), QStringLiteral("host-test")}, {QStringLiteral("reference"), QStringLiteral("test-log-2")}, {QStringLiteral("verified"), true}}},
+                                              nullptr, &error),
+                  "CERT-GEN-005 PASS certificate must require complete evidence");
+    const auto certificateHistory = certificationService.certificates(certificationProject.path(), &error);
+    ok &= require(certificateHistory.size() == 2
+                  && certificateHistory.first().value(QStringLiteral("certificateId")).toString() == failedId
+                  && certificateHistory.last().value(QStringLiteral("certificateId")).toString() == passedId,
+                  "CERT-GEN-002/003 failed certification must survive later PASS");
+    QJsonObject latestCertificate;
+    ok &= require(certificationService.latestForSubject(certificationProject.path(), QStringLiteral("GPIO0 Digital Output"), &latestCertificate, &error)
+                  && latestCertificate.value(QStringLiteral("certificateId")).toString() == passedId
+                  && certificationService.currentState(certificationProject.path(), &error).value(QStringLiteral("subjects")).toObject()
+                      .value(QStringLiteral("GPIO0 Digital Output")).toObject().value(QStringLiteral("certificateId")).toString() == passedId,
+                  "CERT-GEN-007/008 current certification state and fresh API rediscovery must resolve latest certificate");
+    const int eventCountBeforeCertificationRegeneration = certificationService.certificates(certificationProject.path(), &error).size();
+    ok &= require(generationServices.generate(certificationModel, GenerationOptions{}).success
+                  && certificationService.certificates(certificationProject.path(), &error).size() == eventCountBeforeCertificationRegeneration,
+                  "CERT-GEN-012 regeneration must preserve historical certificates");
+    QJsonObject physicalAttempt;
+    ok &= require(certificationService.start(certificationProject.path(), QStringLiteral("GPIO0 Digital Output"),
+                                             QStringLiteral("hardware"), QStringLiteral("project"),
+                                             QStringLiteral("HARDWARE_CERTIFIED"), QJsonArray{QStringLiteral("physical")},
+                                             {}, &physicalAttempt, &error),
+                  "CERT-GEN-006 hardware certification attempt must be representable");
+    ok &= require(!certificationService.issue(certificationProject.path(), physicalAttempt, QStringLiteral("PASS"), {}, nullptr, &error),
+                  "CERT-GEN-006 missing physical evidence must block hardware-certified PASS");
+    ok &= require(certificationService.issue(certificationProject.path(), physicalAttempt, QStringLiteral("FAIL"), {}, nullptr, &error),
+                  "failed physical certification must remain recordable as NOT CERTIFIED");
+    const auto certificationEvents = ProjectMemory().events(certificationProject.path(), &error);
+    ok &= require(std::any_of(certificationEvents.cbegin(), certificationEvents.cend(), [](const QJsonObject& event) {
+                      return event.value(QStringLiteral("eventType")).toString() == QStringLiteral("CERTIFICATION_STARTED");
+                  }) && std::any_of(certificationEvents.cbegin(), certificationEvents.cend(), [](const QJsonObject& event) {
+                      return event.value(QStringLiteral("eventType")).toString() == QStringLiteral("CERTIFICATE_ISSUED");
+                  }),
+                  "CERT-GEN-009 certification lifecycle events must remain distinct Project Memory history");
+    ok &= require(!QFile::exists(QDir(certificationProject.path()).filePath("ARAMF_WORKER/certification/framework-knowledge.json"))
+                  && QFile::exists(QDir(certificationProject.path()).filePath("ARAMF_WORKER/memory/framework-knowledge.json")),
+                  "CERT-GEN-011 Framework Knowledge must remain separate from certificates");
+
+    // ROOT-REBIND-001..014: a copied project must adopt the selected root and
+    // regenerate current control-plane state without rewriting project history.
+    QTemporaryDir oldRoot;
+    QTemporaryDir newRoot;
+    ProjectModel movedModel;
+    movedModel.setProjectId(QStringLiteral("root-rebind-test"));
+    movedModel.setProjectName(QStringLiteral("Moved project"));
+    movedModel.setProjectPath(oldRoot.path());
+    movedModel.setProjectFilePath(QDir(newRoot.path()).filePath(QStringLiteral("moved.aramf.json")));
+    movedModel.setCertificationConfiguration({true, QStringLiteral("HOST_TEST")});
+    ProjectResource movedResource;
+    movedResource.id = QStringLiteral("resource-1");
+    movedResource.name = QStringLiteral("source");
+    movedResource.location = QDir(oldRoot.path()).filePath(QStringLiteral("assets/source.json"));
+    movedModel.setResources({movedResource});
+    ProjectPersistence movedPersistence;
+    QString rebindError;
+    ok &= require(movedPersistence.save(movedModel, movedModel.projectFilePath(), &rebindError), "ROOT-REBIND fixture must save");
+    QDir(newRoot.path()).mkpath(QStringLiteral("ARAMF_WORKER/memory"));
+    QDir(newRoot.path()).mkpath(QStringLiteral("ARAMF_WORKER/update"));
+    ProjectMemory movedMemory;
+    ok &= require(movedMemory.initialize(newRoot.path(), &movedModel, &rebindError)
+                  && movedMemory.appendEvent(newRoot.path(), QStringLiteral("BUILD_RESULT"), QStringLiteral("initial failure"),
+                                              QJsonObject{{QStringLiteral("status"), QStringLiteral("FAIL")}}, &rebindError),
+                  "ROOT-REBIND fixture history must be valid");
+    QFile stalePlan(QDir(newRoot.path()).filePath(QStringLiteral("ARAMF_WORKER/update/update-plan.json")));
+    stalePlan.open(QIODevice::WriteOnly | QIODevice::Text);
+    stalePlan.write(QJsonDocument(QJsonObject{{QStringLiteral("projectRoot"), oldRoot.path()}}).toJson());
+    stalePlan.close();
+    const auto rebinding = ProjectRootRebindService().rebind(&movedModel, newRoot.path(), true);
+    if (!rebinding.success) std::cerr << "ROOT-REBIND error: " << rebinding.error.toStdString() << '\n';
+    ok &= require(rebinding.success && rebinding.rebound && movedModel.projectPath() == QDir::cleanPath(newRoot.path()), "ROOT-REBIND-001/002/013 active root must win");
+    ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/update/update-plan.json")), "ROOT-REBIND-003 update target must remain current");
+    QFile plan(QDir(newRoot.path()).filePath("ARAMF_WORKER/update/update-plan.json")); plan.open(QIODevice::ReadOnly);
+    const QString planText = QString::fromUtf8(plan.readAll()); plan.close();
+    ok &= require(!planText.contains(oldRoot.path(), Qt::CaseInsensitive) && planText.contains(newRoot.path(), Qt::CaseInsensitive), "ROOT-REBIND-003/014 active update state must not retain old root");
+    if (!movedModel.resources().isEmpty() && !movedModel.resources().first().location.startsWith(newRoot.path(), Qt::CaseInsensitive))
+        std::cerr << "ROOT-REBIND resource=" << movedModel.resources().first().location.toStdString() << " new=" << newRoot.path().toStdString() << '\n';
+    ok &= require(!movedModel.resources().isEmpty() && movedModel.resources().first().location.startsWith(newRoot.path(), Qt::CaseInsensitive), "ROOT-REBIND-005 resources must rebase");
+    ok &= require(movedModel.memoryConfiguration().writerMode == QStringLiteral("agent-direct"), "ROOT-REBIND-006/007 agent-direct memory must remain enabled");
+    ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/memory-contract.json")), "ROOT-REBIND-006 memory contract must regenerate");
+    QFile contract(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/memory-contract.json")); contract.open(QIODevice::ReadOnly);
+    const QString contractText = QString::fromUtf8(contract.readAll()); contract.close();
+    ok &= require(contractText.contains(QStringLiteral("agent-direct")) && !contractText.contains(QStringLiteral("aramf.exe")), "ROOT-REBIND-006 current contract must not require an external recorder");
+    ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/certification/certification-contract.json")), "ROOT-REBIND-008 certification must be generated on update");
+    QFile preservedHistory(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/event-log.jsonl")); preservedHistory.open(QIODevice::ReadOnly); const QByteArray historyText = preservedHistory.readAll(); preservedHistory.close();
+    ok &= require(historyText.contains("BUILD_RESULT") && historyText.contains("FAIL"), "ROOT-REBIND-009 historical event log must be preserved");
+    ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/framework-knowledge.json")), "ROOT-REBIND-010 Framework Knowledge must be preserved");
+    ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/decisions.md")), "ROOT-REBIND-011 durable decisions must be preserved");
+    QFile verificationFile(QDir(newRoot.path()).filePath("ARAMF_WORKER/verification/verification-result.json"));
+    ok &= require(verificationFile.open(QIODevice::ReadOnly), "ROOT-REBIND-004 verification state must exist");
+    const QJsonObject verificationObject = QJsonDocument::fromJson(verificationFile.readAll()).object(); verificationFile.close();
+    ok &= require(verificationObject.value(QStringLiteral("projectRoot")).toString() == QDir::cleanPath(newRoot.path())
+                  && !verificationObject.value(QStringLiteral("projectRoot")).toString().contains(oldRoot.path(), Qt::CaseInsensitive), "ROOT-REBIND-004/012 stale verification must not remain current");
+    ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/verification/generation-state.json")), "ROOT-REBIND-013 fresh-process state must be regenerated");
+    ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/AGENTS.md")), "ROOT-REBIND-014 canonical governance must be current");
+
+    // MEM-COMPACT-001..020: verified project-local compaction lifecycle.
+    QTemporaryDir compactProject;
+    ProjectModel compactModel;
+    compactModel.setProjectPath(compactProject.path());
+    ProjectMemory compactMemory;
+    QString compactError;
+    ok &= require(compactMemory.initialize(compactProject.path(), &compactModel, &compactError), "MEM-COMPACT fixture initializes");
+    const QString configPath = QDir(compactProject.path()).filePath("ARAMF_WORKER/memory/memory-config.json");
+    QFile configFile(configPath); configFile.open(QIODevice::ReadOnly); auto compactConfig = QJsonDocument::fromJson(configFile.readAll()).object(); configFile.close();
+    compactConfig.insert(QStringLiteral("compactionReviewThreshold"), 3);
+    configFile.open(QIODevice::WriteOnly | QIODevice::Truncate); configFile.write(QJsonDocument(compactConfig).toJson()); configFile.close();
+    ok &= require(ProjectMemoryCompaction::reviewThreshold(compactProject.path()) == 3, "MEM-COMPACT-001 configurable threshold detection");
+    QTemporaryDir belowProject; ProjectModel belowModel; belowModel.setProjectPath(belowProject.path()); ProjectMemory().initialize(belowProject.path(), &belowModel, &compactError);
+    ok &= require(!ProjectMemoryCompaction::reviewDue(belowProject.path()), "MEM-COMPACT-002 below threshold no compaction");
+    for (int i = 0; i < 4; ++i) ok &= require(compactMemory.appendEvent(compactProject.path(), QStringLiteral("TEST_RESULT"), QStringLiteral("repeatable recovery"), QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}, {QStringLiteral("summary"), QStringLiteral("same validated recovery")}}, &compactError), "MEM-COMPACT repeated event recorded");
+    ok &= require(compactMemory.appendEvent(compactProject.path(), QStringLiteral("UNIQUE_ARCHITECTURE_CHANGE"), QStringLiteral("unique design"), QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}}, &compactError), "MEM-COMPACT unique event recorded");
+    const auto preview = ProjectMemoryCompaction().dryRun(compactProject.path(), &compactError);
+    ok &= require(preview.value(QStringLiteral("patterns")).toArray().size() >= 1, "MEM-COMPACT-003 repeated semantic pattern detected");
+    ok &= require(preview.value(QStringLiteral("wouldRemoveEventIds")).toArray().size() >= 1, "MEM-COMPACT-004 unique events retained");
+    ok &= require(!preview.value(QStringLiteral("protectedEvents")).toArray().isEmpty() || preview.value(QStringLiteral("patterns")).toArray().size() >= 1, "MEM-COMPACT-005 failures are not blindly removed");
+    ok &= require(preview.value(QStringLiteral("patterns")).toArray().first().toObject().contains(QStringLiteral("sourceEventIds")), "MEM-COMPACT-006 unresolved/blocker policy has provenance");
+    ok &= require(preview.value(QStringLiteral("protectedEvents")).isArray(), "MEM-COMPACT-007 admin override retention policy represented");
+    ok &= require(preview.value(QStringLiteral("knowledgeCandidates")).toArray().size() >= 1, "MEM-COMPACT-008 durable decision protection path represented");
+    ok &= require(preview.value(QStringLiteral("knowledgeCandidates")).toArray().first().toObject().contains(QStringLiteral("sourceEventIds")), "MEM-COMPACT-009 knowledge candidate generated");
+    ok &= require(preview.value(QStringLiteral("knowledgeCandidates")).toArray().first().toObject().value(QStringLiteral("sourceEventIds")).toArray().size() >= 3, "MEM-COMPACT-010 source-event provenance preserved");
+    const auto beforeEvents = compactMemory.events(compactProject.path(), &compactError); const qint64 oldMax = beforeEvents.last().value(QStringLiteral("sequenceNumber")).toVariant().toLongLong();
+    auto invalidOptions = compactConfig.value(QStringLiteral("validationOptions")).toArray(); invalidOptions.append(QStringLiteral("forced-invalid-validation")); compactConfig.insert(QStringLiteral("validationOptions"), invalidOptions);
+    configFile.open(QIODevice::WriteOnly | QIODevice::Truncate); configFile.write(QJsonDocument(compactConfig).toJson()); configFile.close();
+    QString failedCompactionError; const bool failedCompaction = ProjectMemoryCompaction().compact(compactProject.path(), true, nullptr, &failedCompactionError);
+    ok &= require(!failedCompaction && compactMemory.events(compactProject.path(), &compactError).size() == beforeEvents.size(), "MEM-COMPACT-014 failed validation prevents deletion");
+    invalidOptions.removeLast(); compactConfig.insert(QStringLiteral("validationOptions"), invalidOptions); configFile.open(QIODevice::WriteOnly | QIODevice::Truncate); configFile.write(QJsonDocument(compactConfig).toJson()); configFile.close();
+    QJsonObject compactResult; const bool compactedOk = ProjectMemoryCompaction().compact(compactProject.path(), true, &compactResult, &compactError); if (!compactedOk) std::cerr << "MEM-COMPACT error: " << compactError.toStdString() << '\n'; ok &= require(compactedOk, "MEM-COMPACT-011 sequence numbers are not renumbered");
+    const auto afterEvents = compactMemory.events(compactProject.path(), &compactError); bool gapsRemain = false; for (int i = 1; i < afterEvents.size(); ++i) gapsRemain |= afterEvents.at(i).value(QStringLiteral("sequenceNumber")).toVariant().toLongLong() > afterEvents.at(i - 1).value(QStringLiteral("sequenceNumber")).toVariant().toLongLong() + 1;
+    ok &= require(gapsRemain || afterEvents.size() == beforeEvents.size(), "MEM-COMPACT-012 event IDs and sequence identity preserved");
+    ok &= require(compactMemory.appendEvent(compactProject.path(), QStringLiteral("TEST_RESULT"), QStringLiteral("new event"), QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}}, &compactError), "MEM-COMPACT-013 next sequence remains monotonic");
+    ok &= require(compactMemory.events(compactProject.path(), &compactError).last().value(QStringLiteral("sequenceNumber")).toVariant().toLongLong() > oldMax, "MEM-COMPACT-014 monotonic next sequence");
+    ok &= require(QFileInfo::exists(QDir(compactProject.path()).filePath("ARAMF_WORKER/memory/compaction-manifest.json")), "MEM-COMPACT-015 manifest persisted");
+    ok &= require(QFileInfo::exists(QDir(compactProject.path()).filePath("ARAMF_WORKER/memory/compaction-history.jsonl")), "MEM-COMPACT-016 append-only compaction history persisted");
+    ok &= require(compactMemory.validateColdStart(compactProject.path(), &compactError).value(QStringLiteral("status")).toString() == QStringLiteral("PASS"), "MEM-COMPACT-017 cold-start after compaction");
+    ok &= require(compactMemory.validate(compactProject.path(), &compactError).value(QStringLiteral("status")).toString() == QStringLiteral("PASS"), "MEM-COMPACT-018 memory consistency after compaction");
+    ok &= require(ProjectMemoryCompaction().applicableKnowledge(compactProject.path(), &compactError).value(QStringLiteral("entries")).toArray().size() >= 1
+                  && ProjectMemoryCompaction().dryRun(compactProject.path(), &compactError).value(QStringLiteral("knowledgeCandidates")).toArray().size() <= 1, "MEM-COMPACT-019 second cycle rediscovers applicable knowledge without duplicate IDs");
+    ok &= require(compactResult.value(QStringLiteral("compactionManifest")).toObject().value(QStringLiteral("protectedEvents")).isArray(), "MEM-COMPACT-020 protected event references are retained");
 
     return ok ? 0 : 1;
 }

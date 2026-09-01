@@ -102,6 +102,23 @@ changes only the project path and does not save.
 
 ## Implemented Features
 
+- Added the Android Studio/Kotlin/Gemini project template. It uses the
+  existing template/model/generation architecture with Kotlin, Gradle,
+  Android Studio, Android SDK, Compose/Room preferences, Git, and Gemini
+  defaults. Other agents remain selectable and course specifications can be
+  represented as primary Source of Truth resources.
+- Added Android-aware, scope-sensitive validation guidance for Gradle
+  configuration/compile, unit tests, lint, instrumentation, emulator, and
+  device checks, including Windows Gradle wrapper commands. Runtime evidence
+  states remain distinct and are never fabricated.
+
+- Project Memory Compaction is implemented as a governed C++ subsystem. It
+  detects recurring semantic event patterns at a configurable threshold
+  (default 500), creates project-local knowledge with source provenance,
+  protects decisions/checkpoints/incidents/active evidence, records permanent
+  compaction metadata, and rewrites history only through an explicit verified
+  compaction operation. Normal recording never prunes history.
+
 - Template-derived defaults with compatible user overrides and disabled-template
   manual configuration.
 - Multi-selection capability models and stable catalog IDs for project
@@ -168,6 +185,15 @@ changes only the project path and does not save.
   generated.
 
 ## Verified Functionality
+
+- ANDROID-001 through ANDROID-020 pass in the native core regression suite.
+- Full CTest suite passes: `aramf_core_tests`, `aramf_workflow_tests`, and
+  `aramf_update_campaign`.
+
+- Current control-plane repair: memory manifest, current state, consistency
+  validation, cold-start validation, recording configuration, legacy event-ID
+  exception policy, and completed UPDATE lifecycle agree. Real PVD history was
+  not deleted. The PVD compaction dry run projects 188 active events to 184.
 
 - 250-scenario campaign completed under `test_250/`. The native core workflow
   exercised isolated project creation, Save/Load, selective Generate, Verify,
@@ -320,3 +346,20 @@ descriptions, scopes, and canonical identities were preserved.
 
 - Task: Milestone: add admin override and destructive-operation safety
 - Status: PASS
+
+## Latest Source Capability
+
+- Test Certification is now a first-class generic project capability with append-only certificate history, evidence gating, verification levels, current-state rediscovery, Project Memory lifecycle events, and generated governance.
+- Verified: certification regression coverage and the complete native CTest suite pass.
+
+## Latest Source Fix
+
+- Task: Fix Project Memory generation architecture at the ARAMF source.
+- Status: PASS
+- Implemented explicit `agent-direct` Project Memory ownership, append-only historical governance, current-state separation, governed agent writes, and regression coverage for generated projects.
+- Verified: native build, core tests, workflow tests, and update campaign all pass.
+
+- Task: Fix project-root rebinding and existing-project control-plane update.
+- Status: PASS
+- Implemented selected-root authority, stale-root migration, resource/control-plane path rebasing, fresh verification provenance, current certification generation, and ROOT-REBIND regression coverage.
+- Verified: existing Project 7 was updated in place; no active Project 6 references remain, Project Memory history was preserved, and current verification/cold-start validation resolve Project 7.

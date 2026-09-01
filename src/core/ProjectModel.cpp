@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QRegularExpression>
 #include <QUrl>
+#include <QFile>
 
 namespace {
 
@@ -22,6 +23,20 @@ bool containsAny(const QStringList& values, std::initializer_list<QStringView> c
         }
     }
     return false;
+}
+
+QString sourceText(const ProjectModel* model, const ProjectResource& resource)
+{
+    if (!resource.description.trimmed().isEmpty()) return resource.description;
+    const QString path = QDir::isAbsolutePath(resource.location) ? resource.location : QDir(model->projectPath()).filePath(resource.location);
+    QFile file(path);
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) return QString::fromUtf8(file.readAll());
+    return {};
+}
+
+bool requirement(const QString& text, const QString& pattern)
+{
+    return QRegularExpression(pattern, QRegularExpression::CaseInsensitiveOption).match(text).hasMatch();
 }
 
 }
@@ -59,6 +74,10 @@ bool sameResourceIdentity(const ProjectResource& left, const ProjectResource& ri
 
 QString deriveProjectContext(const DevelopmentCapabilities& capabilities)
 {
+    if (containsAny(capabilities.targetPlatforms, {u"android"})
+        || containsAny(capabilities.frameworks, {u"android-sdk", u"jetpack-compose"})) {
+        return QStringLiteral("android-application");
+    }
     if (containsAny(capabilities.frameworks, {u"pico-sdk", u"arduino", u"platformio", u"esp-idf", u"zephyr"})
         && containsAny(capabilities.targetPlatforms, {u"embedded", u"embedded-system", u"microcontroller", u"bare-metal", u"rtos"})) {
         return QStringLiteral("embedded-firmware");
@@ -386,6 +405,7 @@ void ProjectModel::setResources(const QList<ProjectResource>& value)
     resources_ = value;
     resourceNames_.clear();
     for (const auto& resource : resources_) resourceNames_ << resource.name;
+    resolveAndroidConstraints();
     notifyChanged();
 }
 
@@ -411,7 +431,8 @@ void ProjectModel::setRuleConfiguration(const RuleConfiguration& value)
 
 void ProjectModel::setMemoryConfiguration(const MemoryConfiguration& value)
 {
-    if (memoryConfiguration_.captureCategories == value.captureCategories
+    if (memoryConfiguration_.writerMode == value.writerMode
+        && memoryConfiguration_.captureCategories == value.captureCategories
         && memoryConfiguration_.retentionLevel == value.retentionLevel
         && memoryConfiguration_.maintenanceOptions == value.maintenanceOptions
         && memoryConfiguration_.validationOptions == value.validationOptions
@@ -420,6 +441,125 @@ void ProjectModel::setMemoryConfiguration(const MemoryConfiguration& value)
         && memoryConfiguration_.maximumSizeBytes == value.maximumSizeBytes) return;
     memoryConfiguration_ = value;
     notifyChanged();
+}
+
+void ProjectModel::setCertificationConfiguration(const CertificationConfiguration& value)
+{
+    if (certificationConfiguration_.enabled == value.enabled
+        && certificationConfiguration_.defaultVerificationLevel == value.defaultVerificationLevel) return;
+    certificationConfiguration_ = value;
+    notifyChanged();
+}
+
+void ProjectModel::setAndroidConstraints(const AndroidProjectConstraints& value)
+{
+    androidConstraints_ = value;
+    notifyChanged();
+}
+
+void ProjectModel::resolveAndroidConstraints()
+{
+    AndroidProjectConstraints next;
+    if (templateId_ != QStringLiteral("android-studio-kotlin-gemini") && context_ != QStringLiteral("android-application")) {
+        androidConstraints_ = next;
+        return;
+    }
+    for (const auto& resource : resources_) {
+        if (!resource.enabled || resource.authorityLevel.compare(QStringLiteral("primary-source-of-truth"), Qt::CaseInsensitive) != 0) continue;
+        const QString text = sourceText(this, resource);
+        if (text.trimmed().isEmpty()) continue;
+        const QString source = resource.id;
+        next.sourceOfTruthResource = source;
+        next.sourceOfTruthTitle = resource.name;
+        next.minSdkSource = source; next.primaryIdeSource = source; next.kotlinSource = source;
+        next.uiTechnologySource = source; next.composeSource = source; next.roomSource = source;
+        next.unitTestsSource = source; next.lintSource = source;
+        const auto sdk = QRegularExpression(QStringLiteral("minimum\\s+sdk\\s*[=:]\\s*(\\d+)"), QRegularExpression::CaseInsensitiveOption).match(text);
+        if (sdk.hasMatch()) { next.minSdk = sdk.captured(1).toInt(); next.minSdkSpecified = true; }
+        const auto setText = [](QString& value, QString& provenance, const QString& derived, const QString& source) {
+            value = derived; provenance = source;
+        };
+        if (text.contains(QStringLiteral("LABORATORY HANDBOOK: MULTI-AGENT SANDBOX"), Qt::CaseInsensitive))
+            setText(next.courseName, next.courseNameSource, QStringLiteral("Android Development and Software Architecture"), source);
+        if (text.contains(QStringLiteral("smart-home-gitops"), Qt::CaseInsensitive))
+            setText(next.projectDomain, next.projectDomainSource, QStringLiteral("Smart Home GitOps control application"), source);
+        if (requirement(text, QStringLiteral("\\bMVVM\\b.*(required|strict|separation)|strict separation.*MVVM")))
+            setText(next.architecture, next.architectureSource, QStringLiteral("MVVM"), source);
+        const QList<QPair<QString, QString>> technologies = {
+            {QStringLiteral("Kotlin Coroutines"), QStringLiteral("kotlin\\s+coroutines")},
+            {QStringLiteral("Jetpack Compose"), QStringLiteral("jetpack\\s+compose")},
+            {QStringLiteral("GitOps"), QStringLiteral("gitops")},
+            {QStringLiteral("Retrofit"), QStringLiteral("retrofit")},
+            {QStringLiteral("Gson"), QStringLiteral("\\bgson\\b")},
+            {QStringLiteral("Kotlin Flow / StateFlow"), QStringLiteral("stateflow|kotlin\\s+flow")},
+            {QStringLiteral("Regex or weighted heuristics"), QStringLiteral("regex\\s+or\\s+weighted\\s+heuristics|weighted\\s+heuristics")}
+        };
+        for (const auto& technology : technologies) {
+            if (requirement(text, technology.second)) next.declaredTechnologies << technology.first;
+        }
+        if (!next.declaredTechnologies.isEmpty()) next.declaredTechnologiesSource = source;
+        next.kotlinRequired = requirement(text, QStringLiteral("kotlin.*(mandatory|required)"));
+        if (next.kotlinRequired) next.kotlinSource = source;
+        if (requirement(text, QStringLiteral("android\\s+studio.*(official|primary|required)"))) next.primaryIde = QStringLiteral("android-studio");
+        if (next.primaryIde == QStringLiteral("android-studio")) next.primaryIdeSource = source;
+        next.composeRequired = requirement(text, QStringLiteral("jetpack\\s+compose.*(explicitly|required|must)|ui framework:\\s*jetpack\\s+compose"));
+        if (next.composeRequired) { next.composeRequiredSource = source; next.composeSource = source; next.uiTechnology = QStringLiteral("jetpack-compose"); next.uiTechnologySource = source; }
+        if (requirement(text, QStringLiteral("xml\\s+layouts?.*(mandatory|required)"))) { next.xmlRequired = true; next.uiTechnology = QStringLiteral("xml"); next.uiTechnologySource = source; }
+        if (requirement(text, QStringLiteral("compose.*(must\\s+not|prohibited|forbidden|disabled)"))) { next.composeAllowed = false; next.composeSelected = false; }
+        else if (next.composeRequired) { next.composeAllowed = true; next.composeSelected = true; }
+        next.roomRequired = requirement(text, QStringLiteral("room\\s+(?:is\\s+)?(?:mandatory|required)|(?:mandatory|required|must\\s+use)\\s+room"));
+        next.unitTestsRequired = requirement(text, QStringLiteral("unit\\s+tests?.*(mandatory|required)|validation expectations.*unit\\s+tests"));
+        next.lintRequired = requirement(text, QStringLiteral("lint.*(mandatory|required|must\\s+pass)"));
+        next.retrofitRequired = requirement(text, QStringLiteral("retrofit.*(required|must)")); next.retrofitSource = next.retrofitRequired ? source : QString();
+        next.gsonRequired = requirement(text, QStringLiteral("gson.*(required|must)")); next.gsonSource = next.gsonRequired ? source : QString();
+        next.internetPermissionRequired = requirement(text, QStringLiteral("internet permission.*required|android\\.permission\\.internet")); next.internetPermissionSource = next.internetPermissionRequired ? source : QString();
+        next.githubApiRequired = requirement(text, QStringLiteral("github api.*required|github api.*communication")); next.githubApiSource = next.githubApiRequired ? source : QString();
+        next.githubPatRequired = requirement(text, QStringLiteral("personal access token|github pat|github.*PAT")); next.githubPatSource = next.githubPatRequired ? source : QString();
+        next.classicPatRequired = requirement(text, QStringLiteral("PAT type:\\s*classic|classic.*PAT")); next.classicPatSource = next.classicPatRequired ? source : QString();
+        if (requirement(text, QStringLiteral("scope:\\s*`?repo`?|\\brepo\\s+scope"))) { next.patScope = QStringLiteral("repo"); next.patScopeSource = source; }
+        next.hardcodedTokenProhibited = requirement(text, QStringLiteral("hardcoded token.*(prohibited|never)|token.*not.*hardcoded|must never be hardcoded")); next.hardcodedTokenSource = next.hardcodedTokenProhibited ? source : QString();
+        next.localPropertiesRequired = requirement(text, QStringLiteral("local\\.properties")); next.localPropertiesSource = next.localPropertiesRequired ? source : QString();
+        next.buildConfigRequired = requirement(text, QStringLiteral("buildconfig|build config")); next.buildConfigSource = next.buildConfigRequired ? source : QString();
+        next.privateRepositoryRequired = requirement(text, QStringLiteral("strictly private|private github repository")); next.privateRepositorySource = next.privateRepositoryRequired ? source : QString();
+        next.instructorCollaboratorRequired = requirement(text, QStringLiteral("instructor collaborator.*(required|write permission)")); next.instructorCollaboratorSource = next.instructorCollaboratorRequired ? source : QString();
+        if (text.contains(QStringLiteral("smart-home-gitops"), Qt::CaseInsensitive)) { next.repositoryName = QStringLiteral("smart-home-gitops"); next.repositoryNameSource = source; }
+        if (requirement(text, QStringLiteral("initial branch:?\\s*`?main`?"))) { next.initialBranch = QStringLiteral("main"); next.initialBranchSource = source; }
+        if (requirement(text, QStringLiteral("house_config\\.json"))) { next.requiredInitialFile = QStringLiteral("house_config.json"); next.requiredInitialFileSource = source; }
+        if ((text.contains(QStringLiteral("house_config.json"), Qt::CaseInsensitive) && text.contains(QStringLiteral("official house state"), Qt::CaseInsensitive))
+            || requirement(text, QStringLiteral("house_config\\.json.*single source|single source.*house_config"))) { next.applicationStateSource = QStringLiteral("GitHub/house_config.json"); next.applicationStateSourceSource = source; }
+        if (requirement(text, QStringLiteral("declaratively managed|state model.*declarative"))) { next.stateModel = QStringLiteral("declarative"); next.stateModelSource = source; }
+        if (requirement(text, QStringLiteral("workflow.*gitops|gitops.*workflow"))) { next.workflow = QStringLiteral("GitOps"); next.workflowSource = source; }
+        next.applicationStateFields = {QStringLiteral("target_temperature"), QStringLiteral("living_room_lights"), QStringLiteral("hvac_mode"), QStringLiteral("security_system"), QStringLiteral("last_updated_by")};
+        if (text.contains(QStringLiteral("target_temperature"), Qt::CaseInsensitive)) next.applicationStateFieldsSource = source;
+        if (requirement(text, QStringLiteral("EcoAgent"))) next.domainAgents << QStringLiteral("EcoAgent");
+        if (requirement(text, QStringLiteral("LuxAgent"))) next.domainAgents << QStringLiteral("LuxAgent");
+        if (!next.domainAgents.isEmpty()) { next.domainAgentsSource = source; next.domainAgentDistinction = QStringLiteral("EcoAgent and LuxAgent are application/course simulation agents; Gemini, Codex, and ChatGPT are ARAMF development agents."); next.domainAgentDistinctionSource = source; }
+        next.pollingRequired = requirement(text, QStringLiteral("polling.*required|polling loop")); next.pollingSource = next.pollingRequired ? source : QString();
+        const auto interval = QRegularExpression(QStringLiteral("(30)\\s*seconds"), QRegularExpression::CaseInsensitiveOption).match(text);
+        if (interval.hasMatch()) { next.pollingIntervalSeconds = interval.captured(1).toInt(); next.pollingIntervalSource = source; }
+        if (requirement(text, QStringLiteral("execution location:\\s*viewmodel|polling.*viewmodel"))) { next.pollingExecutionLocation = QStringLiteral("ViewModel"); next.pollingExecutionLocationSource = source; }
+        if (requirement(text, QStringLiteral("Dispatchers\\.IO"))) { next.networkDispatcher = QStringLiteral("Dispatchers.IO"); next.networkDispatcherSource = source; }
+        if (requirement(text, QStringLiteral("Dispatchers\\.Default"))) { next.analysisDispatcher = QStringLiteral("Dispatchers.Default"); next.analysisDispatcherSource = source; }
+        next.stateFlowRequired = requirement(text, QStringLiteral("stateflow")); next.stateFlowSource = next.stateFlowRequired ? source : QString();
+        next.collectAsStateRequired = requirement(text, QStringLiteral("collectAsState")); next.collectAsStateSource = next.collectAsStateRequired ? source : QString();
+        next.deceptionDetectorRequired = requirement(text, QStringLiteral("deceptiondetector")); next.deceptionDetectorSource = next.deceptionDetectorRequired ? source : QString();
+        next.regexOrHeuristicsRequired = requirement(text, QStringLiteral("regex\\s+or\\s+weighted\\s+heuristics")); next.regexOrHeuristicsSource = next.regexOrHeuristicsRequired ? source : QString();
+        if (requirement(text, QStringLiteral("0\\s*[-–]\\s*100%|0–100%|0-100"))) { next.confidenceMinPercent = 0; next.confidenceMaxPercent = 100; next.confidenceRangeSource = source; }
+        next.normalGreenRequired = requirement(text, QStringLiteral("normal.*green|green ui")); next.normalGreenSource = next.normalGreenRequired ? source : QString();
+        next.securityAlertRedRequired = requirement(text, QStringLiteral("securityalert.*red|red ui")); next.securityAlertRedSource = next.securityAlertRedRequired ? source : QString();
+        next.rawAdversarialTextRequired = requirement(text, QStringLiteral("raw (ai|adversarial).*text|raw ai text")); next.rawAdversarialTextSource = next.rawAdversarialTextRequired ? source : QString();
+        next.humanInTheLoopRequired = requirement(text, QStringLiteral("human-in-the-loop.*required|human operator.*override")); next.humanInTheLoopSource = next.humanInTheLoopRequired ? source : QString();
+        next.validationRequirements = {QStringLiteral("Android compilation"), QStringLiteral("unit tests"), QStringLiteral("application startup"), QStringLiteral("emulator verification"), QStringLiteral("MVVM structural verification"), QStringLiteral("secure token handling verification"), QStringLiteral("polling verification"), QStringLiteral("Dispatchers.IO verification"), QStringLiteral("Dispatchers.Default verification"), QStringLiteral("Compose reactive state verification"), QStringLiteral("GitHub API behavior verification"), QStringLiteral("deception detector verification"), QStringLiteral("confidence score verification")};
+        next.validationRequirementsSource = source;
+        next.submissionRequirements = {QStringLiteral("screen recording with audio"), QStringLiteral("Canvas submission"), QStringLiteral("private GitHub repository link")}; next.submissionRequirementsSource = source;
+        if (requirement(text, QStringLiteral("maximum 3\\s*[-–]\\s*5 minutes|3\\s*[-–]\\s*5 minutes"))) { next.submissionVideoDuration = QStringLiteral("maximum 3–5 minutes"); next.submissionVideoDurationSource = source; }
+        next.submissionSegments = {QStringLiteral("Live Simulation Demonstration"), QStringLiteral("MVVM Architecture & Security Walkthrough"), QStringLiteral("Algorithm Analysis / Verification")}; next.submissionSegmentsSource = source;
+        next.unresolvedRequirements = {QStringLiteral("Android minimum SDK"), QStringLiteral("target compile SDK"), QStringLiteral("application package name"), QStringLiteral("exact instructor GitHub username"), QStringLiteral("exact GitHub API endpoints"), QStringLiteral("Human-in-the-Loop override UI"), QStringLiteral("deception scoring weights")};
+        next.unresolvedRequirementsSource = source;
+        break;
+    }
+    androidConstraints_ = next;
+    if (!next.composeAllowed || !next.composeSelected) capabilities_.frameworks.removeAll(QStringLiteral("jetpack-compose"));
 }
 
 void ProjectModel::setGenerationOptions(const GenerationOptions& value)
@@ -505,6 +645,7 @@ void ProjectModel::resetForNewProject()
     resourcePolicy_.options = {QStringLiteral("read-relevant"), QStringLiteral("prefer-authoritative"), QStringLiteral("respect-scope"), QStringLiteral("ignore-disabled"), QStringLiteral("warn-conflicts")};
     ruleConfiguration_ = {};
     memoryConfiguration_ = {};
+    certificationConfiguration_ = {};
     profileSelections_.clear();
     ai_ = {};
     options_.clear();

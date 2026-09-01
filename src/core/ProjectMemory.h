@@ -3,6 +3,7 @@
 #pragma once
 
 #include <QJsonObject>
+#include <QList>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -60,9 +61,41 @@ public:
                                       const QJsonObject& additionalFields = {},
                                       QJsonObject* result = nullptr,
                                       QString* error = nullptr);
+    QList<QJsonObject> events(const QString& projectRoot, QString* error = nullptr) const;
+    bool eventById(const QString& projectRoot,
+                   const QString& eventId,
+                   QJsonObject* result,
+                   QString* error = nullptr) const;
+    QList<QJsonObject> eventsForTask(const QString& projectRoot,
+                                     const QString& task,
+                                     const QString& eventType = {},
+                                     QString* error = nullptr) const;
+    QList<QJsonObject> decisions(const QString& projectRoot,
+                                 bool includeSuperseded = true,
+                                 QString* error = nullptr) const;
+    QList<QJsonObject> currentDecisions(const QString& projectRoot,
+                                        QString* error = nullptr) const;
+    bool decisionById(const QString& projectRoot,
+                     const QString& decisionId,
+                     QJsonObject* result,
+                     QString* error = nullptr) const;
+    QList<QJsonObject> decisionsByTopic(const QString& projectRoot,
+                                        const QString& topic,
+                                        bool includeSuperseded = true,
+                                        QString* error = nullptr) const;
+    QList<QJsonObject> checkpoints(const QString& projectRoot, QString* error = nullptr) const;
+    bool checkpointById(const QString& projectRoot,
+                        const QString& checkpointId,
+                        QJsonObject* result,
+                        QString* error = nullptr) const;
+    bool latestCheckpoint(const QString& projectRoot,
+                          QJsonObject* result,
+                          QString* error = nullptr) const;
+    bool recordingEnabled(const QString& projectRoot, QString* error = nullptr) const;
     static QStringList supportedRecordOperations();
     QJsonObject validate(const QString& projectRoot, QString* error = nullptr) const;
     QJsonObject validateColdStart(const QString& projectRoot, QString* error = nullptr) const;
+    bool refreshDerivedState(const QString& projectRoot, QString* error = nullptr) const;
     bool refreshMemoryContract(const QString& projectRoot, QString* error = nullptr) const;
     bool refreshMemoryInstructions(const QString& projectRoot, QString* error = nullptr) const;
     qint64 memoryUsageBytes(const QString& projectRoot) const;

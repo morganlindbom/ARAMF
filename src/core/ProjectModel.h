@@ -95,6 +95,122 @@ struct ResourcePolicy {
     QString loadingStrategy = QStringLiteral("relevant");
 };
 
+struct AndroidProjectConstraints {
+    int minSdk = 0;
+    bool minSdkSpecified = false;
+    QString minSdkSource;
+    QString courseName;
+    QString courseNameSource;
+    QString projectDomain;
+    QString projectDomainSource;
+    QString architecture;
+    QString architectureSource;
+    QStringList declaredTechnologies;
+    QString declaredTechnologiesSource;
+    QString primaryIde = QStringLiteral("android-studio");
+    QString primaryIdeSource;
+    bool kotlinRequired = false;
+    QString kotlinSource;
+    QString uiTechnology = QStringLiteral("compose");
+    bool xmlRequired = false;
+    QString uiTechnologySource;
+    bool composeAvailable = true;
+    bool composeAllowed = true;
+    bool composeSelected = true;
+    QString composeSource;
+    bool composeRequired = false;
+    QString composeRequiredSource;
+    bool retrofitRequired = false;
+    QString retrofitSource;
+    bool gsonRequired = false;
+    QString gsonSource;
+    bool internetPermissionRequired = false;
+    QString internetPermissionSource;
+    bool githubApiRequired = false;
+    QString githubApiSource;
+    bool githubPatRequired = false;
+    QString githubPatSource;
+    bool classicPatRequired = false;
+    QString classicPatSource;
+    QString patScope;
+    QString patScopeSource;
+    bool hardcodedTokenProhibited = false;
+    QString hardcodedTokenSource;
+    bool localPropertiesRequired = false;
+    QString localPropertiesSource;
+    bool buildConfigRequired = false;
+    QString buildConfigSource;
+    bool privateRepositoryRequired = false;
+    QString privateRepositorySource;
+    bool instructorCollaboratorRequired = false;
+    QString instructorCollaboratorSource;
+    QString repositoryName;
+    QString repositoryNameSource;
+    QString initialBranch;
+    QString initialBranchSource;
+    QString requiredInitialFile;
+    QString requiredInitialFileSource;
+    QString applicationStateSource;
+    QString applicationStateSourceSource;
+    QString stateModel;
+    QString stateModelSource;
+    QString workflow;
+    QString workflowSource;
+    QStringList applicationStateFields;
+    QString applicationStateFieldsSource;
+    QStringList domainAgents;
+    QString domainAgentsSource;
+    QString domainAgentDistinction;
+    QString domainAgentDistinctionSource;
+    bool pollingRequired = false;
+    QString pollingSource;
+    int pollingIntervalSeconds = 0;
+    QString pollingIntervalSource;
+    QString pollingExecutionLocation;
+    QString pollingExecutionLocationSource;
+    QString networkDispatcher;
+    QString networkDispatcherSource;
+    QString analysisDispatcher;
+    QString analysisDispatcherSource;
+    bool stateFlowRequired = false;
+    QString stateFlowSource;
+    bool collectAsStateRequired = false;
+    QString collectAsStateSource;
+    bool deceptionDetectorRequired = false;
+    QString deceptionDetectorSource;
+    bool regexOrHeuristicsRequired = false;
+    QString regexOrHeuristicsSource;
+    int confidenceMinPercent = -1;
+    int confidenceMaxPercent = -1;
+    QString confidenceRangeSource;
+    bool normalGreenRequired = false;
+    QString normalGreenSource;
+    bool securityAlertRedRequired = false;
+    QString securityAlertRedSource;
+    bool rawAdversarialTextRequired = false;
+    QString rawAdversarialTextSource;
+    bool humanInTheLoopRequired = false;
+    QString humanInTheLoopSource;
+    QStringList validationRequirements;
+    QString validationRequirementsSource;
+    QStringList submissionRequirements;
+    QString submissionRequirementsSource;
+    QString submissionVideoDuration;
+    QString submissionVideoDurationSource;
+    QStringList submissionSegments;
+    QString submissionSegmentsSource;
+    QStringList unresolvedRequirements;
+    QString unresolvedRequirementsSource;
+    QString sourceOfTruthTitle;
+    QString sourceOfTruthResource;
+    bool roomRequired = false;
+    QString roomSource;
+    bool unitTestsRequired = false;
+    QString unitTestsSource;
+    bool lintRequired = false;
+    QString lintSource;
+};
+
 struct RuleConfiguration {
     QStringList activeCategories;
     QString enforcementLevel = QStringLiteral("standard");
@@ -106,6 +222,9 @@ struct RuleConfiguration {
 };
 
 struct MemoryConfiguration {
+    // Ownership of project-local persistence. The default keeps memory usable
+    // by the active coding agent without requiring a machine-global recorder.
+    QString writerMode = QStringLiteral("agent-direct");
     QStringList captureCategories;
     QString retentionLevel = QStringLiteral("standard");
     QStringList maintenanceOptions;
@@ -113,6 +232,11 @@ struct MemoryConfiguration {
     QString updateStrategy = QStringLiteral("meaningful-task");
     QStringList historyOptions;
     qint64 maximumSizeBytes = 10LL * 1024LL * 1024LL * 1024LL;
+};
+
+struct CertificationConfiguration {
+    bool enabled = false;
+    QString defaultVerificationLevel = QStringLiteral("HOST_TEST");
 };
 
 struct GenerationOptions {
@@ -144,6 +268,8 @@ public:
     ResourcePolicy resourcePolicy() const { return resourcePolicy_; }
     RuleConfiguration ruleConfiguration() const { return ruleConfiguration_; }
     MemoryConfiguration memoryConfiguration() const { return memoryConfiguration_; }
+    CertificationConfiguration certificationConfiguration() const { return certificationConfiguration_; }
+    AndroidProjectConstraints androidConstraints() const { return androidConstraints_; }
     GenerationOptions generationOptions() const { return generationOptions_; }
     QStringList aiPlatforms() const { return aiPlatforms_; }
     QStringList resourceNames() const { return resourceNames_; }
@@ -167,6 +293,9 @@ public:
     void setResourcePolicy(const ResourcePolicy& value);
     void setRuleConfiguration(const RuleConfiguration& value);
     void setMemoryConfiguration(const MemoryConfiguration& value);
+    void setCertificationConfiguration(const CertificationConfiguration& value);
+    void setAndroidConstraints(const AndroidProjectConstraints& value);
+    void resolveAndroidConstraints();
     void setGenerationOptions(const GenerationOptions& value);
     void applyTemplateCapabilities(const DevelopmentCapabilities& value);
     void applyTemplateDefaults(const DevelopmentEnvironment& value);
@@ -207,6 +336,8 @@ private:
     ResourcePolicy resourcePolicy_;
     RuleConfiguration ruleConfiguration_;
     MemoryConfiguration memoryConfiguration_;
+    CertificationConfiguration certificationConfiguration_;
+    AndroidProjectConstraints androidConstraints_;
     GenerationOptions generationOptions_;
     QStringList aiPlatforms_;
     QStringList resourceNames_;

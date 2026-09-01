@@ -1,0 +1,5 @@
+{
+  "_file": "compaction-manifest.json",
+  "status": "NONE",
+  "policy": "No PVD history has been deleted; dry-run required before verified compaction."
+}

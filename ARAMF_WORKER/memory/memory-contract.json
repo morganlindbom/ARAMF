@@ -51,18 +51,13 @@
         "syntax": "aramf memory record --project <project-root> --operation <operation> ..."
     },
     "configuredMaintenanceOptions": [
-        "update-current-state",
-        "record-decisions",
-        "record-checkpoints",
-        "record-validation",
-        "record-build-results",
-        "record-test-results",
-        "record-task-completion",
-        "update-project-status",
-        "remove-stale-state",
-        "preserve-append-only"
     ],
-    "directEditing": "forbidden: use the ARAMF memory recorder; do not edit owned files directly.",
+    "directEditing": {
+        "default": "forbidden",
+        "frameworkKnowledgeException": "The canonical framework-knowledge.json may be directly created or updated when the operation is explicitly authorized by Admin Morgan Lindbom and the official ARAMF knowledge recorder is unavailable. The operation must preserve the existing schema, stable IDs, unrelated entries, duplicate protection, JSON validity, and exact operation reporting.",
+        "otherOwnedFiles": "No equivalent direct-editing exception exists for other ARAMF-owned memory or project-state files unless separately authorized by this contract.",
+        "rule": "Use the ARAMF memory recorder for ARAMF-owned files. Direct editing is forbidden by default."
+    },
     "frameworkKnowledgeLibrary": {
         "globalLocation": "AramfPaths::programRoot()/ARAMF_DATA/framework-knowledge-library.json",
         "layers": [
@@ -83,14 +78,38 @@
         "reportCommand": "aramf improvement report --project <project-root> --title <title> --observation <observation> [--expected <behavior>] [--area <area>] [--evidence <evidence>]",
         "triageCommand": "aramf improvement triage --project <project-root> --id <gap-id> --action <promote|project-specific|duplicate|needs-evidence|already-resolved|reject> [--duplicate-of <gap-id>] [--priority <priority>]"
     },
+    "knowledge": {
+        "adminAuthorization": "Authorized by: Admin Morgan Lindbom is sufficient authorization for approved framework knowledge create or update operations.",
+        "canonicalFile": "memory/framework-knowledge.json",
+        "duplicatePolicy": "Do not create semantic duplicates. If an equivalent approved record already exists, preserve its stable ID and update it only when explicitly authorized.",
+        "globalKnowledgeRestriction": "GLOBAL_FRAMEWORK knowledge must never silently override explicit current user instructions, current project Source of Truth, durable project decisions, or stronger applicable project-local knowledge.",
+        "globalScope": "GLOBAL_FRAMEWORK",
+        "priority": [
+            "Explicit current user instruction",
+            "Current project Source of Truth and durable project decisions",
+            "Applicable project-local knowledge",
+            "Applicable global/framework knowledge",
+            "Defaults, templates, and inference"
+        ],
+        "projectScope": "PROJECT_LOCAL",
+        "recorderUnavailablePolicy": "If the official recorder is unavailable, framework knowledge may use the administrative knowledge fallback when Authorized by: Admin Morgan Lindbom is present. Other protected ARAMF memory files remain blocked unless separately authorized.",
+        "sessionMemoryPolicy": "Agent or chat-session memory is not a substitute for ARAMF durable knowledge.",
+        "stableIdPolicy": "Existing stable knowledge IDs must be preserved when updating an existing record."
+    },
     "ownedFiles": [
         "memory/event-log.jsonl",
         "memory/metrics.json",
         "memory/current-state.md",
         "memory/memory-manifest.json",
+        "memory/checkpoints.json",
         "memory/memory-consistency-validation.json",
         "PROJECT_STATUS.md"
     ],
+    "recordingAvailability": {
+        "fallbackIndependent": true,
+        "fallbackRule": "The Admin Morgan Lindbom framework knowledge fallback may operate while recordingEnabled is false, but only for canonical framework-knowledge.json operations allowed by administrativeOverride.knowledgeFallback.",
+        "meaning": "recordingEnabled represents availability of the official ARAMF recorder and must not be manually set to true merely because the administrative framework knowledge fallback exists."
+    },
     "recordingEnabled": true,
     "separateOperations": {
         "checkpoints": "deliberate stable recovery points; use aramf memory checkpoint --project <project-root> --title <title> --summary <summary>; not created by routine feedback",

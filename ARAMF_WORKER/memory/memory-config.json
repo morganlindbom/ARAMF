@@ -31,6 +31,8 @@
         "preserve-append-only"
     ],
     "maximumSizeBytes": 10737418240,
+    "compactionReviewThreshold": 500,
+    "compactionPolicy": "verified-compaction-only",
     "retentionLevel": "standard",
     "updateStrategy": "meaningful-task",
     "validationOptions": [
