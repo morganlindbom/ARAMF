@@ -4,12 +4,14 @@
 #include "FrameworkKnowledge.h"
 #include "ImprovementBacklog.h"
 #include "ProjectMemory.h"
+#include "ProjectMemoryCompaction.h"
 
 #include <QDir>
 #include <QFileInfo>
 #include <QHash>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QJsonDocument>
 #include <QSet>
 #include <QTextStream>
 
@@ -17,6 +19,12 @@ namespace {
 void printUsage(QTextStream& stream)
 {
     stream << "Usage: aramf memory record --project <project-root> --operation <operation> [options]\n"
+            << "       aramf memory events --project <project-root> [--format json]\n"
+            << "       aramf memory event --project <project-root> --id <event-id> [--format json]\n"
+            << "       aramf memory decisions --project <project-root> [--format json]\n"
+            << "       aramf memory decision --project <project-root> --id <decision-id> [--format json]\n"
+            << "       aramf memory checkpoints --project <project-root> [--format json]\n"
+            << "       aramf memory checkpoint get --project <project-root> --id <checkpoint-id> [--format json]\n"
             << "       aramf memory decision record --project <project-root> --id <id> --topic <topic> --summary <summary> [options]\n"
             << "       aramf memory decision supersede --project <project-root> --id <id> --replacement <id>\n"
        << "       aramf memory knowledge promote --project <project-root> --id <id>\n"
@@ -27,6 +35,7 @@ void printUsage(QTextStream& stream)
             << "       aramf memory checkpoint --project <project-root> --title <title> --summary <summary> [options]\n"
             << "       aramf memory validate --project <project-root>\n"
             << "       aramf memory cold-start --project <project-root>\n"
+            << "       aramf memory compact --project <project-root> [--dry-run] [--approve]\n"
             << "       aramf improvement report --project <project-root> --title <title> --observation <observation> [options]\n"
             << "       aramf improvement normalize --project <project-root> --project-id <id> --project-name <name>\n"
             << "       aramf improvement list [--stage <stage>] [--status <status>] [--project <project>]\n"
@@ -97,6 +106,48 @@ void printImprovementItem(QTextStream& output, const QJsonObject& item)
            << item.value(QStringLiteral("stage")).toString() << " "
            << item.value(QStringLiteral("status")).toString() << " "
            << item.value(QStringLiteral("title")).toString() << "\n";
+}
+
+QHash<QString, QString> parseReadOptions(const QStringList& arguments, int start, QTextStream& error)
+{
+    const QSet<QString> allowed{QStringLiteral("--project"), QStringLiteral("--id"),
+                                QStringLiteral("--task"), QStringLiteral("--event-type"),
+                                QStringLiteral("--topic"), QStringLiteral("--format"),
+                                QStringLiteral("--current")};
+    QHash<QString, QString> options;
+    for (int index = start; index < arguments.size(); ++index) {
+        const QString name = arguments.at(index);
+        if (!allowed.contains(name)) {
+            error << "error=invalid-argument:" << name << "\n";
+            return {};
+        }
+        if (name == QStringLiteral("--current")) {
+            options.insert(name, QStringLiteral("true"));
+            continue;
+        }
+        if (index + 1 >= arguments.size() || arguments.at(index + 1).startsWith(QStringLiteral("--"))) {
+            error << "error=missing-value:" << name << "\n";
+            return {};
+        }
+        options.insert(name, arguments.at(++index));
+    }
+    return options;
+}
+
+void printObjects(QTextStream& output, const QList<QJsonObject>& values, bool json)
+{
+    if (json) {
+        QJsonArray array;
+        for (const auto& value : values) array.append(value);
+        output << QJsonDocument(array).toJson(QJsonDocument::Compact) << "\n";
+        return;
+    }
+    for (const auto& value : values) output << QJsonDocument(value).toJson(QJsonDocument::Compact) << "\n";
+}
+
+void printObject(QTextStream& output, const QJsonObject& value, bool json)
+{
+    output << QJsonDocument(value).toJson(json ? QJsonDocument::Compact : QJsonDocument::Indented) << "\n";
 }
 }
 
@@ -205,6 +256,113 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
         }
         output << "validated operation=" << arguments.at(1) << " status=PASS\n";
         return 0;
+    }
+    if (arguments.size() >= 2 && arguments.at(0) == QStringLiteral("memory") && arguments.at(1) == QStringLiteral("compact")) {
+        QString projectRoot; bool dryRun = false; bool approve = false;
+        for (int i = 2; i < arguments.size(); ++i) {
+            if (arguments.at(i) == QStringLiteral("--dry-run")) { dryRun = true; continue; }
+            if (arguments.at(i) == QStringLiteral("--approve")) { approve = true; continue; }
+            if (arguments.at(i) == QStringLiteral("--project") && i + 1 < arguments.size()) { projectRoot = QDir::cleanPath(QFileInfo(arguments.at(++i)).absoluteFilePath()); continue; }
+            error << "error=invalid-argument:" << arguments.at(i) << "\n"; return 2;
+        }
+        if (projectRoot.isEmpty()) { error << "error=project-is-required\n"; return 2; }
+        ProjectMemoryCompaction compaction; QString operationError; QJsonObject result;
+        if (dryRun) result = compaction.dryRun(projectRoot, &operationError);
+        else if (!compaction.compact(projectRoot, approve, &result, &operationError)) { error << "error=" << operationError << "\n"; return 2; }
+        if (!operationError.isEmpty()) { error << "error=" << operationError << "\n"; return 2; }
+        output << QJsonDocument(result).toJson(QJsonDocument::Indented) << "\n"; return 0;
+    }
+
+    if (arguments.size() >= 2 && arguments.at(0) == QStringLiteral("memory")
+        && (arguments.at(1) == QStringLiteral("events") || arguments.at(1) == QStringLiteral("event"))) {
+        const auto options = parseReadOptions(arguments, 2, error);
+        if (!options.contains(QStringLiteral("--project"))) {
+            error << "error=project-is-required\n";
+            return 2;
+        }
+        const QString format = options.value(QStringLiteral("--format"), QStringLiteral("text")).toLower();
+        if (format != QStringLiteral("text") && format != QStringLiteral("json")) {
+            error << "error=unsupported-format:" << format << "\n";
+            return 2;
+        }
+        const bool json = format == QStringLiteral("json");
+        const QString projectRoot = QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath());
+        ProjectMemory memory;
+        QString readError;
+        if (arguments.at(1) == QStringLiteral("events")) {
+            QList<QJsonObject> values;
+            if (options.contains(QStringLiteral("--task"))) {
+                values = memory.eventsForTask(projectRoot, options.value(QStringLiteral("--task")), options.value(QStringLiteral("--event-type")), &readError);
+            } else {
+                values = memory.events(projectRoot, &readError);
+                if (readError.isEmpty() && options.contains(QStringLiteral("--event-type"))) {
+                    QList<QJsonObject> filtered;
+                    for (const auto& value : values)
+                        if (value.value(QStringLiteral("eventType")).toString() == options.value(QStringLiteral("--event-type"))) filtered.append(value);
+                    values = filtered;
+                }
+            }
+            if (!readError.isEmpty()) { error << "error=" << readError << "\n"; return 2; }
+            printObjects(output, values, json);
+            return 0;
+        }
+        if (!options.contains(QStringLiteral("--id"))) {
+            error << "error=id-is-required\n";
+            return 2;
+        }
+        QJsonObject value;
+        if (!memory.eventById(projectRoot, options.value(QStringLiteral("--id")), &value, &readError)) {
+            error << "error=" << readError << "\n";
+            return 2;
+        }
+        printObject(output, value, json);
+        return 0;
+    }
+
+    if (arguments.size() >= 2 && arguments.at(0) == QStringLiteral("memory")
+        && (arguments.at(1) == QStringLiteral("decisions") || arguments.at(1) == QStringLiteral("decision"))) {
+        const bool singular = arguments.at(1) == QStringLiteral("decision");
+        if (singular && arguments.size() >= 3
+            && (arguments.at(2) == QStringLiteral("record") || arguments.at(2) == QStringLiteral("supersede"))) {
+            // The write subcommands are handled below.
+        } else {
+            const auto options = parseReadOptions(arguments, 2, error);
+            if (!options.contains(QStringLiteral("--project"))) {
+                error << "error=project-is-required\n";
+                return 2;
+            }
+            const QString format = options.value(QStringLiteral("--format"), QStringLiteral("text")).toLower();
+            if (format != QStringLiteral("text") && format != QStringLiteral("json")) {
+                error << "error=unsupported-format:" << format << "\n";
+                return 2;
+            }
+            const bool json = format == QStringLiteral("json");
+            const QString projectRoot = QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath());
+            ProjectMemory memory;
+            QString readError;
+            if (singular) {
+                if (!options.contains(QStringLiteral("--id"))) {
+                    error << "error=id-is-required\n";
+                    return 2;
+                }
+                QJsonObject value;
+                if (!memory.decisionById(projectRoot, options.value(QStringLiteral("--id")), &value, &readError)) {
+                    error << "error=" << readError << "\n";
+                    return 2;
+                }
+                printObject(output, value, json);
+            } else {
+                QList<QJsonObject> values;
+                if (options.contains(QStringLiteral("--topic")))
+                    values = memory.decisionsByTopic(projectRoot, options.value(QStringLiteral("--topic")), !options.contains(QStringLiteral("--current")), &readError);
+                else if (options.contains(QStringLiteral("--current")))
+                    values = memory.currentDecisions(projectRoot, &readError);
+                else values = memory.decisions(projectRoot, true, &readError);
+                if (!readError.isEmpty()) { error << "error=" << readError << "\n"; return 2; }
+                printObjects(output, values, json);
+            }
+            return 0;
+        }
     }
 
     if (arguments.size() >= 3 && arguments.at(0) == QStringLiteral("memory")
@@ -456,6 +614,56 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
             return 2;
         }
         output << "approved knowledge=" << options.value(QStringLiteral("--id")) << "\n";
+        return 0;
+    }
+
+    if (arguments.size() >= 2 && arguments.at(0) == QStringLiteral("memory")
+        && arguments.at(1) == QStringLiteral("checkpoints")) {
+        const auto options = parseReadOptions(arguments, 2, error);
+        if (!options.contains(QStringLiteral("--project"))) {
+            error << "error=project-is-required\n";
+            return 2;
+        }
+        const QString format = options.value(QStringLiteral("--format"), QStringLiteral("text")).toLower();
+        if (format != QStringLiteral("text") && format != QStringLiteral("json")) {
+            error << "error=unsupported-format:" << format << "\n";
+            return 2;
+        }
+        ProjectMemory memory;
+        QString readError;
+        const auto values = memory.checkpoints(
+            QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath()), &readError);
+        if (!readError.isEmpty()) {
+            error << "error=" << readError << "\n";
+            return 2;
+        }
+        printObjects(output, values, format == QStringLiteral("json"));
+        return 0;
+    }
+
+    if (arguments.size() >= 3 && arguments.at(0) == QStringLiteral("memory")
+        && arguments.at(1) == QStringLiteral("checkpoint")
+        && arguments.at(2) == QStringLiteral("get")) {
+        const auto options = parseReadOptions(arguments, 3, error);
+        if (!options.contains(QStringLiteral("--project")) || !options.contains(QStringLiteral("--id"))) {
+            error << "error=project-and-id-are-required\n";
+            return 2;
+        }
+        const QString format = options.value(QStringLiteral("--format"), QStringLiteral("text")).toLower();
+        if (format != QStringLiteral("text") && format != QStringLiteral("json")) {
+            error << "error=unsupported-format:" << format << "\n";
+            return 2;
+        }
+        ProjectMemory memory;
+        QJsonObject value;
+        QString readError;
+        if (!memory.checkpointById(
+                QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath()),
+                options.value(QStringLiteral("--id")), &value, &readError)) {
+            error << "error=" << readError << "\n";
+            return 2;
+        }
+        printObject(output, value, format == QStringLiteral("json"));
         return 0;
     }
 

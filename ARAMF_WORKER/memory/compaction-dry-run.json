@@ -1,0 +1,151 @@
+﻿{
+    "eventsBefore": 188,
+    "eventsCompacted": 4,
+    "eventsRetained": 184,
+    "knowledgeCandidates": [
+        {
+            "approvalState": "candidate",
+            "confidence": "medium",
+            "evidenceSummary": "Semantic fingerprint 390db7396b7d65d7b2dd52b543ad0942309de757b7f06624d5e69279ac1fa186 matched equivalent event context.",
+            "expectedFutureEfficiencyBenefit": "Avoid rediscovery and repeated equivalent work",
+            "firstObserved": "2026-08-23T01:34:07Z",
+            "id": "pk-390db7396b7d65d7",
+            "lastObserved": "2026-08-23T01:36:44Z",
+            "lesson": "Repeated 3 times: Add Framework Knowledge UPDATE workflow",
+            "occurrenceCount": 3,
+            "portability": "project-local",
+            "reasonForExtraction": "Recurring semantically equivalent operational experience",
+            "scope": "project",
+            "sourceEventIds": [
+                "event-9a742b90-65e2-4afd-a29a-a04d47b155b7",
+                "event-24db2c6b-aa33-4599-a737-dbc180dc6d3f",
+                "event-b198172b-aad7-4295-b690-afdf6bf19a98"
+            ],
+            "sourceProject": "ARAMF",
+            "title": "Recurring lesson: TEST_RESULT"
+        },
+        {
+            "approvalState": "candidate",
+            "confidence": "medium",
+            "evidenceSummary": "Semantic fingerprint 43610e9edf313015985663dbb190740677a1ac03963e86e4ff22950d4255ea5a matched equivalent event context.",
+            "expectedFutureEfficiencyBenefit": "Avoid rediscovery and repeated equivalent work",
+            "firstObserved": "2026-08-23T01:34:07Z",
+            "id": "pk-43610e9edf313015",
+            "lastObserved": "2026-08-23T01:36:43Z",
+            "lesson": "Repeated 3 times: Add Framework Knowledge UPDATE workflow",
+            "occurrenceCount": 3,
+            "portability": "project-local",
+            "reasonForExtraction": "Recurring semantically equivalent operational experience",
+            "scope": "project",
+            "sourceEventIds": [
+                "event-edf06023-2ac0-49b4-830d-b5b2b1eeb745",
+                "event-2238499b-eaac-40d1-908c-f68d409e018f",
+                "event-4da9f623-5943-404f-814b-326f1bd8f6d7"
+            ],
+            "sourceProject": "ARAMF",
+            "title": "Recurring lesson: BUILD_RESULT"
+        },
+        {
+            "approvalState": "candidate",
+            "confidence": "medium",
+            "evidenceSummary": "Semantic fingerprint 5fb94389b3b81c43e3fe191b8dc65d80d2380b785be24e05a2bc6e5b48f95aab matched equivalent event context.",
+            "expectedFutureEfficiencyBenefit": "Avoid rediscovery and repeated equivalent work",
+            "firstObserved": "2026-08-23T01:46:26Z",
+            "id": "pk-5fb94389b3b81c43",
+            "lastObserved": "2026-08-23T13:14:44Z",
+            "lesson": "Repeated 3 times: Framework Knowledge approved",
+            "occurrenceCount": 3,
+            "portability": "project-local",
+            "reasonForExtraction": "Recurring semantically equivalent operational experience",
+            "scope": "project",
+            "sourceEventIds": [
+                "event-d27af080-bfef-4f85-8cd4-65f19a87ae2a",
+                "event-70e64613-3671-4b9d-8f4b-0f173cd09fed",
+                "event-716bab68-d705-474b-9b23-c430d5ec44a1"
+            ],
+            "sourceProject": "ARAMF",
+            "title": "Recurring lesson: FRAMEWORK_KNOWLEDGE_APPROVED"
+        },
+        {
+            "approvalState": "candidate",
+            "confidence": "medium",
+            "evidenceSummary": "Semantic fingerprint 5c8a9f86cf14a697e0bbcf36e1c75322a86a8a22397facba773673b2eb33f848 matched equivalent event context.",
+            "expectedFutureEfficiencyBenefit": "Avoid rediscovery and repeated equivalent work",
+            "firstObserved": "2026-08-22T21:08:45Z",
+            "id": "pk-5c8a9f86cf14a697",
+            "lastObserved": "2026-08-22T22:10:34Z",
+            "lesson": "Repeated 3 times: Project lifecycle finalized",
+            "occurrenceCount": 3,
+            "portability": "project-local",
+            "reasonForExtraction": "Recurring semantically equivalent operational experience",
+            "scope": "project",
+            "sourceEventIds": [
+                "event-fa675aa5-a8af-4f73-b8a3-01c9931cdb3a",
+                "event-050d04c7-b2a3-49f7-9c81-7017c017534c",
+                "event-226ee239-b2bb-4657-97d9-d5954c219af4"
+            ],
+            "sourceProject": "ARAMF",
+            "title": "Recurring lesson: PROJECT_FINALIZED"
+        }
+    ],
+    "patterns": [
+        {
+            "fingerprint": "390db7396b7d65d7b2dd52b543ad0942309de757b7f06624d5e69279ac1fa186",
+            "occurrenceCount": 3,
+            "sourceEventIds": [
+                "event-9a742b90-65e2-4afd-a29a-a04d47b155b7",
+                "event-24db2c6b-aa33-4599-a737-dbc180dc6d3f",
+                "event-b198172b-aad7-4295-b690-afdf6bf19a98"
+            ]
+        },
+        {
+            "fingerprint": "43610e9edf313015985663dbb190740677a1ac03963e86e4ff22950d4255ea5a",
+            "occurrenceCount": 3,
+            "sourceEventIds": [
+                "event-edf06023-2ac0-49b4-830d-b5b2b1eeb745",
+                "event-2238499b-eaac-40d1-908c-f68d409e018f",
+                "event-4da9f623-5943-404f-814b-326f1bd8f6d7"
+            ]
+        },
+        {
+            "fingerprint": "5fb94389b3b81c43e3fe191b8dc65d80d2380b785be24e05a2bc6e5b48f95aab",
+            "occurrenceCount": 3,
+            "sourceEventIds": [
+                "event-d27af080-bfef-4f85-8cd4-65f19a87ae2a",
+                "event-70e64613-3671-4b9d-8f4b-0f173cd09fed",
+                "event-716bab68-d705-474b-9b23-c430d5ec44a1"
+            ]
+        },
+        {
+            "fingerprint": "5c8a9f86cf14a697e0bbcf36e1c75322a86a8a22397facba773673b2eb33f848",
+            "occurrenceCount": 3,
+            "sourceEventIds": [
+                "event-fa675aa5-a8af-4f73-b8a3-01c9931cdb3a",
+                "event-050d04c7-b2a3-49f7-9c81-7017c017534c",
+                "event-226ee239-b2bb-4657-97d9-d5954c219af4"
+            ]
+        }
+    ],
+    "protectedEvents": [
+        "event-779be93d-5b0b-435b-81c0-f555b168bab3"
+    ],
+    "retainedRepresentativeEvents": [
+        "event-9a742b90-65e2-4afd-a29a-a04d47b155b7",
+        "event-24db2c6b-aa33-4599-a737-dbc180dc6d3f",
+        "event-edf06023-2ac0-49b4-830d-b5b2b1eeb745",
+        "event-2238499b-eaac-40d1-908c-f68d409e018f",
+        "event-d27af080-bfef-4f85-8cd4-65f19a87ae2a",
+        "event-70e64613-3671-4b9d-8f4b-0f173cd09fed",
+        "event-fa675aa5-a8af-4f73-b8a3-01c9931cdb3a",
+        "event-050d04c7-b2a3-49f7-9c81-7017c017534c"
+    ],
+    "reviewDue": false,
+    "status": "DRY_RUN",
+    "threshold": 500,
+    "wouldRemoveEventIds": [
+        "event-b198172b-aad7-4295-b690-afdf6bf19a98",
+        "event-4da9f623-5943-404f-814b-326f1bd8f6d7",
+        "event-716bab68-d705-474b-9b23-c430d5ec44a1",
+        "event-226ee239-b2bb-4657-97d9-d5954c219af4"
+    ]
+}

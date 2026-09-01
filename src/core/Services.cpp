@@ -6,6 +6,7 @@
 #include "ControlPlaneMigration.h"
 #include "AiCatalog.h"
 #include "ProjectMemory.h"
+#include "CertificationService.h"
 #include "RuleCatalog.h"
 #include "ValidationRouting.h"
 
@@ -225,6 +226,7 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
     const auto ai = model.aiConfiguration();
     const auto rules = model.ruleConfiguration();
     const auto memory = model.memoryConfiguration();
+    const auto certification = model.certificationConfiguration();
     QJsonObject value{
         {QStringLiteral("projectId"), model.projectId()},
         {QStringLiteral("projectName"), model.projectName()},
@@ -248,6 +250,8 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
         {QStringLiteral("rules"), toJsonArray(rules.activeCategories)},
         {QStringLiteral("ruleEnforcement"), rules.enforcementLevel},
         {QStringLiteral("memoryMaximum"), QString::number(memory.maximumSizeBytes)},
+        {QStringLiteral("certificationEnabled"), certification.enabled},
+        {QStringLiteral("certificationLevel"), certification.defaultVerificationLevel},
         {QStringLiteral("agentRules"), options.generateAgentRules},
         {QStringLiteral("routing"), options.generateRouting},
         {QStringLiteral("platformOutput"), options.generatePlatforms},
@@ -275,6 +279,7 @@ QStringList TemplateManager::builtInTemplates() const
     */
     return {
         QStringLiteral("pico-2w-visual-designer"),
+        QStringLiteral("android-studio-kotlin-gemini"),
         QStringLiteral("qt-desktop-application"),
         QStringLiteral("cpp-command-line"),
         QStringLiteral("cmake-library"),
@@ -295,6 +300,7 @@ QList<TemplateDefinition> TemplateManager::definitions() const
     };
     auto result = QList<TemplateDefinition>{
         make("pico-2w-visual-designer", "Pico 2 W Visual Designer", "embedded-firmware", "cpp", "pico-sdk", "msys2-ucrt64-gcc", "embedded", "cmake", {"Networking", "Testing", "Documentation"}, {"Pico 2 W datasheet", "Pico SDK documentation"}),
+        make("android-studio-kotlin-gemini", "Android Studio/Kotlin/Gemini", "android-application", "kotlin", "android-sdk", "java-jdk", "android", "gradle", {"Android SDK", "Jetpack Compose", "Room", "Testing", "Documentation"}, {"Course assignment / grading rubric", "Android SDK documentation"}),
         make("qt-desktop-application", "Qt Desktop Application", "desktop-application", "cpp", "qt6", "msys2-ucrt64-gcc", "desktop", "cmake", {"SQLite", "Networking", "Testing", "Documentation"}, {"Qt documentation", "Architecture document"}),
         make("cpp-command-line", "C++ Command Line", "software-development", "cpp", "none", "msys2-ucrt64-gcc", "desktop", "cmake", {"Testing", "Documentation"}, {"Specification"}),
         make("cmake-library", "CMake Library", "reusable-library", "cpp", "none", "msys2-ucrt64-gcc", "desktop", "cmake", {"Testing", "Documentation"}, {"API specification"}),
@@ -319,6 +325,29 @@ QList<TemplateDefinition> TemplateManager::definitions() const
         QStringLiteral("routing"), QStringLiteral("project-memory"),
         QStringLiteral("project-status")
     };
+    auto android = std::find_if(result.begin(), result.end(), [](const auto& value) { return value.id == QStringLiteral("android-studio-kotlin-gemini"); });
+    if (android != result.end()) {
+        android->environment.ide = QStringLiteral("android-studio");
+        android->environment.operatingSystem = QStringLiteral("cross-platform");
+        android->environment.packageManager = QStringLiteral("gradle");
+        android->capabilities.languages = {QStringLiteral("kotlin")};
+        android->capabilities.frameworks = {QStringLiteral("android-sdk"), QStringLiteral("jetpack-compose"), QStringLiteral("room")};
+        android->capabilities.ides = {QStringLiteral("android-studio")};
+        android->capabilities.developmentTools = {QStringLiteral("android-sdk"), QStringLiteral("android-emulator")};
+        android->capabilities.hostOperatingSystems = {QStringLiteral("windows"), QStringLiteral("linux"), QStringLiteral("macos")};
+        android->capabilities.targetPlatforms = {QStringLiteral("android")};
+        android->capabilities.targetArchitectures = {QStringLiteral("arm64"), QStringLiteral("x86_64")};
+        android->capabilities.toolchains = {QStringLiteral("java-jdk"), QStringLiteral("kotlin-jvm")};
+        android->capabilities.buildSystems = {QStringLiteral("gradle")};
+        android->capabilities.dependencyManagers = {QStringLiteral("gradle")};
+        android->capabilities.testingCapabilities = {QStringLiteral("unit-testing"), QStringLiteral("integration-testing")};
+        android->capabilities.qualityCapabilities = {QStringLiteral("linting"), QStringLiteral("static-analysis")};
+        android->ai.primaryAgent = QStringLiteral("gemini");
+        android->ai.additionalAgents = {QStringLiteral("openai-codex"), QStringLiteral("claude-code")};
+        android->ai.responsibilities = {QStringLiteral("planning"), QStringLiteral("architecture"), QStringLiteral("coding"), QStringLiteral("testing"), QStringLiteral("debugging"), QStringLiteral("documentation")};
+        android->ai.aramfIntegrations = {QStringLiteral("agents-md"), QStringLiteral("project-status"), QStringLiteral("source-of-truth"), QStringLiteral("durable-decisions"), QStringLiteral("project-memory"), QStringLiteral("framework-knowledge"), QStringLiteral("validation-verification")};
+        android->recommendedRules = {QStringLiteral("Universal safety"), QStringLiteral("Project architecture"), QStringLiteral("Respect Source of Truth"), QStringLiteral("Build Must Pass"), QStringLiteral("Verification Before Completion")};
+    }
     auto& bachelor = result.last();
     bachelor.academic.academicMode = QStringLiteral("thesis");
     bachelor.academic.thesisLevel = QStringLiteral("bachelor");
@@ -337,7 +366,7 @@ QList<TemplateDefinition> TemplateManager::definitions() const
     return result;
 }
 
-TemplateDefinition TemplateManager::definition(const QString& id) const { for (const auto& definition : definitions()) if (definition.id == id) return definition; return {}; }
+TemplateDefinition TemplateManager::definition(const QString& id) const { const QString canonical = id == QStringLiteral("android-kotlin-lite") ? QStringLiteral("android-studio-kotlin-gemini") : id; for (const auto& definition : definitions()) if (definition.id == canonical) return definition; return {}; }
 
 bool TemplateManager::applyTemplate(ProjectModel* model, const QString& id) const
 {
@@ -345,13 +374,14 @@ bool TemplateManager::applyTemplate(ProjectModel* model, const QString& id) cons
 
     Template application changes project configuration only and is grouped as one model update.
     */
-    if (!model || !builtInTemplates().contains(id)) {
+    const QString canonicalId = id == QStringLiteral("android-kotlin-lite") ? QStringLiteral("android-studio-kotlin-gemini") : id;
+    if (!model || !builtInTemplates().contains(canonicalId)) {
         return false;
     }
 
     model->beginUpdate();
-    model->setTemplateId(id);
-    const auto selected = definition(id);
+    model->setTemplateId(canonicalId);
+    const auto selected = definition(canonicalId);
     model->setContext(selected.projectType);
     model->applyTemplateDefaults(selected.environment);
     model->applyTemplateCapabilities(selected.capabilities);
@@ -440,10 +470,87 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "Respect Sources of Truth, durable decisions, and the user-owned `custom/` directory.\n"
             "Authority order: explicit current user instruction, current Source of Truth, current durable project decisions, approved Framework Knowledge, templates/defaults, then AI inference.\n"
             "When a corrected approach is verified and reusable, record a Framework Knowledge candidate with evidence. Never self-approve it; explicit user approval is required before changing its status to `approved`. Superseded entries remain auditable but are not active.\n"
-            "Keep project status current and use project memory when configured.\n"
+            "Keep PROJECT_STATUS.md current as human-readable present state; it is distinct from append-only historical evidence. Project Memory ownership is explicit in memory/memory-contract.json.\n"
             "The generated control directory is `ARAMF_WORKER/`.\n"
             "Framework Knowledge has distinct built-in, global, and project-local layers. The global user library is stored under `ARAMF_DATA/` at the resolved ARAMF program root; build directories are disposable. Only explicitly approved portable knowledge may be promoted there; use the memory knowledge promotion command and never edit knowledge stores directly. New projects seed approved global knowledge without replacing project-local authority.\n"
             "UPDATE is a separate human-controlled workflow: review approved Framework Knowledge, analyze the whole project, prepare a plan, then explicitly execute it through the configured agent. Read `update/update-plan.json` and `update/update-contract.json` when present; the managed project root is the implementation target and `ARAMF_WORKER/` is orchestration only. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes and validation are required. Preserve higher-authority instructions and use the scope-aware validation policy.\n");
+        if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")) {
+            const auto android = model.androidConstraints();
+            canonicalAgent += QStringLiteral(
+                "\n## Android / Kotlin project guidance\n\n"
+                "Template: Android Studio/Kotlin/Gemini. This is an ARAMF-managed Android project whose active control-plane capabilities come from the selected configuration.\n"
+                "Android Studio, Kotlin, Gradle, Android SDK, and Gemini are project tools/profiles; ARAMF governance remains agent-independent and canonical in ARAMF_WORKER/.\n"
+                "Android Studio is the primary IDE for Android application development. Project-support work may also use governed VS Code, command-line tools, Python utilities, SQLite tools, generators, scripts, and validation utilities when they affect this same managed project; the primary IDE is not exclusive.\n"
+                "Effective Android constraints: Kotlin required; primary IDE %1; minimum SDK %2; UI technology %3; Compose allowed=%4 and effectively selected=%5; Room required=%6; unit tests required=%7; lint required=%8. These values are derived from the authoritative Source of Truth and are not Gradle source claims.\n"
+                "Read `memory/project-knowledge.json` when present and apply only approved, applicable project-local lessons; project knowledge remains distinct from Framework Knowledge and is not automatically global.\n"
+                "Treat an explicitly configured course assignment, rubric, teacher specification, or submission requirement recorded as a primary Source of Truth as higher authority than Android defaults. For example, course-required XML overrides a Compose preference, and a course-required persistence technology overrides Room.\n"
+                "Prefer clear UI, state/ViewModel, domain, and data/repository responsibilities when the project benefits; use lifecycle-aware coroutines and Android resources/configuration. Do not add ceremony a small school project does not need.\n"
+                "Use the existing validation profile: Gradle sync/configuration and compile are baseline where applicable; use `./gradlew build`, `./gradlew test`, `./gradlew lint`, or their `gradlew.bat` equivalents only when relevant and available. Keep BUILD PASS, TEST PASS, LINT PASS, EMULATOR VERIFIED, DEVICE VERIFIED, APPLICATION VERIFIED, and CERTIFIED distinct; never fabricate emulator/device/runtime evidence.\n"
+                "Gemini, Codex, Claude, Copilot, and other agents follow this same governance and may be replaced without losing project state.\n");
+            canonicalAgent = canonicalAgent.arg(android.primaryIde)
+                .arg(android.minSdk)
+                .arg(android.uiTechnology)
+                .arg(android.composeAllowed ? QStringLiteral("YES") : QStringLiteral("NO"))
+                .arg(android.composeSelected ? QStringLiteral("YES") : QStringLiteral("NO"))
+                .arg(android.roomRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                .arg(android.unitTestsRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                .arg(android.lintRequired ? QStringLiteral("YES") : QStringLiteral("NO"));
+            if (!android.courseName.isEmpty()) {
+                canonicalAgent += QStringLiteral(
+                    "\n## Course Source of Truth (derived constraints)\n\n"
+                    "Course: %1 (source resource: %2). Project domain: %3. Architecture: %4.\n"
+                    "Declared technologies: %5.\n"
+                    "Compose required=%6; Retrofit required=%7; Gson required=%8; INTERNET permission required=%9; GitHub API required=%10.\n"
+                    "GitHub PAT required=%11; PAT type=%12; scope=%13; hardcoded token prohibited=%14; local.properties to Gradle BuildConfig required=%15.\n"
+                    "Repository: %16; visibility private required=%17; instructor collaborator required=%18; initial branch=%19; initial file=%20.\n"
+                    "Application runtime state Source of Truth: %21; state model=%22; workflow=%23. This is distinct from the project Source of Truth.\n"
+                    "Domain agents: %24. Development agents such as Gemini and Codex remain separate from the application simulation agents.\n"
+                    "Polling: %25 seconds in %26 using %27; analysis uses %28. StateFlow=%29; collectAsState=%30; DeceptionDetector=%31; Regex/weighted heuristics=%32; confidence=%33-%34%%.\n"
+                    "Normal green=%35; SecurityAlert red=%36; raw adversarial text=%37; human-in-the-loop=%38.\n"
+                    "Course validation: %39. Submission: %40; video %41; segments: %42.\n"
+                    "Unresolved / future lab detail (not inferred): %43.\n")
+                    .arg(android.courseName, android.sourceOfTruthResource, android.projectDomain, android.architecture)
+                    .arg(android.declaredTechnologies.join(QStringLiteral(", ")))
+                    .arg(android.composeRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.retrofitRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.gsonRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.internetPermissionRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.githubApiRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.githubPatRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.classicPatRequired ? QStringLiteral("Classic") : QStringLiteral("UNSPECIFIED"))
+                    .arg(android.patScope.isEmpty() ? QStringLiteral("UNSPECIFIED") : android.patScope)
+                    .arg(android.hardcodedTokenProhibited ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.localPropertiesRequired && android.buildConfigRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.repositoryName.isEmpty() ? QStringLiteral("UNSPECIFIED") : android.repositoryName)
+                    .arg(android.privateRepositoryRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.instructorCollaboratorRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.initialBranch.isEmpty() ? QStringLiteral("UNSPECIFIED") : android.initialBranch)
+                    .arg(android.requiredInitialFile.isEmpty() ? QStringLiteral("UNSPECIFIED") : android.requiredInitialFile)
+                    .arg(android.applicationStateSource.isEmpty() ? QStringLiteral("UNSPECIFIED") : android.applicationStateSource)
+                    .arg(android.stateModel.isEmpty() ? QStringLiteral("UNSPECIFIED") : android.stateModel)
+                    .arg(android.workflow.isEmpty() ? QStringLiteral("UNSPECIFIED") : android.workflow)
+                    .arg(android.domainAgents.join(QStringLiteral(", ")))
+                    .arg(android.pollingIntervalSeconds)
+                    .arg(android.pollingExecutionLocation)
+                    .arg(android.networkDispatcher)
+                    .arg(android.analysisDispatcher)
+                    .arg(android.stateFlowRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.collectAsStateRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.deceptionDetectorRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.regexOrHeuristicsRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.confidenceMinPercent < 0 ? QStringLiteral("UNSPECIFIED") : QString::number(android.confidenceMinPercent))
+                    .arg(android.confidenceMaxPercent < 0 ? QStringLiteral("UNSPECIFIED") : QString::number(android.confidenceMaxPercent))
+                    .arg(android.normalGreenRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.securityAlertRedRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.rawAdversarialTextRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.humanInTheLoopRequired ? QStringLiteral("YES") : QStringLiteral("NO"))
+                    .arg(android.validationRequirements.join(QStringLiteral(", ")))
+                    .arg(android.submissionRequirements.join(QStringLiteral(", ")))
+                    .arg(android.submissionVideoDuration.isEmpty() ? QStringLiteral("UNSPECIFIED") : android.submissionVideoDuration)
+                    .arg(android.submissionSegments.join(QStringLiteral(", ")))
+                    .arg(android.unresolvedRequirements.join(QStringLiteral(", ")));
+            }
+        }
         canonicalAgent += QStringLiteral(
             "Run the minimum validation required by `routing/validation-policy.json`; do not run full regression campaigns for ordinary isolated changes. Escalate when scope, risk, failure, or explicit milestone policy requires it.\n");
         if (options.generateMemory) {
@@ -451,11 +558,11 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             QString memorySection = QStringLiteral(
                 "<!-- ARAMF-MEMORY-BEGIN -->\n"
                 "\n## Project Memory Feedback\n\n"
-                "Read `memory/memory-contract.json` before recording development results. "
+                "Read `memory/memory-contract.json` before recording development results. In `agent-direct` mode the active coding agent is the project-local Project Memory writer; no aramf.exe, global `aramf` command, recorder daemon, or external service is required. "
                 "Do not edit `memory/event-log.jsonl`, `memory/metrics.json`, `memory/current-state.md`, "
-                "`memory/memory-manifest.json`, validation state, or `PROJECT_STATUS.md` bookkeeping fields directly. "
-                "Use the ARAMF recorder described by the contract: `aramf memory record --project <project-root> "
-                "--operation <operation> ...`.\n");
+                "`memory/memory-manifest.json`, validation state, or `PROJECT_STATUS.md` bookkeeping fields outside the governed protocol. "
+                "Identify canonical targets, read current files and schemas, preserve unrelated state, perform the narrowest valid mutation, write the existing schema, reload from disk, parse/validate, and verify uniqueness, ordering, and cross-file consistency.\n"
+                "`memory/event-log.jsonl` is append-only historical evidence: preserve failed attempts, successful corrections, and their original IDs, sequences, timestamps, ordering, and PASS/FAIL results. Never rewrite prior events or regenerate history from current state.\n");
             const auto addInstruction = [&memorySection, &memory](const QString& option, const QString& text) {
                 if (memory.maintenanceOptions.contains(option)) memorySection += QStringLiteral("- %1\n").arg(text);
             };
@@ -468,8 +575,16 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             addInstruction(QStringLiteral("record-checkpoints"), QStringLiteral("Record a checkpoint only when an actual stable checkpoint is warranted."));
             memorySection += QStringLiteral("- Record durable decisions only for genuine architecture or policy choices through the decision workflow.\n");
             memorySection += QStringLiteral("- Follow current durable decisions; explicitly superseded decisions remain historical and inactive.\n");
-            memorySection += QStringLiteral("\nThe recorder owns event IDs, timestamps, sequences, metrics, pruning, validation, and current-state pointers.\n\n<!-- ARAMF-MEMORY-END -->\n");
+            memorySection += QStringLiteral("\nThe active agent owns governed writes in `agent-direct` mode. `PROJECT_STATUS.md` and current-state files describe current truth; `memory/event-log.jsonl` preserves historical truth. Corrections and durable decision changes are represented as new evidence with explicit supersession.\n\n<!-- ARAMF-MEMORY-END -->\n");
             canonicalAgent += memorySection;
+        }
+        if (model.certificationConfiguration().enabled) {
+            canonicalAgent += QStringLiteral(
+                "\n## Test Certification\n\n"
+                "Use certification for claims that a capability, component, workflow, integration, release, or hardware configuration has been verified under defined conditions. A test result records what happened; a certificate is the durable structured claim and evidence record.\n"
+                "Certification history at `certification/certificates.jsonl` is append-only. Failed certification attempts remain historical; a retest creates a new certificate ID and may explicitly supersede or relate to an earlier certificate.\n"
+                "Issue PASS only when every applicable required build, test, validation, runtime, on-target, physical, or other evidence requirement is present and verified. Never fabricate evidence or issue `HARDWARE_CERTIFIED` without physical/on-target evidence.\n"
+                "Use `certification/current-certification-state.json` to rediscover current subject state; it is derived current state, not a replacement for certificate history. Project Memory records certification lifecycle events separately, and Framework Knowledge remains separate approved reusable knowledge.\n");
         }
         if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("AGENTS.md")), rootAgent.toUtf8(), &error, true)) {
             return fail(QStringLiteral("Agent rules"), error);
@@ -514,12 +629,25 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             return fail(QStringLiteral("Agent rules"), error);
         }
 
-        const QString status = QStringLiteral(
+        QString status = QStringLiteral(
             "<!-- PROJECT_STATUS.md -->\n\n# Project Status\n\n## Project\n\n"
             "- Name: %1\n- Project ID: %2\n- ARAMF state: Initialized\n\n"
             "## Implemented\n\n- ARAMF control-plane structure generated.\n\n"
             "## Verified\n\n- Generation completed for the selected output products.\n")
                                    .arg(model.projectName(), model.projectId());
+        if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")) {
+            status += QStringLiteral(
+                "\n## Android Validation States\n\n"
+                "Track IMPLEMENTED, BUILD PASS, TEST PASS, LINT PASS, EMULATOR VERIFIED, DEVICE VERIFIED, APPLICATION VERIFIED, and CERTIFIED separately.\n"
+                "Unrun synchronization, emulator, device, lifecycle, permission, navigation, persistence, and runtime checks remain not verified.\n");
+            if (!model.androidConstraints().courseName.isEmpty()) {
+                status += QStringLiteral(
+                    "\n## Course Source of Truth\n\n"
+                    "- Active: %1\n- Android application implementation: not implemented; implementation remains pending.\n"
+                    "- GitHub Lab 0 completion: not independently verified.\n- No real PAT or other secret is stored by ARAMF.\n")
+                               .arg(model.androidConstraints().courseName);
+            }
+        }
         if (!writeTextFile(QDir(projectRoot).filePath(AramfPaths::ProjectStatus), status.toUtf8(), &error, true)) {
             return fail(QStringLiteral("Agent rules"), error);
         }
@@ -557,8 +685,9 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
     if (options.generatePlatforms) {
         const auto environment = model.developmentEnvironment();
         const auto capabilities = model.developmentCapabilities();
-        const QJsonObject platform{
+        QJsonObject platform{
             {QStringLiteral("projectType"), projectTypeLabel(model)},
+            {QStringLiteral("templateId"), model.templateId()},
             {QStringLiteral("environment"), QJsonObject{
                 {QStringLiteral("language"), environment.language}, {QStringLiteral("framework"), environment.framework},
                 {QStringLiteral("ide"), environment.ide}, {QStringLiteral("compiler"), environment.compiler},
@@ -575,6 +704,92 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             {QStringLiteral("toolchains"), toJsonArray(capabilities.toolchains)},
             {QStringLiteral("buildSystems"), toJsonArray(capabilities.buildSystems)}
         };
+        if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")) {
+            platform.insert(QStringLiteral("validationProfile"), QJsonObject{
+                {QStringLiteral("requiredBaseline"), QJsonArray{QStringLiteral("gradle-sync-or-configuration"), QStringLiteral("gradle-compile")}},
+                {QStringLiteral("optionalChecks"), QJsonArray{QStringLiteral("gradle-test"), QStringLiteral("gradle-lint"), QStringLiteral("instrumentation-test"), QStringLiteral("emulator-verification"), QStringLiteral("device-verification")}},
+                {QStringLiteral("wrapperCommands"), QJsonArray{QStringLiteral("./gradlew build"), QStringLiteral("./gradlew test"), QStringLiteral("./gradlew lint"), QStringLiteral("gradlew.bat build"), QStringLiteral("gradlew.bat test"), QStringLiteral("gradlew.bat lint")}},
+                {QStringLiteral("verificationPolicy"), QStringLiteral("Runtime, emulator, device, lifecycle, permission, navigation, and persistence claims require observed evidence and remain distinct from build/test/lint PASS.")}});
+            platform.insert(QStringLiteral("architectureDefaults"), QJsonArray{QStringLiteral("Kotlin"), QStringLiteral("Android lifecycle awareness"), QStringLiteral("ViewModel where appropriate"), QStringLiteral("lifecycle-aware coroutines"), QStringLiteral("Android resources/configuration"), QStringLiteral("Room when structured local persistence is appropriate")});
+            platform.insert(QStringLiteral("courseSourceOfTruth"), QStringLiteral("Explicit primary project resources such as assignment specifications and rubrics override these defaults."));
+            const auto android = model.androidConstraints();
+            QJsonObject effective{
+                {QStringLiteral("language"), environment.language},
+                {QStringLiteral("primaryIde"), android.primaryIde},
+                {QStringLiteral("buildSystem"), environment.buildSystem},
+                {QStringLiteral("minSdk"), android.minSdkSpecified ? QJsonValue(android.minSdk) : QJsonValue(QStringLiteral("UNSPECIFIED"))},
+                {QStringLiteral("minSdkSource"), android.minSdkSource},
+                {QStringLiteral("uiTechnology"), android.uiTechnology},
+                {QStringLiteral("xmlRequired"), android.xmlRequired},
+                {QStringLiteral("composeAvailable"), android.composeAvailable},
+                {QStringLiteral("composeAllowed"), android.composeAllowed},
+                {QStringLiteral("composeSelected"), android.composeSelected},
+                {QStringLiteral("composeSource"), android.composeSource},
+                {QStringLiteral("roomRequired"), android.roomRequired},
+                {QStringLiteral("roomSource"), android.roomSource},
+                {QStringLiteral("unitTestsRequired"), android.unitTestsRequired},
+                {QStringLiteral("unitTestsSource"), android.unitTestsSource},
+                {QStringLiteral("lintRequired"), android.lintRequired},
+                {QStringLiteral("lintSource"), android.lintSource}};
+            effective.insert(QStringLiteral("courseName"), android.courseName);
+            effective.insert(QStringLiteral("courseNameSource"), android.courseNameSource);
+            effective.insert(QStringLiteral("projectDomain"), android.projectDomain);
+            effective.insert(QStringLiteral("projectDomainSource"), android.projectDomainSource);
+            effective.insert(QStringLiteral("architecture"), android.architecture);
+            effective.insert(QStringLiteral("architectureSource"), android.architectureSource);
+            effective.insert(QStringLiteral("declaredTechnologies"), toJsonArray(android.declaredTechnologies));
+            effective.insert(QStringLiteral("declaredTechnologiesSource"), android.declaredTechnologiesSource);
+            effective.insert(QStringLiteral("composeRequired"), android.composeRequired);
+            effective.insert(QStringLiteral("composeRequiredSource"), android.composeRequiredSource);
+            effective.insert(QStringLiteral("retrofitRequired"), android.retrofitRequired);
+            effective.insert(QStringLiteral("retrofitSource"), android.retrofitSource);
+            effective.insert(QStringLiteral("gsonRequired"), android.gsonRequired);
+            effective.insert(QStringLiteral("gsonSource"), android.gsonSource);
+            effective.insert(QStringLiteral("internetPermissionRequired"), android.internetPermissionRequired);
+            effective.insert(QStringLiteral("internetPermissionSource"), android.internetPermissionSource);
+            effective.insert(QStringLiteral("githubApiRequired"), android.githubApiRequired);
+            effective.insert(QStringLiteral("githubPatRequired"), android.githubPatRequired);
+            effective.insert(QStringLiteral("classicPatRequired"), android.classicPatRequired);
+            effective.insert(QStringLiteral("patScope"), android.patScope);
+            effective.insert(QStringLiteral("hardcodedTokenProhibited"), android.hardcodedTokenProhibited);
+            effective.insert(QStringLiteral("localPropertiesRequired"), android.localPropertiesRequired);
+            effective.insert(QStringLiteral("buildConfigRequired"), android.buildConfigRequired);
+            effective.insert(QStringLiteral("privateRepositoryRequired"), android.privateRepositoryRequired);
+            effective.insert(QStringLiteral("instructorCollaboratorRequired"), android.instructorCollaboratorRequired);
+            effective.insert(QStringLiteral("repositoryName"), android.repositoryName);
+            effective.insert(QStringLiteral("initialBranch"), android.initialBranch);
+            effective.insert(QStringLiteral("requiredInitialFile"), android.requiredInitialFile);
+            effective.insert(QStringLiteral("applicationStateSource"), android.applicationStateSource);
+            effective.insert(QStringLiteral("applicationStateFields"), toJsonArray(android.applicationStateFields));
+            effective.insert(QStringLiteral("stateModel"), android.stateModel);
+            effective.insert(QStringLiteral("workflow"), android.workflow);
+            effective.insert(QStringLiteral("domainAgents"), toJsonArray(android.domainAgents));
+            effective.insert(QStringLiteral("domainAgentDistinction"), android.domainAgentDistinction);
+            effective.insert(QStringLiteral("pollingRequired"), android.pollingRequired);
+            effective.insert(QStringLiteral("pollingIntervalSeconds"), android.pollingIntervalSeconds);
+            effective.insert(QStringLiteral("pollingExecutionLocation"), android.pollingExecutionLocation);
+            effective.insert(QStringLiteral("networkDispatcher"), android.networkDispatcher);
+            effective.insert(QStringLiteral("analysisDispatcher"), android.analysisDispatcher);
+            effective.insert(QStringLiteral("stateFlowRequired"), android.stateFlowRequired);
+            effective.insert(QStringLiteral("collectAsStateRequired"), android.collectAsStateRequired);
+            effective.insert(QStringLiteral("deceptionDetectorRequired"), android.deceptionDetectorRequired);
+            effective.insert(QStringLiteral("regexOrHeuristicsRequired"), android.regexOrHeuristicsRequired);
+            effective.insert(QStringLiteral("confidenceMinPercent"), android.confidenceMinPercent);
+            effective.insert(QStringLiteral("confidenceMaxPercent"), android.confidenceMaxPercent);
+            effective.insert(QStringLiteral("normalGreenRequired"), android.normalGreenRequired);
+            effective.insert(QStringLiteral("securityAlertRedRequired"), android.securityAlertRedRequired);
+            effective.insert(QStringLiteral("rawAdversarialTextRequired"), android.rawAdversarialTextRequired);
+            effective.insert(QStringLiteral("humanInTheLoopRequired"), android.humanInTheLoopRequired);
+            effective.insert(QStringLiteral("validationRequirements"), toJsonArray(android.validationRequirements));
+            effective.insert(QStringLiteral("submissionRequirements"), toJsonArray(android.submissionRequirements));
+            effective.insert(QStringLiteral("submissionVideoDuration"), android.submissionVideoDuration);
+            effective.insert(QStringLiteral("submissionSegments"), toJsonArray(android.submissionSegments));
+            effective.insert(QStringLiteral("unresolvedRequirements"), toJsonArray(android.unresolvedRequirements));
+            effective.insert(QStringLiteral("sourceOfTruthTitle"), android.sourceOfTruthTitle);
+            effective.insert(QStringLiteral("sourceOfTruthResource"), android.sourceOfTruthResource);
+            if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::AndroidEffectiveConfig), effective, &error)) return fail(QStringLiteral("Platform metadata"), error);
+            addGeneratedFiles(result, {AramfPaths::AndroidEffectiveConfig});
+        }
         const QString platformPath = QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json");
         if (!writeJsonFile(QDir(projectRoot).filePath(platformPath), platform, &error)) return fail(QStringLiteral("Platform metadata"), error);
         addGeneratedFiles(result, {platformPath});
@@ -630,6 +845,13 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                                    AramfPaths::MemoryContract});
     }
 
+    if (model.certificationConfiguration().enabled) {
+        CertificationService certification;
+        if (!certification.initialize(projectRoot, &model, &error)) return fail(QStringLiteral("Test Certification"), error);
+        addGeneratedFiles(result, {AramfPaths::CertificationContract, AramfPaths::Certificates,
+                                   AramfPaths::CurrentCertificationState});
+    }
+
     if (options.generateProvenance) {
         const auto capabilities = model.developmentCapabilities();
         const auto ai = model.aiConfiguration();
@@ -652,6 +874,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
 
     const QJsonObject generationState{
         {QStringLiteral("fingerprint"), result.fingerprint},
+        {QStringLiteral("projectRoot"), projectRoot},
         {QStringLiteral("generatedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
         {QStringLiteral("agentRules"), options.generateAgentRules},
         {QStringLiteral("routing"), options.generateRouting},
@@ -726,6 +949,30 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     checkFile(QStringLiteral("framework-knowledge"), QStringLiteral("Framework Knowledge"), AramfPaths::FrameworkKnowledge, expectedOptions.generateMemory);
     checkFile(QStringLiteral("provenance"), QStringLiteral("Provenance"), AramfPaths::Provenance, expectedOptions.generateProvenance);
     checkFile(QStringLiteral("selection-effects"), QStringLiteral("Selection effects"), AramfPaths::SelectionEffects, expectedOptions.generateProvenance);
+    const bool certificationEnabled = model.certificationConfiguration().enabled;
+    checkFile(QStringLiteral("certification-contract"), QStringLiteral("Certification contract"), AramfPaths::CertificationContract, certificationEnabled);
+    checkFile(QStringLiteral("current-certification-state"), QStringLiteral("Current certification state"), AramfPaths::CurrentCertificationState, certificationEnabled);
+    if (certificationEnabled) {
+        CertificationService certification;
+        QString certificationError;
+        QFile certificateHistoryFile(QDir(root).filePath(AramfPaths::Certificates));
+        const bool certificateHistoryReadable = certificateHistoryFile.exists()
+            && certificateHistoryFile.open(QIODevice::ReadOnly | QIODevice::Text);
+        certificateHistoryFile.close();
+        addCheck(result, QStringLiteral("certificates"), QStringLiteral("Certificate history"),
+                 certificateHistoryReadable ? VerificationStatus::Pass : VerificationStatus::Fail,
+                 certificateHistoryReadable ? QStringLiteral("Append-only certificate history exists.") : QStringLiteral("Missing certificate history."));
+        const auto history = certification.certificates(root, &certificationError);
+        addCheck(result, QStringLiteral("certification-history"), QStringLiteral("Certificate history parses"),
+                 certificationError.isEmpty() ? VerificationStatus::Pass : VerificationStatus::Fail,
+                 certificationError.isEmpty() ? QStringLiteral("Append-only certificate history is readable.") : certificationError);
+        const auto contract = certification.contract(root, &certificationError);
+        addCheck(result, QStringLiteral("certification-policy"), QStringLiteral("Certification evidence policy"),
+                 !contract.isEmpty() && contract.value(QStringLiteral("passRule")).toString().contains(QStringLiteral("evidence"))
+                     ? VerificationStatus::Pass : VerificationStatus::Fail,
+                 contract.isEmpty() ? certificationError : QStringLiteral("Certification contract defines evidence gating."));
+        Q_UNUSED(history);
+    }
 
     if (expectedOptions.generateResources) {
         QHash<QString, int> identities;
@@ -795,7 +1042,7 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     QJsonArray checks;
     for (const auto& check : result.checks) checks.append(QJsonObject{{QStringLiteral("id"), check.id}, {QStringLiteral("name"), check.name}, {QStringLiteral("status"), statusName(check.status)}, {QStringLiteral("details"), check.details}});
     writeJsonFile(QDir(root).filePath(QStringLiteral("ARAMF_WORKER/verification/verification-result.json")),
-                  QJsonObject{{QStringLiteral("fingerprint"), result.fingerprint}, {QStringLiteral("overallStatus"), statusName(result.overallStatus)}, {QStringLiteral("checkedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}, {QStringLiteral("checks"), checks}}, nullptr);
+                  QJsonObject{{QStringLiteral("fingerprint"), result.fingerprint}, {QStringLiteral("projectRoot"), root}, {QStringLiteral("overallStatus"), statusName(result.overallStatus)}, {QStringLiteral("checkedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}, {QStringLiteral("checks"), checks}}, nullptr);
     return result;
 }
 
@@ -819,6 +1066,12 @@ FinalizationResult FinalizationServices::finalize(const ProjectModel& model,
     const QString verificationPath = QDir(root).filePath(QStringLiteral("ARAMF_WORKER/verification/verification-result.json"));
     if (!readJson(verificationPath, &verification, &error)) {
         result.blockers << QStringLiteral("Run Verify before finalizing.");
+        return result;
+    }
+    if (verification.value(QStringLiteral("projectRoot")).toString().trimmed().isEmpty()
+        || QDir::cleanPath(verification.value(QStringLiteral("projectRoot")).toString())
+               .compare(QDir::cleanPath(root), Qt::CaseInsensitive) != 0) {
+        result.blockers << QStringLiteral("Verification belongs to another project root. Run Verify again.");
         return result;
     }
     if (verification.value(QStringLiteral("overallStatus")).toString() != QStringLiteral("PASS")

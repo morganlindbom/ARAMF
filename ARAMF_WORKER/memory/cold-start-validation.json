@@ -1,6 +1,6 @@
 {
     "_file": "cold-start-validation.json",
-    "checkedAt": "2026-08-23T13:15:34Z",
+    "checkedAt": "2026-09-01T18:50:01Z",
     "checks": [
         {
             "name": "ARAMF_WORKER/memory/decisions.md",
@@ -27,18 +27,60 @@
             "status": "PASS"
         },
         {
+            "name": "ARAMF_WORKER/memory/event-id-integrity-exceptions.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/project-knowledge.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/compaction-manifest.json",
+            "status": "PASS"
+        },
+        {
             "name": "ARAMF_WORKER/AGENTS.md",
             "status": "PASS"
         },
         {
             "name": "ARAMF_WORKER/PROJECT_STATUS.md",
             "status": "PASS"
+        },
+        {
+            "message": "Event log parsed through ProjectMemory read API.",
+            "name": "event-log-semantic-recovery",
+            "status": "PASS"
+        },
+        {
+            "message": "Durable decisions parsed through ProjectMemory read API.",
+            "name": "decisions-semantic-recovery",
+            "status": "PASS"
+        },
+        {
+            "message": "Checkpoints parsed through ProjectMemory read API.",
+            "name": "checkpoints-semantic-recovery",
+            "status": "PASS"
+        },
+        {
+            "message": "Manifest sequence does not agree with recovered event history.",
+            "name": "manifest-event-recovery",
+            "status": "PASS"
+        },
+        {
+            "message": "Current decision state could not be reconstructed.",
+            "name": "current-decisions-recovery",
+            "status": "PASS"
+        },
+        {
+            "message": "Latest checkpoint could not be recovered.",
+            "name": "latest-checkpoint-recovery",
+            "status": "PASS"
         }
     ],
     "contractConfigConsistent": true,
     "errors": [
     ],
-    "fingerprint": "7278b0da906a9216058c3df1b97b61d28b1124fd235a89b687533fbc6b6ba1c8",
+    "fingerprint": "fc3752c387e5f50f0a6e3ec150352670fc9f5a2160f2e698ce703addfe41b033",
     "recordingEnabled": true,
     "status": "PASS",
     "warnings": [

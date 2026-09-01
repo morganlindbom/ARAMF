@@ -23,14 +23,14 @@ ARAMF can still configure projects that use Python, C#, JavaScript/TypeScript, C
 ## Repository Structure
 
 The repository-local ARAMF development control material is under
-`aramf_setup/`. The uppercase `ARAMF/` name is reserved for the control plane
+`aramf_setup/`. The uppercase `ARAMF_WORKER/` name is reserved for the control plane
 generated inside managed target projects.
 
 Root-level generated entry-file templates are kept separately under
 `aramf_setup/bootstrap/`. In particular, `aramf_setup/bootstrap/AGENTS.md` is
 the source reference for a generated `<ProjectPath>/AGENTS.md`; it is not the
 repository-development `aramf_setup/AGENTS.md`. The generated bootstrap points
-to `<ProjectPath>/ARAMF/AGENTS.md`, and the bootstrap source directory is never
+to `<ProjectPath>/ARAMF_WORKER/AGENTS.md`, and the bootstrap source directory is never
 copied into a target project.
 
 ```text
@@ -81,7 +81,7 @@ LICENSE
 The repository root contains only a small `AGENTS.md` discovery file. The
 canonical repository-development instructions and every file those
 instructions depend on are kept under `aramf_setup/`. This is intentionally
-different from the uppercase `ARAMF/` control directory generated inside a
+different from the uppercase `ARAMF_WORKER/` control directory generated inside a
 managed target project.
 
 The intended cold-start order is:
@@ -97,7 +97,7 @@ This keeps the project root clean and avoids duplicated rule stores.
 
 `ProjectMemory` is implemented in C++ and owns:
 
-- initialization of the canonical generated-project `ARAMF/` hierarchy;
+- initialization of the canonical generated-project `ARAMF_WORKER/` hierarchy;
 - append-only JSONL events;
 - durable sequence tracking;
 - generated `current-state.md`;
@@ -122,9 +122,9 @@ The preset expects the established MSYS2 UCRT64 GCC/Ninja environment. Qt 6 must
 
 ## Generation Contract
 
-When ARAMF generates a managed project, it creates an uppercase `ARAMF/` control directory. A root `AGENTS.md` is created only when one does not already exist; foreign root agent instructions are not silently overwritten.
+When ARAMF generates a managed project, it creates an uppercase `ARAMF_WORKER/` control directory. A root `AGENTS.md` is created only when one does not already exist; foreign root agent instructions are not silently overwritten.
 
-Files under `ARAMF/custom/` are user-owned and protected from automatic modification.
+Files under `ARAMF_WORKER/custom/` are user-owned and protected from automatic modification.
 
 ## Historical Material
 
@@ -136,9 +136,9 @@ current authority.
 ## Live Framework Knowledge
 
 ARAMF managed projects keep reusable, evidence-backed lessons in
-`ARAMF/memory/framework-knowledge.json`. Agents may propose candidates after a
+`ARAMF_WORKER/memory/framework-knowledge.json`. Agents may propose candidates after a
 verified correction, but only explicit user approval can promote a candidate to
-`approved`. Approved knowledge is immediately active through `ARAMF/AGENTS.md`;
+`approved`. Approved knowledge is immediately active through `ARAMF_WORKER/AGENTS.md`;
 users do not need to reopen ARAMF just to benefit from an already approved
 lesson. Current user instructions, Sources of Truth, and durable project
 decisions always outrank Framework Knowledge.

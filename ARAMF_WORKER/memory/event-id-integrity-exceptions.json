@@ -1,0 +1,5 @@
+{
+  "_file": "event-id-integrity-exceptions.json",
+  "policy": "Acknowledged immutable legacy anomalies only; new duplicate IDs fail validation.",
+  "exceptions": []
+}

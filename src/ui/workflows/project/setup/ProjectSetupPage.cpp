@@ -1,4 +1,5 @@
 #include "ProjectSetupPage.h"
+#include "../../../../core/ProjectRootRebindService.h"
 
 #include "ui/workflows/project/template/TemplateSelector.h"
 
@@ -109,7 +110,10 @@ void ProjectSetupPage::openProject()
     QString error;
     if (!persistence_->load(model_, filePath, &error)) {
         QMessageBox::warning(this, tr("Open Project"), error);
+        return;
     }
+    const auto rebind = ProjectRootRebindService().rebind(model_, QFileInfo(filePath).absolutePath(), true);
+    if (!rebind.success) QMessageBox::warning(this, tr("Open Project"), rebind.error);
 }
 
 void ProjectSetupPage::saveProject()

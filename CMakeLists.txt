@@ -19,6 +19,10 @@ set(ARAMF_CORE_SOURCES
     src/core/ControlPlaneMigration.cpp
     src/core/ProjectMemory.h
     src/core/ProjectMemory.cpp
+    src/core/ProjectMemoryCompaction.h
+    src/core/ProjectMemoryCompaction.cpp
+    src/core/CertificationService.h
+    src/core/CertificationService.cpp
     src/core/MemoryCommand.h
     src/core/MemoryCommand.cpp
     src/core/ImprovementBacklog.h
@@ -35,6 +39,8 @@ set(ARAMF_CORE_SOURCES
     src/core/MemoryCatalog.cpp
     src/core/ProjectPersistence.h
     src/core/ProjectPersistence.cpp
+    src/core/ProjectRootRebindService.h
+    src/core/ProjectRootRebindService.cpp
     src/core/ProjectModel.h
     src/core/ProjectModel.cpp
     src/core/Services.h
@@ -133,6 +139,10 @@ if(BUILD_TESTING)
         tests/ProjectMemoryTests.cpp
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
+        src/core/ProjectMemoryCompaction.h
+        src/core/ProjectMemoryCompaction.cpp
+        src/core/CertificationService.h
+        src/core/CertificationService.cpp
         src/core/MemoryCommand.h
         src/core/MemoryCommand.cpp
         src/core/ImprovementBacklog.h
@@ -164,6 +174,8 @@ if(BUILD_TESTING)
         src/core/UpdateExecutionService.cpp
         src/core/ProjectPersistence.h
         src/core/ProjectPersistence.cpp
+        src/core/ProjectRootRebindService.h
+        src/core/ProjectRootRebindService.cpp
         src/core/ProjectModel.h
         src/core/ProjectModel.cpp
         src/core/Services.h
@@ -171,6 +183,7 @@ if(BUILD_TESTING)
     )
     target_include_directories(aramf_core_tests PRIVATE src)
     target_link_libraries(aramf_core_tests PRIVATE Qt6::Core)
+    add_dependencies(aramf_core_tests aramf)
     add_test(NAME aramf_core_tests COMMAND aramf_core_tests)
 
     add_executable(aramf_workflow_tests
@@ -182,6 +195,10 @@ if(BUILD_TESTING)
         src/core/ProjectModel.cpp
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
+        src/core/ProjectMemoryCompaction.h
+        src/core/ProjectMemoryCompaction.cpp
+        src/core/CertificationService.h
+        src/core/CertificationService.cpp
         src/core/MemoryCommand.h
         src/core/MemoryCommand.cpp
         src/core/ImprovementBacklog.h

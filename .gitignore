@@ -43,6 +43,7 @@
 build/
 Build/
 build-*/
+acceptance_*/build*/
 
 # User-owned portable ARAMF knowledge; preserved beside the program but not
 # committed with repository source.

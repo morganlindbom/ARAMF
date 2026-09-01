@@ -92,6 +92,8 @@ project paths remain relative to their `ARAMF_WORKER/` control directory.
 ## Project Memory Feedback
 
 Read `memory/memory-contract.json` before recording development results. Do not edit ProjectMemory-owned bookkeeping files directly. Use `aramf memory record --project <project-root> --operation <operation> ...`.
+Use the narrowest valid mutation, reload from disk, parse/validate, and verify cross-file consistency. Project Memory history is append-only during normal operation; verified compaction is the only governed maintenance boundary.
+At task start, read approved applicable knowledge and project-local `memory/project-knowledge.json`. When compaction review is due, run `aramf memory compact --project <project-root> --dry-run`; never remove history without reviewed, validated compaction approval.
 - Record task starts/completions, build results, test results, and validation outcomes when configured.
 - Record durable decisions only for genuine architecture or policy choices through the decision workflow.
 - Record a checkpoint only for a genuine stable recovery point with `aramf memory checkpoint --project <project-root> --title <title> --summary <summary>`; routine feedback does not create one.

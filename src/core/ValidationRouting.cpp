@@ -49,6 +49,8 @@ ValidationPlan ValidationRouting::route(const QStringList& changedFiles,
         || type.contains(QStringLiteral("milestone")) || type.contains(QStringLiteral("certification"));
     const bool migration = containsAny(changedFiles, {QStringLiteral("migration"), QStringLiteral("ControlPlaneMigration"),
                                                        QStringLiteral("ARAMF_WORKER")});
+    const bool android = containsAny(changedFiles, {QStringLiteral("gradle"), QStringLiteral(".gradle"), QStringLiteral(".kt"),
+                                                     QStringLiteral("AndroidManifest"), QStringLiteral("android"), QStringLiteral("compose")});
     const bool broadArchitecture = containsAny(changedFiles, {QStringLiteral("CMakeLists.txt"), QStringLiteral("src/core/Services"),
                                                                QStringLiteral("AramfPaths"), QStringLiteral("bootstrap")});
     const bool memoryContract = containsAny(changedFiles, {QStringLiteral("ProjectMemory"), QStringLiteral("MemoryCommand"),
@@ -71,6 +73,11 @@ ValidationPlan ValidationRouting::route(const QStringList& changedFiles,
                                QStringLiteral("application-startup"), QStringLiteral("memory-consistency"),
                                QStringLiteral("cold-start"), QStringLiteral("git-diff-check")};
         plan.rationale = QStringLiteral("Broad architecture, migration, release, milestone, certification, or explicitly unbounded risk requires full regression.");
+    } else if (android) {
+        plan.level = focusedValidationFailed ? ValidationLevel::Subsystem : ValidationLevel::Focused;
+        plan.requiredChecks = {QStringLiteral("gradle-sync-or-configuration"), QStringLiteral("gradle-compile"), QStringLiteral("git-diff-check")};
+        plan.optionalChecks = {QStringLiteral("gradle-test"), QStringLiteral("gradle-lint"), QStringLiteral("instrumentation-test"), QStringLiteral("emulator-verification"), QStringLiteral("device-verification")};
+        plan.rationale = QStringLiteral("Android validation is scope-aware: Gradle configuration and compile are baseline checks; tests, lint, emulator, and device checks are added only when affected or available.");
     } else if (focusedValidationFailed || (!isolatedUi && (subsystem || memoryContract))) {
         plan.level = ValidationLevel::Subsystem;
         plan.requiredChecks = {QStringLiteral("affected-focused-tests"), QStringLiteral("ctest"), QStringLiteral("memory-consistency")};
@@ -110,9 +117,14 @@ QJsonObject ValidationRouting::policy()
             {QStringLiteral("resources"), QStringLiteral("subsystem when persistence, generation, or verification is affected")},
             {QStringLiteral("persistence"), QStringLiteral("subsystem")},
             {QStringLiteral("generation"), QStringLiteral("subsystem; full only for broad architecture or explicit certification")},
+            {QStringLiteral("certification"), QStringLiteral("full-regression or the certification contract's explicitly required level; ordinary test PASS is not certification")},
             {QStringLiteral("migration"), QStringLiteral("full-regression")},
             {QStringLiteral("workflow"), QStringLiteral("focused or subsystem according to shared impact")},
             {QStringLiteral("control-plane"), QStringLiteral("full-regression")}}},
+        {QStringLiteral("android"), QJsonObject{
+            {QStringLiteral("commands"), QJsonArray{QStringLiteral("./gradlew build"), QStringLiteral("./gradlew test"), QStringLiteral("./gradlew lint"), QStringLiteral("gradlew.bat build"), QStringLiteral("gradlew.bat test"), QStringLiteral("gradlew.bat lint")}},
+            {QStringLiteral("states"), QJsonArray{QStringLiteral("IMPLEMENTED"), QStringLiteral("BUILD PASS"), QStringLiteral("TEST PASS"), QStringLiteral("LINT PASS"), QStringLiteral("EMULATOR VERIFIED"), QStringLiteral("DEVICE VERIFIED"), QStringLiteral("APPLICATION VERIFIED"), QStringLiteral("CERTIFIED")}},
+            {QStringLiteral("principle"), QStringLiteral("Do not fabricate sync, emulator, device, lifecycle, permission, navigation, or persistence results; report unavailable checks as not run or not verified.")}}},
         {QStringLiteral("fullRegressionTriggers"), QJsonArray{QStringLiteral("release preparation"), QStringLiteral("explicit milestone or certification"),
                                                                QStringLiteral("major architecture or control-plane migration"), QStringLiteral("broad cross-system impact"),
                                                                QStringLiteral("unbounded shared impact"), QStringLiteral("failed lower-level validation with wider risk")}},
