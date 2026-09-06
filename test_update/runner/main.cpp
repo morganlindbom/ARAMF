@@ -938,8 +938,8 @@ int main(int argc, char** argv)
     const bool persisted = persistence.save(generationModel, persistedPath, &persistenceError);
     ProjectModel reopenedModel;
     const bool reopened = persisted && persistence.load(&reopenedModel, persistedPath, &persistenceError);
-    campaign.check(QStringLiteral("UPDATE-257"), QStringLiteral("Opening and saving a configuration does not retain an unrelated stale target"), reopened && reopenedModel.projectPath() == generationModel.projectPath() && reopenedModel.projectFilePath() == persistedPath);
-    campaign.check(QStringLiteral("UPDATE-258"), QStringLiteral("Project identity and target path remain represented independently"), reopened && reopenedModel.projectId() == generationModel.projectId() && reopenedModel.projectName() == generationModel.projectName() && reopenedModel.projectPath() != reopenedModel.projectFilePath());
+    campaign.check(QStringLiteral("UPDATE-257"), QStringLiteral("Opening and saving a configuration derives the canonical worker file target"), reopened && reopenedModel.projectPath() == generationModel.projectPath() && QFileInfo(reopenedModel.projectFilePath()).fileName() == QStringLiteral("ARAMF_WORKER.aramf.json"));
+    campaign.check(QStringLiteral("UPDATE-258"), QStringLiteral("Project identity and target path remain represented independently"), reopened && reopenedModel.projectId() == generationModel.projectId() && reopenedModel.projectName() == AramfPaths::workerDirectoryName(QString()) && reopenedModel.projectPath() != reopenedModel.projectFilePath());
     campaign.check(QStringLiteral("UPDATE-259"), QStringLiteral("Project Memory failure does not report a new successful memory product"), !failedGeneration.generatedFiles.contains(QStringLiteral("ARAMF_WORKER/memory/memory-consistency-validation.json")));
     campaign.check(QStringLiteral("UPDATE-260"), QStringLiteral("Project Memory failure cannot report generation success"), !failedGeneration.success);
     QTemporaryDir identityProject;

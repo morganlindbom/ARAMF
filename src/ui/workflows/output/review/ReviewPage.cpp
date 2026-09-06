@@ -5,8 +5,10 @@
 #include "core/RuleCatalog.h"
 #include "core/TemplateValidation.h"
 #include "core/ProjectPersistence.h"
+#include "core/AramfPaths.h"
 #include <QJsonArray>
 #include <QRegularExpression>
+#include <QFileInfo>
 
 #include <algorithm>
 #include <QLabel>
@@ -43,17 +45,29 @@ QString configurationSummary(const QJsonObject& object, const QString& prefix = 
     for (auto it = object.begin(); it != object.end(); ++it) {
         if (it.key() == "environment" || it.key() == "profileSelections" || it.key() == "options") continue;
         if (it.key() == "androidConstraints" && it.value().toObject().value("sourceOfTruthResource").toString().isEmpty()) continue;
+        // Once a generic link is present, the legacy flat dataFormat field is
+        // retained for migration but is no longer a current review setting.
+        if (prefix == QStringLiteral("communication.") && it.key() == QStringLiteral("dataFormat")
+            && !object.value(QStringLiteral("links")).toArray().isEmpty()) continue;
         const QString path = prefix + it.key();
         const QString indent(depth * 2, ' ');
         if (it.value().isObject()) {
             text += indent + fieldLabel(it.key()) + "\n" + configurationSummary(it.value().toObject(), path + '.', depth + 1);
         } else if (it.value().isArray()) {
             QStringList values;
+            QString objectText;
+            int objectCount = 0;
             for (const auto& item : it.value().toArray()) {
-                if (item.isObject()) text += configurationSummary(item.toObject(), "resource.", depth + 1);
+                if (item.isObject()) {
+                    ++objectCount;
+                    objectText += indent + QStringLiteral("  • ") + configurationSummary(item.toObject(), path + '.', depth + 2);
+                }
                 else values << item.toString();
             }
-            text += indent + fieldLabel(it.key()) + ": " + displayList(values, catalogs.value(path)) + "\n";
+            if (objectCount > 0)
+                text += indent + fieldLabel(it.key()) + ": " + QString::number(objectCount) + QObject::tr(" configured") + "\n" + objectText;
+            else
+                text += indent + fieldLabel(it.key()) + ": " + displayList(values, catalogs.value(path)) + "\n";
         } else {
             QString value = it.value().isBool() ? (it.value().toBool() ? QObject::tr("Enabled") : QObject::tr("Disabled"))
                 : it.value().isDouble() ? QString::number(it.value().toDouble(), 'g', 12)
@@ -107,16 +121,22 @@ void ReviewPage::refreshFromModel()
     }
 
     QString text;
-    const QSet<QString> compositeIds = {"pico-2w-visual-designer", "android-studio-kotlin-gemini", "qt-desktop-application",
-                                        "cpp-command-line", "cmake-library", "raspberry-pi-pico-firmware", "react-frontend",
-                                        "python-backend", "csharp-backend", "mobile-application", "full-stack-web-application", "bachelor-thesis"};
     QStringList activeModules;
+    for (const auto& id : model_->templateModules()) activeModules << id;
     QStringList activeTemplates;
-    for (const auto& id : model_->templateModules())
-        (compositeIds.contains(id) ? activeTemplates : activeModules) << id;
+    const auto templateState = model_->templateState();
+    for (const auto& value : templateState.value(QStringLiteral("activeTemplateNames")).toArray())
+        activeTemplates << value.toString();
+    if (activeTemplates.isEmpty()) {
+        for (const auto& value : templateState.value(QStringLiteral("activeTemplates")).toArray())
+            activeTemplates << value.toString();
+    }
     text += tr("Project\n");
-    text += tr("  Name: %1\n  ID: %2\n  Path: %3\n  Active modules: %4\n  Active templates: %5\n  Academic: %6\n\n")
-                .arg(model_->projectName(), model_->projectId(),
+    const QString workerName = AramfPaths::workerDirectoryName(model_->workerNameSuffix());
+    const QString projectFile = model_->projectFilePath().isEmpty()
+        ? workerName + QStringLiteral(".aramf.json") : QFileInfo(model_->projectFilePath()).fileName();
+    text += tr("  Name: %1\n  Worker name: %2\n  Project file: %3\n  ID: %4\n  Path: %5\n  Active modules: %6\n  Active templates: %7\n  Academic: %8\n\n")
+                .arg(model_->projectName(), workerName, projectFile, model_->projectId(),
                      model_->projectPath().isEmpty() ? tr("Project Path is not configured.") : model_->projectPath(),
                      listOrNone(activeModules), listOrNone(activeTemplates),
                      model_->academicConfiguration().academicMode);
@@ -127,18 +147,37 @@ void ReviewPage::refreshFromModel()
                      listOrNone(capabilities.hardwareTargets),
                      listOrNone(capabilities.buildSystems + capabilities.testingCapabilities + capabilities.deliveryCapabilities));
     const auto communication = model_->communicationConfiguration();
+    const auto hardwareResources = model_->hardwareResources();
     if (communication.enabled) {
-        text += tr("Multi-target Communication\n  Source: %1 (%2)\n  Destination: %3 (%4)\n  Transport: Wi-Fi\n  Protocol: %5\n  Endpoint: %6\n  Data format: %7\n  Version: %8\n  Authentication: %9\n  Encryption: %10\n  Integration requirements: %11\n\n")
-            .arg(communication.sourceTarget, communication.sourceRole,
-                 communication.destinationTarget, communication.destinationRole,
-                 communication.protocol.isEmpty() ? tr("Not selected") : communication.protocol,
-                 communication.endpoint.isEmpty() ? tr("Not configured") : communication.endpoint,
-                 communication.dataFormat.isEmpty() ? tr("Not specified") : communication.dataFormat,
-                 communication.protocolVersion,
+        const auto endpointName = [](const CommunicationEndpoint& endpoint) {
+            return endpoint.displayName.isEmpty() ? endpoint.targetId : endpoint.displayName;
+        };
+        const auto endpointA = communication.endpoints.size() > 0 ? endpointName(communication.endpoints.at(0)) : communication.sourceTarget;
+        const auto endpointB = communication.endpoints.size() > 1 ? endpointName(communication.endpoints.at(1)) : communication.destinationTarget;
+        const auto roleA = communication.endpoints.size() > 0 ? communication.endpoints.at(0).role : communication.sourceRole;
+        const auto roleB = communication.endpoints.size() > 1 ? communication.endpoints.at(1).role : communication.destinationRole;
+        const auto link = communication.links.isEmpty() ? CommunicationLink{} : communication.links.first();
+        const auto direction = link.direction.isEmpty() ? QStringLiteral("bidirectional") : link.direction;
+        const auto transport = link.transport.isEmpty() ? communication.transport : link.transport;
+        const auto protocol = link.protocol.isEmpty() ? communication.protocol : link.protocol;
+        text += tr("Communication Link\n  Endpoint A: %1\n  Role: %2\n  Endpoint A address: %3\n  Endpoint B: %4\n  Role: %5\n  Endpoint B address: %6\n  Direction: %7\n  Transport: %8\n  Protocol: %9\n  Frame: %10\n  Logical model: %11\n  Wire encoding: %12\n  Byte order: %13\n  Version: %14\n  Authentication: %15\n  Encryption: %16\n  Integration requirements: %17\n\n")
+            .arg(endpointA, roleA,
+                 communication.endpoints.size() > 0 && !communication.endpoints.at(0).address.isEmpty() ? communication.endpoints.at(0).address : tr("Not configured"),
+                 endpointB, roleB,
+                 communication.endpoints.size() > 1 && !communication.endpoints.at(1).address.isEmpty() ? communication.endpoints.at(1).address : tr("Not configured"),
+                 direction,
+                 transport.isEmpty() ? tr("Not selected") : transport,
+                 protocol.isEmpty() ? tr("Not selected") : protocol,
+                 link.frameType.isEmpty() ? tr("Not specified") : link.frameType,
+                 link.logicalDataModel.isEmpty() ? tr("Not specified") : link.logicalDataModel,
+                 link.wireEncoding.isEmpty() ? tr("Not specified") : link.wireEncoding,
+                 link.byteOrder.isEmpty() ? tr("Not specified") : link.byteOrder,
+                 link.protocolVersion.isEmpty() ? communication.protocolVersion : link.protocolVersion,
                  communication.authenticationRequired ? tr("required") : tr("not required"),
                  communication.encryptionRequired ? tr("required") : tr("not required"),
                  listOrNone(communication.integrationRequirements));
     }
+    text += tr("Hardware resources: %1\n\n").arg(hardwareResources.isEmpty() ? tr("None configured") : QString::number(hardwareResources.size()) + tr(" configured"));
     text += tr("AI Configuration\n  Primary agent: %1\n  Additional agents: %2\n  Responsibilities: %3\n  Permissions: %4\n  ARAMF integrations: %5\n\n")
                 .arg(displayAiList({ai.primaryAgent}), displayAiList(ai.additionalAgents), listOrNone(ai.responsibilities),
                      listOrNone(ai.permissions), listOrNone(ai.aramfIntegrations));

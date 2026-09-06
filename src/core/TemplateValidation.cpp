@@ -172,12 +172,50 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
         const QString destination = communication.value("destinationTarget").toString();
         const QString transport = communication.value("transport").toString();
         const QString protocol = communication.value("protocol").toString();
+        const auto endpoints = communication.value("endpoints").toArray();
+        QHash<QString, QJsonObject> endpointObjects;
+        for (const auto& endpointValue : endpoints) {
+            const auto endpoint = endpointValue.toObject();
+            endpointObjects.insert(endpoint.value("id").toString(), endpoint);
+        }
         require(!source.isEmpty() && !destination.isEmpty() && source != destination,
                 "Communication requires distinct source and destination targets");
         require(transport == "wifi", "Unsupported communication transport: " + transport);
         if (!protocol.isEmpty()) require(QStringList{"http-rest", "websocket", "tcp", "udp"}.contains(protocol), "Unsupported communication protocol: " + protocol);
-        if (protocol == "http-rest" || protocol == "websocket" || protocol == "tcp" || protocol == "udp")
-            require(!communication.value("endpoint").toString().trimmed().isEmpty(), "Communication protocol requires an endpoint");
+        if (protocol == "http-rest" || protocol == "websocket" || protocol == "tcp" || protocol == "udp") {
+            bool addressConfigured = false;
+            if (!endpointObjects.isEmpty()) {
+                const auto links = communication.value("links").toArray();
+                for (const auto& linkValue : links) {
+                    const auto link = linkValue.toObject();
+                    const QString linkProtocol = link.value("protocol").toString();
+                    if (!linkProtocol.isEmpty() && linkProtocol != protocol) continue;
+                    const auto endpointA = endpointObjects.value(link.value("endpointA").toString());
+                    const auto endpointB = endpointObjects.value(link.value("endpointB").toString());
+                    const auto roleAddress = [](const QJsonObject& endpoint, const QString& role) {
+                        return endpoint.value("role").toString().compare(role, Qt::CaseInsensitive) == 0
+                            && !endpoint.value("address").toString().trimmed().isEmpty();
+                    };
+                    if (roleAddress(endpointA, QStringLiteral("server"))) addressConfigured = true;
+                    if (roleAddress(endpointB, QStringLiteral("server"))) addressConfigured = true;
+                    if (endpointA.value("role").toString().isEmpty() && !endpointA.value("address").toString().trimmed().isEmpty()) addressConfigured = true;
+                    if (endpointB.value("role").toString().isEmpty() && !endpointB.value("address").toString().trimmed().isEmpty()) addressConfigured = true;
+                }
+                if (links.isEmpty()) {
+                    for (const auto& endpoint : endpointObjects) {
+                        if (endpoint.value("role").toString().compare(QStringLiteral("server"), Qt::CaseInsensitive) == 0
+                            && !endpoint.value("address").toString().trimmed().isEmpty()) { addressConfigured = true; break; }
+                    }
+                }
+            } else {
+                addressConfigured = !communication.value("endpoint").toString().trimmed().isEmpty();
+            }
+            // Endpoint address completeness is a readiness concern. Structural
+            // configuration validation must still allow reusable templates to
+            // be generated before deployment addresses are known.
+            if (endpointObjects.isEmpty())
+                require(addressConfigured, "Communication protocol requires an endpoint");
+        }
         require(!communication.value("protocolVersion").toString().trimmed().isEmpty(), "Communication protocol version is required");
         if (source == "android-application")
             require(strings(at(config, "capabilities.targetPlatforms")).contains("android") || strings(at(config, "capabilities.languages")).contains("kotlin"),
@@ -185,6 +223,58 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
         if (destination == "raspberry-pi-pico-2-w")
             require(strings(at(config, "capabilities.hardwareTargets")).contains("raspberry-pi-pico-2-w") || strings(at(config, "capabilities.frameworks")).contains("pico-sdk"),
                     "Communication destination target is not represented by the selected Pico capabilities");
+        QSet<QString> endpointIds;
+        for (const auto& endpointValue : endpoints) endpointIds.insert(endpointValue.toObject().value("id").toString());
+        const auto links = communication.value("links").toArray();
+        QSet<QString> linkEndpointPairs;
+        for (const auto& linkValue : links) {
+            const auto link = linkValue.toObject();
+            const QString endpointA = link.value("endpointA").toString();
+            const QString endpointB = link.value("endpointB").toString();
+            require(endpointIds.contains(endpointA) && endpointIds.contains(endpointB), "Communication link references an unknown endpoint");
+            linkEndpointPairs.insert(endpointA + QLatin1Char('\x1f') + endpointB);
+            linkEndpointPairs.insert(endpointB + QLatin1Char('\x1f') + endpointA);
+            require(link.value("protocolVersion").toString().trimmed().isEmpty() || link.value("protocolVersion").toString().toInt() > 0, "Communication protocol version is invalid");
+            require(link.value("maximumPacketSize").toInt() >= 0, "Communication maximum packet size is invalid");
+        }
+        QSet<qint64> messageIds;
+        const QSet<QString> fieldTypes = {"bool", "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64", "float32", "float64", "string", "bytes", "object", "array", "enum", "timestamp", "uuid"};
+        const auto messages = communication.value("messages").toArray();
+        for (const auto& messageValue : messages) {
+            const auto message = messageValue.toObject(); const qint64 id = static_cast<qint64>(message.value("id").toDouble());
+            require(id > 0 && !messageIds.contains(id), "Communication message IDs must be unique and positive"); messageIds.insert(id);
+            require(!message.value("name").toString().trimmed().isEmpty(), "Communication message name is required");
+            const QString sourceEndpoint = message.value("sourceEndpointId").toString();
+            const QString destinationEndpoint = message.value("destinationEndpointId").toString();
+            require(endpointIds.contains(sourceEndpoint) && endpointIds.contains(destinationEndpoint), "Communication message references an unknown endpoint");
+            require(linkEndpointPairs.contains(sourceEndpoint + QLatin1Char('\x1f') + destinationEndpoint), "Communication message endpoints are not connected by a communication link");
+            const auto response = static_cast<qint64>(message.value("responseMessageId").toDouble()); const auto request = static_cast<qint64>(message.value("requestMessageId").toDouble());
+            require(response == 0 || response != id, "Communication response cannot reference itself"); require(request == 0 || request != id, "Communication request cannot reference itself");
+            QSet<QString> fieldNames;
+            for (const auto& fieldValue : message.value("fields").toArray()) { const auto field = fieldValue.toObject(); const QString name = field.value("name").toString(); require(!name.isEmpty() && !fieldNames.contains(name), "Communication field names must be unique within a message"); fieldNames.insert(name); require(fieldTypes.contains(field.value("type").toString()), "Communication field type is unsupported: " + field.value("type").toString()); }
+        }
+        for (const auto& messageValue : messages) { const auto message = messageValue.toObject(); const qint64 response = static_cast<qint64>(message.value("responseMessageId").toDouble()); const qint64 request = static_cast<qint64>(message.value("requestMessageId").toDouble()); if (response && !messageIds.contains(response)) errors << "Communication response references an unknown message"; if (request && !messageIds.contains(request)) errors << "Communication request references an unknown message"; }
+    }
+    const auto hardwareResources = config.value(QStringLiteral("hardwareResources")).toArray();
+    if (!hardwareResources.isEmpty()) {
+        QSet<QString> resourceIds;
+        QSet<QString> endpointIds;
+        for (const auto& endpointValue : communication.value(QStringLiteral("endpoints")).toArray()) endpointIds.insert(endpointValue.toObject().value(QStringLiteral("id")).toString());
+        for (const auto& value : hardwareResources) {
+            const auto resource = value.toObject();
+            const QString id = resource.value(QStringLiteral("id")).toString();
+            require(!id.trimmed().isEmpty() && !resourceIds.contains(id), "Hardware resource IDs must be unique and non-empty"); resourceIds.insert(id);
+            require(resource.value(QStringLiteral("resourceType")).toString() == QStringLiteral("digital-pin"), "Unsupported hardware resource type");
+            require(endpointIds.contains(resource.value(QStringLiteral("endpointId")).toString()), "Hardware resource references an unknown endpoint");
+        }
+        for (const auto& messageValue : communication.value(QStringLiteral("messages")).toArray()) {
+            const auto message = messageValue.toObject();
+            if (message.value(QStringLiteral("name")).toString() == QStringLiteral("WRITE_DIGITAL_PIN") || message.value(QStringLiteral("name")).toString() == QStringLiteral("READ_DIGITAL_PIN")) {
+                for (const auto& fieldValue : message.value(QStringLiteral("fields")).toArray())
+                    if (fieldValue.toObject().value(QStringLiteral("name")).toString() == QStringLiteral("pinId"))
+                        require(fieldValue.toObject().value(QStringLiteral("type")).toString() == QStringLiteral("string"), "Digital pin commands require symbolic string pinId");
+            }
+        }
     }
     if (has("academic.academicMode", "disabled")) {
         for (const auto& path : {"academic.thesisLevel", "academic.thesisApproaches", "academic.researchMethods", "academic.academicRequirements", "academic.academicDeliverables"})
@@ -241,6 +331,16 @@ QStringList TemplateValidation::readiness(const ProjectModel& model)
     QStringList errors;
     // Older/manual projects retain their existing selective-generation contract.
     if (!model.templateState().isEmpty()) errors = validateConfiguration(ProjectPersistence().configuration(model));
+    const auto communication = model.communicationConfiguration();
+    if (communication.enabled) {
+        const auto protocolNeedsAddress = QStringList{"http-rest", "websocket", "tcp", "udp"}.contains(communication.protocol);
+        if (protocolNeedsAddress && !communication.endpoints.isEmpty()) {
+            bool listeningAddress = false;
+            for (const auto& endpoint : communication.endpoints)
+                if (endpoint.role.compare(QStringLiteral("server"), Qt::CaseInsensitive) == 0 && !endpoint.address.trimmed().isEmpty()) listeningAddress = true;
+            if (!listeningAddress) errors << "Communication protocol requires a listening endpoint address";
+        }
+    }
     if (model.projectPath().trimmed().isEmpty() || QDir::cleanPath(model.projectPath()) == ".") errors << "Choose a Project Path.";
     return errors;
 }

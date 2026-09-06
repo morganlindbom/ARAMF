@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QString>
+#include <QRegularExpression>
 
 namespace AramfPaths {
 // Repository-local development material lives under ./aramf_setup/.
@@ -56,10 +57,36 @@ inline const QString UpdateContract = QStringLiteral("ARAMF_WORKER/update/update
 inline const QString UpdateHistoryDirectory = QStringLiteral("ARAMF_WORKER/update/history");
 
 namespace detail {
+inline QString& workerSuffixOverride() { static QString value; return value; }
 inline QString& programRootOverride()
 {
     static QString value;
     return value;
+}
+
+inline QString normalizeWorkerNameSuffix(const QString& raw)
+{
+    QString value = raw.toUpper();
+    value.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9_]+")), QStringLiteral("_"));
+    value.replace(QRegularExpression(QStringLiteral("_+")), QStringLiteral("_"));
+    value.remove(QRegularExpression(QStringLiteral("^_+")));
+    value.remove(QRegularExpression(QStringLiteral("_+$")));
+    return value;
+}
+inline QString workerDirectoryName(const QString& suffix)
+{
+    const QString normalized = normalizeWorkerNameSuffix(suffix);
+    return normalized.isEmpty() ? QStringLiteral("ARAMF_WORKER") : QStringLiteral("ARAMF_WORKER_") + normalized;
+}
+inline void setRuntimeWorkerNameSuffix(const QString& suffix) { detail::workerSuffixOverride() = normalizeWorkerNameSuffix(suffix); }
+inline QString runtimeWorkerDirectoryName() { return workerDirectoryName(detail::workerSuffixOverride()); }
+inline QString resolveWorkerRelativePath(QString relative)
+{
+    if (detail::workerSuffixOverride().isEmpty()) return relative;
+    if (relative == ControlDirectory) return runtimeWorkerDirectoryName();
+    if (relative.startsWith(QStringLiteral("ARAMF_WORKER/")))
+        relative.replace(0, QStringLiteral("ARAMF_WORKER").size(), runtimeWorkerDirectoryName());
+    return relative;
 }
 
 inline QString& applicationDirectoryOverride()
@@ -68,6 +95,12 @@ inline QString& applicationDirectoryOverride()
     return value;
 }
 }
+
+inline QString normalizeWorkerNameSuffix(const QString& raw) { return detail::normalizeWorkerNameSuffix(raw); }
+inline QString workerDirectoryName(const QString& suffix) { return detail::workerDirectoryName(suffix); }
+inline void setRuntimeWorkerNameSuffix(const QString& suffix) { detail::setRuntimeWorkerNameSuffix(suffix); }
+inline QString runtimeWorkerDirectoryName() { return detail::runtimeWorkerDirectoryName(); }
+inline QString resolveWorkerRelativePath(const QString& relative) { return detail::resolveWorkerRelativePath(relative); }
 
 inline void setProgramRootForTests(const QString& root)
 {

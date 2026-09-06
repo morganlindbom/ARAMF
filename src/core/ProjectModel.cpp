@@ -1,4 +1,5 @@
 #include "ProjectModel.h"
+#include "AramfPaths.h"
 
 #include <QUuid>
 #include <QSet>
@@ -182,6 +183,16 @@ void ProjectModel::setTemplateId(const QString& value)
     if (templateId_ == value) return;
     templateId_ = value;
     if (value.isEmpty()) { templateState_ = {}; environmentOverrides_.clear(); }
+    notifyChanged();
+}
+
+void ProjectModel::setWorkerNameSuffix(const QString& value)
+{
+    const QString normalized = AramfPaths::normalizeWorkerNameSuffix(value);
+    const QString canonicalName = AramfPaths::workerDirectoryName(normalized);
+    if (workerNameSuffix_ == normalized && projectName_ == canonicalName) return;
+    workerNameSuffix_ = normalized;
+    projectName_ = canonicalName;
     notifyChanged();
 }
 
@@ -618,10 +629,80 @@ void ProjectModel::setGenerationOptions(const GenerationOptions& value)
     notifyChanged();
 }
 
+void ProjectModel::setHardwareResources(const QList<HardwareResource>& value)
+{
+    if (hardwareResources_.size() == value.size()) {
+        bool equal = true;
+        for (int i = 0; i < value.size(); ++i) {
+            const auto& a = hardwareResources_.at(i); const auto& b = value.at(i);
+            equal &= a.id == b.id && a.endpointId == b.endpointId && a.resourceType == b.resourceType
+                && a.physicalResource == b.physicalResource && a.direction == b.direction
+                && a.logicalMode == b.logicalMode && a.activeLevel == b.activeLevel && a.purpose == b.purpose
+                && a.ownership == b.ownership && a.capabilities == b.capabilities;
+        }
+        if (equal) return;
+    }
+    hardwareResources_ = value;
+    notifyChanged();
+}
+
 void ProjectModel::setCommunicationConfiguration(const CommunicationConfiguration& value)
 {
-    if (communication_.enabled == value.enabled
-        && communication_.sourceTarget == value.sourceTarget
+    CommunicationConfiguration normalized = value;
+    if (normalized.endpoints.size() >= 2) {
+        if (!normalized.sourceTarget.isEmpty()) normalized.endpoints[0].targetId = normalized.sourceTarget;
+        if (!normalized.destinationTarget.isEmpty()) normalized.endpoints[1].targetId = normalized.destinationTarget;
+        if (!normalized.sourceRole.isEmpty()) normalized.endpoints[0].role = normalized.sourceRole;
+        if (!normalized.destinationRole.isEmpty()) normalized.endpoints[1].role = normalized.destinationRole;
+        normalized.sourceTarget = normalized.endpoints.at(0).targetId;
+        normalized.destinationTarget = normalized.endpoints.at(1).targetId;
+        normalized.sourceRole = normalized.endpoints.at(0).role;
+        normalized.destinationRole = normalized.endpoints.at(1).role;
+    }
+    if (!normalized.links.isEmpty()) {
+        auto& link = normalized.links.first();
+        if (!normalized.transport.isEmpty()) link.transport = normalized.transport;
+        if (!normalized.protocol.isEmpty()) link.protocol = normalized.protocol;
+        if (!normalized.protocolVersion.isEmpty()) link.protocolVersion = normalized.protocolVersion;
+        normalized.transport = link.transport;
+        normalized.protocol = link.protocol;
+        normalized.protocolVersion = link.protocolVersion;
+    }
+    if (normalized.endpoints.isEmpty() && !normalized.sourceTarget.isEmpty() && !normalized.destinationTarget.isEmpty()) {
+        normalized.endpoints = {{QStringLiteral("endpoint-a"), normalized.sourceTarget, normalized.sourceTarget, normalized.sourceRole, {}, {}},
+                                {QStringLiteral("endpoint-b"), normalized.destinationTarget, normalized.destinationTarget, normalized.destinationRole, {}, {}}};
+    }
+    // One-time migration of the legacy shared endpoint into the canonical
+    // listening endpoint. Generic endpoint addresses remain authoritative once
+    // any address has been configured.
+    if (!normalized.endpoint.trimmed().isEmpty() && !normalized.endpoints.isEmpty()) {
+        bool hasAddress = false;
+        for (const auto& endpoint : normalized.endpoints) hasAddress |= !endpoint.address.trimmed().isEmpty();
+        if (!hasAddress) {
+            auto server = std::find_if(normalized.endpoints.begin(), normalized.endpoints.end(), [](const auto& endpoint) {
+                return endpoint.role.compare(QStringLiteral("server"), Qt::CaseInsensitive) == 0;
+            });
+            if (server == normalized.endpoints.end()) server = normalized.endpoints.begin() + (normalized.endpoints.size() > 1 ? 1 : 0);
+            server->address = normalized.endpoint;
+        }
+    }
+    if (normalized.links.isEmpty() && normalized.endpoints.size() >= 2) {
+        normalized.links = {{QStringLiteral("link-1"), normalized.endpoints.at(0).id, normalized.endpoints.at(1).id,
+                             QStringLiteral("bidirectional"), normalized.transport, normalized.protocol, {}, {}, {}, normalized.protocolVersion,
+                             {}, normalized.reconnectPolicy, normalized.errorHandling, false, 0, {}}};
+    }
+    auto endpointsEqual = [](const QList<CommunicationEndpoint>& a, const QList<CommunicationEndpoint>& b) {
+        if (a.size() != b.size()) return false;
+        for (int i = 0; i < a.size(); ++i) if (a.at(i).id != b.at(i).id || a.at(i).targetId != b.at(i).targetId || a.at(i).displayName != b.at(i).displayName || a.at(i).role != b.at(i).role || a.at(i).capabilities != b.at(i).capabilities || a.at(i).address != b.at(i).address) return false;
+        return true;
+    };
+    auto linksEqual = [](const QList<CommunicationLink>& a, const QList<CommunicationLink>& b) {
+        if (a.size() != b.size()) return false;
+        for (int i = 0; i < a.size(); ++i) if (a.at(i).id != b.at(i).id || a.at(i).endpointA != b.at(i).endpointA || a.at(i).endpointB != b.at(i).endpointB || a.at(i).direction != b.at(i).direction || a.at(i).transport != b.at(i).transport || a.at(i).protocol != b.at(i).protocol || a.at(i).frameType != b.at(i).frameType || a.at(i).logicalDataModel != b.at(i).logicalDataModel || a.at(i).wireEncoding != b.at(i).wireEncoding || a.at(i).protocolVersion != b.at(i).protocolVersion || a.at(i).byteOrder != b.at(i).byteOrder || a.at(i).timeout != b.at(i).timeout || a.at(i).reconnectPolicy != b.at(i).reconnectPolicy || a.at(i).errorHandling != b.at(i).errorHandling || a.at(i).acknowledgement != b.at(i).acknowledgement || a.at(i).maximumPacketSize != b.at(i).maximumPacketSize) return false;
+        return true;
+    };
+    if (communication_.enabled == normalized.enabled
+        && communication_.sourceTarget == normalized.sourceTarget
         && communication_.destinationTarget == value.destinationTarget
         && communication_.transport == value.transport
         && communication_.protocol == value.protocol
@@ -634,8 +715,12 @@ void ProjectModel::setCommunicationConfiguration(const CommunicationConfiguratio
         && communication_.encryptionRequired == value.encryptionRequired
         && communication_.reconnectPolicy == value.reconnectPolicy
         && communication_.errorHandling == value.errorHandling
-        && communication_.integrationRequirements == value.integrationRequirements) return;
-    communication_ = value;
+        && communication_.integrationRequirements == normalized.integrationRequirements
+        && endpointsEqual(communication_.endpoints, normalized.endpoints)
+        && linksEqual(communication_.links, normalized.links)
+        && communication_.messages.size() == normalized.messages.size()
+        && communication_.testVectors.size() == normalized.testVectors.size()) return;
+    communication_ = normalized;
     notifyChanged();
 }
 
@@ -679,6 +764,7 @@ void ProjectModel::resetForNewProject()
     projectName_ = QStringLiteral("New AR&MF Project");
     projectPath_.clear();
     projectFilePath_.clear();
+    workerNameSuffix_.clear();
     description_.clear();
     templateId_.clear();
     templateModules_.clear();
