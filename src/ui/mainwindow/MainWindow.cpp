@@ -32,6 +32,7 @@
 #include "ui/workflows/update/review/FrameworkKnowledgeReviewPage.h"
 #include "ui/workflows/update/apply/FrameworkKnowledgeApplyPage.h"
 #include "ui/workflows/update/backlog/ImprovementBacklogPage.h"
+#include "ui/shared/PageSupport.h"
 
 #include <QFrame>
 #include <QApplication>
@@ -299,6 +300,12 @@ MainWindow::MainWindow(
     registerPage(WorkflowPageId::UpdateReview, updateReviewPage_);
     registerPage(WorkflowPageId::UpdateApply, updateApplyPage_);
     registerPage(WorkflowPageId::ImprovementBacklog, improvementBacklogPage_);
+
+    // All pages share the same scroll host.  Normalize their horizontal
+    // policies once at the shell boundary so every workflow page follows the
+    // viewport width without duplicating resize logic in each page.
+    for (int index = 0; index < stack_->count(); ++index)
+        AramfUi::normalizeWorkflowPage(stack_->widget(index));
 
     workflow_->setStepCount(stack_->count());
 

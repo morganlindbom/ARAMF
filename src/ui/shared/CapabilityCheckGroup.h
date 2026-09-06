@@ -6,6 +6,8 @@
 
 class QLineEdit;
 class QCheckBox;
+class QGridLayout;
+class QResizeEvent;
 
 class CapabilityCheckGroup final : public QGroupBox
 {
@@ -22,6 +24,13 @@ signals:
     void selectionChanged(const QStringList& ids);
 
 private:
+    void reflow();
     QList<QCheckBox*> checks_;
     QLineEdit* customEdit_ = nullptr;
+    QGridLayout* layout_ = nullptr;
+    int requestedColumns_ = 1;
+    int activeColumns_ = 0;
+
+protected:
+    void resizeEvent(QResizeEvent* event) override;
 };

@@ -350,7 +350,14 @@ int main(int argc, char** argv)
             const QRect viewport = QRect(pageScroll->viewport()->mapToGlobal(QPoint(0, 0)), pageScroll->viewport()->size());
             for (int index = 0; index < stack->count(); ++index) {
                 stack->setCurrentIndex(index); QApplication::processEvents();
-                Q_UNUSED(viewport);
+                auto* page = stack->currentWidget();
+                if (!page) continue;
+                for (auto* child : page->findChildren<QWidget*>()) {
+                    if (!child->isVisible() || child->width() <= 0 || child->height() <= 0) continue;
+                    const QRect childRect(child->mapToGlobal(QPoint(0, 0)), child->size());
+                    check(childRect.left() >= viewport.left() - 2 && childRect.right() <= viewport.right() + 2,
+                          "workflow page child remains within viewport width");
+                }
             }
         }
     }
