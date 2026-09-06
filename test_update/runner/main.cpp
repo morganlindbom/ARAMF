@@ -571,12 +571,23 @@ int main(int argc, char** argv)
     const auto invalidOverride = CodexExecutableResolver::resolve();
     campaign.check(QStringLiteral("UPDATE-104"), QStringLiteral("invalid CODEX_CLI_PATH is reported explicitly"), !invalidOverride.available && invalidOverride.source == QStringLiteral("CODEX_CLI_PATH") && invalidOverride.error.contains(QStringLiteral("CODEX_CLI_PATH")));
     if (previousCodexOverride.isEmpty()) qunsetenv("CODEX_CLI_PATH"); else qputenv("CODEX_CLI_PATH", previousCodexOverride.toLocal8Bit());
-    const auto localCandidates = CodexExecutableResolver::localCandidates();
     const QByteArray previousPath = qgetenv("PATH");
+    const QByteArray previousLocalAppData = qgetenv("LOCALAPPDATA");
+    QTemporaryDir codexFixture;
+    const QString codexVersionDirectory = QDir(codexFixture.path()).filePath(QStringLiteral("OpenAI/Codex/bin/hermetic-test"));
+    QDir().mkpath(codexVersionDirectory);
+    QFile hermeticCodex(QDir(codexVersionDirectory).filePath(QStringLiteral("codex.cmd")));
+    const bool fixtureReady = hermeticCodex.open(QIODevice::WriteOnly | QIODevice::Text);
+    if (fixtureReady) {
+        hermeticCodex.write("@echo codex-cli hermetic-test\r\n");
+        hermeticCodex.close();
+    }
+    qputenv("LOCALAPPDATA", codexFixture.path().toLocal8Bit());
+    const auto localCandidates = CodexExecutableResolver::localCandidates();
     qputenv("PATH", QByteArray());
     const auto localDiscoveredCodex = CodexExecutableResolver::resolve();
     qputenv("PATH", previousPath);
-    const bool localFound = localDiscoveredCodex.available && localDiscoveredCodex.source == QStringLiteral("LOCALAPPDATA");
+    const bool localFound = fixtureReady && localDiscoveredCodex.available && localDiscoveredCodex.source == QStringLiteral("LOCALAPPDATA");
     campaign.check(QStringLiteral("UPDATE-105"), QStringLiteral("dynamic LOCALAPPDATA Codex installation is discovered"), localFound);
     const QFileInfo discoveredLocalInfo(localDiscoveredCodex.path);
     campaign.check(QStringLiteral("UPDATE-106"), QStringLiteral("local discovery does not depend on a fixed hash directory"),
@@ -606,6 +617,7 @@ int main(int argc, char** argv)
     campaign.check(QStringLiteral("UPDATE-116"), QStringLiteral("ARAMF_WORKER is not the implementation working directory"), !CodexExecutionAdapter::workingDirectoryAllowed(controlRequest));
     campaign.check(QStringLiteral("UPDATE-117"), QStringLiteral("Codex discovery and execution avoid shell interpolation"), !CodexExecutionAdapter::argumentsFor(executionRequest).contains(QStringLiteral("cmd.exe")) && !CodexExecutionAdapter::argumentsFor(executionRequest).contains(QStringLiteral("powershell")));
     campaign.check(QStringLiteral("UPDATE-118"), QStringLiteral("Codex hash-directory replacement can be rediscovered dynamically"), localCandidates.isEmpty() || localRediscoveredCodex.available);
+    if (previousLocalAppData.isEmpty()) qunsetenv("LOCALAPPDATA"); else qputenv("LOCALAPPDATA", previousLocalAppData);
     QTemporaryDir globalSourceProject;
     ProjectModel globalSourceModel;
     QString globalSourceError;
