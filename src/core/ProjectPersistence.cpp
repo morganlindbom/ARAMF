@@ -1,7 +1,9 @@
 #include "ProjectPersistence.h"
 
 #include "ProjectModel.h"
+#include "AramfPaths.h"
 
+#include <QDir>
 #include <QFile>
 #include <QSaveFile>
 #include <QJsonArray>
@@ -123,6 +125,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     root.insert(QStringLiteral("projectName"), model.projectName());
     root.insert(QStringLiteral("projectPath"), model.projectPath());
     root.insert(QStringLiteral("projectFilePath"), model.projectFilePath());
+    root.insert(QStringLiteral("workerNameSuffix"), model.workerNameSuffix());
     root.insert(QStringLiteral("description"), model.description());
     root.insert(QStringLiteral("templateId"), model.templateId());
     root.insert(QStringLiteral("templateModules"), toJsonArray(model.templateModules()));
@@ -242,6 +245,19 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
         {QStringLiteral("memory"), generation.generateMemory},
         {QStringLiteral("provenance"), generation.generateProvenance}});
     const auto communication = model.communicationConfiguration();
+    QJsonArray endpoints;
+    for (const auto& endpoint : communication.endpoints)
+        endpoints.append(QJsonObject{{QStringLiteral("id"), endpoint.id}, {QStringLiteral("targetId"), endpoint.targetId}, {QStringLiteral("displayName"), endpoint.displayName}, {QStringLiteral("role"), endpoint.role}, {QStringLiteral("capabilities"), toJsonArray(endpoint.capabilities)}, {QStringLiteral("address"), endpoint.address}});
+    QJsonArray links;
+    for (const auto& link : communication.links)
+        links.append(QJsonObject{{QStringLiteral("id"), link.id}, {QStringLiteral("endpointA"), link.endpointA}, {QStringLiteral("endpointB"), link.endpointB}, {QStringLiteral("direction"), link.direction}, {QStringLiteral("transport"), link.transport}, {QStringLiteral("protocol"), link.protocol}, {QStringLiteral("frameType"), link.frameType}, {QStringLiteral("logicalDataModel"), link.logicalDataModel}, {QStringLiteral("wireEncoding"), link.wireEncoding}, {QStringLiteral("protocolVersion"), link.protocolVersion}, {QStringLiteral("byteOrder"), link.byteOrder}, {QStringLiteral("timeout"), link.timeout}, {QStringLiteral("reconnectPolicy"), link.reconnectPolicy}, {QStringLiteral("errorHandling"), link.errorHandling}, {QStringLiteral("acknowledgement"), link.acknowledgement}, {QStringLiteral("maximumPacketSize"), link.maximumPacketSize}});
+    QJsonArray messages;
+    for (const auto& message : communication.messages) {
+        QJsonArray fields;
+        for (const auto& field : message.fields)
+            fields.append(QJsonObject{{QStringLiteral("name"), field.name}, {QStringLiteral("type"), field.type}, {QStringLiteral("required"), field.required}, {QStringLiteral("description"), field.description}, {QStringLiteral("array"), field.array}, {QStringLiteral("min"), field.min}, {QStringLiteral("max"), field.max}, {QStringLiteral("defaultValue"), field.defaultValue}, {QStringLiteral("enumValues"), toJsonArray(field.enumValues)}});
+        messages.append(QJsonObject{{QStringLiteral("id"), static_cast<qint64>(message.id)}, {QStringLiteral("name"), message.name}, {QStringLiteral("type"), message.type}, {QStringLiteral("direction"), message.direction}, {QStringLiteral("sourceEndpointId"), message.sourceEndpointId}, {QStringLiteral("destinationEndpointId"), message.destinationEndpointId}, {QStringLiteral("requestMessageId"), static_cast<qint64>(message.requestMessageId)}, {QStringLiteral("responseMessageId"), static_cast<qint64>(message.responseMessageId)}, {QStringLiteral("fields"), fields}, {QStringLiteral("description"), message.description}});
+    }
     root.insert(QStringLiteral("communication"), QJsonObject{
         {QStringLiteral("enabled"), communication.enabled},
         {QStringLiteral("sourceTarget"), communication.sourceTarget},
@@ -257,7 +273,12 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
         {QStringLiteral("encryptionRequired"), communication.encryptionRequired},
         {QStringLiteral("reconnectPolicy"), communication.reconnectPolicy},
         {QStringLiteral("errorHandling"), communication.errorHandling},
-        {QStringLiteral("integrationRequirements"), toJsonArray(communication.integrationRequirements)}});
+        {QStringLiteral("integrationRequirements"), toJsonArray(communication.integrationRequirements)},
+        {QStringLiteral("endpoints"), endpoints}, {QStringLiteral("links"), links}, {QStringLiteral("messages"), messages}});
+    QJsonArray hardwareResources;
+    for (const auto& resource : model.hardwareResources())
+        hardwareResources.append(QJsonObject{{QStringLiteral("id"), resource.id}, {QStringLiteral("endpointId"), resource.endpointId}, {QStringLiteral("resourceType"), resource.resourceType}, {QStringLiteral("physicalResource"), resource.physicalResource}, {QStringLiteral("direction"), resource.direction}, {QStringLiteral("logicalMode"), resource.logicalMode}, {QStringLiteral("activeLevel"), resource.activeLevel}, {QStringLiteral("purpose"), resource.purpose}, {QStringLiteral("ownership"), resource.ownership}, {QStringLiteral("capabilities"), toJsonArray(resource.capabilities)}});
+    root.insert(QStringLiteral("hardwareResources"), hardwareResources);
     root.insert(QStringLiteral("profileSelections"), toJsonArray(model.profileSelections()));
     root.insert(QStringLiteral("options"), options);
 
@@ -409,6 +430,11 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
     model->setProjectName(root.value(QStringLiteral("projectName")).toString());
     model->setProjectPath(root.value(QStringLiteral("projectPath")).toString());
     model->setProjectFilePath(root.value("projectFilePath").toString());
+    model->setWorkerNameSuffix(root.value("workerNameSuffix").toString());
+    const QString canonicalName = AramfPaths::workerDirectoryName(model->workerNameSuffix());
+    model->setProjectName(canonicalName);
+    if (!model->projectPath().trimmed().isEmpty())
+        model->setProjectFilePath(QDir(model->projectPath()).filePath(canonicalName + QStringLiteral(".aramf.json")));
     model->setDescription(root.value(QStringLiteral("description")).toString());
     model->setTemplateId(normalizeTemplateId(root.value(QStringLiteral("templateId")).toString()));
     model->setTemplateModules(fromJsonArray(root.value(QStringLiteral("templateModules"))));
@@ -491,6 +517,20 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
         communication.reconnectPolicy = communicationObject.value(QStringLiteral("reconnectPolicy")).toString();
         communication.errorHandling = communicationObject.value(QStringLiteral("errorHandling")).toString();
         communication.integrationRequirements = fromJsonArray(communicationObject.value(QStringLiteral("integrationRequirements")));
+        for (const auto& value : communicationObject.value(QStringLiteral("endpoints")).toArray()) {
+            const auto object = value.toObject();
+            communication.endpoints.append({object.value(QStringLiteral("id")).toString(), object.value(QStringLiteral("targetId")).toString(), object.value(QStringLiteral("displayName")).toString(), object.value(QStringLiteral("role")).toString(), fromJsonArray(object.value(QStringLiteral("capabilities"))), object.value(QStringLiteral("address")).toString()});
+        }
+        for (const auto& value : communicationObject.value(QStringLiteral("links")).toArray()) {
+            const auto object = value.toObject();
+            communication.links.append({object.value(QStringLiteral("id")).toString(), object.value(QStringLiteral("endpointA")).toString(), object.value(QStringLiteral("endpointB")).toString(), object.value(QStringLiteral("direction")).toString(QStringLiteral("bidirectional")), object.value(QStringLiteral("transport")).toString(), object.value(QStringLiteral("protocol")).toString(), object.value(QStringLiteral("frameType")).toString(), object.value(QStringLiteral("logicalDataModel")).toString(), object.value(QStringLiteral("wireEncoding")).toString(), object.value(QStringLiteral("protocolVersion")).toString(QStringLiteral("1")), object.value(QStringLiteral("timeout")).toString(), object.value(QStringLiteral("reconnectPolicy")).toString(), object.value(QStringLiteral("errorHandling")).toString(), object.value(QStringLiteral("acknowledgement")).toBool(), object.value(QStringLiteral("maximumPacketSize")).toInt(), object.value(QStringLiteral("byteOrder")).toString()});
+        }
+        for (const auto& value : communicationObject.value(QStringLiteral("messages")).toArray()) {
+            const auto object = value.toObject(); CommunicationMessage message;
+            message.id = static_cast<qint64>(object.value(QStringLiteral("id")).toDouble()); message.name = object.value(QStringLiteral("name")).toString(); message.type = object.value(QStringLiteral("type")).toString(); message.direction = object.value(QStringLiteral("direction")).toString(); message.sourceEndpointId = object.value(QStringLiteral("sourceEndpointId")).toString(); message.destinationEndpointId = object.value(QStringLiteral("destinationEndpointId")).toString(); message.requestMessageId = static_cast<qint64>(object.value(QStringLiteral("requestMessageId")).toDouble()); message.responseMessageId = static_cast<qint64>(object.value(QStringLiteral("responseMessageId")).toDouble()); message.description = object.value(QStringLiteral("description")).toString();
+            for (const auto& fieldValue : object.value(QStringLiteral("fields")).toArray()) { const auto fieldObject = fieldValue.toObject(); message.fields.append({fieldObject.value(QStringLiteral("name")).toString(), fieldObject.value(QStringLiteral("type")).toString(), fieldObject.value(QStringLiteral("required")).toBool(), fieldObject.value(QStringLiteral("description")).toString(), fieldObject.value(QStringLiteral("array")).toBool(), fieldObject.value(QStringLiteral("min")).toString(), fieldObject.value(QStringLiteral("max")).toString(), fieldObject.value(QStringLiteral("defaultValue")).toString(), fromJsonArray(fieldObject.value(QStringLiteral("enumValues")))}); }
+            communication.messages.append(message);
+        }
     }
     QList<ProjectResource> resources;
     const auto resourceValue = root.value(QStringLiteral("resources"));
@@ -536,6 +576,16 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
     } else {
         model->setResources(resources);
     }
+    QList<HardwareResource> hardwareResources;
+    for (const auto& value : root.value(QStringLiteral("hardwareResources")).toArray()) {
+        const auto object = value.toObject(); HardwareResource resource;
+        resource.id = object.value(QStringLiteral("id")).toString(); resource.endpointId = object.value(QStringLiteral("endpointId")).toString();
+        resource.resourceType = object.value(QStringLiteral("resourceType")).toString(QStringLiteral("digital-pin")); resource.physicalResource = object.value(QStringLiteral("physicalResource")).toString();
+        resource.direction = object.value(QStringLiteral("direction")).toString(); resource.logicalMode = object.value(QStringLiteral("logicalMode")).toString(); resource.activeLevel = object.value(QStringLiteral("activeLevel")).toString();
+        resource.purpose = object.value(QStringLiteral("purpose")).toString(); resource.ownership = object.value(QStringLiteral("ownership")).toString(); resource.capabilities = fromJsonArray(object.value(QStringLiteral("capabilities")));
+        hardwareResources.append(resource);
+    }
+    model->setHardwareResources(hardwareResources);
     const auto androidObject = root.value(QStringLiteral("androidConstraints")).toObject();
     if (!androidObject.isEmpty()) {
         AndroidProjectConstraints android;

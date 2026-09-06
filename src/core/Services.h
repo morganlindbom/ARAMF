@@ -107,6 +107,8 @@ public:
     QList<TemplateDefinition> definitions() const;
     bool applyTemplate(ProjectModel* model, const QString& id, QString* error = nullptr) const;
     bool applyModules(ProjectModel* model, const QStringList& moduleIds, QString* error = nullptr) const;
+    bool applyComposedSelection(ProjectModel* model, const QStringList& templateIds,
+                                const QStringList& manualModuleIds, QString* error = nullptr) const;
     bool saveCustomTemplate(const ProjectModel& model, const QString& name, QString* id = nullptr, QString* error = nullptr);
     bool removeCustomTemplate(const QString& id, QString* error = nullptr);
     QString libraryPath() const { return libraryPath_; }

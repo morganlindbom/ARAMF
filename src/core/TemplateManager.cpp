@@ -399,10 +399,27 @@ QList<TemplateDefinition> TemplateManager::officialDefinitions() const
         combined.communication.enabled = true;
         combined.communication.sourceTarget = QStringLiteral("android-application");
         combined.communication.destinationTarget = QStringLiteral("raspberry-pi-pico-2-w");
+        combined.communication.sourceRole = QStringLiteral("client");
+        combined.communication.destinationRole = QStringLiteral("server");
         combined.communication.transport = QStringLiteral("wifi");
+        combined.communication.protocol = QStringLiteral("websocket");
+        combined.communication.endpoints = {
+            {QStringLiteral("endpoint-a"), QStringLiteral("android-application"), QStringLiteral("Android Application"), QStringLiteral("client"), {QStringLiteral("wifi"), QStringLiteral("websocket")}, {}},
+            {QStringLiteral("endpoint-b"), QStringLiteral("raspberry-pi-pico-2-w"), QStringLiteral("Raspberry Pi Pico 2 W"), QStringLiteral("server"), {QStringLiteral("wifi"), QStringLiteral("websocket")}, {}}};
+        combined.communication.links = {{QStringLiteral("android-pico-link"), QStringLiteral("endpoint-a"), QStringLiteral("endpoint-b"), QStringLiteral("bidirectional"), QStringLiteral("wifi"), QStringLiteral("websocket"), QStringLiteral("binary"), QStringLiteral("structured-messages"), QStringLiteral("cbor"), QStringLiteral("1"), {}, {}, {}, false, 0, QStringLiteral("little-endian")}};
+        combined.communication.messages = {
+            {1, QStringLiteral("WRITE_DIGITAL_PIN"), QStringLiteral("command"), QStringLiteral("endpoint-a->endpoint-b"), QStringLiteral("endpoint-a"), QStringLiteral("endpoint-b"), 0, 2,
+             {{QStringLiteral("pinId"), QStringLiteral("string"), true, QStringLiteral("Symbolic hardware resource ID")}, {QStringLiteral("value"), QStringLiteral("bool"), true}}, QStringLiteral("Write a logical digital resource")},
+            {2, QStringLiteral("WRITE_DIGITAL_PIN_RESULT"), QStringLiteral("response"), QStringLiteral("endpoint-b->endpoint-a"), QStringLiteral("endpoint-b"), QStringLiteral("endpoint-a"), 1, 0,
+             {{QStringLiteral("pinId"), QStringLiteral("string"), true}, {QStringLiteral("success"), QStringLiteral("bool"), true}}, QStringLiteral("Result of a digital write")},
+            {3, QStringLiteral("READ_DIGITAL_PIN"), QStringLiteral("request"), QStringLiteral("endpoint-a->endpoint-b"), QStringLiteral("endpoint-a"), QStringLiteral("endpoint-b"), 0, 4,
+             {{QStringLiteral("pinId"), QStringLiteral("string"), true}}, QStringLiteral("Read a logical digital resource")},
+            {4, QStringLiteral("DIGITAL_PIN_STATE"), QStringLiteral("response"), QStringLiteral("endpoint-b->endpoint-a"), QStringLiteral("endpoint-b"), QStringLiteral("endpoint-a"), 3, 0,
+             {{QStringLiteral("pinId"), QStringLiteral("string"), true}, {QStringLiteral("value"), QStringLiteral("bool"), true}}, QStringLiteral("Digital resource state")}};
         combined.communication.integrationRequirements = {QStringLiteral("endpoint-reachability"), QStringLiteral("malformed-input-rejection"), QStringLiteral("reconnect-recovery"), QStringLiteral("timeout-handling"), QStringLiteral("protocol-contract-compatibility")};
         ensureStandardAgents(combined);
         finish(combined);
+        combined.configuration.insert(QStringLiteral("hardwareResources"), QJsonArray{QJsonObject{{QStringLiteral("id"), QStringLiteral("STATUS_OUTPUT")}, {QStringLiteral("endpointId"), QStringLiteral("endpoint-b")}, {QStringLiteral("resourceType"), QStringLiteral("digital-pin")}, {QStringLiteral("physicalResource"), QString()}, {QStringLiteral("direction"), QStringLiteral("output")}, {QStringLiteral("activeLevel"), QStringLiteral("high")}, {QStringLiteral("purpose"), QStringLiteral("Configurable status output")}, {QStringLiteral("ownership"), QStringLiteral("project")}, {QStringLiteral("capabilities"), QJsonArray{QStringLiteral("digital-output")}}}});
         result << combined;
     }
     return result;
@@ -453,6 +470,25 @@ TemplateDefinition TemplateManager::definition(const QString& id) const
 bool TemplateManager::applyTemplate(ProjectModel* model, const QString& id, QString* error) const
 {
     return applyModules(model, id.isEmpty() ? QStringList{} : QStringList{id}, error);
+}
+
+bool TemplateManager::applyComposedSelection(ProjectModel* model, const QStringList& templateIds,
+                                              const QStringList& manualModuleIds, QString* error) const
+{
+    QStringList sources = templateIds;
+    for (const auto& moduleId : manualModuleIds) if (!sources.contains(moduleId)) sources << moduleId;
+    if (!applyModules(model, sources, error)) return false;
+    auto state = model->templateState();
+    state.insert(QStringLiteral("activeTemplates"), QJsonArray::fromStringList(templateIds));
+    QJsonArray activeTemplateNames;
+    for (const auto& id : templateIds) {
+        const auto definition = this->definition(id);
+        activeTemplateNames.append(definition.displayName.isEmpty() ? id : definition.displayName);
+    }
+    state.insert(QStringLiteral("activeTemplateNames"), activeTemplateNames);
+    state.insert(QStringLiteral("manualModules"), QJsonArray::fromStringList(manualModuleIds));
+    model->setTemplateState(state);
+    return true;
 }
 
 namespace {
@@ -510,7 +546,12 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
         // merged result is validated after all selected modules are applied;
         // requiring a standalone complete project here would make useful
         // modules such as Gradle or Android SDK immediately self-unselect.
-        if (d.kind == TemplateDefinition::Kind::CompositeTemplate && !d.userDefined) {
+        // The combined Android + Pico preset intentionally leaves its endpoint
+        // unset; that project-specific value is configured after selection.
+        // Keep selection usable while full readiness validation still requires
+        // an endpoint before generation.
+        if (d.kind == TemplateDefinition::Kind::CompositeTemplate && !d.userDefined
+            && d.id != QStringLiteral("official-android-pico-2w")) {
             const auto errors = TemplateValidation::validateDefinition(d);
             if (!errors.isEmpty()) { if (error) *error = errors.join('\n'); return false; }
         }
@@ -547,6 +588,7 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
         mergeDomain(root, source, QStringLiteral("generationOptions"), {});
         if (source.value(QStringLiteral("communication")).toObject().value(QStringLiteral("enabled")).toBool(false))
             root.insert(QStringLiteral("communication"), source.value(QStringLiteral("communication")));
+        if (source.contains(QStringLiteral("hardwareResources"))) root.insert(QStringLiteral("hardwareResources"), source.value(QStringLiteral("hardwareResources")));
         const auto academic = source.value("academic").toObject();
         if (academic.value("academicMode").toString() != QStringLiteral("disabled")) root.insert("academic", academic);
         if (root.value("context").toString().isEmpty() && !d.projectType.isEmpty()) root.insert("context", d.projectType);

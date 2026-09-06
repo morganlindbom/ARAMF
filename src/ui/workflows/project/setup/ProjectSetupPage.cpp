@@ -2,6 +2,7 @@
 #include "../../../../core/ProjectRootRebindService.h"
 
 #include "ui/workflows/project/template/TemplateSelector.h"
+#include "core/AramfPaths.h"
 
 #include <QDir>
 #include <QCheckBox>
@@ -45,6 +46,8 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
       type_(new QLineEdit(this)),
       description_(new QTextEdit(this))
 {
+    name_->setReadOnly(true);
+    name_->setObjectName(QStringLiteral("canonicalProjectName"));
     // Description is the flexible field, but it must yield space to the
     // fixed-content controls above it when the page is short.
     description_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -65,10 +68,23 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     layout->addLayout(actions);
     layout->addWidget(templateSelector_);
 
+    auto* workerNameForm = new QFormLayout;
+    workerNameSuffix_ = new QLineEdit(this);
+    workerNameSuffix_->setObjectName(QStringLiteral("workerNameSuffix"));
+    workerNameSuffix_->setPlaceholderText(tr("Optional suffix, e.g. ANDROID_PICO"));
+    workerNamePreview_ = new QLabel(this);
+    workerNamePreview_->setObjectName(QStringLiteral("workerNamePreview"));
+    workerNameForm->addRow(tr("Worker name suffix"), workerNameSuffix_);
+    workerNameForm->addRow(tr("Preview"), workerNamePreview_);
+    layout->addLayout(workerNameForm);
+
     communicationGroup_ = new QGroupBox(tr("Cross-target communication"), this);
+    communicationGroup_->setObjectName(QStringLiteral("communicationGroup"));
     auto* communicationForm = new QFormLayout(communicationGroup_);
-    auto* transport = new QLabel(tr("Wi-Fi (configurable protocol)"), communicationGroup_);
+    communicationTransport_ = new QComboBox(communicationGroup_);
+    addOption(communicationTransport_, tr("Wi-Fi"), "wifi");
     communicationProtocol_ = new QComboBox(communicationGroup_);
+    communicationProtocol_->setObjectName(QStringLiteral("communicationProtocol"));
     addOption(communicationProtocol_, tr("Choose protocol"), {});
     addOption(communicationProtocol_, tr("HTTP / REST"), "http-rest");
     addOption(communicationProtocol_, tr("WebSocket"), "websocket");
@@ -76,6 +92,8 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     addOption(communicationProtocol_, tr("UDP"), "udp");
     communicationSourceTarget_ = new QComboBox(communicationGroup_);
     communicationDestinationTarget_ = new QComboBox(communicationGroup_);
+    communicationSourceTarget_->setObjectName(QStringLiteral("communicationEndpointATarget"));
+    communicationDestinationTarget_->setObjectName(QStringLiteral("communicationEndpointBTarget"));
     for (auto* combo : {communicationSourceTarget_, communicationDestinationTarget_}) {
         addOption(combo, tr("Android Application"), "android-application");
         addOption(combo, tr("Raspberry Pi Pico 2 W"), "raspberry-pi-pico-2-w");
@@ -83,29 +101,56 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     }
     communicationSourceRole_ = new QComboBox(communicationGroup_);
     communicationDestinationRole_ = new QComboBox(communicationGroup_);
+    communicationSourceRole_->setObjectName(QStringLiteral("communicationEndpointARole"));
+    communicationDestinationRole_->setObjectName(QStringLiteral("communicationEndpointBRole"));
     for (auto* combo : {communicationSourceRole_, communicationDestinationRole_}) {
         addOption(combo, tr("Client"), "client"); addOption(combo, tr("Server"), "server");
         addOption(combo, tr("Controller"), "controller"); addOption(combo, tr("Monitor"), "monitor");
         addOption(combo, tr("Bidirectional peer"), "peer");
     }
-    communicationEndpoint_ = new QLineEdit(communicationGroup_);
-    communicationEndpoint_->setPlaceholderText(tr("Endpoint / host:port (no secrets)"));
-    communicationFormat_ = new QComboBox(communicationGroup_);
-    addOption(communicationFormat_, tr("Not specified"), {}); addOption(communicationFormat_, "JSON", "json");
-    addOption(communicationFormat_, tr("Binary"), "binary"); addOption(communicationFormat_, tr("Text"), "text");
-    addOption(communicationFormat_, tr("Custom protocol"), "custom");
+    communicationDirection_ = new QComboBox(communicationGroup_);
+    communicationDirection_->setObjectName(QStringLiteral("communicationDirection"));
+    addOption(communicationDirection_, tr("Bidirectional"), "bidirectional");
+    addOption(communicationDirection_, tr("Unidirectional"), "unidirectional");
+    addOption(communicationDirection_, tr("Request / response"), "request-response");
+    addOption(communicationDirection_, tr("Event-driven"), "event-driven");
+    communicationFrameType_ = new QComboBox(communicationGroup_);
+    communicationFrameType_->setObjectName(QStringLiteral("communicationFrameType"));
+    addOption(communicationFrameType_, tr("Binary"), "binary"); addOption(communicationFrameType_, tr("Text"), "text");
+    communicationLogicalModel_ = new QComboBox(communicationGroup_);
+    communicationLogicalModel_->setObjectName(QStringLiteral("communicationLogicalModel"));
+    addOption(communicationLogicalModel_, tr("Structured messages"), "structured-messages");
+    addOption(communicationLogicalModel_, tr("Raw values"), "raw-values");
+    communicationWireEncoding_ = new QComboBox(communicationGroup_);
+    communicationWireEncoding_->setObjectName(QStringLiteral("communicationWireEncoding"));
+    addOption(communicationWireEncoding_, tr("CBOR"), "cbor"); addOption(communicationWireEncoding_, tr("JSON"), "json");
+    addOption(communicationWireEncoding_, tr("None / raw"), "raw");
+    communicationByteOrder_ = new QComboBox(communicationGroup_);
+    communicationByteOrder_->setObjectName(QStringLiteral("communicationByteOrder"));
+    addOption(communicationByteOrder_, tr("Little Endian"), "little-endian"); addOption(communicationByteOrder_, tr("Big Endian"), "big-endian");
+    communicationEndpointAAddress_ = new QLineEdit(communicationGroup_);
+    communicationEndpointAAddress_->setObjectName(QStringLiteral("communicationEndpointAAddress"));
+    communicationEndpointAAddress_->setPlaceholderText(tr("Endpoint A address (no secrets)"));
+    communicationEndpointBAddress_ = new QLineEdit(communicationGroup_);
+    communicationEndpointBAddress_->setObjectName(QStringLiteral("communicationEndpointBAddress"));
+    communicationEndpointBAddress_->setPlaceholderText(tr("Endpoint B address / host:port (no secrets)"));
     communicationVersion_ = new QLineEdit(communicationGroup_); communicationVersion_->setPlaceholderText("1");
     communicationAuthentication_ = new QCheckBox(tr("Authentication required"), communicationGroup_);
     communicationEncryption_ = new QCheckBox(tr("Encrypted transport required"), communicationGroup_);
-    communicationForm->addRow(tr("Transport"), transport);
+    communicationForm->addRow(tr("Endpoint A target"), communicationSourceTarget_);
+    communicationForm->addRow(tr("Endpoint A role"), communicationSourceRole_);
+    communicationForm->addRow(tr("Endpoint A address"), communicationEndpointAAddress_);
+    communicationForm->addRow(tr("Endpoint B target"), communicationDestinationTarget_);
+    communicationForm->addRow(tr("Endpoint B role"), communicationDestinationRole_);
+    communicationForm->addRow(tr("Endpoint B address"), communicationEndpointBAddress_);
+    communicationForm->addRow(tr("Direction"), communicationDirection_);
+    communicationForm->addRow(tr("Transport"), communicationTransport_);
     communicationForm->addRow(tr("Protocol"), communicationProtocol_);
-    communicationForm->addRow(tr("Source target"), communicationSourceTarget_);
-    communicationForm->addRow(tr("Destination target"), communicationDestinationTarget_);
-    communicationForm->addRow(tr("Source role"), communicationSourceRole_);
-    communicationForm->addRow(tr("Destination role"), communicationDestinationRole_);
-    communicationForm->addRow(tr("Endpoint"), communicationEndpoint_);
-    communicationForm->addRow(tr("Data format"), communicationFormat_);
+    communicationForm->addRow(tr("Frame type"), communicationFrameType_);
+    communicationForm->addRow(tr("Logical data model"), communicationLogicalModel_);
+    communicationForm->addRow(tr("Wire encoding"), communicationWireEncoding_);
     communicationForm->addRow(tr("Protocol version"), communicationVersion_);
+    communicationForm->addRow(tr("Byte order"), communicationByteOrder_);
     communicationForm->addRow(communicationAuthentication_);
     communicationForm->addRow(communicationEncryption_);
     communicationGroup_->setVisible(false);
@@ -123,6 +168,9 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     pathLayout->addWidget(path_);
     pathLayout->addWidget(browse);
     form->addRow(tr("Project path"), pathRow);
+    projectFilePreview_ = new QLabel(this);
+    projectFilePreview_->setObjectName(QStringLiteral("projectFilePreview"));
+    projectFilePreview_->setVisible(false);
     form->addRow(tr("Project ID"), id_);
     type_->setObjectName("projectType");
     form->addRow(tr("Project type"), type_);
@@ -134,9 +182,27 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     layout->addStretch();
 
     id_->setReadOnly(true);
-    connect(name_, &QLineEdit::textChanged, model_, &ProjectModel::setProjectName);
     connect(type_, &QLineEdit::textEdited, model_, &ProjectModel::setContext);
-    connect(path_, &QLineEdit::textChanged, model_, &ProjectModel::setProjectPath);
+    connect(path_, &QLineEdit::textChanged, this, [this](const QString& value) {
+        model_->setProjectPath(value);
+        syncCanonicalIdentity(true);
+    });
+    connect(workerNameSuffix_, &QLineEdit::textChanged, this, [this](const QString& raw) {
+        workerNameEditing_ = true;
+        workerNameRawInput_ = raw;
+        const QString normalized = AramfPaths::normalizeWorkerNameSuffix(raw);
+        model_->setWorkerNameSuffix(normalized);
+        syncCanonicalIdentity(true);
+    });
+    connect(workerNameSuffix_, &QLineEdit::editingFinished, this, [this] {
+        workerNameEditing_ = false;
+        const QString normalized = AramfPaths::normalizeWorkerNameSuffix(workerNameSuffix_->text());
+        const QSignalBlocker blocker(workerNameSuffix_);
+        workerNameSuffix_->setText(normalized);
+        model_->setWorkerNameSuffix(normalized);
+        workerNameRawInput_ = normalized;
+        syncCanonicalIdentity(true);
+    });
     connect(browse, &QPushButton::clicked, this, &ProjectSetupPage::browseProjectPath);
     connect(description_, &QTextEdit::textChanged, this, [this] {
         model_->setDescription(description_->toPlainText());
@@ -148,11 +214,18 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
         value.protocol = communicationProtocol_->currentData().toString();
         value.sourceRole = communicationSourceRole_->currentData().toString();
         value.destinationRole = communicationDestinationRole_->currentData().toString();
-        value.endpoint = communicationEndpoint_->text();
-        value.dataFormat = communicationFormat_->currentData().toString();
+        value.transport = communicationTransport_->currentData().toString();
         value.protocolVersion = communicationVersion_->text();
         value.authenticationRequired = communicationAuthentication_->isChecked();
         value.encryptionRequired = communicationEncryption_->isChecked();
+        if (value.endpoints.size() < 2) {
+            value.endpoints = {{QStringLiteral("endpoint-a"), value.sourceTarget, QString(), value.sourceRole, {}, {}},
+                               {QStringLiteral("endpoint-b"), value.destinationTarget, QString(), value.destinationRole, {}, {}}};
+        }
+        value.endpoints[0].targetId = value.sourceTarget; value.endpoints[0].role = value.sourceRole; value.endpoints[0].address = communicationEndpointAAddress_->text();
+        value.endpoints[1].targetId = value.destinationTarget; value.endpoints[1].role = value.destinationRole; value.endpoints[1].address = communicationEndpointBAddress_->text();
+        if (value.links.isEmpty()) value.links.append({QStringLiteral("communication-link"), QStringLiteral("endpoint-a"), QStringLiteral("endpoint-b"), QStringLiteral("bidirectional"), value.transport, value.protocol, {}, {}, {}, value.protocolVersion, {}, {}, {}, false, 0, {}});
+        auto& link = value.links[0]; link.direction = communicationDirection_->currentData().toString(); link.transport = value.transport; link.protocol = value.protocol; link.frameType = communicationFrameType_->currentData().toString(); link.logicalDataModel = communicationLogicalModel_->currentData().toString(); link.wireEncoding = communicationWireEncoding_->currentData().toString(); link.protocolVersion = value.protocolVersion; link.byteOrder = communicationByteOrder_->currentData().toString();
         model_->setCommunicationConfiguration(value);
     };
     connect(communicationProtocol_, &QComboBox::currentIndexChanged, this, persistCommunication);
@@ -160,8 +233,14 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     connect(communicationDestinationTarget_, &QComboBox::currentIndexChanged, this, persistCommunication);
     connect(communicationSourceRole_, &QComboBox::currentIndexChanged, this, persistCommunication);
     connect(communicationDestinationRole_, &QComboBox::currentIndexChanged, this, persistCommunication);
-    connect(communicationFormat_, &QComboBox::currentIndexChanged, this, persistCommunication);
-    connect(communicationEndpoint_, &QLineEdit::textChanged, this, persistCommunication);
+    connect(communicationDirection_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationTransport_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationFrameType_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationLogicalModel_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationWireEncoding_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationByteOrder_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationEndpointAAddress_, &QLineEdit::textChanged, this, persistCommunication);
+    connect(communicationEndpointBAddress_, &QLineEdit::textChanged, this, persistCommunication);
     connect(communicationVersion_, &QLineEdit::textChanged, this, persistCommunication);
     connect(communicationAuthentication_, &QCheckBox::toggled, this, persistCommunication);
     connect(communicationEncryption_, &QCheckBox::toggled, this, persistCommunication);
@@ -228,12 +307,12 @@ void ProjectSetupPage::saveProject()
 
 bool ProjectSetupPage::saveProjectAs(QString* error)
 {
-    const QString filePath = QFileDialog::getSaveFileName(
-        this, tr("Save ARAMF Project As"), QString(), tr("ARAMF Projects (*.aramf.json);;JSON files (*.json)"));
-    if (filePath.isEmpty()) {
+    const QString directory = QFileDialog::getExistingDirectory(this, tr("Select Project Directory"), model_->projectPath().isEmpty() ? QDir::homePath() : model_->projectPath());
+    if (directory.isEmpty()) {
         if (error) *error = tr("Save As was cancelled.");
         return false;
     }
+    const QString filePath = QDir(directory).filePath(AramfPaths::workerDirectoryName(model_->workerNameSuffix()) + QStringLiteral(".aramf.json"));
     QString saveError;
     if (!writeProject(filePath, &saveError)) {
         if (error) {
@@ -282,6 +361,17 @@ bool ProjectSetupPage::confirmDiscardOrSave()
     return true;
 }
 
+void ProjectSetupPage::syncCanonicalIdentity(bool deriveProjectFile)
+{
+    const QString workerName = AramfPaths::workerDirectoryName(model_->workerNameSuffix());
+    if (model_->projectName() != workerName) model_->setProjectName(workerName);
+    workerNamePreview_->setText(workerName);
+    const QString derivedFileName = workerName + QStringLiteral(".aramf.json");
+    if (deriveProjectFile && !model_->projectPath().trimmed().isEmpty() && model_->projectFilePath().trimmed().isEmpty())
+        model_->setProjectFilePath(QDir(model_->projectPath()).filePath(derivedFileName));
+    if (projectFilePreview_) projectFilePreview_->setText(derivedFileName);
+}
+
 void ProjectSetupPage::refreshFromModel()
 {
     const QSignalBlocker nameBlocker(name_);
@@ -289,22 +379,36 @@ void ProjectSetupPage::refreshFromModel()
     const QSignalBlocker idBlocker(id_);
     const QSignalBlocker typeBlocker(type_);
     const QSignalBlocker descriptionBlocker(description_);
+    const QSignalBlocker suffixBlocker(workerNameSuffix_);
 
-    name_->setText(model_->projectName());
+    name_->setText(AramfPaths::workerDirectoryName(model_->workerNameSuffix()));
     path_->setText(model_->projectPath());
     id_->setText(model_->projectId());
     type_->setText(model_->context());
     const auto communication = model_->communicationConfiguration();
     communicationGroup_->setVisible(communication.enabled);
-    setData(communicationProtocol_, communication.protocol);
-    setData(communicationSourceTarget_, communication.sourceTarget);
-    setData(communicationDestinationTarget_, communication.destinationTarget);
-    setData(communicationSourceRole_, communication.sourceRole);
-    setData(communicationDestinationRole_, communication.destinationRole);
-    setData(communicationFormat_, communication.dataFormat);
-    { const QSignalBlocker b1(communicationEndpoint_), b2(communicationVersion_), b3(communicationAuthentication_), b4(communicationEncryption_);
-      communicationEndpoint_->setText(communication.endpoint); communicationVersion_->setText(communication.protocolVersion);
+    const auto endpointA = communication.endpoints.size() > 0 ? communication.endpoints.at(0) : CommunicationEndpoint{};
+    const auto endpointB = communication.endpoints.size() > 1 ? communication.endpoints.at(1) : CommunicationEndpoint{};
+    const auto link = communication.links.isEmpty() ? CommunicationLink{} : communication.links.first();
+    setData(communicationProtocol_, link.protocol.isEmpty() ? communication.protocol : link.protocol);
+    setData(communicationTransport_, link.transport.isEmpty() ? communication.transport : link.transport);
+    setData(communicationSourceTarget_, endpointA.targetId.isEmpty() ? communication.sourceTarget : endpointA.targetId);
+    setData(communicationDestinationTarget_, endpointB.targetId.isEmpty() ? communication.destinationTarget : endpointB.targetId);
+    setData(communicationSourceRole_, endpointA.role.isEmpty() ? communication.sourceRole : endpointA.role);
+    setData(communicationDestinationRole_, endpointB.role.isEmpty() ? communication.destinationRole : endpointB.role);
+    setData(communicationDirection_, link.direction);
+    setData(communicationFrameType_, link.frameType);
+    setData(communicationLogicalModel_, link.logicalDataModel);
+    setData(communicationWireEncoding_, link.wireEncoding);
+    setData(communicationByteOrder_, link.byteOrder);
+    { const QSignalBlocker b1(communicationEndpointAAddress_), b2(communicationEndpointBAddress_), b3(communicationVersion_), b4(communicationAuthentication_), b5(communicationEncryption_);
+      communicationEndpointAAddress_->setText(endpointA.address); communicationEndpointBAddress_->setText(endpointB.address); communicationVersion_->setText(link.protocolVersion.isEmpty() ? communication.protocolVersion : link.protocolVersion);
       communicationAuthentication_->setChecked(communication.authenticationRequired); communicationEncryption_->setChecked(communication.encryptionRequired); }
     type_->setReadOnly(model_->projectTypeLocked());
     description_->setPlainText(model_->description());
+    if (!workerNameEditing_ && !workerNameSuffix_->hasFocus()) {
+        workerNameRawInput_ = model_->workerNameSuffix();
+        workerNameSuffix_->setText(workerNameRawInput_);
+    }
+    syncCanonicalIdentity(false);
 }

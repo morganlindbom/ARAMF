@@ -5,6 +5,8 @@
 #include <QHash>
 #include <QSet>
 #include <QJsonObject>
+#include <QJsonValue>
+#include <QByteArray>
 
 struct DevelopmentEnvironment {
     QString language;
@@ -94,6 +96,19 @@ bool sameResourceIdentity(const ProjectResource& left,
 struct ResourcePolicy {
     QStringList options;
     QString loadingStrategy = QStringLiteral("relevant");
+};
+
+struct HardwareResource {
+    QString id;
+    QString endpointId;
+    QString resourceType = QStringLiteral("digital-pin");
+    QString physicalResource;
+    QString direction;
+    QString logicalMode;
+    QString activeLevel;
+    QString purpose;
+    QString ownership;
+    QStringList capabilities;
 };
 
 struct AndroidProjectConstraints {
@@ -249,6 +264,68 @@ struct GenerationOptions {
     bool generateProvenance = true;
 };
 
+struct CommunicationEndpoint {
+    QString id;
+    QString targetId;
+    QString displayName;
+    QString role;
+    QStringList capabilities;
+    QString address;
+};
+
+struct CommunicationLink {
+    QString id;
+    QString endpointA;
+    QString endpointB;
+    QString direction = QStringLiteral("bidirectional");
+    QString transport;
+    QString protocol;
+    QString frameType;
+    QString logicalDataModel;
+    QString wireEncoding;
+    QString protocolVersion = QStringLiteral("1");
+    QString timeout;
+    QString reconnectPolicy;
+    QString errorHandling;
+    bool acknowledgement = false;
+    int maximumPacketSize = 0;
+    QString byteOrder;
+};
+
+struct CommunicationField {
+    QString name;
+    QString type;
+    bool required = false;
+    QString description;
+    bool array = false;
+    QString min;
+    QString max;
+    QString defaultValue;
+    QStringList enumValues;
+};
+
+struct CommunicationMessage {
+    qint64 id = 0;
+    QString name;
+    QString type;
+    QString direction;
+    QString sourceEndpointId;
+    QString destinationEndpointId;
+    qint64 requestMessageId = 0;
+    qint64 responseMessageId = 0;
+    QList<CommunicationField> fields;
+    QString description;
+};
+
+struct CommunicationTestVector {
+    QString id;
+    qint64 messageId = 0;
+    QJsonValue logicalInput;
+    QByteArray expectedEncodedPayload;
+    QJsonObject expectedDecodedFields;
+    QString direction;
+};
+
 struct CommunicationConfiguration {
     bool enabled = false;
     QString sourceTarget = QStringLiteral("android-application");
@@ -265,6 +342,10 @@ struct CommunicationConfiguration {
     QString reconnectPolicy;
     QString errorHandling;
     QStringList integrationRequirements;
+    QList<CommunicationEndpoint> endpoints;
+    QList<CommunicationLink> links;
+    QList<CommunicationMessage> messages;
+    QList<CommunicationTestVector> testVectors;
 };
 
 class ProjectModel final : public QObject {
@@ -276,6 +357,7 @@ public:
     QString projectName() const { return projectName_; }
     QString projectPath() const { return projectPath_; }
     QString projectFilePath() const { return projectFilePath_; }
+    QString workerNameSuffix() const { return workerNameSuffix_; }
     QString description() const { return description_; }
     QString templateId() const { return templateId_; }
     QStringList templateModules() const { return templateModules_; }
@@ -289,6 +371,7 @@ public:
     AcademicConfiguration academicConfiguration() const { return academic_; }
     AiConfiguration aiConfiguration() const { return ai_; }
     QList<ProjectResource> resources() const { return resources_; }
+    QList<HardwareResource> hardwareResources() const { return hardwareResources_; }
     ResourcePolicy resourcePolicy() const { return resourcePolicy_; }
     RuleConfiguration ruleConfiguration() const { return ruleConfiguration_; }
     MemoryConfiguration memoryConfiguration() const { return memoryConfiguration_; }
@@ -306,6 +389,7 @@ public:
     void setProjectName(const QString& value);
     void setProjectPath(const QString& value);
     void setProjectFilePath(const QString& value);
+    void setWorkerNameSuffix(const QString& value);
     void setProjectId(const QString& value);
     void setDescription(const QString& value);
     void setTemplateId(const QString& value);
@@ -316,6 +400,7 @@ public:
     void setAcademicConfiguration(const AcademicConfiguration& value);
     void setAiConfiguration(const AiConfiguration& value);
     void setResources(const QList<ProjectResource>& value);
+    void setHardwareResources(const QList<HardwareResource>& value);
     void setResourcePolicy(const ResourcePolicy& value);
     void setRuleConfiguration(const RuleConfiguration& value);
     void setMemoryConfiguration(const MemoryConfiguration& value);
@@ -352,6 +437,7 @@ private:
     QString projectName_ = QStringLiteral("New AR&MF Project");
     QString projectPath_;
     QString projectFilePath_;
+    QString workerNameSuffix_;
     QString description_;
     QString templateId_;
     QStringList templateModules_;
@@ -362,6 +448,7 @@ private:
     AcademicConfiguration academic_;
     AiConfiguration ai_;
     QList<ProjectResource> resources_;
+    QList<HardwareResource> hardwareResources_;
     ResourcePolicy resourcePolicy_;
     RuleConfiguration ruleConfiguration_;
     MemoryConfiguration memoryConfiguration_;

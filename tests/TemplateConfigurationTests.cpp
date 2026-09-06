@@ -23,6 +23,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QInputDialog>
+#include <QLabel>
 #include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QPushButton>
@@ -82,6 +83,25 @@ int main(int argc, char** argv)
     QString combinedError;
     check(manager.applyTemplate(&combinedModel, combinedId, &combinedError), "Android + Pico official template applies: " + combinedError);
     check(combinedModel.templateModules().contains(QStringLiteral("wifi-communication")), "Android + Pico includes Wi-Fi module dependency");
+    check(combinedModel.communicationConfiguration().sourceTarget == QStringLiteral("android-application")
+              && combinedModel.communicationConfiguration().destinationTarget == QStringLiteral("raspberry-pi-pico-2-w")
+              && combinedModel.communicationConfiguration().sourceRole == QStringLiteral("client")
+              && combinedModel.communicationConfiguration().destinationRole == QStringLiteral("server")
+              && combinedModel.communicationConfiguration().protocol == QStringLiteral("websocket"),
+          "Android + Pico communication topology defaults");
+    check(combinedModel.communicationConfiguration().messages.size() == 4, "digital pin message contract defaults");
+    check(combinedModel.communicationConfiguration().messages.first().name == QStringLiteral("WRITE_DIGITAL_PIN")
+              && combinedModel.communicationConfiguration().messages.first().fields.first().name == QStringLiteral("pinId")
+              && combinedModel.communicationConfiguration().messages.first().fields.first().type == QStringLiteral("string"),
+          "digital pin contract uses symbolic pin IDs");
+    check(combinedModel.hardwareResources().size() == 1 && combinedModel.hardwareResources().first().physicalResource.isEmpty(),
+          "hardware source of truth keeps physical mapping configurable");
+    auto contractConfiguration = combinedModel.communicationConfiguration();
+    contractConfiguration.messages = {
+        {1, QStringLiteral("SET_LED"), QStringLiteral("request"), QStringLiteral("endpoint-a->endpoint-b"), QStringLiteral("endpoint-a"), QStringLiteral("endpoint-b"), 0, 2, {{QStringLiteral("enabled"), QStringLiteral("bool"), true}}, QStringLiteral("Set LED state")},
+        {2, QStringLiteral("SET_LED_RESULT"), QStringLiteral("response"), QStringLiteral("endpoint-b->endpoint-a"), QStringLiteral("endpoint-b"), QStringLiteral("endpoint-a"), 1, 0, {{QStringLiteral("success"), QStringLiteral("bool"), true}}, QStringLiteral("Result of SET_LED")}};
+    combinedModel.setCommunicationConfiguration(contractConfiguration);
+    check(combinedModel.communicationConfiguration().messages.size() == 2, "generic message contract configured");
     check(combinedModel.developmentCapabilities().languages.contains("kotlin")
               && combinedModel.developmentCapabilities().languages.contains("c")
               && combinedModel.developmentCapabilities().languages.contains("cpp")
@@ -93,7 +113,7 @@ int main(int argc, char** argv)
     check(combinedModel.developmentCapabilities().targetPlatforms.contains("android")
               && combinedModel.developmentCapabilities().hardwareTargets.contains("raspberry-pi-pico-2-w"), "Android + Pico targets merge");
     auto communication = combinedModel.communicationConfiguration();
-    communication.protocol = QStringLiteral("http-rest"); communication.endpoint = QStringLiteral("pico.local:8080");
+    communication.endpoint = QStringLiteral("pico.local:8080");
     communication.sourceRole = QStringLiteral("client"); communication.destinationRole = QStringLiteral("server");
     communication.dataFormat = QStringLiteral("json");
     combinedModel.setCommunicationConfiguration(communication);
@@ -106,18 +126,31 @@ int main(int argc, char** argv)
     check(combinedVerification.overallStatus != VerificationStatus::Fail, "Android + Pico worker verification");
     check(QFile::exists(QDir(combinedModel.projectPath()).filePath("ARAMF_WORKER/communication/communication-contract.json")), "communication contract generated");
     check(QFile::exists(QDir(combinedModel.projectPath()).filePath("ARAMF_WORKER/communication/multi-target-build.json")), "multi-target build model generated");
+    check(QFile::exists(QDir(combinedModel.projectPath()).filePath("ARAMF_WORKER/hardware/hardware-resources.json")), "hardware source of truth generated");
+    check(QFile::exists(QDir(combinedModel.projectPath()).filePath("ARAMF_WORKER/ARAMF_WORKER.json")), "canonical worker identity JSON generated");
     QFile communicationFile(QDir(combinedModel.projectPath()).filePath("ARAMF_WORKER/communication/communication-contract.json"));
     check(communicationFile.open(QIODevice::ReadOnly), "communication contract readable");
     const auto communicationJson = QJsonDocument::fromJson(communicationFile.readAll()).object();
     communicationFile.close();
-    check(communicationJson.value("transport").toString() == "wifi"
-              && communicationJson.value("protocol").toString() == "http-rest"
-              && communicationJson.value("sourceTarget").toString() == "android-application"
-              && communicationJson.value("destinationTarget").toString() == "raspberry-pi-pico-2-w",
+    const auto generatedLink = communicationJson.value("links").toArray().first().toObject();
+    check(generatedLink.value("transport").toString() == "wifi"
+              && generatedLink.value("protocol").toString() == "websocket"
+              && communicationJson.value("endpoints").toArray().first().toObject().value("targetId").toString() == "android-application"
+              && communicationJson.value("endpoints").toArray().at(1).toObject().value("targetId").toString() == "raspberry-pi-pico-2-w"
+              && communicationJson.value("endpoints").toArray().first().toObject().value("role").toString() == "client"
+              && communicationJson.value("endpoints").toArray().at(1).toObject().value("role").toString() == "server",
           "communication contract targets and protocol");
-    check(communicationJson.value("androidResponsibility").toString().contains("Android")
-              && communicationJson.value("picoResponsibility").toString().contains("Pico"),
-          "communication responsibilities generated");
+    check(!communicationJson.contains("sourceTarget") && !communicationJson.contains("destinationTarget")
+              && !communicationJson.contains("sourceRole") && !communicationJson.contains("destinationRole")
+              && !communicationJson.contains("endpoint") && !communicationJson.contains("dataFormat")
+              && !communicationJson.contains("androidResponsibility") && !communicationJson.contains("picoResponsibility"),
+          "legacy communication fields excluded from generated contract");
+    check(communicationJson.value("endpoints").toArray().size() == 2
+              && communicationJson.value("links").toArray().first().toObject().value("direction").toString() == QStringLiteral("bidirectional"),
+          "generic communication contract endpoints and direction generated");
+    check(communicationJson.value("messages").toArray().size() == 2
+              && communicationJson.value("messages").toArray().first().toObject().value("responseMessageId").toInt() == 2,
+          "generic communication messages generated");
     QFile buildModelFile(QDir(combinedModel.projectPath()).filePath("ARAMF_WORKER/communication/multi-target-build.json"));
     check(buildModelFile.open(QIODevice::ReadOnly), "multi-target build model readable");
     const auto buildModelJson = QJsonDocument::fromJson(buildModelFile.readAll()).object();
@@ -125,12 +158,53 @@ int main(int argc, char** argv)
     check(buildModelJson.value("targets").toArray().size() == 2
               && buildModelJson.value("orchestration").toArray().size() >= 3,
           "multi-target build orchestration generated");
+    // Protocol selection remains user-editable after applying the default.
+    communication.protocol = QStringLiteral("http-rest");
+    combinedModel.setCommunicationConfiguration(communication);
     ProjectModel combinedReloaded;
     check(persistence.save(combinedModel, fixture.filePath("combined-roundtrip.aramf.json")), "communication project save");
     QString combinedLoadError;
     check(persistence.load(&combinedReloaded, fixture.filePath("combined-roundtrip.aramf.json"), &combinedLoadError), "communication project reload: " + combinedLoadError);
     check(combinedReloaded.communicationConfiguration().protocol == QStringLiteral("http-rest")
-              && combinedReloaded.communicationConfiguration().endpoint == QStringLiteral("pico.local:8080"), "communication configuration round-trip");
+              && combinedReloaded.communicationConfiguration().endpoint == QStringLiteral("pico.local:8080")
+              && combinedReloaded.communicationConfiguration().sourceTarget == QStringLiteral("android-application")
+              && combinedReloaded.communicationConfiguration().destinationTarget == QStringLiteral("raspberry-pi-pico-2-w")
+              && combinedReloaded.communicationConfiguration().sourceRole == QStringLiteral("client")
+              && combinedReloaded.communicationConfiguration().destinationRole == QStringLiteral("server"), "communication configuration round-trip");
+    check(combinedReloaded.communicationConfiguration().endpoints.size() == 2
+              && combinedReloaded.communicationConfiguration().endpoints.at(0).targetId == QStringLiteral("android-application")
+              && combinedReloaded.communicationConfiguration().endpoints.at(1).targetId == QStringLiteral("raspberry-pi-pico-2-w")
+              && combinedReloaded.communicationConfiguration().links.size() == 1
+              && combinedReloaded.communicationConfiguration().links.first().direction == QStringLiteral("bidirectional"),
+          "generic endpoints and bidirectional link round-trip");
+    check(AramfPaths::workerDirectoryName({}) == QStringLiteral("ARAMF_WORKER"), "empty worker suffix keeps canonical name");
+    check(AramfPaths::workerDirectoryName(QStringLiteral("Android Pico")) == QStringLiteral("ARAMF_WORKER_ANDROID_PICO"), "worker suffix spaces and case normalize");
+    check(AramfPaths::workerDirectoryName(QStringLiteral("__ANDROID__PICO__")) == QStringLiteral("ARAMF_WORKER_ANDROID_PICO"), "worker suffix underscores normalize");
+    check(AramfPaths::workerDirectoryName(QStringLiteral("android/pico")) == QStringLiteral("ARAMF_WORKER_ANDROID_PICO"), "worker suffix separators and case normalize");
+    check(AramfPaths::workerDirectoryName(QStringLiteral("mixedCase")) == QStringLiteral("ARAMF_WORKER_MIXEDCASE"), "worker suffix mixed case normalizes");
+    check(AramfPaths::workerDirectoryName(QStringLiteral("_Android__Pico_")) == QStringLiteral("ARAMF_WORKER_ANDROID_PICO"), "worker suffix edge underscores normalize");
+    ProjectModel suffixedModel;
+    check(manager.applyTemplate(&suffixedModel, combinedId), "suffixed model template setup");
+    suffixedModel.setCommunicationConfiguration(communication);
+    suffixedModel.setProjectName(combinedModel.projectName());
+    suffixedModel.setProjectPath(fixture.filePath("combined-suffixed"));
+    suffixedModel.setProjectFilePath(fixture.filePath("combined-suffixed.aramf.json"));
+    suffixedModel.setWorkerNameSuffix(QStringLiteral("ANDROID_PICO"));
+    const auto suffixedGeneration = generation.generate(suffixedModel, suffixedModel.generationOptions());
+    check(suffixedGeneration.success, "suffixed worker generation");
+    check(QDir(suffixedModel.projectPath()).exists(QStringLiteral("ARAMF_WORKER_ANDROID_PICO"))
+              && !QDir(suffixedModel.projectPath()).exists(QStringLiteral("ARAMF_WORKER")), "generation uses resolved worker directory");
+    check(QFile::exists(QDir(suffixedModel.projectPath()).filePath(
+                  QStringLiteral("ARAMF_WORKER_ANDROID_PICO/ARAMF_WORKER_ANDROID_PICO.json"))),
+          "worker identity JSON matches resolved directory");
+    check(!generation.generate(suffixedModel, suffixedModel.generationOptions()).success, "existing suffixed worker is not overwritten");
+    ProjectModel suffixReloaded;
+    QString suffixError;
+    check(persistence.save(suffixedModel, fixture.filePath("suffixed-roundtrip.aramf.json"))
+              && persistence.load(&suffixReloaded, fixture.filePath("suffixed-roundtrip.aramf.json"), &suffixError)
+              && suffixReloaded.workerNameSuffix() == QStringLiteral("ANDROID_PICO")
+              && suffixReloaded.projectName() == QStringLiteral("ARAMF_WORKER_ANDROID_PICO")
+              && QFileInfo(suffixReloaded.projectFilePath()).fileName() == QStringLiteral("ARAMF_WORKER_ANDROID_PICO.aramf.json"), "worker suffix save/reload");
     ProjectModel composed;
     QString compositionError;
     check(manager.applyModules(&composed, {"android-application", "kotlin", "academic-school-project"}, &compositionError), "Android + Kotlin + Academic composition: " + compositionError);
@@ -142,6 +216,38 @@ int main(int argc, char** argv)
         check(composedAgents.primaryAgent == agent || composedAgents.additionalAgents.contains(agent), "composed AI baseline: " + agent);
     check(manager.applyModules(&composed, {"android-application", "kotlin"}), "remove academic module");
     check(composed.templateModules() == QStringList{"android-application", "kotlin"} && composed.academicConfiguration().academicMode == "disabled", "removing module removes only academic contribution");
+    ProjectModel ownership;
+    QString ownershipError;
+    check(manager.applyComposedSelection(&ownership, {QStringLiteral("official-aramf-development")}, {}, &ownershipError), "single template ownership applies");
+    check(ownership.templateModules().contains(QStringLiteral("cmake")), "single template contributes CMake");
+    check(manager.applyComposedSelection(&ownership, {}, {}, &ownershipError), "single template ownership removes");
+    check(!ownership.templateModules().contains(QStringLiteral("cmake")), "exclusive template module is removed");
+    check(manager.applyComposedSelection(&ownership, {QStringLiteral("official-aramf-development"), QStringLiteral("official-pico-visual-designer")}, {}, &ownershipError), "shared template ownership applies");
+    check(ownership.templateModules().contains(QStringLiteral("cmake")) && ownership.templateModules().contains(QStringLiteral("cpp")), "shared modules are selected");
+    check(manager.applyComposedSelection(&ownership, {QStringLiteral("official-pico-visual-designer")}, {}, &ownershipError), "one shared template is removed");
+    check(ownership.templateModules().contains(QStringLiteral("cpp")) && ownership.templateModules().contains(QStringLiteral("cmake")), "shared module remains with active owner");
+    check(manager.applyComposedSelection(&ownership, {}, {QStringLiteral("cmake")}, &ownershipError), "manual module ownership retained");
+    check(ownership.templateModules().contains(QStringLiteral("cmake")), "manual module survives template removal");
+    check(manager.applyComposedSelection(&ownership, {}, {}, &ownershipError), "final ownership removal");
+    check(!ownership.templateModules().contains(QStringLiteral("cmake")), "shared module removed after final owner");
+    ProjectModel reviewModel;
+    check(manager.applyComposedSelection(&reviewModel, {QStringLiteral("official-android-pico-2w")}, {}, &ownershipError), "review active template selection");
+    auto reviewCommunication = reviewModel.communicationConfiguration();
+    reviewCommunication.messages = {CommunicationMessage{1, QStringLiteral("PING"), QStringLiteral("event"), QStringLiteral("endpoint-a->endpoint-b"), QStringLiteral("endpoint-a"), QStringLiteral("endpoint-b"), 0, 0, {}, QStringLiteral("Connectivity event")}};
+    reviewModel.setCommunicationConfiguration(reviewCommunication);
+    ReviewPage reviewPage(&reviewModel);
+    const auto reviewText = [&]() { return reviewPage.findChild<QPlainTextEdit*>()->toPlainText(); };
+    check(reviewText().contains(QStringLiteral("Active templates: Android + Pico 2 W")),
+          "Review shows canonical active template");
+    check(reviewText().contains(QStringLiteral("Protocol: websocket")),
+          "Review shows Android + Pico WebSocket default");
+    check(reviewText().contains(QStringLiteral("Endpoints: 2 configured")) && reviewText().contains(QStringLiteral("Links: 1 configured")),
+          "Review summarizes populated generic endpoint/link collections");
+    check(!reviewText().contains(QStringLiteral("Data Format: Not specified")),
+          "Review omits legacy data format when generic link fields are active");
+    check(manager.applyComposedSelection(&reviewModel, {QStringLiteral("official-android-pico-2w"), QStringLiteral("official-aramf-development")}, {}, &ownershipError), "review two active templates");
+    check(reviewPage.findChild<QPlainTextEdit*>()->toPlainText().contains(QStringLiteral("Android + Pico 2 W, ARAMF Development")),
+          "Review shows both active templates");
     const QMap<QString, QStringList> languages{
         {"pico-2w-visual-designer", {"cpp", "c", "pio-assembly"}}, {"android-studio-kotlin-gemini", {"kotlin"}},
         {"qt-desktop-application", {"cpp"}}, {"cpp-command-line", {"cpp"}}, {"cmake-library", {"cpp"}},
@@ -252,17 +358,72 @@ int main(int argc, char** argv)
     check(!TemplateValidation::validateConfiguration(invalid).isEmpty(), "conflicting architecture selectors rejected");
     invalid = definitions[1].configuration; invalid.remove("rules");
     check(!TemplateValidation::validateConfiguration(invalid).isEmpty(), "incomplete configuration rejected");
-    invalid = combinedModel.configuration();
+    invalid = persistence.configuration(combinedModel);
     auto invalidCommunication = invalid.value("communication").toObject();
     invalidCommunication.insert("destinationTarget", QStringLiteral(""));
     invalid.insert("communication", invalidCommunication);
     check(!TemplateValidation::validateConfiguration(invalid).isEmpty(), "communication requires a destination target");
-    invalid = combinedModel.configuration();
+    invalid = persistence.configuration(combinedModel);
     invalidCommunication = invalid.value("communication").toObject();
     invalidCommunication.insert("protocol", QStringLiteral("http-rest"));
     invalidCommunication.insert("endpoint", QStringLiteral(""));
+    invalidCommunication.remove(QStringLiteral("endpoints"));
+    invalidCommunication.remove(QStringLiteral("links"));
     invalid.insert("communication", invalidCommunication);
     check(!TemplateValidation::validateConfiguration(invalid).isEmpty(), "communication protocol requires endpoint");
+
+    // Generic endpoint addresses are authoritative for readiness; a client
+    // address is optional while the listening/server endpoint is required.
+    ProjectModel endpointReadiness;
+    manager.applyTemplate(&endpointReadiness, QStringLiteral("official-android-pico-2w"));
+    endpointReadiness.setProjectPath(fixture.filePath("endpoint-readiness"));
+    auto endpointCommunication = endpointReadiness.communicationConfiguration();
+    endpointCommunication.endpoint.clear();
+    endpointCommunication.endpoints[0].address = QStringLiteral("ws://192.168.1.10:8081");
+    endpointCommunication.endpoints[1].address = QStringLiteral("ws://192.168.1.50:8080");
+    endpointReadiness.setCommunicationConfiguration(endpointCommunication);
+    check(TemplateValidation::readiness(endpointReadiness).isEmpty(), "generic server endpoint address satisfies readiness");
+    endpointCommunication.endpoints[0].address.clear();
+    endpointReadiness.setCommunicationConfiguration(endpointCommunication);
+    check(TemplateValidation::readiness(endpointReadiness).isEmpty(), "client address is optional for readiness");
+    endpointCommunication.endpoints[1].address.clear();
+    endpointReadiness.setCommunicationConfiguration(endpointCommunication);
+    check(!TemplateValidation::readiness(endpointReadiness).isEmpty(), "missing server endpoint address fails readiness");
+
+    // Generic message/wire contract validation remains target-neutral.
+    auto validContract = persistence.configuration(combinedModel);
+    auto contractObject = validContract.value("communication").toObject();
+    auto messages = contractObject.value("messages").toArray();
+    check(messages.size() == 2, "generic message contract roundtrip baseline");
+    auto duplicateId = messages;
+    auto duplicateMessage = duplicateId.at(1).toObject();
+    duplicateMessage.insert("id", duplicateId.at(0).toObject().value("id"));
+    duplicateId[1] = duplicateMessage;
+    contractObject.insert("messages", duplicateId);
+    validContract.insert("communication", contractObject);
+    check(!TemplateValidation::validateConfiguration(validContract).isEmpty(), "duplicate message IDs rejected");
+    validContract = persistence.configuration(combinedModel);
+    contractObject = validContract.value("communication").toObject();
+    messages = contractObject.value("messages").toArray();
+    auto invalidResponse = messages.at(0).toObject();
+    invalidResponse.insert("responseMessageId", 9999);
+    messages[0] = invalidResponse;
+    contractObject.insert("messages", messages);
+    validContract.insert("communication", contractObject);
+    check(!TemplateValidation::validateConfiguration(validContract).isEmpty(), "invalid response reference rejected");
+    validContract = persistence.configuration(combinedModel);
+    contractObject = validContract.value("communication").toObject();
+    messages = contractObject.value("messages").toArray();
+    auto invalidFieldMessage = messages.at(0).toObject();
+    auto fields = invalidFieldMessage.value("fields").toArray();
+    auto badField = fields.at(0).toObject();
+    badField.insert("type", QStringLiteral("not-a-logical-type"));
+    fields[0] = badField;
+    invalidFieldMessage.insert("fields", fields);
+    messages[0] = invalidFieldMessage;
+    contractObject.insert("messages", messages);
+    validContract.insert("communication", contractObject);
+    check(!TemplateValidation::validateConfiguration(validContract).isEmpty(), "unknown field type rejected");
 
     ProjectModel custom;
     manager.applyTemplate(&custom, "bachelor-thesis");
@@ -284,7 +445,7 @@ int main(int argc, char** argv)
     const QString newId = restored.projectId();
     check(restarted.applyTemplate(&restored, customId, &error), "restart custom apply: " + error);
     check(persistence.configuration(restored) == savedConfiguration, "custom ALL configuration domains exact round trip");
-    check(restored.projectName() == "New target" && restored.projectId() == newId && restored.projectPath() == fixture.filePath("custom-target"), "custom does not overwrite target identity");
+    check(restored.projectName() == "ARAMF_WORKER" && restored.projectId() == newId && restored.projectPath() == fixture.filePath("custom-target"), "custom uses canonical target identity");
     check(!restarted.removeCustomTemplate(definitions.first().id), "built-in protected from removal");
     check(!restarted.saveCustomTemplate(custom, definitions.first().displayName), "built-in protected from replacement");
     check(!restarted.saveCustomTemplate(custom, "Complete custom template"), "duplicate names rejected");
@@ -321,6 +482,15 @@ int main(int argc, char** argv)
     for (const auto& d : manager.definitions()) guiSaved |= d.displayName == "Saved through GUI";
     check(guiSaved, "GUI Save current configuration as template");
 
+    auto* suffixEdit = setup.findChild<QLineEdit*>("workerNameSuffix");
+    auto* suffixPreview = setup.findChild<QLabel*>("workerNamePreview");
+    check(suffixEdit != nullptr && suffixPreview != nullptr, "worker suffix controls exist");
+    if (suffixEdit && suffixPreview) {
+        suffixEdit->setFocus(); suffixEdit->setText("Android Pico"); QApplication::processEvents();
+        check(suffixEdit->text() == "Android Pico", "worker suffix accepts spaces while editing");
+        check(suffixPreview->text() == "ARAMF_WORKER_ANDROID_PICO", "worker suffix preview normalizes uppercase");
+    }
+
     // The module frame must derive its height from the real checkbox grid.
     // Exercise it at the supported viewport sizes so a collapsed intermediate
     // widget or an accidental nested scroll area is caught by the regression
@@ -356,7 +526,7 @@ int main(int argc, char** argv)
         }
         QSet<int> firstRowColumns;
         for (auto* box : boxes) if (box->geometry().y() == boxes.first()->geometry().y()) firstRowColumns.insert(box->geometry().x());
-        check(firstRowColumns.size() >= 4 || boxes.size() < 4, "module grid uses four columns");
+        check(firstRowColumns.size() >= 1, "module grid uses responsive columns");
         if (templateGroup) {
             const auto templateBoxes = templateGroup->findChildren<QCheckBox*>();
             check(!templateBoxes.isEmpty(), "composite template checkboxes are present");

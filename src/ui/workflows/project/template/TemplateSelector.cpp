@@ -1,6 +1,7 @@
 #include "TemplateSelector.h"
 #include "core/TemplateValidation.h"
 #include <QCheckBox>
+#include <QJsonArray>
 #include <QComboBox>
 #include <QFormLayout>
 #include <QGridLayout>
@@ -20,6 +21,8 @@ TemplateSelector::TemplateSelector(ProjectModel* model, TemplateManager* manager
       moduleFrame_(new QGroupBox(tr("Project modules"), this)),
       moduleGrid_(new QWidget(moduleFrame_)), status_(new QLabel(this)), remove_(new QPushButton(tr("Remove saved template"), this))
 {
+    setMinimumWidth(0);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     moduleFrame_->setObjectName(QStringLiteral("moduleGroup"));
     moduleGrid_->setObjectName(QStringLiteral("moduleGrid"));
     templateFrame_ = new QGroupBox(tr("Project templates"), this);
@@ -39,6 +42,8 @@ TemplateSelector::TemplateSelector(ProjectModel* model, TemplateManager* manager
     grid->setVerticalSpacing(7);
     for (int column = 0; column < 4; ++column) grid->setColumnStretch(column, 1);
     moduleGrid_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    moduleGrid_->setMinimumWidth(0);
+    moduleFrame_->setMinimumWidth(0);
     layout->addWidget(moduleFrame_);
     auto* templateFrameLayout = new QVBoxLayout(templateFrame_);
     templateFrameLayout->setContentsMargins(6, 8, 6, 8);
@@ -50,6 +55,8 @@ TemplateSelector::TemplateSelector(ProjectModel* model, TemplateManager* manager
     for (int column = 0; column < 2; ++column) templateGridLayout->setColumnStretch(column, 1);
     templateFrame_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     templateGrid_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    templateGrid_->setMinimumWidth(0);
+    templateFrame_->setMinimumWidth(0);
     layout->addWidget(templateFrame_);
     auto* details = new QLabel(tr("Select one or more modules. Settings are merged; unchecking a module removes only its contribution."), this);
     details->setWordWrap(true); details->setObjectName(QStringLiteral("templateDetails")); layout->addWidget(details);
@@ -94,6 +101,16 @@ void TemplateSelector::refreshFromModel()
     const auto official = manager_->officialDefinitions();
     const auto templates = manager_->customDefinitions();
     const auto legacyTemplates = manager_->definitions();
+    const auto state = model_->templateState();
+    QStringList activeTemplates;
+    for (const auto& value : state.value(QStringLiteral("activeTemplates")).toArray()) activeTemplates << value.toString();
+    QStringList manualModules;
+    for (const auto& value : state.value(QStringLiteral("manualModules")).toArray()) manualModules << value.toString();
+    if (activeTemplates.isEmpty()) {
+        for (const auto& d : official) if (model_->templateModules().contains(d.id)) activeTemplates << d.id;
+        for (const auto& d : templates) if (model_->templateModules().contains(d.id)) activeTemplates << d.id;
+    }
+    if (manualModules.isEmpty() && activeTemplates.isEmpty()) manualModules = model_->templateModules();
     for (const auto& d : modules) selector_->addItem(d.displayName, d.id);
     for (const auto& d : legacyTemplates) selector_->addItem(d.displayName, d.id);
     moduleChecks_.clear();
@@ -109,10 +126,14 @@ void TemplateSelector::refreshFromModel()
         check->setChecked(model_->templateModules().contains(d.id) || (model_->templateModules().isEmpty() && model_->templateId() == d.id));
         moduleChecks_ << check;
         grid->addWidget(check, i / columns, i % columns);
-        connect(check, &QCheckBox::toggled, this, [this] {
-            QStringList selected;
-            for (auto* item : moduleChecks_) if (item->isChecked()) selected << item->property("moduleId").toString();
-            QString error; manager_->applyModules(model_, selected, &error);
+        connect(check, &QCheckBox::toggled, this, [this, check] {
+            auto state = model_->templateState();
+            QStringList selectedTemplates; for (const auto& value : state.value("activeTemplates").toArray()) selectedTemplates << value.toString();
+            QStringList manual; for (const auto& value : state.value("manualModules").toArray()) manual << value.toString();
+            const QString id = check->property("moduleId").toString();
+            if (check->isChecked()) { if (!manual.contains(id)) manual << id; }
+            else manual.removeAll(id);
+            QString error; manager_->applyComposedSelection(model_, selectedTemplates, manual, &error);
             if (!error.isEmpty()) status_->setText(error);
             QTimer::singleShot(0, this, &TemplateSelector::refreshFromModel);
         });
@@ -134,9 +155,10 @@ void TemplateSelector::refreshFromModel()
         templateGrid->addWidget(check, i / 2, i % 2);
         connect(check, &QCheckBox::toggled, this, [this] {
             QStringList selected;
-            for (auto* item : moduleChecks_) if (item->isChecked()) selected << item->property("moduleId").toString();
-            for (auto* item : templateChecks_) if (item->isChecked()) selected << item->property("templateId").toString();
-            QString error; manager_->applyModules(model_, selected, &error);
+            QStringList selectedTemplates; for (auto* item : templateChecks_) if (item->isChecked()) selectedTemplates << item->property("templateId").toString();
+            auto state = model_->templateState(); QStringList manual;
+            for (const auto& value : state.value("manualModules").toArray()) manual << value.toString();
+            QString error; manager_->applyComposedSelection(model_, selectedTemplates, manual, &error);
             if (!error.isEmpty()) status_->setText(error);
             QTimer::singleShot(0, this, &TemplateSelector::refreshFromModel);
         });
@@ -144,6 +166,13 @@ void TemplateSelector::refreshFromModel()
     if (templates.isEmpty()) {
         auto* empty = new QLabel(tr("No saved templates."), templateGrid_);
         empty->setObjectName(QStringLiteral("noSavedTemplates"));
+        empty->setWordWrap(true);
+        empty->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        empty->setMinimumWidth(0);
+        // The status line provides the empty-state message; keep this legacy
+        // placeholder out of geometry calculations so it cannot impose a
+        // width on the responsive workflow page.
+        empty->setVisible(false);
         templateGrid->addWidget(empty, 0, 0, 1, 2);
     }
     templateFrame_->setTitle(tr("Project templates"));

@@ -31,7 +31,7 @@ QString absolutePath(const QString& projectRoot, const QString& relativePath)
 
     The project root is always treated as the owner of the generated ARAMF control plane.
     */
-    return QDir(projectRoot).filePath(relativePath);
+    return QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(relativePath));
 }
 
 bool writeTextFile(const QString& path, const QByteArray& data, QString* error, bool onlyIfMissing = false)
