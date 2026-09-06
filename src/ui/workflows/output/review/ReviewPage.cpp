@@ -126,6 +126,19 @@ void ReviewPage::refreshFromModel()
                      listOrNone(capabilities.developmentTools), listOrNone(capabilities.targetPlatforms),
                      listOrNone(capabilities.hardwareTargets),
                      listOrNone(capabilities.buildSystems + capabilities.testingCapabilities + capabilities.deliveryCapabilities));
+    const auto communication = model_->communicationConfiguration();
+    if (communication.enabled) {
+        text += tr("Multi-target Communication\n  Source: %1 (%2)\n  Destination: %3 (%4)\n  Transport: Wi-Fi\n  Protocol: %5\n  Endpoint: %6\n  Data format: %7\n  Version: %8\n  Authentication: %9\n  Encryption: %10\n  Integration requirements: %11\n\n")
+            .arg(communication.sourceTarget, communication.sourceRole,
+                 communication.destinationTarget, communication.destinationRole,
+                 communication.protocol.isEmpty() ? tr("Not selected") : communication.protocol,
+                 communication.endpoint.isEmpty() ? tr("Not configured") : communication.endpoint,
+                 communication.dataFormat.isEmpty() ? tr("Not specified") : communication.dataFormat,
+                 communication.protocolVersion,
+                 communication.authenticationRequired ? tr("required") : tr("not required"),
+                 communication.encryptionRequired ? tr("required") : tr("not required"),
+                 listOrNone(communication.integrationRequirements));
+    }
     text += tr("AI Configuration\n  Primary agent: %1\n  Additional agents: %2\n  Responsibilities: %3\n  Permissions: %4\n  ARAMF integrations: %5\n\n")
                 .arg(displayAiList({ai.primaryAgent}), displayAiList(ai.additionalAgents), listOrNone(ai.responsibilities),
                      listOrNone(ai.permissions), listOrNone(ai.aramfIntegrations));

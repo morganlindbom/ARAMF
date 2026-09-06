@@ -143,6 +143,7 @@ void finish(TemplateDefinition& d)
     model.setAiConfiguration(d.ai);
     model.setRuleConfiguration(d.rules);
     model.setMemoryConfiguration(d.memory);
+    model.setCommunicationConfiguration(d.communication);
     model.setResourcePolicy(d.resourcePolicy);
     model.setCertificationConfiguration(d.certification);
     model.setGenerationOptions(d.generation);
@@ -322,6 +323,18 @@ QList<TemplateDefinition> TemplateManager::moduleDefinitions() const
     focused("android-studio-kotlin-gemini", "mobile-platform", "Mobile Application", {"kotlin"}, {"android-sdk"}, {"java-jdk"}, {"mobile", "android"});
     focused("pico-2w-visual-designer", "pico-sdk", "Pico SDK", {"c", "cpp"}, {"pico-sdk"}, {"arm-gnu"}, {"microcontroller"});
     focused("pico-2w-visual-designer", "pio-assembly", "PIO Assembly", {"pio-assembly"}, {"pico-sdk"}, {"arm-gnu"}, {"microcontroller"});
+    TemplateDefinition wifi;
+    wifi.kind = TemplateDefinition::Kind::Module;
+    wifi.id = QStringLiteral("wifi-communication");
+    wifi.displayName = QStringLiteral("Wi-Fi Communication");
+    wifi.projectType = QStringLiteral("software-development");
+    wifi.description = QStringLiteral("Adds a configurable Wi-Fi communication link between project targets without choosing a protocol.");
+    wifi.capabilities.targetPlatforms = {QStringLiteral("android"), QStringLiteral("microcontroller")};
+    wifi.capabilities.hostOperatingSystems = {QStringLiteral("cross-platform")};
+    wifi.communication.enabled = true;
+    wifi.communication.transport = QStringLiteral("wifi");
+    wifi.communication.integrationRequirements = {QStringLiteral("endpoint-reachability"), QStringLiteral("malformed-input-rejection"), QStringLiteral("reconnect-recovery"), QStringLiteral("timeout-handling")};
+    ensureStandardAgents(wifi); finish(wifi); result << wifi;
     return result;
 }
 
@@ -352,6 +365,46 @@ QList<TemplateDefinition> TemplateManager::officialDefinitions() const
     // ARAMF itself is a Qt/CMake desktop project; use the existing Qt preset
     // as the authoritative catalog-backed configuration.
     result.last().description = QStringLiteral("Official ARAMF development configuration using C++, Qt, CMake and standard ARAMF governance.");
+    TemplateDefinition combined;
+    for (const auto& source : builtIns()) {
+        if (source.id == QStringLiteral("android-studio-kotlin-gemini")) combined = source;
+    }
+    if (!combined.id.isEmpty()) {
+        TemplateDefinition pico;
+        for (const auto& source : builtIns()) if (source.id == QStringLiteral("pico-2w-visual-designer")) pico = source;
+        const auto append = [](QStringList& target, const QStringList& values) {
+            for (const auto& value : values) if (!target.contains(value)) target << value;
+        };
+        append(combined.capabilities.languages, pico.capabilities.languages);
+        append(combined.capabilities.frameworks, pico.capabilities.frameworks);
+        append(combined.capabilities.ides, pico.capabilities.ides);
+        append(combined.capabilities.developmentTools, pico.capabilities.developmentTools);
+        append(combined.capabilities.targetPlatforms, pico.capabilities.targetPlatforms);
+        append(combined.capabilities.targetArchitectures, pico.capabilities.targetArchitectures);
+        if (combined.capabilities.targetArchitectures.size() > 1)
+            combined.capabilities.targetArchitectures.removeAll(QStringLiteral("auto"));
+        append(combined.capabilities.processorFamilies, pico.capabilities.processorFamilies);
+        append(combined.capabilities.hardwareTargets, pico.capabilities.hardwareTargets);
+        append(combined.capabilities.toolchains, pico.capabilities.toolchains);
+        append(combined.capabilities.buildSystems, pico.capabilities.buildSystems);
+        append(combined.capabilities.buildConfigurations, pico.capabilities.buildConfigurations);
+        append(combined.capabilities.testingCapabilities, pico.capabilities.testingCapabilities);
+        append(combined.capabilities.deliveryCapabilities, pico.capabilities.deliveryCapabilities);
+        combined.id = QStringLiteral("official-android-pico-2w");
+        combined.displayName = QStringLiteral("Android + Pico 2 W");
+        combined.projectType = QStringLiteral("combined-android-pico");
+        combined.official = true;
+        combined.description = QStringLiteral("Official combined Android and Raspberry Pi Pico 2 W configuration with a shared Wi-Fi communication contract.");
+        combined.ai.primaryAgent = QStringLiteral("gemini");
+        combined.communication.enabled = true;
+        combined.communication.sourceTarget = QStringLiteral("android-application");
+        combined.communication.destinationTarget = QStringLiteral("raspberry-pi-pico-2-w");
+        combined.communication.transport = QStringLiteral("wifi");
+        combined.communication.integrationRequirements = {QStringLiteral("endpoint-reachability"), QStringLiteral("malformed-input-rejection"), QStringLiteral("reconnect-recovery"), QStringLiteral("timeout-handling"), QStringLiteral("protocol-contract-compatibility")};
+        ensureStandardAgents(combined);
+        finish(combined);
+        result << combined;
+    }
     return result;
 }
 
@@ -373,6 +426,7 @@ QList<TemplateDefinition> TemplateManager::definitions() const
         d.academic = model.academicConfiguration(); d.ai = model.aiConfiguration();
         d.rules = model.ruleConfiguration(); d.memory = model.memoryConfiguration();
         d.resourcePolicy = model.resourcePolicy(); d.generation = model.generationOptions();
+        d.communication = model.communicationConfiguration();
         d.certification = model.certificationConfiguration(); d.description = model.description();
         ensureStandardAgents(d);
         model.setAiConfiguration(d.ai);
@@ -429,6 +483,7 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
     }
     QStringList effectiveIds = moduleIds;
     const QHash<QString, QStringList> templateModules = {
+        {QStringLiteral("official-android-pico-2w"), {QStringLiteral("android-application"), QStringLiteral("mobile-platform"), QStringLiteral("kotlin"), QStringLiteral("android-sdk"), QStringLiteral("android-studio"), QStringLiteral("gradle"), QStringLiteral("pico-2w"), QStringLiteral("embedded-firmware"), QStringLiteral("pico-sdk"), QStringLiteral("c"), QStringLiteral("cpp"), QStringLiteral("pio-assembly"), QStringLiteral("wifi-communication")}},
         {QStringLiteral("official-pico-visual-designer"), {QStringLiteral("desktop-application"), QStringLiteral("cpp"), QStringLiteral("c"), QStringLiteral("qt"), QStringLiteral("cmake"), QStringLiteral("pico-2w"), QStringLiteral("embedded-firmware"), QStringLiteral("pico-sdk"), QStringLiteral("pio-assembly")}},
         {QStringLiteral("official-aramf-development"), {QStringLiteral("desktop-application"), QStringLiteral("cpp"), QStringLiteral("qt"), QStringLiteral("cmake")}},
         {QStringLiteral("android-studio-kotlin-gemini"), {QStringLiteral("android-application"), QStringLiteral("kotlin")}},
@@ -490,6 +545,8 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
         mergeDomain(root, source, QStringLiteral("memory"), {"captureCategories", "maintenanceOptions", "validationOptions", "historyOptions"});
         mergeDomain(root, source, QStringLiteral("ai"), {"additionalAgents", "responsibilities", "permissions", "aramfIntegrations"});
         mergeDomain(root, source, QStringLiteral("generationOptions"), {});
+        if (source.value(QStringLiteral("communication")).toObject().value(QStringLiteral("enabled")).toBool(false))
+            root.insert(QStringLiteral("communication"), source.value(QStringLiteral("communication")));
         const auto academic = source.value("academic").toObject();
         if (academic.value("academicMode").toString() != QStringLiteral("disabled")) root.insert("academic", academic);
         if (root.value("context").toString().isEmpty() && !d.projectType.isEmpty()) root.insert("context", d.projectType);

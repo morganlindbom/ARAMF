@@ -618,6 +618,27 @@ void ProjectModel::setGenerationOptions(const GenerationOptions& value)
     notifyChanged();
 }
 
+void ProjectModel::setCommunicationConfiguration(const CommunicationConfiguration& value)
+{
+    if (communication_.enabled == value.enabled
+        && communication_.sourceTarget == value.sourceTarget
+        && communication_.destinationTarget == value.destinationTarget
+        && communication_.transport == value.transport
+        && communication_.protocol == value.protocol
+        && communication_.sourceRole == value.sourceRole
+        && communication_.destinationRole == value.destinationRole
+        && communication_.endpoint == value.endpoint
+        && communication_.dataFormat == value.dataFormat
+        && communication_.protocolVersion == value.protocolVersion
+        && communication_.authenticationRequired == value.authenticationRequired
+        && communication_.encryptionRequired == value.encryptionRequired
+        && communication_.reconnectPolicy == value.reconnectPolicy
+        && communication_.errorHandling == value.errorHandling
+        && communication_.integrationRequirements == value.integrationRequirements) return;
+    communication_ = value;
+    notifyChanged();
+}
+
 void ProjectModel::setProfileSelections(const QStringList& value)
 {
     if (profileSelections_ == value) return;

@@ -156,10 +156,36 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
         require(has("capabilities.dependencyManagers", "gradle"), "Android requires Gradle dependency management");
     }
     if (has("capabilities.languages", "pio-assembly")) require(has("capabilities.frameworks", "pico-sdk"), "PIO Assembly requires Pico SDK");
+    const bool androidTarget = has("capabilities.targetPlatforms", "android");
+    const bool picoTarget = has("capabilities.hardwareTargets", "raspberry-pi-pico-2-w") || has("capabilities.frameworks", "pico-sdk");
+    if (androidTarget && picoTarget) {
+        require(has("capabilities.buildSystems", "gradle"), "Combined Android + Pico projects require Gradle");
+        require(has("capabilities.buildSystems", "cmake") || has("capabilities.buildSystems", "pico-sdk-cmake"), "Combined Android + Pico projects require CMake");
+    }
     if (has("rules.activeCategories", "cmake-rules")) require(has("capabilities.buildSystems", "cmake") || has("capabilities.buildSystems", "pico-sdk-cmake"), "CMake rules require CMake");
     if (has("capabilities.frameworks", "aspnet")) require(has("capabilities.buildSystems", "msbuild") || has("capabilities.buildSystems", "visual-studio-build"), "ASP.NET requires MSBuild");
     if (has("capabilities.hardwareTargets", "raspberry-pi-pico-2-w")) require(has("capabilities.processorFamilies", "rp2350"), "Pico 2 W requires RP2350");
     if (has("capabilities.hardwareTargets", "raspberry-pi-pico")) require(has("capabilities.processorFamilies", "rp2040"), "Pico requires RP2040");
+    const auto communication = at(config, "communication").toObject();
+    if (communication.value("enabled").toBool(false)) {
+        const QString source = communication.value("sourceTarget").toString();
+        const QString destination = communication.value("destinationTarget").toString();
+        const QString transport = communication.value("transport").toString();
+        const QString protocol = communication.value("protocol").toString();
+        require(!source.isEmpty() && !destination.isEmpty() && source != destination,
+                "Communication requires distinct source and destination targets");
+        require(transport == "wifi", "Unsupported communication transport: " + transport);
+        if (!protocol.isEmpty()) require(QStringList{"http-rest", "websocket", "tcp", "udp"}.contains(protocol), "Unsupported communication protocol: " + protocol);
+        if (protocol == "http-rest" || protocol == "websocket" || protocol == "tcp" || protocol == "udp")
+            require(!communication.value("endpoint").toString().trimmed().isEmpty(), "Communication protocol requires an endpoint");
+        require(!communication.value("protocolVersion").toString().trimmed().isEmpty(), "Communication protocol version is required");
+        if (source == "android-application")
+            require(strings(at(config, "capabilities.targetPlatforms")).contains("android") || strings(at(config, "capabilities.languages")).contains("kotlin"),
+                    "Communication source target is not represented by the selected Android capabilities");
+        if (destination == "raspberry-pi-pico-2-w")
+            require(strings(at(config, "capabilities.hardwareTargets")).contains("raspberry-pi-pico-2-w") || strings(at(config, "capabilities.frameworks")).contains("pico-sdk"),
+                    "Communication destination target is not represented by the selected Pico capabilities");
+    }
     if (has("academic.academicMode", "disabled")) {
         for (const auto& path : {"academic.thesisLevel", "academic.thesisApproaches", "academic.researchMethods", "academic.academicRequirements", "academic.academicDeliverables"})
             require(strings(at(config, path)).isEmpty(), "Disabled academic mode has active selections: " + QString(path));

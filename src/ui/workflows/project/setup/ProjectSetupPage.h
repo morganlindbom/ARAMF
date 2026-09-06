@@ -8,6 +8,9 @@ class QLineEdit;
 class QTextEdit;
 class TemplateSelector;
 class QPushButton;
+class QComboBox;
+class QCheckBox;
+class QGroupBox;
 
 class ProjectSetupPage final : public QWidget {
 public:
@@ -42,4 +45,15 @@ private:
     QLineEdit* id_;
     QLineEdit* type_;
     QTextEdit* description_;
+    QGroupBox* communicationGroup_ = nullptr;
+    QComboBox* communicationProtocol_ = nullptr;
+    QComboBox* communicationSourceTarget_ = nullptr;
+    QComboBox* communicationDestinationTarget_ = nullptr;
+    QComboBox* communicationSourceRole_ = nullptr;
+    QComboBox* communicationDestinationRole_ = nullptr;
+    QComboBox* communicationFormat_ = nullptr;
+    QLineEdit* communicationEndpoint_ = nullptr;
+    QLineEdit* communicationVersion_ = nullptr;
+    QCheckBox* communicationAuthentication_ = nullptr;
+    QCheckBox* communicationEncryption_ = nullptr;
 };

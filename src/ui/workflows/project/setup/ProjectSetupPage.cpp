@@ -4,6 +4,8 @@
 #include "ui/workflows/project/template/TemplateSelector.h"
 
 #include <QDir>
+#include <QCheckBox>
+#include <QComboBox>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QFormLayout>
@@ -15,6 +17,20 @@
 #include <QTextEdit>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QGroupBox>
+
+namespace {
+void addOption(QComboBox* combo, const QString& label, const QString& id)
+{
+    combo->addItem(label, id);
+}
+void setData(QComboBox* combo, const QString& value)
+{
+    const QSignalBlocker blocker(combo);
+    const int index = combo->findData(value);
+    combo->setCurrentIndex(index >= 0 ? index : 0);
+}
+}
 
 ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager,
                                    ProjectPersistence* persistence, QWidget* parent)
@@ -49,6 +65,52 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     layout->addLayout(actions);
     layout->addWidget(templateSelector_);
 
+    communicationGroup_ = new QGroupBox(tr("Cross-target communication"), this);
+    auto* communicationForm = new QFormLayout(communicationGroup_);
+    auto* transport = new QLabel(tr("Wi-Fi (configurable protocol)"), communicationGroup_);
+    communicationProtocol_ = new QComboBox(communicationGroup_);
+    addOption(communicationProtocol_, tr("Choose protocol"), {});
+    addOption(communicationProtocol_, tr("HTTP / REST"), "http-rest");
+    addOption(communicationProtocol_, tr("WebSocket"), "websocket");
+    addOption(communicationProtocol_, tr("TCP"), "tcp");
+    addOption(communicationProtocol_, tr("UDP"), "udp");
+    communicationSourceTarget_ = new QComboBox(communicationGroup_);
+    communicationDestinationTarget_ = new QComboBox(communicationGroup_);
+    for (auto* combo : {communicationSourceTarget_, communicationDestinationTarget_}) {
+        addOption(combo, tr("Android Application"), "android-application");
+        addOption(combo, tr("Raspberry Pi Pico 2 W"), "raspberry-pi-pico-2-w");
+        addOption(combo, tr("Custom target"), "custom");
+    }
+    communicationSourceRole_ = new QComboBox(communicationGroup_);
+    communicationDestinationRole_ = new QComboBox(communicationGroup_);
+    for (auto* combo : {communicationSourceRole_, communicationDestinationRole_}) {
+        addOption(combo, tr("Client"), "client"); addOption(combo, tr("Server"), "server");
+        addOption(combo, tr("Controller"), "controller"); addOption(combo, tr("Monitor"), "monitor");
+        addOption(combo, tr("Bidirectional peer"), "peer");
+    }
+    communicationEndpoint_ = new QLineEdit(communicationGroup_);
+    communicationEndpoint_->setPlaceholderText(tr("Endpoint / host:port (no secrets)"));
+    communicationFormat_ = new QComboBox(communicationGroup_);
+    addOption(communicationFormat_, tr("Not specified"), {}); addOption(communicationFormat_, "JSON", "json");
+    addOption(communicationFormat_, tr("Binary"), "binary"); addOption(communicationFormat_, tr("Text"), "text");
+    addOption(communicationFormat_, tr("Custom protocol"), "custom");
+    communicationVersion_ = new QLineEdit(communicationGroup_); communicationVersion_->setPlaceholderText("1");
+    communicationAuthentication_ = new QCheckBox(tr("Authentication required"), communicationGroup_);
+    communicationEncryption_ = new QCheckBox(tr("Encrypted transport required"), communicationGroup_);
+    communicationForm->addRow(tr("Transport"), transport);
+    communicationForm->addRow(tr("Protocol"), communicationProtocol_);
+    communicationForm->addRow(tr("Source target"), communicationSourceTarget_);
+    communicationForm->addRow(tr("Destination target"), communicationDestinationTarget_);
+    communicationForm->addRow(tr("Source role"), communicationSourceRole_);
+    communicationForm->addRow(tr("Destination role"), communicationDestinationRole_);
+    communicationForm->addRow(tr("Endpoint"), communicationEndpoint_);
+    communicationForm->addRow(tr("Data format"), communicationFormat_);
+    communicationForm->addRow(tr("Protocol version"), communicationVersion_);
+    communicationForm->addRow(communicationAuthentication_);
+    communicationForm->addRow(communicationEncryption_);
+    communicationGroup_->setVisible(false);
+    layout->addWidget(communicationGroup_);
+
     auto* form = new QFormLayout;
     form->addRow(tr("Project name"), name_);
     auto* pathRow = new QWidget(this);
@@ -79,6 +141,30 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     connect(description_, &QTextEdit::textChanged, this, [this] {
         model_->setDescription(description_->toPlainText());
     });
+    const auto persistCommunication = [this] {
+        auto value = model_->communicationConfiguration();
+        value.sourceTarget = communicationSourceTarget_->currentData().toString();
+        value.destinationTarget = communicationDestinationTarget_->currentData().toString();
+        value.protocol = communicationProtocol_->currentData().toString();
+        value.sourceRole = communicationSourceRole_->currentData().toString();
+        value.destinationRole = communicationDestinationRole_->currentData().toString();
+        value.endpoint = communicationEndpoint_->text();
+        value.dataFormat = communicationFormat_->currentData().toString();
+        value.protocolVersion = communicationVersion_->text();
+        value.authenticationRequired = communicationAuthentication_->isChecked();
+        value.encryptionRequired = communicationEncryption_->isChecked();
+        model_->setCommunicationConfiguration(value);
+    };
+    connect(communicationProtocol_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationSourceTarget_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationDestinationTarget_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationSourceRole_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationDestinationRole_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationFormat_, &QComboBox::currentIndexChanged, this, persistCommunication);
+    connect(communicationEndpoint_, &QLineEdit::textChanged, this, persistCommunication);
+    connect(communicationVersion_, &QLineEdit::textChanged, this, persistCommunication);
+    connect(communicationAuthentication_, &QCheckBox::toggled, this, persistCommunication);
+    connect(communicationEncryption_, &QCheckBox::toggled, this, persistCommunication);
     connect(model_, &ProjectModel::modelChanged,
             this, &ProjectSetupPage::refreshFromModel);
     refreshFromModel();
@@ -208,6 +294,17 @@ void ProjectSetupPage::refreshFromModel()
     path_->setText(model_->projectPath());
     id_->setText(model_->projectId());
     type_->setText(model_->context());
+    const auto communication = model_->communicationConfiguration();
+    communicationGroup_->setVisible(communication.enabled);
+    setData(communicationProtocol_, communication.protocol);
+    setData(communicationSourceTarget_, communication.sourceTarget);
+    setData(communicationDestinationTarget_, communication.destinationTarget);
+    setData(communicationSourceRole_, communication.sourceRole);
+    setData(communicationDestinationRole_, communication.destinationRole);
+    setData(communicationFormat_, communication.dataFormat);
+    { const QSignalBlocker b1(communicationEndpoint_), b2(communicationVersion_), b3(communicationAuthentication_), b4(communicationEncryption_);
+      communicationEndpoint_->setText(communication.endpoint); communicationVersion_->setText(communication.protocolVersion);
+      communicationAuthentication_->setChecked(communication.authenticationRequired); communicationEncryption_->setChecked(communication.encryptionRequired); }
     type_->setReadOnly(model_->projectTypeLocked());
     description_->setPlainText(model_->description());
 }
