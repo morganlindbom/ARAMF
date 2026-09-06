@@ -241,6 +241,23 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
         {QStringLiteral("resources"), generation.generateResources},
         {QStringLiteral("memory"), generation.generateMemory},
         {QStringLiteral("provenance"), generation.generateProvenance}});
+    const auto communication = model.communicationConfiguration();
+    root.insert(QStringLiteral("communication"), QJsonObject{
+        {QStringLiteral("enabled"), communication.enabled},
+        {QStringLiteral("sourceTarget"), communication.sourceTarget},
+        {QStringLiteral("destinationTarget"), communication.destinationTarget},
+        {QStringLiteral("transport"), communication.transport},
+        {QStringLiteral("protocol"), communication.protocol},
+        {QStringLiteral("sourceRole"), communication.sourceRole},
+        {QStringLiteral("destinationRole"), communication.destinationRole},
+        {QStringLiteral("endpoint"), communication.endpoint},
+        {QStringLiteral("dataFormat"), communication.dataFormat},
+        {QStringLiteral("protocolVersion"), communication.protocolVersion},
+        {QStringLiteral("authenticationRequired"), communication.authenticationRequired},
+        {QStringLiteral("encryptionRequired"), communication.encryptionRequired},
+        {QStringLiteral("reconnectPolicy"), communication.reconnectPolicy},
+        {QStringLiteral("errorHandling"), communication.errorHandling},
+        {QStringLiteral("integrationRequirements"), toJsonArray(communication.integrationRequirements)}});
     root.insert(QStringLiteral("profileSelections"), toJsonArray(model.profileSelections()));
     root.insert(QStringLiteral("options"), options);
 
@@ -456,6 +473,25 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
         generation.generateProvenance = generationObject.value(QStringLiteral("provenance")).toBool(true);
         model->setGenerationOptions(generation);
     }
+    CommunicationConfiguration communication;
+    const auto communicationObject = root.value(QStringLiteral("communication")).toObject();
+    if (!communicationObject.isEmpty()) {
+        communication.enabled = communicationObject.value(QStringLiteral("enabled")).toBool();
+        communication.sourceTarget = communicationObject.value(QStringLiteral("sourceTarget")).toString(communication.sourceTarget);
+        communication.destinationTarget = communicationObject.value(QStringLiteral("destinationTarget")).toString(communication.destinationTarget);
+        communication.transport = communicationObject.value(QStringLiteral("transport")).toString(communication.transport);
+        communication.protocol = communicationObject.value(QStringLiteral("protocol")).toString();
+        communication.sourceRole = communicationObject.value(QStringLiteral("sourceRole")).toString();
+        communication.destinationRole = communicationObject.value(QStringLiteral("destinationRole")).toString();
+        communication.endpoint = communicationObject.value(QStringLiteral("endpoint")).toString();
+        communication.dataFormat = communicationObject.value(QStringLiteral("dataFormat")).toString();
+        communication.protocolVersion = communicationObject.value(QStringLiteral("protocolVersion")).toString(communication.protocolVersion);
+        communication.authenticationRequired = communicationObject.value(QStringLiteral("authenticationRequired")).toBool();
+        communication.encryptionRequired = communicationObject.value(QStringLiteral("encryptionRequired")).toBool();
+        communication.reconnectPolicy = communicationObject.value(QStringLiteral("reconnectPolicy")).toString();
+        communication.errorHandling = communicationObject.value(QStringLiteral("errorHandling")).toString();
+        communication.integrationRequirements = fromJsonArray(communicationObject.value(QStringLiteral("integrationRequirements")));
+    }
     QList<ProjectResource> resources;
     const auto resourceValue = root.value(QStringLiteral("resources"));
     const auto resourceArray = resourceValue.toArray();
@@ -548,6 +584,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
     resourcePolicy.loadingStrategy = resourcePolicyObject.value(QStringLiteral("loadingStrategy")).toString(QStringLiteral("relevant"));
     model->setResourcePolicy(resourcePolicy);
     model->setProfileSelections(fromJsonArray(root.value(QStringLiteral("profileSelections"))));
+    model->setCommunicationConfiguration(communication);
     const auto optionsObject = root.value(QStringLiteral("options")).toObject();
     for (auto it = optionsObject.constBegin(); it != optionsObject.constEnd(); ++it) {
         model->setOptionValues(it.key(), fromJsonArray(it.value()));

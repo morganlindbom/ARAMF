@@ -265,6 +265,8 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
         {QStringLiteral("resourceOutput"), options.generateResources},
         {QStringLiteral("memoryOutput"), options.generateMemory},
         {QStringLiteral("provenance"), options.generateProvenance}};
+    const auto communication = model.communicationConfiguration();
+    value.insert(QStringLiteral("communication"), QJsonObject{{QStringLiteral("enabled"), communication.enabled}, {QStringLiteral("sourceTarget"), communication.sourceTarget}, {QStringLiteral("destinationTarget"), communication.destinationTarget}, {QStringLiteral("transport"), communication.transport}, {QStringLiteral("protocol"), communication.protocol}, {QStringLiteral("protocolVersion"), communication.protocolVersion}});
     return QString::fromLatin1(QCryptographicHash::hash(
         QJsonDocument(value).toJson(QJsonDocument::Compact), QCryptographicHash::Sha256).toHex());
 }
@@ -675,6 +677,43 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         const QString platformPath = QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json");
         if (!writeJsonFile(QDir(projectRoot).filePath(platformPath), platform, &error)) return fail(QStringLiteral("Platform metadata"), error);
         addGeneratedFiles(result, {platformPath});
+        const auto communication = model.communicationConfiguration();
+        if (communication.enabled) {
+            const QJsonObject contract{
+                {QStringLiteral("sourceTarget"), communication.sourceTarget},
+                {QStringLiteral("destinationTarget"), communication.destinationTarget},
+                {QStringLiteral("transport"), communication.transport},
+                {QStringLiteral("protocol"), communication.protocol},
+                {QStringLiteral("sourceRole"), communication.sourceRole},
+                {QStringLiteral("destinationRole"), communication.destinationRole},
+                {QStringLiteral("endpoint"), communication.endpoint},
+                {QStringLiteral("dataFormat"), communication.dataFormat},
+                {QStringLiteral("protocolVersion"), communication.protocolVersion},
+                {QStringLiteral("authenticationRequired"), communication.authenticationRequired},
+                {QStringLiteral("encryptionRequired"), communication.encryptionRequired},
+                {QStringLiteral("reconnectPolicy"), communication.reconnectPolicy},
+                {QStringLiteral("errorHandling"), communication.errorHandling},
+                {QStringLiteral("androidResponsibility"), QStringLiteral("Implement the configured Android communication role using the shared contract; keep credentials out of source control and handle timeouts and reconnects.")},
+                {QStringLiteral("picoResponsibility"), QStringLiteral("Implement the configured Pico firmware communication role using the shared contract; initialize Wi-Fi networking, validate messages, reconnect safely and avoid blocking time-critical work.")},
+                {QStringLiteral("integrationRequirements"), toJsonArray(communication.integrationRequirements)}};
+            const QString contractPath = QStringLiteral("ARAMF_WORKER/communication/communication-contract.json");
+            if (!writeJsonFile(QDir(projectRoot).filePath(contractPath), contract, &error)) return fail(QStringLiteral("Communication contract"), error);
+            addGeneratedFiles(result, {contractPath});
+            const bool hasAndroid = capabilities.targetPlatforms.contains(QStringLiteral("android"));
+            const bool hasPico = capabilities.hardwareTargets.contains(QStringLiteral("raspberry-pi-pico-2-w"))
+                || capabilities.frameworks.contains(QStringLiteral("pico-sdk"));
+            if (hasAndroid && hasPico) {
+                const QJsonObject targets{
+                    {QStringLiteral("projectScope"), QStringLiteral("one coordinated Android + Raspberry Pi Pico 2 W system")},
+                    {QStringLiteral("targets"), QJsonArray{
+                        QJsonObject{{QStringLiteral("id"), QStringLiteral("android")}, {QStringLiteral("name"), QStringLiteral("Android application")}, {QStringLiteral("buildSystem"), QStringLiteral("gradle")}, {QStringLiteral("environment"), QStringLiteral("Android Studio")}, {QStringLiteral("outputs"), QJsonArray{"APK", "AAB"}}, {QStringLiteral("tests"), QJsonArray{"JVM/unit", "instrumentation/UI"}}},
+                        QJsonObject{{QStringLiteral("id"), QStringLiteral("pico-2w")}, {QStringLiteral("name"), QStringLiteral("Raspberry Pi Pico 2 W firmware")}, {QStringLiteral("buildSystem"), QStringLiteral("cmake")}, {QStringLiteral("sdk"), QStringLiteral("pico-sdk")}, {QStringLiteral("outputs"), QJsonArray{"UF2", "ELF", "BIN"}}, {QStringLiteral("tests"), QJsonArray{"host/unit", "hardware when available"}}}}},
+                    {QStringLiteral("orchestration"), QJsonArray{"validate shared configuration", "build Pico firmware", "run Pico tests", "build Android application", "run Android tests", "run communication contract tests", "verify combined system"}}};
+                const QString targetsPath = QStringLiteral("ARAMF_WORKER/communication/multi-target-build.json");
+                if (!writeJsonFile(QDir(projectRoot).filePath(targetsPath), targets, &error)) return fail(QStringLiteral("Multi-target build model"), error);
+                addGeneratedFiles(result, {targetsPath});
+            }
+        }
     }
 
     if (options.generateResources) {
@@ -841,6 +880,11 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     checkFile(QStringLiteral("framework-knowledge"), QStringLiteral("Framework Knowledge"), AramfPaths::FrameworkKnowledge, expectedOptions.generateMemory);
     checkFile(QStringLiteral("provenance"), QStringLiteral("Provenance"), AramfPaths::Provenance, expectedOptions.generateProvenance);
     checkFile(QStringLiteral("selection-effects"), QStringLiteral("Selection effects"), AramfPaths::SelectionEffects, expectedOptions.generateProvenance);
+    checkFile(QStringLiteral("communication-contract"), QStringLiteral("Communication contract"), QStringLiteral("ARAMF_WORKER/communication/communication-contract.json"), model.communicationConfiguration().enabled && expectedOptions.generatePlatforms);
+    const auto capabilitiesForVerification = model.developmentCapabilities();
+    const bool combinedTargets = capabilitiesForVerification.targetPlatforms.contains(QStringLiteral("android"))
+        && (capabilitiesForVerification.hardwareTargets.contains(QStringLiteral("raspberry-pi-pico-2-w")) || capabilitiesForVerification.frameworks.contains(QStringLiteral("pico-sdk")));
+    checkFile(QStringLiteral("multi-target-build"), QStringLiteral("Multi-target build model"), QStringLiteral("ARAMF_WORKER/communication/multi-target-build.json"), combinedTargets && model.communicationConfiguration().enabled && expectedOptions.generatePlatforms);
     const bool certificationEnabled = model.certificationConfiguration().enabled;
     checkFile(QStringLiteral("certification-contract"), QStringLiteral("Certification contract"), AramfPaths::CertificationContract, certificationEnabled);
     checkFile(QStringLiteral("current-certification-state"), QStringLiteral("Current certification state"), AramfPaths::CurrentCertificationState, certificationEnabled);
@@ -888,11 +932,15 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
 
     const QStringList jsonFiles{AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes,
         QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json"), AramfPaths::ResourceManifest,
+        QStringLiteral("ARAMF_WORKER/communication/communication-contract.json"), QStringLiteral("ARAMF_WORKER/communication/multi-target-build.json"),
         AramfPaths::MemoryConfiguration, AramfPaths::FrameworkKnowledge, AramfPaths::Provenance, AramfPaths::SelectionEffects};
     for (const auto& relative : jsonFiles) {
         const bool expected = (relative == AramfPaths::TaskRoutes || relative == AramfPaths::ScopeRoutes) ? expectedOptions.generateRouting
             : relative == QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json") ? expectedOptions.generatePlatforms
             : relative == AramfPaths::ResourceManifest ? expectedOptions.generateResources
+            : (relative == QStringLiteral("ARAMF_WORKER/communication/communication-contract.json")
+               || relative == QStringLiteral("ARAMF_WORKER/communication/multi-target-build.json"))
+                ? (model.communicationConfiguration().enabled && expectedOptions.generatePlatforms)
             : (relative == AramfPaths::MemoryConfiguration || relative == AramfPaths::FrameworkKnowledge) ? expectedOptions.generateMemory
             : expectedOptions.generateProvenance;
         if (!expected) continue;

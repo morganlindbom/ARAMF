@@ -417,3 +417,11 @@ descriptions, scopes, and canonical identities were preserved.
 - UPDATE campaign and full CTest pass after the change. A real Codex
   installation is not required by the resolver test; production reports an
   unavailable installation when none can be resolved.
+
+## Combined Android + Pico Communication Checkpoint
+
+- ProjectModel now carries an optional, generic cross-target communication contract with source/destination targets, Wi-Fi transport, protocol, roles, endpoint, data format, protocol version, security flags, reconnect/error handling, and integration requirements.
+- The built-in `wifi-communication` module contributes the communication capability without forcing a protocol. The official `Android + Pico 2 W` template composes Android/Gradle and Pico/CMake modules plus Wi-Fi communication.
+- Generation emits `ARAMF_WORKER/communication/communication-contract.json` and, for combined Android/Pico selections, `multi-target-build.json` describing separate Android and Pico pipelines and their integration orchestration.
+- Project Setup exposes editable communication settings; Review summarizes the resolved contract. Persistence and custom template configuration include communication state while project identity remains separate.
+- Validation covers module/template application, generation, worker verification, communication persistence round-trip, target/build dependency checks, and the existing Android-only/Pico-only/template regressions. Full CTest remains 4/4 PASS; no physical Android device, Pico board, or network is required for these hermetic checks.

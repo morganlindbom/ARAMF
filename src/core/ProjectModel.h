@@ -249,6 +249,24 @@ struct GenerationOptions {
     bool generateProvenance = true;
 };
 
+struct CommunicationConfiguration {
+    bool enabled = false;
+    QString sourceTarget = QStringLiteral("android-application");
+    QString destinationTarget = QStringLiteral("raspberry-pi-pico-2-w");
+    QString transport = QStringLiteral("wifi");
+    QString protocol;
+    QString sourceRole;
+    QString destinationRole;
+    QString endpoint;
+    QString dataFormat;
+    QString protocolVersion = QStringLiteral("1");
+    bool authenticationRequired = false;
+    bool encryptionRequired = false;
+    QString reconnectPolicy;
+    QString errorHandling;
+    QStringList integrationRequirements;
+};
+
 class ProjectModel final : public QObject {
     Q_OBJECT
 public:
@@ -277,6 +295,7 @@ public:
     CertificationConfiguration certificationConfiguration() const { return certificationConfiguration_; }
     AndroidProjectConstraints androidConstraints() const { return androidConstraints_; }
     GenerationOptions generationOptions() const { return generationOptions_; }
+    CommunicationConfiguration communicationConfiguration() const { return communication_; }
     QStringList aiPlatforms() const { return aiPlatforms_; }
     QStringList resourceNames() const { return resourceNames_; }
     QStringList profileSelections() const { return profileSelections_; }
@@ -304,6 +323,7 @@ public:
     void setAndroidConstraints(const AndroidProjectConstraints& value);
     void resolveAndroidConstraints();
     void setGenerationOptions(const GenerationOptions& value);
+    void setCommunicationConfiguration(const CommunicationConfiguration& value);
     void applyTemplateCapabilities(const DevelopmentCapabilities& value);
     void applyTemplateDefaults(const DevelopmentEnvironment& value);
     void setAiPlatforms(const QStringList& value);
@@ -348,6 +368,7 @@ private:
     CertificationConfiguration certificationConfiguration_;
     AndroidProjectConstraints androidConstraints_;
     GenerationOptions generationOptions_;
+    CommunicationConfiguration communication_;
     QStringList aiPlatforms_;
     QStringList resourceNames_;
     QStringList profileSelections_;

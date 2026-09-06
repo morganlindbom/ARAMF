@@ -83,6 +83,7 @@ struct TemplateDefinition {
     MemoryConfiguration memory;
     ResourcePolicy resourcePolicy;
     GenerationOptions generation;
+    CommunicationConfiguration communication;
     CertificationConfiguration certification;
     QString description;
     QStringList exclusions;

@@ -71,12 +71,66 @@ int main(int argc, char** argv)
     const auto definitions = manager.definitions();
     check(definitions.size() == 12, "all 12 built-ins audited");
     const auto officialDefinitions = manager.officialDefinitions();
-    check(officialDefinitions.size() == 2, "two official templates available");
+    check(officialDefinitions.size() == 3, "three official templates available");
     for (const auto& official : officialDefinitions) {
         ProjectModel officialModel;
         check(manager.applyTemplate(&officialModel, official.id), official.id + " official template applies");
         check(officialModel.templateModules().contains(official.id), official.id + " provenance retained");
     }
+    ProjectModel combinedModel;
+    const QString combinedId = QStringLiteral("official-android-pico-2w");
+    QString combinedError;
+    check(manager.applyTemplate(&combinedModel, combinedId, &combinedError), "Android + Pico official template applies: " + combinedError);
+    check(combinedModel.templateModules().contains(QStringLiteral("wifi-communication")), "Android + Pico includes Wi-Fi module dependency");
+    check(combinedModel.developmentCapabilities().languages.contains("kotlin")
+              && combinedModel.developmentCapabilities().languages.contains("c")
+              && combinedModel.developmentCapabilities().languages.contains("cpp")
+              && combinedModel.developmentCapabilities().languages.contains("pio-assembly"), "Android + Pico language merge");
+    check(combinedModel.developmentCapabilities().frameworks.contains("android-sdk")
+              && combinedModel.developmentCapabilities().frameworks.contains("pico-sdk"), "Android + Pico SDK merge");
+    check(combinedModel.developmentCapabilities().buildSystems.contains("gradle")
+              && combinedModel.developmentCapabilities().buildSystems.contains("cmake"), "Android + Pico build-system merge");
+    check(combinedModel.developmentCapabilities().targetPlatforms.contains("android")
+              && combinedModel.developmentCapabilities().hardwareTargets.contains("raspberry-pi-pico-2-w"), "Android + Pico targets merge");
+    auto communication = combinedModel.communicationConfiguration();
+    communication.protocol = QStringLiteral("http-rest"); communication.endpoint = QStringLiteral("pico.local:8080");
+    communication.sourceRole = QStringLiteral("client"); communication.destinationRole = QStringLiteral("server");
+    communication.dataFormat = QStringLiteral("json");
+    combinedModel.setCommunicationConfiguration(communication);
+    combinedModel.setProjectPath(fixture.filePath("combined-android-pico"));
+    combinedModel.setProjectName(QStringLiteral("Combined Android Pico"));
+    combinedModel.setProjectFilePath(fixture.filePath("combined.aramf.json"));
+    const auto combinedGeneration = generation.generate(combinedModel, combinedModel.generationOptions());
+    check(combinedGeneration.success, "Android + Pico worker generation");
+    const auto combinedVerification = verification.verify(combinedModel, combinedModel.generationOptions());
+    check(combinedVerification.overallStatus != VerificationStatus::Fail, "Android + Pico worker verification");
+    check(QFile::exists(QDir(combinedModel.projectPath()).filePath("ARAMF_WORKER/communication/communication-contract.json")), "communication contract generated");
+    check(QFile::exists(QDir(combinedModel.projectPath()).filePath("ARAMF_WORKER/communication/multi-target-build.json")), "multi-target build model generated");
+    QFile communicationFile(QDir(combinedModel.projectPath()).filePath("ARAMF_WORKER/communication/communication-contract.json"));
+    check(communicationFile.open(QIODevice::ReadOnly), "communication contract readable");
+    const auto communicationJson = QJsonDocument::fromJson(communicationFile.readAll()).object();
+    communicationFile.close();
+    check(communicationJson.value("transport").toString() == "wifi"
+              && communicationJson.value("protocol").toString() == "http-rest"
+              && communicationJson.value("sourceTarget").toString() == "android-application"
+              && communicationJson.value("destinationTarget").toString() == "raspberry-pi-pico-2-w",
+          "communication contract targets and protocol");
+    check(communicationJson.value("androidResponsibility").toString().contains("Android")
+              && communicationJson.value("picoResponsibility").toString().contains("Pico"),
+          "communication responsibilities generated");
+    QFile buildModelFile(QDir(combinedModel.projectPath()).filePath("ARAMF_WORKER/communication/multi-target-build.json"));
+    check(buildModelFile.open(QIODevice::ReadOnly), "multi-target build model readable");
+    const auto buildModelJson = QJsonDocument::fromJson(buildModelFile.readAll()).object();
+    buildModelFile.close();
+    check(buildModelJson.value("targets").toArray().size() == 2
+              && buildModelJson.value("orchestration").toArray().size() >= 3,
+          "multi-target build orchestration generated");
+    ProjectModel combinedReloaded;
+    check(persistence.save(combinedModel, fixture.filePath("combined-roundtrip.aramf.json")), "communication project save");
+    QString combinedLoadError;
+    check(persistence.load(&combinedReloaded, fixture.filePath("combined-roundtrip.aramf.json"), &combinedLoadError), "communication project reload: " + combinedLoadError);
+    check(combinedReloaded.communicationConfiguration().protocol == QStringLiteral("http-rest")
+              && combinedReloaded.communicationConfiguration().endpoint == QStringLiteral("pico.local:8080"), "communication configuration round-trip");
     ProjectModel composed;
     QString compositionError;
     check(manager.applyModules(&composed, {"android-application", "kotlin", "academic-school-project"}, &compositionError), "Android + Kotlin + Academic composition: " + compositionError);
@@ -198,6 +252,17 @@ int main(int argc, char** argv)
     check(!TemplateValidation::validateConfiguration(invalid).isEmpty(), "conflicting architecture selectors rejected");
     invalid = definitions[1].configuration; invalid.remove("rules");
     check(!TemplateValidation::validateConfiguration(invalid).isEmpty(), "incomplete configuration rejected");
+    invalid = combinedModel.configuration();
+    auto invalidCommunication = invalid.value("communication").toObject();
+    invalidCommunication.insert("destinationTarget", QStringLiteral(""));
+    invalid.insert("communication", invalidCommunication);
+    check(!TemplateValidation::validateConfiguration(invalid).isEmpty(), "communication requires a destination target");
+    invalid = combinedModel.configuration();
+    invalidCommunication = invalid.value("communication").toObject();
+    invalidCommunication.insert("protocol", QStringLiteral("http-rest"));
+    invalidCommunication.insert("endpoint", QStringLiteral(""));
+    invalid.insert("communication", invalidCommunication);
+    check(!TemplateValidation::validateConfiguration(invalid).isEmpty(), "communication protocol requires endpoint");
 
     ProjectModel custom;
     manager.applyTemplate(&custom, "bachelor-thesis");
