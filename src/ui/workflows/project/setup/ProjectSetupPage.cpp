@@ -26,8 +26,12 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
       name_(new QLineEdit(this)),
       path_(new QLineEdit(this)),
       id_(new QLineEdit(this)),
+      type_(new QLineEdit(this)),
       description_(new QTextEdit(this))
 {
+    // Description is the flexible field, but it must yield space to the
+    // fixed-content controls above it when the page is short.
+    description_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     auto* layout = new QVBoxLayout(this);
     layout->addWidget(new QLabel(
         tr("<h2>What is the project?</h2>Select the template and define the project's identity."), this));
@@ -51,17 +55,25 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     auto* pathLayout = new QHBoxLayout(pathRow);
     pathLayout->setContentsMargins(0, 0, 0, 0);
     auto* browse = new QPushButton(tr("Browse..."), pathRow);
+    path_->setMinimumWidth(0);
+    path_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    browse->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
     pathLayout->addWidget(path_);
     pathLayout->addWidget(browse);
     form->addRow(tr("Project path"), pathRow);
     form->addRow(tr("Project ID"), id_);
+    type_->setObjectName("projectType");
+    form->addRow(tr("Project type"), type_);
 
     form->addRow(tr("Description"), description_);
+    form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+    form->setRowWrapPolicy(QFormLayout::WrapLongRows);
     layout->addLayout(form);
     layout->addStretch();
 
     id_->setReadOnly(true);
     connect(name_, &QLineEdit::textChanged, model_, &ProjectModel::setProjectName);
+    connect(type_, &QLineEdit::textEdited, model_, &ProjectModel::setContext);
     connect(path_, &QLineEdit::textChanged, model_, &ProjectModel::setProjectPath);
     connect(browse, &QPushButton::clicked, this, &ProjectSetupPage::browseProjectPath);
     connect(description_, &QTextEdit::textChanged, this, [this] {
@@ -189,10 +201,13 @@ void ProjectSetupPage::refreshFromModel()
     const QSignalBlocker nameBlocker(name_);
     const QSignalBlocker pathBlocker(path_);
     const QSignalBlocker idBlocker(id_);
+    const QSignalBlocker typeBlocker(type_);
     const QSignalBlocker descriptionBlocker(description_);
 
     name_->setText(model_->projectName());
     path_->setText(model_->projectPath());
     id_->setText(model_->projectId());
+    type_->setText(model_->context());
+    type_->setReadOnly(model_->projectTypeLocked());
     description_->setPlainText(model_->description());
 }

@@ -1,4 +1,5 @@
 #include "GeneratePage.h"
+#include "core/TemplateValidation.h"
 
 #include "ui/workflows/project/setup/ProjectSetupPage.h"
 
@@ -60,6 +61,7 @@ GeneratePage::GeneratePage(ProjectModel* model, ProjectSetupPage* setupPage,
     });
 
     auto* generateButton = new QPushButton(tr("Save & Generate"), this);
+    generateButton->setObjectName("saveAndGenerate");
     layout->addWidget(generateButton);
 
     result_ = new QPlainTextEdit(this);
@@ -67,6 +69,11 @@ GeneratePage::GeneratePage(ProjectModel* model, ProjectSetupPage* setupPage,
     layout->addWidget(result_);
 
     connect(generateButton, &QPushButton::clicked, this, [this] {
+        const auto errors = TemplateValidation::readiness(*model_);
+        if (!errors.isEmpty()) {
+            result_->setPlainText(tr("Save: NOT RUN\nGenerate: NOT RUN\n\n%1").arg(errors.join('\n')));
+            return;
+        }
         const GenerationOptions options = selectedOptions();
         const bool hasProjectPath = !model_->projectPath().trimmed().isEmpty()
             && QDir::cleanPath(model_->projectPath().trimmed()) != QStringLiteral(".");

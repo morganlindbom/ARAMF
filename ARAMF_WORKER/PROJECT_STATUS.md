@@ -28,6 +28,52 @@ generated inside every managed target project is `ARAMF_WORKER/`. Application co
 `tests/`, and target-project support is data driven rather than a second runtime
 backend.
 
+Template selection is composable: Project Setup uses a framed two-column
+checkbox grid and stores selected module IDs in ProjectModel. MainWindow owns
+the page-level vertical scroll area while workflow navigation scrolls
+independently; page content keeps its natural height and horizontal scrolling
+is disabled. The module grid is installed directly in the framed selector
+layout, so its QGroupBox size hint includes every checkbox and cannot collapse.
+Project Setup now separates atomic project modules from composite templates;
+composite selections resolve their required module IDs into the module frame.
+The visible catalog now treats Frame 1 as the built-in functionality catalog;
+Frame 2 is reserved for user-saved templates, with an empty-state message when
+no saved templates exist. Legacy composite definitions remain available only
+for migration and compatibility.
+All visible Frame 1 entries are now registered as authoritative module
+definitions, and module selections are applied as partial contributions before
+the merged project is validated.
+Reusable template saving now performs structural/name validation only, strips
+project-instance identity fields, and preserves selected module IDs for
+save/restart/restore. Partial configurations such as Qt+CMake are supported.
+The module grid is now four-column responsive. Two protected official templates
+(Pico Visual Designer and ARAMF Development) are exposed alongside user-saved
+templates; historical composites remain migration-only.
+The Frame 1 catalog audit added catalog-backed C, TypeScript, web/application
+role, Pico SDK and PIO Assembly modules, plus focused backend/frontend/library
+and mobile roles.
+Final official-template consistency audit confirms Pico Visual Designer now
+activates Pico SDK, C and PIO Assembly explicitly; ARAMF Development activates
+all of its visible Qt/CMake desktop modules.
+The responsive layout regression pass retains the four-column module grid,
+disables workflow horizontal scrolling, names the page scroll host for tests,
+and verifies frame width across the supported window sizes.
+The page host now ignores child minimum widths horizontally, while
+TemplateSelector derives its module/template column count from actual content
+width and reflows existing checkbox widgets without changing model state.
+
+## Checkpoint Status
+
+Completed: composable project modules, the 27-module catalog audit, official
+Pico Visual Designer and ARAMF Development templates, user-saved template
+persistence/provenance, partial validation, and the responsive Project page
+including dynamic module reflow and Project path/Browse behavior.
+
+Known remaining UI issue: several non-Project workflow pages still require
+responsive layout cleanup. The Project page responsive layout has been
+manually verified, but the remaining workflow pages have not yet been fully
+normalized to the same responsive-width behavior. This is a separate follow-up.
+
 `MainWindow` owns the application shell, shared workflow page host, global
 scrolling, global UI zoom, and developer-controlled startup placement. The
 startup screen index and requested width/height are supplied from `src/main.cpp`.
@@ -342,24 +388,8 @@ descriptions, scopes, and canonical identities were preserved.
 
 
 
+
 ## Latest Agent Task
 
-- Task: Milestone: add admin override and destructive-operation safety
+- Task: Restore MSYS2 Qt toolchain for include resolution
 - Status: PASS
-
-## Latest Source Capability
-
-- Test Certification is now a first-class generic project capability with append-only certificate history, evidence gating, verification levels, current-state rediscovery, Project Memory lifecycle events, and generated governance.
-- Verified: certification regression coverage and the complete native CTest suite pass.
-
-## Latest Source Fix
-
-- Task: Fix Project Memory generation architecture at the ARAMF source.
-- Status: PASS
-- Implemented explicit `agent-direct` Project Memory ownership, append-only historical governance, current-state separation, governed agent writes, and regression coverage for generated projects.
-- Verified: native build, core tests, workflow tests, and update campaign all pass.
-
-- Task: Fix project-root rebinding and existing-project control-plane update.
-- Status: PASS
-- Implemented selected-root authority, stale-root migration, resource/control-plane path rebasing, fresh verification provenance, current certification generation, and ROOT-REBIND regression coverage.
-- Verified: existing Project 7 was updated in place; no active Project 6 references remain, Project Memory history was preserved, and current verification/cold-start validation resolve Project 7.

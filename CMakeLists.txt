@@ -45,6 +45,8 @@ set(ARAMF_CORE_SOURCES
     src/core/ProjectModel.cpp
     src/core/Services.h
     src/core/Services.cpp
+    src/core/TemplateManager.cpp
+    src/core/TemplateValidation.cpp
     src/core/ValidationRouting.h
     src/core/ValidationRouting.cpp
     src/core/UpdateService.h
@@ -180,6 +182,8 @@ if(BUILD_TESTING)
         src/core/ProjectModel.cpp
         src/core/Services.h
         src/core/Services.cpp
+    src/core/TemplateManager.cpp
+    src/core/TemplateValidation.cpp
     )
     target_include_directories(aramf_core_tests PRIVATE src)
     target_link_libraries(aramf_core_tests PRIVATE Qt6::Core)
@@ -250,6 +254,17 @@ if(BUILD_TESTING)
     target_link_libraries(aramf_workflow_tests PRIVATE Qt6::Core Qt6::Widgets)
     add_test(NAME aramf_workflow_tests COMMAND aramf_workflow_tests)
 
+    add_executable(aramf_template_tests
+        tests/TemplateConfigurationTests.cpp
+        ${ARAMF_CORE_SOURCES}
+        ${ARAMF_UI_SOURCES}
+    )
+    target_include_directories(aramf_template_tests PRIVATE src)
+    target_link_libraries(aramf_template_tests PRIVATE Qt6::Core Qt6::Widgets)
+    add_test(NAME aramf_template_tests COMMAND aramf_template_tests)
+    set_tests_properties(aramf_template_tests PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=windows;PATH=C:/msys64/ucrt64/bin")
+
     add_executable(aramf_update_campaign_runner
         test_update/runner/main.cpp
         ${ARAMF_CORE_SOURCES}
@@ -268,5 +283,13 @@ if(WIN32)
             COMMAND "${WINDEPLOYQT_EXECUTABLE}" --release --no-translations "$<TARGET_FILE:aramf>"
             COMMENT "Deploying Qt runtime files"
             VERBATIM)
+        foreach(ARAMF_TEST_TARGET aramf_core_tests aramf_workflow_tests aramf_template_tests aramf_update_campaign_runner)
+            if(TARGET ${ARAMF_TEST_TARGET})
+                add_custom_command(TARGET ${ARAMF_TEST_TARGET} POST_BUILD
+                    COMMAND "${WINDEPLOYQT_EXECUTABLE}" --release --no-translations "$<TARGET_FILE:${ARAMF_TEST_TARGET}>"
+                    COMMENT "Deploying Qt runtime files for ${ARAMF_TEST_TARGET}"
+                    VERBATIM)
+            endif()
+        endforeach()
     endif()
 endif()

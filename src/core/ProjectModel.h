@@ -4,6 +4,7 @@
 #include <QStringList>
 #include <QHash>
 #include <QSet>
+#include <QJsonObject>
 
 struct DevelopmentEnvironment {
     QString language;
@@ -259,6 +260,11 @@ public:
     QString projectFilePath() const { return projectFilePath_; }
     QString description() const { return description_; }
     QString templateId() const { return templateId_; }
+    QStringList templateModules() const { return templateModules_; }
+    QJsonObject templateState() const { return templateState_; }
+    void setTemplateState(const QJsonObject& state);
+    bool projectTypeLocked() const { return !templateId_.isEmpty() && !templateState_.value("projectType").toString().isEmpty(); }
+    void clearEnvironmentOverrides() { environmentOverrides_.clear(); }
     QString context() const { return context_; }
     DevelopmentEnvironment developmentEnvironment() const { return environment_; }
     DevelopmentCapabilities developmentCapabilities() const { return capabilities_; }
@@ -284,6 +290,7 @@ public:
     void setProjectId(const QString& value);
     void setDescription(const QString& value);
     void setTemplateId(const QString& value);
+    void setTemplateModules(const QStringList& value);
     void setContext(const QString& value);
     void setDevelopmentEnvironment(const DevelopmentEnvironment& value);
     void setDevelopmentCapabilities(const DevelopmentCapabilities& value);
@@ -327,6 +334,8 @@ private:
     QString projectFilePath_;
     QString description_;
     QString templateId_;
+    QStringList templateModules_;
+    QJsonObject templateState_;
     QString context_;
     DevelopmentEnvironment environment_;
     DevelopmentCapabilities capabilities_;

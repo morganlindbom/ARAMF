@@ -161,17 +161,26 @@ MainWindow::MainWindow(
     setCentralWidget(central);
 
     auto *layout = new QHBoxLayout(central);
+    layout->setContentsMargins(8, 8, 8, 8);
+    layout->setSpacing(8);
 
     workflow_ = new WorkflowWidget(central);
-    workflow_->setFixedWidth(280);
+    workflow_->setMinimumWidth(220);
+    workflow_->setMaximumWidth(340);
+    workflow_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
 
     pageScroll_ = new QScrollArea(central);
+    pageScroll_->setObjectName(QStringLiteral("workflowPageScroll"));
     pageScroll_->setWidgetResizable(true);
-    pageScroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    pageScroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     pageScroll_->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     pageScroll_->setFrameShape(QFrame::NoFrame);
 
     stack_ = new QStackedWidget;
+    // The scroll viewport owns horizontal width. Do not let the widest page
+    // size hint turn into a minimum width for the entire stacked host.
+    stack_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    stack_->setMinimumSize(0, 0);
     pageScroll_->setWidget(stack_);
 
     layout->addWidget(workflow_);
@@ -335,6 +344,10 @@ void MainWindow::setWorkflowPage(WorkflowPageId page)
     currentPage_ = page;
 
     stack_->setCurrentIndex(pageIndex.value());
+    if (auto* current = stack_->currentWidget()) {
+        stack_->setMinimumHeight(0);
+        stack_->setMinimumHeight(qMax(current->sizeHint().height(), current->minimumSizeHint().height()));
+    }
 
     if (pageScroll_->verticalScrollBar())
     {

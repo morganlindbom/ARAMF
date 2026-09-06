@@ -66,6 +66,8 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
                                         const GenerationOptions& options);
 
 struct TemplateDefinition {
+    enum class Kind { Module, CompositeTemplate };
+    Kind kind = Kind::CompositeTemplate;
     QString id;
     QString displayName;
     QString projectType;
@@ -77,6 +79,16 @@ struct TemplateDefinition {
     QStringList recommendedResources;
     QStringList recommendedAiConfiguration;
     QStringList supportedCapabilities;
+    RuleConfiguration rules;
+    MemoryConfiguration memory;
+    ResourcePolicy resourcePolicy;
+    GenerationOptions generation;
+    CertificationConfiguration certification;
+    QString description;
+    QStringList exclusions;
+    QJsonObject configuration;
+    bool userDefined = false;
+    bool official = false;
 };
 
 class TemplateManager final : public QObject
@@ -84,11 +96,24 @@ class TemplateManager final : public QObject
     Q_OBJECT
 
 public:
-    explicit TemplateManager(QObject* parent = nullptr);
+    explicit TemplateManager(QObject* parent = nullptr, const QString& libraryPath = {});
     QStringList builtInTemplates() const;
+    QList<TemplateDefinition> moduleDefinitions() const;
+    QList<TemplateDefinition> compositeDefinitions() const;
+    QList<TemplateDefinition> customDefinitions() const;
+    QList<TemplateDefinition> officialDefinitions() const;
     TemplateDefinition definition(const QString& id) const;
     QList<TemplateDefinition> definitions() const;
-    bool applyTemplate(ProjectModel* model, const QString& id) const;
+    bool applyTemplate(ProjectModel* model, const QString& id, QString* error = nullptr) const;
+    bool applyModules(ProjectModel* model, const QStringList& moduleIds, QString* error = nullptr) const;
+    bool saveCustomTemplate(const ProjectModel& model, const QString& name, QString* id = nullptr, QString* error = nullptr);
+    bool removeCustomTemplate(const QString& id, QString* error = nullptr);
+    QString libraryPath() const { return libraryPath_; }
+    QString libraryError() const;
+signals:
+    void templatesChanged();
+private:
+    QString libraryPath_;
 };
 
 class GenerationServices final : public QObject
