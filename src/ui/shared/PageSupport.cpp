@@ -3,9 +3,17 @@
 #include "core/ProjectModel.h"
 
 #include <QCheckBox>
+#include <QComboBox>
+#include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
+#include <QLineEdit>
+#include <QListWidget>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QRadioButton>
 #include <QSignalBlocker>
+#include <QTextEdit>
 #include <QVBoxLayout>
 
 namespace AramfUi {
@@ -66,6 +74,41 @@ QCheckBox* check(const QString& text, const QString& hint, QWidget* parent)
     auto* result = new QCheckBox(text, parent);
     result->setToolTip(hint);
     return result;
+}
+
+void normalizeWorkflowPage(QWidget* page)
+{
+    if (!page) return;
+
+    // The page host owns the available width.  Clear inherited minimum-width
+    // pressure and let controls consume only the width the host supplies.
+    page->setMinimumWidth(0);
+    page->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    for (auto* form : page->findChildren<QFormLayout*>()) {
+        form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+        form->setRowWrapPolicy(QFormLayout::WrapLongRows);
+    }
+    for (auto* widget : page->findChildren<QWidget*>()) {
+        widget->setMinimumWidth(0);
+        if (auto* label = qobject_cast<QLabel*>(widget)) {
+            label->setWordWrap(true);
+            label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        } else if (qobject_cast<QLineEdit*>(widget)
+                   || qobject_cast<QComboBox*>(widget)
+                   || qobject_cast<QTextEdit*>(widget)
+                   || qobject_cast<QPlainTextEdit*>(widget)
+                   || qobject_cast<QListWidget*>(widget)) {
+            widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        } else if (qobject_cast<QGroupBox*>(widget)) {
+            widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        } else if (qobject_cast<QCheckBox*>(widget)
+                   || qobject_cast<QRadioButton*>(widget)) {
+            widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+        } else if (qobject_cast<QPushButton*>(widget)) {
+            widget->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+        }
+    }
+    page->updateGeometry();
 }
 
 }

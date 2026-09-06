@@ -4,6 +4,7 @@
 #include <QCheckBox>
 #include <QGridLayout>
 #include <QLineEdit>
+#include <QResizeEvent>
 #include <QSignalBlocker>
 
 namespace {
@@ -14,16 +15,18 @@ bool isCustomId(const QString& id)
 }
 
 CapabilityCheckGroup::CapabilityCheckGroup(const QString& title, const QList<EnvironmentOption>& options, int columns, QWidget* parent)
-    : QGroupBox(title, parent)
+    : QGroupBox(title, parent), requestedColumns_(qMax(1, columns))
 {
-    auto* layout = new QGridLayout(this);
-    layout->setColumnStretch(columns, 1);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    layout_ = new QGridLayout(this);
+    layout_->setHorizontalSpacing(18);
+    layout_->setVerticalSpacing(7);
     for (int index = 0; index < options.size(); ++index) {
         const auto& option = options.at(index);
         auto* check = new QCheckBox(option.first, this);
         check->setProperty("capabilityId", option.second);
         checks_.append(check);
-        layout->addWidget(check, index / columns, index % columns);
+        layout_->addWidget(check, index / requestedColumns_, index % requestedColumns_);
         connect(check, &QCheckBox::toggled, this, [this](bool) {
             if (customEdit_) {
                 const auto values = selectedIds();
@@ -37,8 +40,40 @@ CapabilityCheckGroup::CapabilityCheckGroup(const QString& title, const QList<Env
     customEdit_ = new QLineEdit(this);
     customEdit_->setPlaceholderText(tr("Custom value"));
     customEdit_->setVisible(false);
-    layout->addWidget(customEdit_, (options.size() + columns - 1) / columns, 0, 1, columns);
+    layout_->addWidget(customEdit_, (options.size() + requestedColumns_ - 1) / requestedColumns_, 0, 1, requestedColumns_);
     connect(customEdit_, &QLineEdit::textChanged, this, [this] { emit selectionChanged(selectedIds()); });
+    reflow();
+}
+
+void CapabilityCheckGroup::resizeEvent(QResizeEvent* event)
+{
+    QGroupBox::resizeEvent(event);
+    reflow();
+}
+
+void CapabilityCheckGroup::reflow()
+{
+    if (!layout_) return;
+    int widest = 1;
+    for (auto* check : checks_) widest = qMax(widest, check->sizeHint().width());
+    const int available = qMax(1, contentsRect().width() - layout_->contentsMargins().left() - layout_->contentsMargins().right());
+    const int spacing = qMax(0, layout_->horizontalSpacing());
+    int columns = 1;
+    for (int candidate = requestedColumns_; candidate >= 1; --candidate) {
+        if (candidate * widest + (candidate - 1) * spacing <= available) {
+            columns = candidate;
+            break;
+        }
+    }
+    if (columns == activeColumns_) return;
+    activeColumns_ = columns;
+    while (auto* item = layout_->takeAt(0)) delete item;
+    for (int column = 0; column < requestedColumns_; ++column)
+        layout_->setColumnStretch(column, column < columns ? 1 : 0);
+    for (int index = 0; index < checks_.size(); ++index)
+        layout_->addWidget(checks_.at(index), index / columns, index % columns);
+    if (customEdit_)
+        layout_->addWidget(customEdit_, (checks_.size() + columns - 1) / columns, 0, 1, columns);
 }
 
 QStringList CapabilityCheckGroup::selectedIds() const

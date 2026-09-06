@@ -61,6 +61,14 @@ and verifies frame width across the supported window sizes.
 The page host now ignores child minimum widths horizontally, while
 TemplateSelector derives its module/template column count from actual content
 width and reflows existing checkbox widgets without changing model state.
+All workflow pages now receive a shared shell-level responsive normalization:
+page and control minimum widths are cleared, form layouts wrap and grow fields,
+and labels, editors, groups and selectors follow the scroll viewport width.
+Dense checkbox groups use a reusable content-width-based reflow helper that
+preserves their existing widgets and model state.
+Windows builds now deploy the MinGW runtime DLLs beside ARAMF and its test
+executables in addition to the Qt runtime, so launching `build/aramf.exe` does
+not depend on the developer's MSYS2 `PATH`.
 
 ## Checkpoint Status
 
@@ -69,10 +77,13 @@ Pico Visual Designer and ARAMF Development templates, user-saved template
 persistence/provenance, partial validation, and the responsive Project page
 including dynamic module reflow and Project path/Browse behavior.
 
-Known remaining UI issue: several non-Project workflow pages still require
-responsive layout cleanup. The Project page responsive layout has been
-manually verified, but the remaining workflow pages have not yet been fully
-normalized to the same responsive-width behavior. This is a separate follow-up.
+The shared responsive normalization has been implemented for the remaining
+workflow pages. Manual visual review of unusual font metrics or future
+page-specific controls remains an ongoing verification item.
+The Windows runtime deployment checkpoint is complete: the build system places
+the required MinGW DLLs beside `build/aramf.exe`, and full CTest passes 4/4.
+The previous runtime launch error is resolved; no broader manual all-page visual
+certification is claimed here.
 
 `MainWindow` owns the application shell, shared workflow page host, global
 scrolling, global UI zoom, and developer-controlled startup placement. The

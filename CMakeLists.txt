@@ -277,6 +277,29 @@ if(BUILD_TESTING)
 endif()
 
 if(WIN32)
+    # windeployqt installs Qt DLLs but does not deploy the MinGW runtime used
+    # by this build.  Keep the application self-contained when launched from
+    # the build directory (for example from Explorer or Android Studio).
+    get_filename_component(ARAMF_COMPILER_BIN "${CMAKE_CXX_COMPILER}" DIRECTORY)
+    set(ARAMF_RUNTIME_DLLS
+        libgcc_s_seh-1.dll
+        libstdc++-6.dll
+        libwinpthread-1.dll
+        libatomic-1.dll
+        libssp-0.dll)
+    function(aramf_deploy_compiler_runtime target)
+        foreach(runtime_dll IN LISTS ARAMF_RUNTIME_DLLS)
+            if(EXISTS "${ARAMF_COMPILER_BIN}/${runtime_dll}")
+                add_custom_command(TARGET ${target} POST_BUILD
+                    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+                        "${ARAMF_COMPILER_BIN}/${runtime_dll}"
+                        "$<TARGET_FILE_DIR:${target}>/${runtime_dll}"
+                    COMMENT "Deploying ${runtime_dll} for ${target}"
+                    VERBATIM)
+            endif()
+        endforeach()
+    endfunction()
+
     find_program(WINDEPLOYQT_EXECUTABLE NAMES windeployqt6 windeployqt)
     if(WINDEPLOYQT_EXECUTABLE)
         add_custom_command(TARGET aramf POST_BUILD
@@ -292,4 +315,10 @@ if(WIN32)
             endif()
         endforeach()
     endif()
+    aramf_deploy_compiler_runtime(aramf)
+    foreach(ARAMF_TEST_TARGET aramf_core_tests aramf_workflow_tests aramf_template_tests aramf_update_campaign_runner)
+        if(TARGET ${ARAMF_TEST_TARGET})
+            aramf_deploy_compiler_runtime(${ARAMF_TEST_TARGET})
+        endif()
+    endforeach()
 endif()
