@@ -169,15 +169,44 @@ void ProjectModel::setDescription(const QString& value)
     notifyChanged();
 }
 
+void ProjectModel::setTemplateState(const QJsonObject& state)
+{
+    if (templateState_ == state) return;
+    templateState_ = state;
+    if (projectTypeLocked()) context_ = state.value("projectType").toString();
+    notifyChanged();
+}
+
 void ProjectModel::setTemplateId(const QString& value)
 {
     if (templateId_ == value) return;
     templateId_ = value;
+    if (value.isEmpty()) { templateState_ = {}; environmentOverrides_.clear(); }
+    notifyChanged();
+}
+
+void ProjectModel::setTemplateModules(const QStringList& value)
+{
+    QStringList normalized = value;
+    normalized.removeAll(QString());
+    normalized.removeDuplicates();
+    if (templateModules_ == normalized) return;
+    templateModules_ = normalized;
+    if (templateModules_.isEmpty()) {
+        templateId_.clear();
+        templateState_ = {};
+        environmentOverrides_.clear();
+    } else if (templateModules_.size() == 1) {
+        templateId_ = templateModules_.first();
+    } else {
+        templateId_ = QStringLiteral("composed");
+    }
     notifyChanged();
 }
 
 void ProjectModel::setContext(const QString& value)
 {
+    if (projectTypeLocked() && value != templateState_.value("projectType").toString()) return;
     if (context_ == value) return;
     context_ = value;
     notifyChanged();
@@ -246,7 +275,7 @@ void ProjectModel::applyTemplateDefaults(const DevelopmentEnvironment& value)
 
 void ProjectModel::setDevelopmentCapabilities(const DevelopmentCapabilities& value)
 {
-    const QString derivedContext = deriveProjectContext(value);
+    const QString derivedContext = projectTypeLocked() ? templateState_.value("projectType").toString() : deriveProjectContext(value);
     if (capabilities_.languages == value.languages
         && capabilities_.frameworks == value.frameworks
         && capabilities_.ides == value.ides
@@ -271,19 +300,24 @@ void ProjectModel::setDevelopmentCapabilities(const DevelopmentCapabilities& val
 
     capabilities_ = value;
     context_ = derivedContext;
+    resolveAndroidConstraints();
+    const auto& effective = capabilities_;
     DevelopmentEnvironment next = environment_;
-    next.language = value.languages.isEmpty() ? QString() : value.languages.first();
-    next.framework = value.frameworks.isEmpty() ? QString() : value.frameworks.first();
-    next.ide = value.ides.isEmpty() ? QString() : value.ides.first();
-    next.compiler = value.toolchains.isEmpty() ? QString() : value.toolchains.first();
-    next.operatingSystem = value.hostOperatingSystems.isEmpty() ? QString() : value.hostOperatingSystems.first();
-    next.targetPlatform = value.targetPlatforms.isEmpty() ? QString() : value.targetPlatforms.first();
-    next.targetArchitecture = value.targetArchitectures.isEmpty() ? QString() : value.targetArchitectures.first();
-    next.buildSystem = value.buildSystems.isEmpty() ? QString() : value.buildSystems.first();
+    next.language = effective.languages.isEmpty() ? QString() : effective.languages.first();
+    next.framework = effective.frameworks.isEmpty() ? QString() : effective.frameworks.first();
+    next.ide = effective.ides.isEmpty() ? QString() : effective.ides.first();
+    next.compiler = effective.toolchains.isEmpty() ? QString() : effective.toolchains.first();
+    next.operatingSystem = effective.hostOperatingSystems.isEmpty() ? QString() : effective.hostOperatingSystems.first();
+    next.targetPlatform = effective.targetPlatforms.isEmpty() ? QString() : effective.targetPlatforms.first();
+    next.targetArchitecture = effective.targetArchitectures.isEmpty() ? QString() : effective.targetArchitectures.first();
+    next.buildSystem = effective.buildSystems.isEmpty() ? QString() : effective.buildSystems.first();
+    next.packageManager = effective.dependencyManagers.isEmpty() ? QString() : effective.dependencyManagers.first();
+    next.versionControl = effective.versionControlSystems.isEmpty() ? QString() : effective.versionControlSystems.first();
     if (next.language != environment_.language || next.framework != environment_.framework
         || next.ide != environment_.ide || next.compiler != environment_.compiler
         || next.operatingSystem != environment_.operatingSystem || next.targetPlatform != environment_.targetPlatform
-        || next.targetArchitecture != environment_.targetArchitecture || next.buildSystem != environment_.buildSystem) {
+        || next.targetArchitecture != environment_.targetArchitecture || next.buildSystem != environment_.buildSystem
+        || next.packageManager != environment_.packageManager || next.versionControl != environment_.versionControl) {
         environment_ = next;
         emit developmentEnvironmentChanged();
     }
@@ -464,6 +498,8 @@ void ProjectModel::resolveAndroidConstraints()
         androidConstraints_ = next;
         return;
     }
+    next.composeSelected = capabilities_.frameworks.contains("jetpack-compose");
+    next.uiTechnology = next.composeSelected ? "compose" : "xml";
     for (const auto& resource : resources_) {
         if (!resource.enabled || resource.authorityLevel.compare(QStringLiteral("primary-source-of-truth"), Qt::CaseInsensitive) != 0) continue;
         const QString text = sourceText(this, resource);
@@ -560,6 +596,12 @@ void ProjectModel::resolveAndroidConstraints()
     }
     androidConstraints_ = next;
     if (!next.composeAllowed || !next.composeSelected) capabilities_.frameworks.removeAll(QStringLiteral("jetpack-compose"));
+    auto select = [](QStringList& items, const QString& id) { if (!items.contains(id)) items << id; };
+    if (next.composeRequired && next.composeAllowed) select(capabilities_.frameworks, "jetpack-compose");
+    if (next.roomRequired) select(capabilities_.frameworks, "room");
+    if (next.kotlinRequired) select(capabilities_.languages, "kotlin");
+    if (next.unitTestsRequired) select(capabilities_.testingCapabilities, "unit-testing");
+    if (next.lintRequired) select(capabilities_.qualityCapabilities, "linting");
 }
 
 void ProjectModel::setGenerationOptions(const GenerationOptions& value)
@@ -602,6 +644,9 @@ void ProjectModel::endUpdate()
     if (updateDepth_ == 0) return;
     if (--updateDepth_ == 0 && pendingNotification_) {
         pendingNotification_ = false;
+        emit developmentCapabilitiesChanged();
+        emit developmentEnvironmentChanged();
+        emit aiConfigurationChanged();
         emit modelChanged();
     }
 }
@@ -615,6 +660,8 @@ void ProjectModel::resetForNewProject()
     projectFilePath_.clear();
     description_.clear();
     templateId_.clear();
+    templateModules_.clear();
+    templateState_ = {};
     context_.clear();
     environment_ = {};
     environment_.ide = QStringLiteral("visual-studio-code");
@@ -646,6 +693,8 @@ void ProjectModel::resetForNewProject()
     ruleConfiguration_ = {};
     memoryConfiguration_ = {};
     certificationConfiguration_ = {};
+    generationOptions_ = {};
+    androidConstraints_ = {};
     profileSelections_.clear();
     ai_ = {};
     options_.clear();

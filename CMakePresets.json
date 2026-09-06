@@ -6,7 +6,11 @@
       "displayName": "Windows MSYS2 UCRT64",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
+      "environment": {
+        "PATH": "C:/msys64/ucrt64/bin;$penv{PATH}"
+      },
       "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "C:/msys64/ucrt64",
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "C:/msys64/ucrt64/bin/g++.exe",
         "CMAKE_MAKE_PROGRAM": "C:/msys64/ucrt64/bin/ninja.exe",

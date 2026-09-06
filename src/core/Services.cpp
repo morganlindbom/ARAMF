@@ -1,6 +1,7 @@
 // Services.cpp
 
 #include "Services.h"
+#include "TemplateValidation.h"
 
 #include "AramfPaths.h"
 #include "ControlPlaneMigration.h"
@@ -241,6 +242,12 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
         {QStringLiteral("architectures"), toJsonArray(capabilities.targetArchitectures)},
         {QStringLiteral("toolchains"), toJsonArray(capabilities.toolchains)},
         {QStringLiteral("buildSystems"), toJsonArray(capabilities.buildSystems)},
+        {QStringLiteral("dependencyManagers"), toJsonArray(capabilities.dependencyManagers)},
+        {QStringLiteral("buildConfigurations"), toJsonArray(capabilities.buildConfigurations)},
+        {QStringLiteral("testingCapabilities"), toJsonArray(capabilities.testingCapabilities)},
+        {QStringLiteral("qualityCapabilities"), toJsonArray(capabilities.qualityCapabilities)},
+        {QStringLiteral("automationCapabilities"), toJsonArray(capabilities.automationCapabilities)},
+        {QStringLiteral("deliveryCapabilities"), toJsonArray(capabilities.deliveryCapabilities)},
         {QStringLiteral("aiAgent"), ai.primaryAgent},
         {QStringLiteral("aiResponsibilities"), toJsonArray(ai.responsibilities)},
         {QStringLiteral("aiPermissions"), toJsonArray(ai.permissions)},
@@ -262,136 +269,6 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
         QJsonDocument(value).toJson(QJsonDocument::Compact), QCryptographicHash::Sha256).toHex());
 }
 
-TemplateManager::TemplateManager(QObject* parent)
-    : QObject(parent)
-{
-    /**Construct the template catalog service.
-
-    Templates describe target projects; they do not change the fact that ARAMF itself is implemented entirely in C++.
-    */
-}
-
-QStringList TemplateManager::builtInTemplates() const
-{
-    /**Return the protected built-in template order.
-
-    Pico 2 W Visual Designer remains template number one while cross-language target templates stay available.
-    */
-    return {
-        QStringLiteral("pico-2w-visual-designer"),
-        QStringLiteral("android-studio-kotlin-gemini"),
-        QStringLiteral("qt-desktop-application"),
-        QStringLiteral("cpp-command-line"),
-        QStringLiteral("cmake-library"),
-        QStringLiteral("raspberry-pi-pico-firmware"),
-        QStringLiteral("react-frontend"),
-        QStringLiteral("python-backend"),
-        QStringLiteral("csharp-backend"),
-        QStringLiteral("mobile-application"),
-        QStringLiteral("full-stack-web-application"),
-        QStringLiteral("bachelor-thesis")
-    };
-}
-
-QList<TemplateDefinition> TemplateManager::definitions() const
-{
-    auto make = [](const QString& id, const QString& name, const QString& type, const QString& language, const QString& framework, const QString& compiler, const QString& target, const QString& build, const QStringList& supported, const QStringList& resources) {
-        TemplateDefinition d; d.id=id; d.displayName=name; d.projectType=type; d.environment.language=language; d.environment.framework=framework; d.environment.ide=QStringLiteral("visual-studio-code"); d.environment.compiler=compiler; d.environment.operatingSystem=QStringLiteral("windows"); d.environment.targetPlatform=target; d.environment.targetArchitecture=target == QStringLiteral("embedded") ? QStringLiteral("cortex-m") : QStringLiteral("x86_64"); d.environment.buildSystem=build; d.environment.packageManager=QStringLiteral("none"); d.environment.versionControl=QStringLiteral("git"); d.supportedCapabilities=supported; d.recommendedResources=resources; d.recommendedAiConfiguration={QStringLiteral("codex"), QStringLiteral("planning"), QStringLiteral("coding"), QStringLiteral("review"), QStringLiteral("testing"), QStringLiteral("documentation")}; d.recommendedRules={QStringLiteral("Universal safety"), QStringLiteral("Project architecture")}; d.capabilities.languages={language}; d.capabilities.frameworks={framework}; d.capabilities.ides={d.environment.ide}; d.capabilities.versionControlSystems={QStringLiteral("git")}; d.capabilities.hostOperatingSystems={d.environment.operatingSystem}; d.capabilities.targetPlatforms={target}; d.capabilities.targetArchitectures={d.environment.targetArchitecture}; d.capabilities.toolchains={compiler}; d.capabilities.buildSystems={build}; d.capabilities.buildConfigurations={QStringLiteral("debug"), QStringLiteral("release")}; if (id == QStringLiteral("pico-2w-visual-designer")) { d.capabilities.languages={QStringLiteral("cpp"), QStringLiteral("c"), QStringLiteral("pio-assembly")}; d.capabilities.frameworks={QStringLiteral("qt"), QStringLiteral("pico-sdk")}; d.capabilities.ides={QStringLiteral("visual-studio-code")}; d.capabilities.versionControlSystems={QStringLiteral("git")}; d.capabilities.developmentTools={QStringLiteral("debugger"), QStringLiteral("hardware-debug-probe")}; d.capabilities.targetPlatforms={QStringLiteral("windows-desktop"), QStringLiteral("microcontroller")}; d.capabilities.targetArchitectures={QStringLiteral("x86_64"), QStringLiteral("rp2350"), QStringLiteral("cortex-m")}; d.capabilities.processorFamilies={QStringLiteral("rp2350")}; d.capabilities.hardwareTargets={QStringLiteral("raspberry-pi-pico-2-w")}; d.capabilities.toolchains={QStringLiteral("msys2-ucrt64-gcc"), QStringLiteral("arm-gnu"), QStringLiteral("pico-sdk-toolchain")}; d.capabilities.buildSystems={QStringLiteral("cmake"), QStringLiteral("ninja")}; d.capabilities.testingCapabilities={QStringLiteral("unit-testing")}; d.capabilities.buildConfigurations={QStringLiteral("debug"), QStringLiteral("release")}; } return d;
-    };
-    auto result = QList<TemplateDefinition>{
-        make("pico-2w-visual-designer", "Pico 2 W Visual Designer", "embedded-firmware", "cpp", "pico-sdk", "msys2-ucrt64-gcc", "embedded", "cmake", {"Networking", "Testing", "Documentation"}, {"Pico 2 W datasheet", "Pico SDK documentation"}),
-        make("android-studio-kotlin-gemini", "Android Studio/Kotlin/Gemini", "android-application", "kotlin", "android-sdk", "java-jdk", "android", "gradle", {"Android SDK", "Jetpack Compose", "Room", "Testing", "Documentation"}, {"Course assignment / grading rubric", "Android SDK documentation"}),
-        make("qt-desktop-application", "Qt Desktop Application", "desktop-application", "cpp", "qt6", "msys2-ucrt64-gcc", "desktop", "cmake", {"SQLite", "Networking", "Testing", "Documentation"}, {"Qt documentation", "Architecture document"}),
-        make("cpp-command-line", "C++ Command Line", "software-development", "cpp", "none", "msys2-ucrt64-gcc", "desktop", "cmake", {"Testing", "Documentation"}, {"Specification"}),
-        make("cmake-library", "CMake Library", "reusable-library", "cpp", "none", "msys2-ucrt64-gcc", "desktop", "cmake", {"Testing", "Documentation"}, {"API specification"}),
-        make("raspberry-pi-pico-firmware", "Raspberry Pi Pico Firmware", "embedded-firmware", "cpp", "pico-sdk", "msys2-ucrt64-gcc", "embedded", "cmake", {"Testing", "Documentation"}, {"Pico SDK documentation"}),
-        make("react-frontend", "React Frontend", "web-application", "typescript", "react", "node", "web", "npm", {"Testing", "Documentation"}, {"Frontend specification"}),
-        make("python-backend", "Python Backend", "backend-service", "python", "fastapi", "python", "server", "pyproject", {"SQLite", "Testing", "Documentation"}, {"API specification"}),
-        make("csharp-backend", "C# Backend", "backend-service", "csharp", "aspnet", "dotnet", "server", "cmake", {"Testing", "Documentation"}, {"API specification"}),
-        make("mobile-application", "Mobile Application", "software-development", "cpp", "qt6", "msvc", "desktop", "cmake", {"Testing", "Documentation"}, {"Mobile specification"}),
-        make("full-stack-web-application", "Full Stack Web Application", "web-application", "typescript", "react", "node", "web", "npm", {"SQLite", "Networking", "Testing", "Documentation"}, {"Architecture document", "API specification"}),
-        make("bachelor-thesis", "Bachelor Thesis", "thesis", "cpp", "none", "msys2-ucrt64-gcc", "desktop", "cmake", {"Documentation"}, {"Thesis specification", "Reference implementations"})
-    };
-    auto& pico = result.first();
-    pico.ai.primaryAgent = QStringLiteral("openai-codex");
-    pico.ai.additionalAgents = {QStringLiteral("chatgpt")};
-    pico.ai.responsibilities = {
-        QStringLiteral("planning"), QStringLiteral("architecture"),
-        QStringLiteral("coding"), QStringLiteral("testing"),
-        QStringLiteral("documentation")
-    };
-    pico.ai.aramfIntegrations = {
-        QStringLiteral("agents-md"), QStringLiteral("rules"),
-        QStringLiteral("routing"), QStringLiteral("project-memory"),
-        QStringLiteral("project-status")
-    };
-    auto android = std::find_if(result.begin(), result.end(), [](const auto& value) { return value.id == QStringLiteral("android-studio-kotlin-gemini"); });
-    if (android != result.end()) {
-        android->environment.ide = QStringLiteral("android-studio");
-        android->environment.operatingSystem = QStringLiteral("cross-platform");
-        android->environment.packageManager = QStringLiteral("gradle");
-        android->capabilities.languages = {QStringLiteral("kotlin")};
-        android->capabilities.frameworks = {QStringLiteral("android-sdk"), QStringLiteral("jetpack-compose"), QStringLiteral("room")};
-        android->capabilities.ides = {QStringLiteral("android-studio")};
-        android->capabilities.developmentTools = {QStringLiteral("android-sdk"), QStringLiteral("android-emulator")};
-        android->capabilities.hostOperatingSystems = {QStringLiteral("windows"), QStringLiteral("linux"), QStringLiteral("macos")};
-        android->capabilities.targetPlatforms = {QStringLiteral("android")};
-        android->capabilities.targetArchitectures = {QStringLiteral("arm64"), QStringLiteral("x86_64")};
-        android->capabilities.toolchains = {QStringLiteral("java-jdk"), QStringLiteral("kotlin-jvm")};
-        android->capabilities.buildSystems = {QStringLiteral("gradle")};
-        android->capabilities.dependencyManagers = {QStringLiteral("gradle")};
-        android->capabilities.testingCapabilities = {QStringLiteral("unit-testing"), QStringLiteral("integration-testing")};
-        android->capabilities.qualityCapabilities = {QStringLiteral("linting"), QStringLiteral("static-analysis")};
-        android->ai.primaryAgent = QStringLiteral("gemini");
-        android->ai.additionalAgents = {QStringLiteral("openai-codex"), QStringLiteral("claude-code")};
-        android->ai.responsibilities = {QStringLiteral("planning"), QStringLiteral("architecture"), QStringLiteral("coding"), QStringLiteral("testing"), QStringLiteral("debugging"), QStringLiteral("documentation")};
-        android->ai.aramfIntegrations = {QStringLiteral("agents-md"), QStringLiteral("project-status"), QStringLiteral("source-of-truth"), QStringLiteral("durable-decisions"), QStringLiteral("project-memory"), QStringLiteral("framework-knowledge"), QStringLiteral("validation-verification")};
-        android->recommendedRules = {QStringLiteral("Universal safety"), QStringLiteral("Project architecture"), QStringLiteral("Respect Source of Truth"), QStringLiteral("Build Must Pass"), QStringLiteral("Verification Before Completion")};
-    }
-    auto& bachelor = result.last();
-    bachelor.academic.academicMode = QStringLiteral("thesis");
-    bachelor.academic.thesisLevel = QStringLiteral("bachelor");
-    bachelor.academic.thesisApproaches = {QStringLiteral("software-system-development")};
-    bachelor.academic.academicRequirements = {
-        QStringLiteral("source-citations"),
-        QStringLiteral("reference-list"),
-        QStringLiteral("methodology-section"),
-        QStringLiteral("research-questions"),
-        QStringLiteral("academic-formatting")
-    };
-    bachelor.academic.academicDeliverables = {
-        QStringLiteral("written-thesis"),
-        QStringLiteral("source-code")
-    };
-    return result;
-}
-
-TemplateDefinition TemplateManager::definition(const QString& id) const { const QString canonical = id == QStringLiteral("android-kotlin-lite") ? QStringLiteral("android-studio-kotlin-gemini") : id; for (const auto& definition : definitions()) if (definition.id == canonical) return definition; return {}; }
-
-bool TemplateManager::applyTemplate(ProjectModel* model, const QString& id) const
-{
-    /**Apply one known built-in template to the project model.
-
-    Template application changes project configuration only and is grouped as one model update.
-    */
-    const QString canonicalId = id == QStringLiteral("android-kotlin-lite") ? QStringLiteral("android-studio-kotlin-gemini") : id;
-    if (!model || !builtInTemplates().contains(canonicalId)) {
-        return false;
-    }
-
-    model->beginUpdate();
-    model->setTemplateId(canonicalId);
-    const auto selected = definition(canonicalId);
-    model->setContext(selected.projectType);
-    model->applyTemplateDefaults(selected.environment);
-    model->applyTemplateCapabilities(selected.capabilities);
-    model->setAcademicConfiguration(selected.academic);
-    model->setAiConfiguration(selected.ai);
-    model->applyTemplateDefaults(selected.environment);
-    model->endUpdate();
-    return true;
-}
-
 GenerationServices::GenerationServices(QObject* parent)
     : QObject(parent)
 {
@@ -405,6 +282,11 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                                                const GenerationOptions& options) const
 {
     GenerationResult result;
+    const auto configurationErrors = TemplateValidation::readiness(model);
+    if (!configurationErrors.isEmpty()) {
+        result.error = configurationErrors.join('\n');
+        return result;
+    }
     result.fingerprint = projectConfigurationFingerprint(model, options);
     if (!options.generateAgentRules && !options.generateRouting && !options.generatePlatforms
         && !options.generateResources && !options.generateMemory && !options.generateProvenance) {
@@ -860,7 +742,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             {QStringLiteral("projectId"), model.projectId()}, {QStringLiteral("projectName"), model.projectName()},
             {QStringLiteral("template"), model.templateId()}, {QStringLiteral("projectType"), projectTypeLabel(model)}};
         const QJsonObject effects{
-            {QStringLiteral("template"), model.templateId()}, {QStringLiteral("languages"), toJsonArray(capabilities.languages)},
+            {QStringLiteral("template"), model.templateId()}, {QStringLiteral("templateModules"), toJsonArray(model.templateModules())}, {QStringLiteral("languages"), toJsonArray(capabilities.languages)},
             {QStringLiteral("frameworks"), toJsonArray(capabilities.frameworks)}, {QStringLiteral("platforms"), toJsonArray(capabilities.targetPlatforms)},
             {QStringLiteral("hardware"), toJsonArray(capabilities.hardwareTargets)}, {QStringLiteral("primaryAiAgent"), ai.primaryAgent},
             {QStringLiteral("resources"), model.resources().size()}, {QStringLiteral("rules"), toJsonArray(model.ruleConfiguration().activeCategories)},
@@ -888,6 +770,16 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
     }
     addGeneratedFiles(result, {QStringLiteral("ARAMF_WORKER/verification/generation-state.json")});
 
+    // Generation writes the complete selected product set after ProjectMemory
+    // initialization. Refresh derived state last so cold-start validation
+    // describes the final generated control plane, not the pre-generation tree.
+    if (options.generateMemory) {
+        ProjectMemory memory;
+        QString memoryError;
+        if (!memory.refreshDerivedState(projectRoot, &memoryError))
+            return fail(QStringLiteral("Project Memory derived state"), memoryError);
+        addGeneratedFiles(result, {AramfPaths::CurrentState, AramfPaths::ColdStartValidation});
+    }
     result.success = true;
     return result;
 }
@@ -1118,6 +1010,10 @@ FinalizationResult FinalizationServices::finalize(const ProjectModel& model,
         }
     }
     if (!writeTextFile(statusPath, status.toUtf8(), &error)) { result.error = error; return result; }
+    if (expectedOptions.generateMemory && !memory.refreshDerivedState(root, &error)) {
+        result.error = error;
+        return result;
+    }
     result.success = true;
     return result;
 }

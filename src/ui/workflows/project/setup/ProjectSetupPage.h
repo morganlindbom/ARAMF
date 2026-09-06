@@ -40,5 +40,6 @@ private:
     QLineEdit* name_;
     QLineEdit* path_;
     QLineEdit* id_;
+    QLineEdit* type_;
     QTextEdit* description_;
 };

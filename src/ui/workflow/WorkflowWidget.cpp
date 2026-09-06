@@ -15,11 +15,17 @@ WorkflowWidget::WorkflowWidget(QWidget* parent)
       forward_(new QPushButton(tr("Forward"), this))
 {
     auto* layout = new QVBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(6);
     layout->addWidget(new QLabel(tr("Workflow"), this));
     layout->addWidget(steps_, 1);
+    steps_->setMinimumHeight(0);
+    steps_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     auto* buttons = new QHBoxLayout;
     buttons->addWidget(back_);
     buttons->addWidget(forward_);
+    back_->setMinimumHeight(32);
+    forward_->setMinimumHeight(32);
     layout->addLayout(buttons);
 
     connect(steps_, &QListWidget::currentRowChanged, this, [this](int row) {

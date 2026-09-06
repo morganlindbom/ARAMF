@@ -3,6 +3,7 @@
 #include "ProjectModel.h"
 
 #include <QFile>
+#include <QSaveFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -75,7 +76,7 @@ QStringList migrateMemoryOptions(const QStringList& values)
 }
 }
 
-bool ProjectPersistence::save(const ProjectModel& model, const QString& filePath, QString* error) const
+QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
 {
     QJsonObject environment;
     const auto env = model.developmentEnvironment();
@@ -112,7 +113,8 @@ bool ProjectPersistence::save(const ProjectModel& model, const QString& filePath
     capabilityObject.insert(QStringLiteral("deliveryCapabilities"), toJsonArray(capabilities.deliveryCapabilities));
 
     QJsonObject options;
-    for (auto it = model.options().cbegin(); it != model.options().cend(); ++it) {
+    const auto storedOptions = model.options();
+    for (auto it = storedOptions.cbegin(); it != storedOptions.cend(); ++it) {
         options.insert(it.key(), toJsonArray(it.value()));
     }
 
@@ -120,9 +122,11 @@ bool ProjectPersistence::save(const ProjectModel& model, const QString& filePath
     root.insert(QStringLiteral("projectId"), model.projectId());
     root.insert(QStringLiteral("projectName"), model.projectName());
     root.insert(QStringLiteral("projectPath"), model.projectPath());
-    root.insert(QStringLiteral("projectFilePath"), filePath);
+    root.insert(QStringLiteral("projectFilePath"), model.projectFilePath());
     root.insert(QStringLiteral("description"), model.description());
     root.insert(QStringLiteral("templateId"), model.templateId());
+    root.insert(QStringLiteral("templateModules"), toJsonArray(model.templateModules()));
+    root.insert(QStringLiteral("templateState"), model.templateState());
     root.insert(QStringLiteral("context"), model.context());
     const auto ai = model.aiConfiguration();
     QJsonObject aiObject;
@@ -240,12 +244,26 @@ bool ProjectPersistence::save(const ProjectModel& model, const QString& filePath
     root.insert(QStringLiteral("profileSelections"), toJsonArray(model.profileSelections()));
     root.insert(QStringLiteral("options"), options);
 
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+    return root;
+}
+
+QJsonObject ProjectPersistence::configuration(const ProjectModel& model) const
+{
+    auto root = toJson(model);
+    for (const auto& key : {"projectId", "projectName", "projectPath", "projectFilePath", "templateId", "templateModules", "templateState", "aiPlatforms"}) root.remove(key);
+    return root;
+}
+
+bool ProjectPersistence::save(const ProjectModel& model, const QString& filePath, QString* error) const
+{
+    auto root = toJson(model);
+    root.insert("projectFilePath", filePath);
+    QSaveFile file(filePath);
+    const auto bytes = QJsonDocument(root).toJson(QJsonDocument::Indented);
+    if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit()) {
         if (error) *error = file.errorString();
         return false;
     }
-    file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
     return true;
 }
 
@@ -268,7 +286,14 @@ bool ProjectPersistence::load(ProjectModel* model, const QString& filePath, QStr
         return false;
     }
 
-    const auto root = document.object();
+    auto root = document.object();
+    root.insert("projectFilePath", filePath);
+    return fromJson(model, root, error);
+}
+
+bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, QString* error) const
+{
+    if (!model) { if (error) *error = "Project model is not available."; return false; }
     AcademicConfiguration academic;
     const auto academicObject = root.value(QStringLiteral("academic")).toObject();
     if (!academicObject.isEmpty()) {
@@ -361,15 +386,24 @@ bool ProjectPersistence::load(ProjectModel* model, const QString& filePath, QStr
     }
 
     model->beginUpdate();
+    model->resetForNewProject();
+    model->setTemplateState(root.value("templateState").toObject());
     model->setProjectId(root.value(QStringLiteral("projectId")).toString());
     model->setProjectName(root.value(QStringLiteral("projectName")).toString());
     model->setProjectPath(root.value(QStringLiteral("projectPath")).toString());
-    model->setProjectFilePath(filePath);
+    model->setProjectFilePath(root.value("projectFilePath").toString());
     model->setDescription(root.value(QStringLiteral("description")).toString());
     model->setTemplateId(normalizeTemplateId(root.value(QStringLiteral("templateId")).toString()));
+    model->setTemplateModules(fromJsonArray(root.value(QStringLiteral("templateModules"))));
+    // A composite template may include required module IDs; preserve the
+    // persisted composite/template identity after normalizing those modules.
+    model->setTemplateId(normalizeTemplateId(root.value(QStringLiteral("templateId")).toString()));
+    if (model->templateModules().isEmpty() && !model->templateId().isEmpty() && model->templateId() != QStringLiteral("composed"))
+        model->setTemplateModules({model->templateId()});
     model->setContext(root.value(QStringLiteral("context")).toString());
     model->setDevelopmentCapabilities(capabilities);
     model->setDevelopmentEnvironment(environment);
+    model->setContext(root.value("context").toString());
     model->setAcademicConfiguration(academic);
     model->setAiConfiguration(ai);
     // Structured AI configuration is authoritative when present. The legacy
@@ -508,7 +542,7 @@ bool ProjectPersistence::load(ProjectModel* model, const QString& filePath, QStr
     ResourcePolicy resourcePolicy;
     const auto resourcePolicyObject = root.value(QStringLiteral("resourcePolicy")).toObject();
     resourcePolicy.options = fromJsonArray(resourcePolicyObject.value(QStringLiteral("options")));
-    if (resourcePolicy.options.isEmpty()) {
+    if (!resourcePolicyObject.contains("options")) {
         resourcePolicy.options = {QStringLiteral("read-relevant"), QStringLiteral("prefer-authoritative"), QStringLiteral("respect-scope"), QStringLiteral("ignore-disabled"), QStringLiteral("warn-conflicts")};
     }
     resourcePolicy.loadingStrategy = resourcePolicyObject.value(QStringLiteral("loadingStrategy")).toString(QStringLiteral("relevant"));
@@ -518,6 +552,7 @@ bool ProjectPersistence::load(ProjectModel* model, const QString& filePath, QStr
     for (auto it = optionsObject.constBegin(); it != optionsObject.constEnd(); ++it) {
         model->setOptionValues(it.key(), fromJsonArray(it.value()));
     }
+    model->clearEnvironmentOverrides();
     model->endUpdate();
     model->setModified(false);
     return true;

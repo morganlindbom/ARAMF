@@ -18,7 +18,8 @@
       "command": "C:\\Program Files\\CMake\\bin\\cmake.exe",
       "args": [
         "--build",
-        "${workspaceFolder}/build",
+        "--preset",
+        "windows-ucrt64-debug",
         "--parallel",
         "2"
       ],
