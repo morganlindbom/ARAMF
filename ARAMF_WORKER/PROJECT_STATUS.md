@@ -393,3 +393,16 @@ descriptions, scopes, and canonical identities were preserved.
 
 - Task: Restore MSYS2 Qt toolchain for include resolution
 - Status: PASS
+
+## Codex Executable Discovery Checkpoint
+
+- UPDATE-105 now uses a hermetic temporary Codex installation fixture rather
+  than depending on a developer-specific `%LOCALAPPDATA%` path.
+- Codex resolution remains ordered as explicit configured path,
+  `CODEX_CLI_PATH`, process `PATH`, and the supported dynamic
+  `%LOCALAPPDATA%/OpenAI/Codex/bin/<version>` locations.
+- Local discovery accepts both `codex.exe` and the Windows package-manager
+  `codex.cmd` entry point; executable validation still launches `--version`.
+- UPDATE campaign and full CTest pass after the change. A real Codex
+  installation is not required by the resolver test; production reports an
+  unavailable installation when none can be resolved.

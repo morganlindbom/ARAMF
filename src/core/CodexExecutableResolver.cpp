@@ -60,8 +60,10 @@ QStringList CodexExecutableResolver::localCandidates()
         return left.absoluteFilePath() < right.absoluteFilePath();
     });
     for (const auto& directory : directories) {
-        const QString candidate = QDir(directory.absoluteFilePath()).filePath(QStringLiteral("codex.exe"));
-        if (QFileInfo(candidate).isFile()) candidates.append(candidate);
+        for (const auto& name : {QStringLiteral("codex.exe"), QStringLiteral("codex.cmd")}) {
+            const QString candidate = QDir(directory.absoluteFilePath()).filePath(name);
+            if (QFileInfo(candidate).isFile()) candidates.append(candidate);
+        }
     }
     return candidates;
 }
