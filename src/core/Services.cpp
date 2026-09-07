@@ -851,8 +851,23 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         if (!QDir(projectRoot).rename(QStringLiteral("ARAMF_WORKER"), AramfPaths::workerDirectoryName(suffix)))
             return fail(QStringLiteral("Worker directory"), QStringLiteral("Could not rename worker directory to %1").arg(resolved));
         AramfPaths::setRuntimeWorkerNameSuffix(suffix);
+        // The worker directory is renamed only after its contents are generated.
+        // Update both bootstrap documents so a fresh suffixed project points
+        // agents at the directory that actually exists.
+        const QString resolvedWorkerName = AramfPaths::workerDirectoryName(suffix);
+        for (const QString& relative : {QStringLiteral("AGENTS.md"), resolvedWorkerName + QStringLiteral("/AGENTS.md")}) {
+            const QString path = QDir(projectRoot).filePath(relative);
+            QFile file(path);
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+                return fail(QStringLiteral("Agent bootstrap"), file.errorString());
+            QString text = QString::fromUtf8(file.readAll());
+            file.close();
+            text.replace(QStringLiteral("ARAMF_WORKER"), resolvedWorkerName);
+            if (!writeTextFile(path, text.toUtf8(), &error))
+                return fail(QStringLiteral("Agent bootstrap"), error);
+        }
         for (auto& generated : result.generatedFiles)
-            generated.replace(QStringLiteral("ARAMF_WORKER"), AramfPaths::workerDirectoryName(suffix));
+            generated.replace(QStringLiteral("ARAMF_WORKER"), resolvedWorkerName);
         AramfPaths::setRuntimeWorkerNameSuffix({});
     }
     // The worker identity JSON uses the same resolved basename as its
@@ -945,7 +960,7 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     if (certificationEnabled) {
         CertificationService certification;
         QString certificationError;
-        QFile certificateHistoryFile(QDir(root).filePath(AramfPaths::Certificates));
+        QFile certificateHistoryFile(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::Certificates)));
         const bool certificateHistoryReadable = certificateHistoryFile.exists()
             && certificateHistoryFile.open(QIODevice::ReadOnly | QIODevice::Text);
         certificateHistoryFile.close();
@@ -1013,7 +1028,7 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
                  report.value(QStringLiteral("status")).toString() == QStringLiteral("PASS") ? VerificationStatus::Pass : VerificationStatus::Fail,
                  error.isEmpty() ? report.value(QStringLiteral("status")).toString() : error);
         QJsonObject cold;
-        const bool coldPass = readJson(QDir(root).filePath(AramfPaths::ColdStartValidation), &cold, &error)
+        const bool coldPass = readJson(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ColdStartValidation)), &cold, &error)
             && cold.value(QStringLiteral("status")).toString() == QStringLiteral("PASS");
         addCheck(result, QStringLiteral("cold-start"), QStringLiteral("Cold-start validation"),
                  coldPass ? VerificationStatus::Pass : VerificationStatus::Fail,
@@ -1035,7 +1050,7 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     result.overallStatus = hasFail ? VerificationStatus::Fail : hasWarning ? VerificationStatus::Warning : VerificationStatus::Pass;
     QJsonArray checks;
     for (const auto& check : result.checks) checks.append(QJsonObject{{QStringLiteral("id"), check.id}, {QStringLiteral("name"), check.name}, {QStringLiteral("status"), statusName(check.status)}, {QStringLiteral("details"), check.details}});
-    writeJsonFile(QDir(root).filePath(QStringLiteral("ARAMF_WORKER/verification/verification-result.json")),
+    writeJsonFile(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/verification-result.json"))),
                   QJsonObject{{QStringLiteral("fingerprint"), result.fingerprint}, {QStringLiteral("projectRoot"), root}, {QStringLiteral("overallStatus"), statusName(result.overallStatus)}, {QStringLiteral("checkedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}, {QStringLiteral("checks"), checks}}, nullptr);
     return result;
 }
@@ -1075,7 +1090,7 @@ FinalizationResult FinalizationServices::finalize(const ProjectModel& model,
         return result;
     }
     QJsonObject existing;
-    const QString finalizationPath = QDir(root).filePath(QStringLiteral("ARAMF_WORKER/verification/finalization-state.json"));
+    const QString finalizationPath = QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/finalization-state.json")));
     if (readJson(finalizationPath, &existing, nullptr)
         && existing.value(QStringLiteral("fingerprint")).toString() == result.fingerprint) {
         result.success = true;
@@ -1098,7 +1113,7 @@ FinalizationResult FinalizationServices::finalize(const ProjectModel& model,
         result.error = error;
         return result;
     }
-    const QString statusPath = QDir(root).filePath(AramfPaths::ProjectStatus);
+    const QString statusPath = QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ProjectStatus));
     QFile statusFile(statusPath);
     QString status;
     if (statusFile.open(QIODevice::ReadOnly | QIODevice::Text)) status = statusFile.readAll();
