@@ -275,7 +275,7 @@ QList<EnvironmentOption> versionControlSystems()
 
 QList<EnvironmentOption> developmentSupport()
 {
-    return options({{"Debugger", "debugger"}, {"Remote Debugging", "remote-debugging"}, {"Hardware Debug Probe", "hardware-debug-probe"}, {"Profiling", "profiling"}, {"Memory Analysis", "memory-analysis"}, {"Android SDK", "android-sdk"}});
+    return options({{"Debugger", "debugger"}, {"Remote Debugging", "remote-debugging"}, {"Hardware Debug Probe", "hardware-debug-probe"}, {"Profiling", "profiling"}, {"Memory Analysis", "memory-analysis"}, {"Android SDK", "android-sdk"}, {"Arduino IDE", "arduino-ide"}});
 }
 
 QList<EnvironmentOption> processorFamilies()

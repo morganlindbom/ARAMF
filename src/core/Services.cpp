@@ -369,7 +369,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "Communication commands use symbolic hardware resource IDs. Resolve physical pins only through `hardware/hardware-resources.json`; validate endpoint ownership and capabilities, and never invent or access arbitrary numeric GPIOs in communication code.\n"
             "Framework Knowledge has distinct built-in, global, and project-local layers. The global user library is stored under `ARAMF_DATA/` at the resolved ARAMF program root; build directories are disposable. Only explicitly approved portable knowledge may be promoted there; use the memory knowledge promotion command and never edit knowledge stores directly. New projects seed approved global knowledge without replacing project-local authority.\n"
             "UPDATE is a separate human-controlled workflow: review approved Framework Knowledge, analyze the whole project, prepare a plan, then explicitly execute it through the configured agent. Read `update/update-plan.json` and `update/update-contract.json` when present; the managed project root is the implementation target and `ARAMF_WORKER/` is orchestration only. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes and validation are required. Preserve higher-authority instructions and use the scope-aware validation policy.\n");
-        if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")) {
+        if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")
+            || model.templateId() == QStringLiteral("official-android-arduino-smart-home") || model.templateId() == QStringLiteral("android-arduino-smart-home")) {
             const auto android = model.androidConstraints();
             canonicalAgent += QStringLiteral(
                 "\n## Android / Kotlin project guidance\n\n"
@@ -445,6 +446,16 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                     .arg(android.submissionSegments.join(QStringLiteral(", ")))
                     .arg(android.unresolvedRequirements.join(QStringLiteral(", ")));
             }
+        }
+        if (model.templateId() == QStringLiteral("official-android-arduino-smart-home")
+            || model.templateId() == QStringLiteral("android-arduino-smart-home")) {
+            canonicalAgent += QStringLiteral(
+                "\n## Android / Arduino KS0085 Smart Home guidance\n\n"
+                "Android Studio is the primary IDE and Kotlin is the Android language. The embedded side is an Arduino-compatible Keyestudio KS0085 Smart Home platform using readable C/C++. Android communicates with the HM-10 Bluetooth module, which bridges to Arduino UART/serial. Wi-Fi and Raspberry Pi Pico are not part of this template.\n"
+                "Keep Android connection/discovery state, command transmission, telemetry reception, dashboard UI, lifecycle-safe reconnection and error handling separated into understandable responsibilities. Keep Arduino initialization, sensor acquisition, actuator control, command parsing, response generation, safe hardware states and symbolic pin ownership explicit.\n"
+                "Use `hardware/hardware-resources.json` as the hardware authority. Keep LED, relay, buzzer, fan, servo, LCD, PIR, MQ-2, photocell, soil-moisture, water/steam and push-button resources symbolic and replaceable; do not invent fixed GPIO numbers in communication code.\n"
+                "Recommended progression: validate existing KS0085 hardware and firmware; test sensors and actuators individually; validate Bluetooth with the original implementation; connect a minimal Kotlin Bluetooth client; send one command; control one actuator; read one sensor; build the dashboard; integrate remaining devices; then improve protocol robustness and validate the complete Android-to-hardware workflow.\n"
+                "The communication contract defines message structure, not a frozen legacy one-character protocol. Preserve UI/communication separation and make each increment observable and testable for a school project.\n");
         }
         canonicalAgent += QStringLiteral(
             "Run the minimum validation required by `routing/validation-policy.json`; do not run full regression campaigns for ordinary isolated changes. Escalate when scope, risk, failure, or explicit milestone policy requires it.\n");
@@ -530,11 +541,14 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "## Implemented\n\n- ARAMF control-plane structure generated.\n\n"
             "## Verified\n\n- Generation completed for the selected output products.\n")
                                    .arg(model.projectName(), model.projectId());
-        if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")) {
+        if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")
+            || model.templateId() == QStringLiteral("official-android-arduino-smart-home") || model.templateId() == QStringLiteral("android-arduino-smart-home")) {
             status += QStringLiteral(
                 "\n## Android Validation States\n\n"
                 "Track IMPLEMENTED, BUILD PASS, TEST PASS, LINT PASS, EMULATOR VERIFIED, DEVICE VERIFIED, APPLICATION VERIFIED, and CERTIFIED separately.\n"
                 "Unrun synchronization, emulator, device, lifecycle, permission, navigation, persistence, and runtime checks remain not verified.\n");
+            if (model.templateId() == QStringLiteral("official-android-arduino-smart-home") || model.templateId() == QStringLiteral("android-arduino-smart-home"))
+                status += QStringLiteral("\n## Arduino / KS0085 Validation States\n\nTrack Bluetooth pairing, UART/serial protocol, sensor acquisition, actuator control, safe-state behavior, and complete Android-to-hardware integration separately. Physical hardware evidence is required for on-target claims.\n");
             if (!model.androidConstraints().courseName.isEmpty()) {
                 status += QStringLiteral(
                     "\n## Course Source of Truth\n\n"
@@ -718,13 +732,18 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             const bool hasAndroid = capabilities.targetPlatforms.contains(QStringLiteral("android"));
             const bool hasPico = capabilities.hardwareTargets.contains(QStringLiteral("raspberry-pi-pico-2-w"))
                 || capabilities.frameworks.contains(QStringLiteral("pico-sdk"));
-            if (hasAndroid && hasPico) {
+            const bool hasArduino = capabilities.hardwareTargets.contains(QStringLiteral("arduino-mcu"))
+                || capabilities.frameworks.contains(QStringLiteral("arduino"));
+            if (hasAndroid && (hasPico || hasArduino)) {
+                const QJsonObject embeddedTarget = hasArduino
+                    ? QJsonObject{{QStringLiteral("id"), QStringLiteral("arduino")}, {QStringLiteral("name"), QStringLiteral("Arduino-compatible KS0085 Smart Home firmware")}, {QStringLiteral("buildSystem"), QStringLiteral("arduino-build")}, {QStringLiteral("environment"), QStringLiteral("Arduino IDE")}, {QStringLiteral("outputs"), QJsonArray{"HEX", "BIN"}}, {QStringLiteral("tests"), QJsonArray{"host/unit", "hardware when available"}}}
+                    : QJsonObject{{QStringLiteral("id"), QStringLiteral("pico-2w")}, {QStringLiteral("name"), QStringLiteral("Raspberry Pi Pico 2 W firmware")}, {QStringLiteral("buildSystem"), QStringLiteral("cmake")}, {QStringLiteral("sdk"), QStringLiteral("pico-sdk")}, {QStringLiteral("outputs"), QJsonArray{"UF2", "ELF", "BIN"}}, {QStringLiteral("tests"), QJsonArray{"host/unit", "hardware when available"}}};
                 const QJsonObject targets{
-                    {QStringLiteral("projectScope"), QStringLiteral("one coordinated Android + Raspberry Pi Pico 2 W system")},
+                    {QStringLiteral("projectScope"), hasArduino ? QStringLiteral("one coordinated Android + Arduino KS0085 Smart Home system") : QStringLiteral("one coordinated Android + Raspberry Pi Pico 2 W system")},
                     {QStringLiteral("targets"), QJsonArray{
                         QJsonObject{{QStringLiteral("id"), QStringLiteral("android")}, {QStringLiteral("name"), QStringLiteral("Android application")}, {QStringLiteral("buildSystem"), QStringLiteral("gradle")}, {QStringLiteral("environment"), QStringLiteral("Android Studio")}, {QStringLiteral("outputs"), QJsonArray{"APK", "AAB"}}, {QStringLiteral("tests"), QJsonArray{"JVM/unit", "instrumentation/UI"}}},
-                        QJsonObject{{QStringLiteral("id"), QStringLiteral("pico-2w")}, {QStringLiteral("name"), QStringLiteral("Raspberry Pi Pico 2 W firmware")}, {QStringLiteral("buildSystem"), QStringLiteral("cmake")}, {QStringLiteral("sdk"), QStringLiteral("pico-sdk")}, {QStringLiteral("outputs"), QJsonArray{"UF2", "ELF", "BIN"}}, {QStringLiteral("tests"), QJsonArray{"host/unit", "hardware when available"}}}}},
-                    {QStringLiteral("orchestration"), QJsonArray{"validate shared configuration", "build Pico firmware", "run Pico tests", "build Android application", "run Android tests", "run communication contract tests", "verify combined system"}}};
+                        embeddedTarget}},
+                    {QStringLiteral("orchestration"), hasArduino ? QJsonArray{"validate shared configuration", "build Arduino firmware", "run Arduino tests", "build Android application", "run Android tests", "run Bluetooth/serial contract tests", "verify combined system"} : QJsonArray{"validate shared configuration", "build Pico firmware", "run Pico tests", "build Android application", "run Android tests", "run communication contract tests", "verify combined system"}}};
                 const QString targetsPath = QStringLiteral("ARAMF_WORKER/communication/multi-target-build.json");
                 if (!writeJsonFile(QDir(projectRoot).filePath(targetsPath), targets, &error)) return fail(QStringLiteral("Multi-target build model"), error);
                 addGeneratedFiles(result, {targetsPath});
@@ -866,6 +885,13 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             if (!writeTextFile(path, text.toUtf8(), &error))
                 return fail(QStringLiteral("Agent bootstrap"), error);
         }
+        // Bootstrap rewriting changes a cold-start input, so refresh derived
+        // memory artifacts after all suffix-specific files are final.
+        if (options.generateMemory) {
+            ProjectMemory memory;
+            if (!memory.refreshDerivedState(projectRoot, &error))
+                return fail(QStringLiteral("Project Memory derived state"), error);
+        }
         for (auto& generated : result.generatedFiles)
             generated.replace(QStringLiteral("ARAMF_WORKER"), resolvedWorkerName);
         AramfPaths::setRuntimeWorkerNameSuffix({});
@@ -953,7 +979,9 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     const auto capabilitiesForVerification = model.developmentCapabilities();
     const bool combinedTargets = capabilitiesForVerification.targetPlatforms.contains(QStringLiteral("android"))
         && (capabilitiesForVerification.hardwareTargets.contains(QStringLiteral("raspberry-pi-pico-2-w")) || capabilitiesForVerification.frameworks.contains(QStringLiteral("pico-sdk")));
-    checkFile(QStringLiteral("multi-target-build"), QStringLiteral("Multi-target build model"), QStringLiteral("ARAMF_WORKER/communication/multi-target-build.json"), combinedTargets && model.communicationConfiguration().enabled && expectedOptions.generatePlatforms);
+    const bool arduinoTargets = capabilitiesForVerification.targetPlatforms.contains(QStringLiteral("android"))
+        && (capabilitiesForVerification.hardwareTargets.contains(QStringLiteral("arduino-mcu")) || capabilitiesForVerification.frameworks.contains(QStringLiteral("arduino")));
+    checkFile(QStringLiteral("multi-target-build"), QStringLiteral("Multi-target build model"), QStringLiteral("ARAMF_WORKER/communication/multi-target-build.json"), (combinedTargets || arduinoTargets) && model.communicationConfiguration().enabled && expectedOptions.generatePlatforms);
     const bool certificationEnabled = model.certificationConfiguration().enabled;
     checkFile(QStringLiteral("certification-contract"), QStringLiteral("Certification contract"), AramfPaths::CertificationContract, certificationEnabled);
     checkFile(QStringLiteral("current-certification-state"), QStringLiteral("Current certification state"), AramfPaths::CurrentCertificationState, certificationEnabled);

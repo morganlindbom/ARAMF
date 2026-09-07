@@ -180,8 +180,8 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
         }
         require(!source.isEmpty() && !destination.isEmpty() && source != destination,
                 "Communication requires distinct source and destination targets");
-        require(transport == "wifi", "Unsupported communication transport: " + transport);
-        if (!protocol.isEmpty()) require(QStringList{"http-rest", "websocket", "tcp", "udp"}.contains(protocol), "Unsupported communication protocol: " + protocol);
+        require(QStringList{"wifi", "bluetooth", "serial"}.contains(transport), "Unsupported communication transport: " + transport);
+        if (!protocol.isEmpty()) require(QStringList{"http-rest", "websocket", "tcp", "udp", "serial"}.contains(protocol), "Unsupported communication protocol: " + protocol);
         if (protocol == "http-rest" || protocol == "websocket" || protocol == "tcp" || protocol == "udp") {
             bool addressConfigured = false;
             if (!endpointObjects.isEmpty()) {
@@ -264,7 +264,7 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
             const auto resource = value.toObject();
             const QString id = resource.value(QStringLiteral("id")).toString();
             require(!id.trimmed().isEmpty() && !resourceIds.contains(id), "Hardware resource IDs must be unique and non-empty"); resourceIds.insert(id);
-            require(resource.value(QStringLiteral("resourceType")).toString() == QStringLiteral("digital-pin"), "Unsupported hardware resource type");
+            require(QStringList{QStringLiteral("digital-pin"), QStringLiteral("analog-input"), QStringLiteral("pwm-output"), QStringLiteral("i2c-device"), QStringLiteral("uart"), QStringLiteral("servo"), QStringLiteral("relay"), QStringLiteral("display"), QStringLiteral("buzzer")}.contains(resource.value(QStringLiteral("resourceType")).toString()), "Unsupported hardware resource type");
             require(endpointIds.contains(resource.value(QStringLiteral("endpointId")).toString()), "Hardware resource references an unknown endpoint");
         }
         for (const auto& messageValue : communication.value(QStringLiteral("messages")).toArray()) {

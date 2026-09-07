@@ -157,6 +157,7 @@ QList<TemplateDefinition> builtIns()
     auto result = QList<TemplateDefinition>{
         base("pico-2w-visual-designer", "Pico 2 W Visual Designer", "embedded-firmware", {"cpp", "c", "pio-assembly"}, {"pico-sdk"}, {"windows-desktop", "microcontroller"}, {"msys2-ucrt64-gcc", "arm-gnu"}, {"cmake", "ninja"}, {"cmake-fetchcontent"}),
         base("android-studio-kotlin-gemini", "Android Studio/Kotlin/Gemini", "android-application", {"kotlin"}, {"android-sdk", "jetpack-compose", "android-emulator"}, {"android"}, {"java-jdk", "kotlin-jvm"}, {"gradle"}, {"gradle"}),
+        base("android-arduino-smart-home", "Android Arduino Smart Home", "combined-android-arduino-smart-home", {"kotlin", "cpp", "c"}, {"android-sdk", "jetpack-compose", "android-emulator", "arduino"}, {"android", "embedded-system", "microcontroller"}, {"java-jdk", "avr-gcc"}, {"gradle", "arduino-build"}, {"gradle"}),
         base("qt-desktop-application", "Qt Desktop Application", "desktop-application", {"cpp"}, {"qt"}, {"windows-desktop"}, {"msys2-ucrt64-gcc"}, {"cmake", "ninja"}, {"cmake-fetchcontent"}),
         base("cpp-command-line", "C++ Command Line", "software-development", {"cpp"}, {}, {"command-line"}, {"msys2-ucrt64-gcc"}, {"cmake", "ninja"}, {"cmake-fetchcontent"}),
         base("cmake-library", "CMake Library", "reusable-library", {"cpp"}, {}, {"library"}, {"msys2-ucrt64-gcc"}, {"cmake", "ninja"}, {"cmake-fetchcontent"}),
@@ -208,6 +209,51 @@ QList<TemplateDefinition> builtIns()
             d.ai.responsibilities << "ui-ux-design" << "accessibility-review";
             d.ai.permissions << "run-linters";
         }
+        if (d.id == "android-arduino-smart-home") {
+            c.ides = {QStringLiteral("android-studio"), QStringLiteral("arduino-ide")};
+            c.developmentTools << QStringLiteral("arduino-ide");
+            c.targetArchitectures = {QStringLiteral("avr")};
+            c.hardwareTargets = {QStringLiteral("mobile-device"), QStringLiteral("arduino-mcu")};
+            c.processorFamilies = {QStringLiteral("avr")};
+            c.testingCapabilities << QStringLiteral("hardware-in-loop");
+            c.qualityCapabilities << QStringLiteral("linting");
+            c.deliveryCapabilities << QStringLiteral("firmware-image") << QStringLiteral("package-installer");
+            d.rules.projectScopes << QStringLiteral("hardware-firmware");
+            d.academic.academicMode = QStringLiteral("academic-assignment");
+            d.ai.primaryAgent = QStringLiteral("gemini");
+            assistantDefaults(d, QStringLiteral("gemini"));
+            d.ai.responsibilities << QStringLiteral("ui-ux-design") << QStringLiteral("accessibility-review");
+            d.ai.permissions << QStringLiteral("run-linters");
+            d.description = QStringLiteral("School-oriented Android Kotlin application for the Keyestudio KS0085 Arduino-compatible Smart Home Kit, connected through HM-10 Bluetooth and UART/serial communication.");
+            d.recommendedResources << QStringLiteral("Keyestudio KS0085 Smart Home Kit documentation") << QStringLiteral("Course assignment / grading rubric");
+            d.exclusions << QStringLiteral("Raspberry Pi Pico, Wi-Fi, cloud services and fixed pin numbers are not selected by this Arduino template");
+            d.communication.enabled = true;
+            d.communication.sourceTarget = QStringLiteral("android-application");
+            d.communication.destinationTarget = QStringLiteral("arduino-mcu");
+            d.communication.sourceRole = QStringLiteral("client");
+            d.communication.destinationRole = QStringLiteral("server");
+            d.communication.transport = QStringLiteral("bluetooth");
+            d.communication.protocol = QStringLiteral("serial");
+            d.communication.protocolVersion = QStringLiteral("1");
+            d.communication.reconnectPolicy = QStringLiteral("retry-with-backoff");
+            d.communication.errorHandling = QStringLiteral("reject-malformed-and-report-error");
+            d.communication.integrationRequirements = {QStringLiteral("bluetooth-pairing"), QStringLiteral("uart-serial-bridge"), QStringLiteral("reconnect-recovery"), QStringLiteral("malformed-input-rejection"), QStringLiteral("lifecycle-safe-connection")};
+            d.communication.endpoints = {
+                {QStringLiteral("android-endpoint"), QStringLiteral("android-application"), QStringLiteral("Android Application"), QStringLiteral("client"), {QStringLiteral("bluetooth"), QStringLiteral("command-transmission"), QStringLiteral("telemetry-reception")}, QStringLiteral("HM-10")},
+                {QStringLiteral("arduino-endpoint"), QStringLiteral("arduino-mcu"), QStringLiteral("Arduino / KS0085 Smart Home"), QStringLiteral("server"), {QStringLiteral("bluetooth"), QStringLiteral("uart"), QStringLiteral("gpio"), QStringLiteral("pwm"), QStringLiteral("adc")}, QStringLiteral("KS0085")}};
+            d.communication.links = {{QStringLiteral("android-arduino-bluetooth"), QStringLiteral("android-endpoint"), QStringLiteral("arduino-endpoint"), QStringLiteral("bidirectional"), QStringLiteral("bluetooth"), QStringLiteral("serial"), QStringLiteral("text"), QStringLiteral("command-oriented-messages"), QStringLiteral("utf-8"), QStringLiteral("1"), QStringLiteral("3s"), QStringLiteral("retry-with-backoff"), QStringLiteral("reject-malformed-and-report-error"), true, 256, {}}};
+            d.communication.messages = {
+                {1, QStringLiteral("DEVICE_COMMAND"), QStringLiteral("command"), QStringLiteral("android-endpoint->arduino-endpoint"), QStringLiteral("android-endpoint"), QStringLiteral("arduino-endpoint"), 0, 2, {{QStringLiteral("command"), QStringLiteral("string"), true}, {QStringLiteral("value"), QStringLiteral("string"), false}}, QStringLiteral("Symbolic actuator or device command; project defines the command vocabulary")},
+                {2, QStringLiteral("DEVICE_STATE"), QStringLiteral("response"), QStringLiteral("arduino-endpoint->android-endpoint"), QStringLiteral("arduino-endpoint"), QStringLiteral("android-endpoint"), 1, 0, {{QStringLiteral("deviceId"), QStringLiteral("string"), true}, {QStringLiteral("state"), QStringLiteral("string"), true}, {QStringLiteral("value"), QStringLiteral("string"), false}}, QStringLiteral("Device state or sensor telemetry response")}};
+            d.communication.testVectors = {};
+            c.developmentTools.removeDuplicates();
+            c.testingCapabilities.removeDuplicates();
+            c.qualityCapabilities.removeDuplicates();
+            c.deliveryCapabilities.removeDuplicates();
+            d.rules.projectScopes.removeDuplicates();
+            d.ai.permissions.removeDuplicates();
+            d.ai.responsibilities.removeDuplicates();
+        }
         if (d.id == "bachelor-thesis") {
             d.academic.academicMode = "thesis"; d.academic.thesisLevel = "bachelor";
             d.academic.thesisApproaches = {"software-system-development"};
@@ -221,6 +267,16 @@ QList<TemplateDefinition> builtIns()
         c.testingCapabilities.removeDuplicates();
         ensureStandardAgents(d);
         finish(d);
+        if (d.id == "android-arduino-smart-home") {
+            d.configuration.insert(QStringLiteral("hardwareResources"), QJsonArray{
+                QJsonObject{{QStringLiteral("id"), QStringLiteral("KS0085_LEDS")}, {QStringLiteral("endpointId"), QStringLiteral("arduino-endpoint")}, {QStringLiteral("resourceType"), QStringLiteral("digital-pin")}, {QStringLiteral("direction"), QStringLiteral("output")}, {QStringLiteral("purpose"), QStringLiteral("LED control")}, {QStringLiteral("ownership"), QStringLiteral("project")}, {QStringLiteral("capabilities"), QJsonArray{QStringLiteral("digital-output")}}},
+                QJsonObject{{QStringLiteral("id"), QStringLiteral("KS0085_RELAY")}, {QStringLiteral("endpointId"), QStringLiteral("arduino-endpoint")}, {QStringLiteral("resourceType"), QStringLiteral("digital-pin")}, {QStringLiteral("direction"), QStringLiteral("output")}, {QStringLiteral("purpose"), QStringLiteral("Relay control")}, {QStringLiteral("ownership"), QStringLiteral("project")}, {QStringLiteral("capabilities"), QJsonArray{QStringLiteral("digital-output")}}},
+                QJsonObject{{QStringLiteral("id"), QStringLiteral("KS0085_PIR")}, {QStringLiteral("endpointId"), QStringLiteral("arduino-endpoint")}, {QStringLiteral("resourceType"), QStringLiteral("digital-pin")}, {QStringLiteral("direction"), QStringLiteral("input")}, {QStringLiteral("purpose"), QStringLiteral("PIR motion sensor")}, {QStringLiteral("ownership"), QStringLiteral("project")}, {QStringLiteral("capabilities"), QJsonArray{QStringLiteral("digital-input")}}},
+                QJsonObject{{QStringLiteral("id"), QStringLiteral("KS0085_ANALOG_SENSORS")}, {QStringLiteral("endpointId"), QStringLiteral("arduino-endpoint")}, {QStringLiteral("resourceType"), QStringLiteral("analog-input")}, {QStringLiteral("direction"), QStringLiteral("input")}, {QStringLiteral("purpose"), QStringLiteral("MQ-2, photocell, soil moisture and water/steam sensors")}, {QStringLiteral("ownership"), QStringLiteral("project")}, {QStringLiteral("capabilities"), QJsonArray{QStringLiteral("adc")}}}});
+            ProjectModel normalized;
+            ProjectPersistence().fromJson(&normalized, d.configuration);
+            d.configuration = ProjectPersistence().configuration(normalized);
+        }
         if (d.id == "qt-desktop-application") {
             d.environment.framework = "qt6";
             auto environment = d.configuration.value("environment").toObject();
@@ -323,6 +379,27 @@ QList<TemplateDefinition> TemplateManager::moduleDefinitions() const
     focused("android-studio-kotlin-gemini", "mobile-platform", "Mobile Application", {"kotlin"}, {"android-sdk"}, {"java-jdk"}, {"mobile", "android"});
     focused("pico-2w-visual-designer", "pico-sdk", "Pico SDK", {"c", "cpp"}, {"pico-sdk"}, {"arm-gnu"}, {"microcontroller"});
     focused("pico-2w-visual-designer", "pio-assembly", "PIO Assembly", {"pio-assembly"}, {"pico-sdk"}, {"arm-gnu"}, {"microcontroller"});
+    const auto generic = [&result](const QString& id, const QString& name, const QString& description) {
+        TemplateDefinition module;
+        module.kind = TemplateDefinition::Kind::Module;
+        module.id = id; module.displayName = name; module.projectType = QStringLiteral("software-development");
+        module.description = description; module.capabilities = {};
+        ensureStandardAgents(module); finish(module); result << module;
+    };
+    generic(QStringLiteral("arduino"), QStringLiteral("Arduino"), QStringLiteral("Arduino-compatible embedded development."));
+    generic(QStringLiteral("arduino-ide"), QStringLiteral("Arduino IDE"), QStringLiteral("Arduino development tooling."));
+    generic(QStringLiteral("arduino-mcu"), QStringLiteral("Arduino-compatible controller"), QStringLiteral("Arduino-compatible microcontroller target."));
+    generic(QStringLiteral("hardware-integration"), QStringLiteral("Hardware Integration"), QStringLiteral("Explicit hardware ownership and integration boundaries."));
+    generic(QStringLiteral("bluetooth-communication"), QStringLiteral("Bluetooth Communication"), QStringLiteral("Bluetooth device communication."));
+    generic(QStringLiteral("serial-communication"), QStringLiteral("Serial / UART Communication"), QStringLiteral("UART and serial protocol integration."));
+    generic(QStringLiteral("smart-home-iot"), QStringLiteral("Smart Home / IoT"), QStringLiteral("Smart Home and IoT device responsibilities."));
+    generic(QStringLiteral("sensor-integration"), QStringLiteral("Sensor Integration"), QStringLiteral("Digital and analog sensor acquisition."));
+    generic(QStringLiteral("actuator-control"), QStringLiteral("Actuator Control"), QStringLiteral("Actuator, relay, motor and servo control."));
+    generic(QStringLiteral("device-control"), QStringLiteral("Device Control"), QStringLiteral("Remote device command and state control."));
+    generic(QStringLiteral("device-monitoring"), QStringLiteral("Device Monitoring"), QStringLiteral("Telemetry and device state monitoring."));
+    generic(QStringLiteral("ui-device-control"), QStringLiteral("User Interface / Device Control"), QStringLiteral("Student-friendly UI-to-device command mapping."));
+    generic(QStringLiteral("build-test-delivery"), QStringLiteral("Build / Test / Delivery"), QStringLiteral("Incremental build, test and delivery workflow."));
+    generic(QStringLiteral("git-version-control"), QStringLiteral("Git / Version Control"), QStringLiteral("Git-based project history and collaboration."));
     TemplateDefinition wifi;
     wifi.kind = TemplateDefinition::Kind::Module;
     wifi.id = QStringLiteral("wifi-communication");
@@ -355,16 +432,16 @@ QList<TemplateDefinition> TemplateManager::officialDefinitions() const
 {
     QList<TemplateDefinition> result;
     for (const auto& source : builtIns()) {
-        if (source.id != QStringLiteral("pico-2w-visual-designer") && source.id != QStringLiteral("qt-desktop-application")) continue;
+        if (source.id != QStringLiteral("pico-2w-visual-designer") && source.id != QStringLiteral("qt-desktop-application") && source.id != QStringLiteral("android-arduino-smart-home")) continue;
         auto d = source;
-        d.id = source.id == QStringLiteral("pico-2w-visual-designer") ? QStringLiteral("official-pico-visual-designer") : QStringLiteral("official-aramf-development");
-        d.displayName = source.id == QStringLiteral("pico-2w-visual-designer") ? QStringLiteral("Pico Visual Designer") : QStringLiteral("ARAMF Development");
+        d.id = source.id == QStringLiteral("pico-2w-visual-designer") ? QStringLiteral("official-pico-visual-designer") : source.id == QStringLiteral("qt-desktop-application") ? QStringLiteral("official-aramf-development") : QStringLiteral("official-android-arduino-smart-home");
+        d.displayName = source.id == QStringLiteral("pico-2w-visual-designer") ? QStringLiteral("Pico Visual Designer") : source.id == QStringLiteral("qt-desktop-application") ? QStringLiteral("ARAMF Development") : QStringLiteral("Android Arduino Smart Home");
         d.official = true;
         result << d;
     }
     // ARAMF itself is a Qt/CMake desktop project; use the existing Qt preset
     // as the authoritative catalog-backed configuration.
-    result.last().description = QStringLiteral("Official ARAMF development configuration using C++, Qt, CMake and standard ARAMF governance.");
+    for (auto& official : result) if (official.id == QStringLiteral("official-aramf-development")) official.description = QStringLiteral("Official ARAMF development configuration using C++, Qt, CMake and standard ARAMF governance.");
     TemplateDefinition combined;
     for (const auto& source : builtIns()) {
         if (source.id == QStringLiteral("android-studio-kotlin-gemini")) combined = source;
@@ -460,7 +537,7 @@ QString TemplateManager::libraryError() const { QString error; readLibrary(libra
 
 TemplateDefinition TemplateManager::definition(const QString& id) const
 {
-    const QString canonical = id == "android-kotlin-lite" ? "android-studio-kotlin-gemini" : id;
+    const QString canonical = id == "android-kotlin-lite" ? "android-studio-kotlin-gemini" : id == "Android_Arduino_Smart_Home" ? "official-android-arduino-smart-home" : id;
     for (const auto& d : moduleDefinitions()) if (d.id == canonical) return d;
     for (const auto& d : officialDefinitions()) if (d.id == canonical) return d;
     for (const auto& d : definitions()) if (d.id == canonical) return d;
@@ -520,6 +597,7 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
     QStringList effectiveIds = moduleIds;
     const QHash<QString, QStringList> templateModules = {
         {QStringLiteral("official-android-pico-2w"), {QStringLiteral("android-application"), QStringLiteral("mobile-platform"), QStringLiteral("kotlin"), QStringLiteral("android-sdk"), QStringLiteral("android-studio"), QStringLiteral("gradle"), QStringLiteral("pico-2w"), QStringLiteral("embedded-firmware"), QStringLiteral("pico-sdk"), QStringLiteral("c"), QStringLiteral("cpp"), QStringLiteral("pio-assembly"), QStringLiteral("wifi-communication")}},
+        {QStringLiteral("official-android-arduino-smart-home"), {QStringLiteral("mobile-platform"), QStringLiteral("android-application"), QStringLiteral("kotlin"), QStringLiteral("android-sdk"), QStringLiteral("android-studio"), QStringLiteral("gradle"), QStringLiteral("embedded-firmware"), QStringLiteral("arduino"), QStringLiteral("arduino-ide"), QStringLiteral("arduino-mcu"), QStringLiteral("c"), QStringLiteral("cpp"), QStringLiteral("hardware-integration"), QStringLiteral("bluetooth-communication"), QStringLiteral("serial-communication"), QStringLiteral("smart-home-iot"), QStringLiteral("sensor-integration"), QStringLiteral("actuator-control"), QStringLiteral("device-control"), QStringLiteral("device-monitoring"), QStringLiteral("ui-device-control"), QStringLiteral("build-test-delivery"), QStringLiteral("git-version-control")}},
         {QStringLiteral("official-pico-visual-designer"), {QStringLiteral("desktop-application"), QStringLiteral("cpp"), QStringLiteral("c"), QStringLiteral("qt"), QStringLiteral("cmake"), QStringLiteral("pico-2w"), QStringLiteral("embedded-firmware"), QStringLiteral("pico-sdk"), QStringLiteral("pio-assembly")}},
         {QStringLiteral("official-aramf-development"), {QStringLiteral("desktop-application"), QStringLiteral("cpp"), QStringLiteral("qt"), QStringLiteral("cmake")}},
         {QStringLiteral("android-studio-kotlin-gemini"), {QStringLiteral("android-application"), QStringLiteral("kotlin")}},

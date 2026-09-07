@@ -402,6 +402,21 @@ descriptions, scopes, and canonical identities were preserved.
 
 ## Latest Agent Task
 
+## Android Arduino Smart Home Template Checkpoint
+
+- Added official `Android Arduino Smart Home` template with canonical alias
+  `Android_Arduino_Smart_Home`.
+- Defaults select Kotlin, C, C++, Android Studio, Android SDK, Gradle, Arduino,
+  Arduino IDE, AVR, Android plus Arduino-compatible microcontroller targets,
+  Bluetooth, and UART/serial communication; Raspberry Pi Pico and Wi-Fi are not
+  selected.
+- The generated communication contract models Android → HM-10 Bluetooth →
+  Arduino UART/serial with symbolic KS0085 hardware resources for LEDs, relay,
+  PIR and analog sensors. Generated worker guidance includes school-friendly
+  Android/Arduino responsibilities and phased development guidance.
+- Full CTest passed 4/4, including template, core, workflow and UPDATE suites.
+- No physical KS0085, HM-10 or Android-device certification is claimed.
+
 - Task: Restore MSYS2 Qt toolchain for include resolution
 - Status: PASS
 
