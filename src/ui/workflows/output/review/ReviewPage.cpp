@@ -177,7 +177,13 @@ void ReviewPage::refreshFromModel()
                  communication.encryptionRequired ? tr("required") : tr("not required"),
                  listOrNone(communication.integrationRequirements));
     }
-    text += tr("Hardware resources: %1\n\n").arg(hardwareResources.isEmpty() ? tr("None configured") : QString::number(hardwareResources.size()) + tr(" configured"));
+    QStringList hardwareSummary;
+    for (const auto& resource : hardwareResources)
+        hardwareSummary << (resource.purpose.isEmpty() ? resource.id : resource.purpose);
+    const QString hardwareText = hardwareResources.isEmpty()
+        ? tr("None configured")
+        : QString::number(hardwareResources.size()) + tr(" configured (" ) + hardwareSummary.join(QStringLiteral(", ")) + QLatin1Char(')');
+    text += tr("Hardware resources: %1\n\n").arg(hardwareText);
     text += tr("AI Configuration\n  Primary agent: %1\n  Additional agents: %2\n  Responsibilities: %3\n  Permissions: %4\n  ARAMF integrations: %5\n\n")
                 .arg(displayAiList({ai.primaryAgent}), displayAiList(ai.additionalAgents), listOrNone(ai.responsibilities),
                      listOrNone(ai.permissions), listOrNone(ai.aramfIntegrations));

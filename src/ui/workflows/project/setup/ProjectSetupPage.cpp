@@ -83,6 +83,8 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     auto* communicationForm = new QFormLayout(communicationGroup_);
     communicationTransport_ = new QComboBox(communicationGroup_);
     addOption(communicationTransport_, tr("Wi-Fi"), "wifi");
+    addOption(communicationTransport_, tr("Bluetooth"), "bluetooth");
+    addOption(communicationTransport_, tr("Serial / UART"), "serial");
     communicationProtocol_ = new QComboBox(communicationGroup_);
     communicationProtocol_->setObjectName(QStringLiteral("communicationProtocol"));
     addOption(communicationProtocol_, tr("Choose protocol"), {});
@@ -90,6 +92,7 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     addOption(communicationProtocol_, tr("WebSocket"), "websocket");
     addOption(communicationProtocol_, tr("TCP"), "tcp");
     addOption(communicationProtocol_, tr("UDP"), "udp");
+    addOption(communicationProtocol_, tr("Serial protocol"), "serial");
     communicationSourceTarget_ = new QComboBox(communicationGroup_);
     communicationDestinationTarget_ = new QComboBox(communicationGroup_);
     communicationSourceTarget_->setObjectName(QStringLiteral("communicationEndpointATarget"));
@@ -97,6 +100,8 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     for (auto* combo : {communicationSourceTarget_, communicationDestinationTarget_}) {
         addOption(combo, tr("Android Application"), "android-application");
         addOption(combo, tr("Raspberry Pi Pico 2 W"), "raspberry-pi-pico-2-w");
+        addOption(combo, tr("Arduino-compatible controller"), "arduino-mcu");
+        addOption(combo, tr("HM-10 Bluetooth module"), "hm-10-bluetooth");
         addOption(combo, tr("Custom target"), "custom");
     }
     communicationSourceRole_ = new QComboBox(communicationGroup_);

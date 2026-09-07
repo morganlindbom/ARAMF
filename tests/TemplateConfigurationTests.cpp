@@ -70,9 +70,9 @@ int main(int argc, char** argv)
     ProjectMemory memory;
     QJsonObject audit;
     const auto definitions = manager.definitions();
-    check(definitions.size() == 12, "all 12 built-ins audited");
+    check(definitions.size() == 13, "all 13 built-ins audited");
     const auto officialDefinitions = manager.officialDefinitions();
-    check(officialDefinitions.size() == 3, "three official templates available");
+    check(officialDefinitions.size() == 4, "four official templates available");
     for (const auto& official : officialDefinitions) {
         ProjectModel officialModel;
         check(manager.applyTemplate(&officialModel, official.id), official.id + " official template applies");
@@ -114,6 +114,33 @@ int main(int argc, char** argv)
                       && endpoints[1].address == QStringLiteral("ws://192.168.1.50:9000"),
                   "user endpoint addresses survive save and reload");
         }
+    }
+    {
+        const QString smartHomeId = QStringLiteral("official-android-arduino-smart-home");
+        ProjectModel smartHome;
+        QString smartHomeError;
+        check(manager.applyTemplate(&smartHome, smartHomeId, &smartHomeError), "Android Arduino Smart Home applies: " + smartHomeError);
+        const auto capabilities = smartHome.developmentCapabilities();
+        check(manager.definition(QStringLiteral("Android_Arduino_Smart_Home")).id == smartHomeId, "canonical Android_Arduino_Smart_Home alias resolves");
+        check(capabilities.languages.contains("kotlin") && capabilities.languages.contains("c") && capabilities.languages.contains("cpp"), "Smart Home selects Kotlin, C and C++");
+        check(capabilities.frameworks.contains("android-sdk") && capabilities.frameworks.contains("arduino"), "Smart Home selects Android SDK and Arduino");
+        check(capabilities.ides.contains("android-studio") && capabilities.ides.contains("arduino-ide"), "Smart Home selects Android Studio and Arduino IDE");
+        check(capabilities.buildSystems.contains("gradle") && capabilities.buildSystems.contains("arduino-build"), "Smart Home selects Gradle and Arduino build");
+        check(capabilities.hardwareTargets.contains("arduino-mcu") && !capabilities.hardwareTargets.contains("raspberry-pi-pico-2-w"), "Smart Home selects Arduino and excludes Pico");
+        const auto communication = smartHome.communicationConfiguration();
+        check(communication.transport == "bluetooth" && communication.protocol == "serial"
+                  && communication.sourceTarget == "android-application" && communication.destinationTarget == "arduino-mcu",
+              "Smart Home selects Bluetooth and UART/serial topology");
+        check(smartHome.hardwareResources().size() >= 4 && smartHome.templateModules().contains("sensor-integration")
+                  && smartHome.templateModules().contains("actuator-control"), "Smart Home preserves hardware resources and modules");
+        const auto path = fixture.filePath("smart-home-roundtrip.aramf.json");
+        QString smartHomePersistenceError;
+        check(persistence.save(smartHome, path, &smartHomePersistenceError), "Smart Home save: " + smartHomePersistenceError);
+        ProjectModel reloaded;
+        check(persistence.load(&reloaded, path, &smartHomePersistenceError)
+                  && reloaded.communicationConfiguration().transport == "bluetooth"
+                  && reloaded.developmentCapabilities().languages.contains("kotlin")
+                  && reloaded.developmentCapabilities().hardwareTargets.contains("arduino-mcu"), "Smart Home save/reload preserves configuration");
     }
     check(combinedModel.communicationConfiguration().messages.first().name == QStringLiteral("WRITE_DIGITAL_PIN")
               && combinedModel.communicationConfiguration().messages.first().fields.first().name == QStringLiteral("pinId")
@@ -290,6 +317,7 @@ int main(int argc, char** argv)
         {"raspberry-pi-pico-firmware", {"cpp", "c", "pio-assembly"}}, {"react-frontend", {"typescript", "html", "css"}},
         {"python-backend", {"python"}}, {"csharp-backend", {"csharp"}}, {"mobile-application", {"kotlin"}},
         {"full-stack-web-application", {"typescript", "html", "css"}}, {"bachelor-thesis", {"cpp"}}
+        , {"android-arduino-smart-home", {"kotlin", "cpp", "c"}}
     };
     for (const auto& d : definitions) {
         const auto issues = TemplateValidation::validateDefinition(d);
@@ -301,7 +329,7 @@ int main(int argc, char** argv)
         configuredAgents << d.ai.primaryAgent;
         for (const auto& agent : standardAgents)
             check(configuredAgents.contains(agent), d.id + " standard AI agent: " + agent);
-        check((d.academic.academicMode != "disabled") == (d.id == "bachelor-thesis"), d.id + " academic applicability");
+        check((d.academic.academicMode != "disabled") == (d.id == "bachelor-thesis" || d.id == "android-arduino-smart-home"), d.id + " academic applicability");
         if (d.id == "android-studio-kotlin-gemini") {
             check(d.ai.primaryAgent == "gemini" && d.capabilities.ides == QStringList{"android-studio"}, "Android agent/IDE");
             check(d.capabilities.targetArchitectures == QStringList{"auto"} && !d.capabilities.frameworks.contains("room"), "Android excludes fixed ABI and optional database");
