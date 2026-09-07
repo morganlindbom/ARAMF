@@ -404,8 +404,8 @@ QList<TemplateDefinition> TemplateManager::officialDefinitions() const
         combined.communication.transport = QStringLiteral("wifi");
         combined.communication.protocol = QStringLiteral("websocket");
         combined.communication.endpoints = {
-            {QStringLiteral("endpoint-a"), QStringLiteral("android-application"), QStringLiteral("Android Application"), QStringLiteral("client"), {QStringLiteral("wifi"), QStringLiteral("websocket")}, {}},
-            {QStringLiteral("endpoint-b"), QStringLiteral("raspberry-pi-pico-2-w"), QStringLiteral("Raspberry Pi Pico 2 W"), QStringLiteral("server"), {QStringLiteral("wifi"), QStringLiteral("websocket")}, {}}};
+            {QStringLiteral("endpoint-a"), QStringLiteral("android-application"), QStringLiteral("Android Application"), QStringLiteral("client"), {QStringLiteral("wifi"), QStringLiteral("websocket")}, QStringLiteral("android.local")},
+            {QStringLiteral("endpoint-b"), QStringLiteral("raspberry-pi-pico-2-w"), QStringLiteral("Raspberry Pi Pico 2 W"), QStringLiteral("server"), {QStringLiteral("wifi"), QStringLiteral("websocket")}, QStringLiteral("ws://pico.local:8080")}};
         combined.communication.links = {{QStringLiteral("android-pico-link"), QStringLiteral("endpoint-a"), QStringLiteral("endpoint-b"), QStringLiteral("bidirectional"), QStringLiteral("wifi"), QStringLiteral("websocket"), QStringLiteral("binary"), QStringLiteral("structured-messages"), QStringLiteral("cbor"), QStringLiteral("1"), {}, {}, {}, false, 0, QStringLiteral("little-endian")}};
         combined.communication.messages = {
             {1, QStringLiteral("WRITE_DIGITAL_PIN"), QStringLiteral("command"), QStringLiteral("endpoint-a->endpoint-b"), QStringLiteral("endpoint-a"), QStringLiteral("endpoint-b"), 0, 2,
@@ -546,12 +546,7 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
         // merged result is validated after all selected modules are applied;
         // requiring a standalone complete project here would make useful
         // modules such as Gradle or Android SDK immediately self-unselect.
-        // The combined Android + Pico preset intentionally leaves its endpoint
-        // unset; that project-specific value is configured after selection.
-        // Keep selection usable while full readiness validation still requires
-        // an endpoint before generation.
-        if (d.kind == TemplateDefinition::Kind::CompositeTemplate && !d.userDefined
-            && d.id != QStringLiteral("official-android-pico-2w")) {
+        if (d.kind == TemplateDefinition::Kind::CompositeTemplate && !d.userDefined) {
             const auto errors = TemplateValidation::validateDefinition(d);
             if (!errors.isEmpty()) { if (error) *error = errors.join('\n'); return false; }
         }

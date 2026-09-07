@@ -90,6 +90,31 @@ int main(int argc, char** argv)
               && combinedModel.communicationConfiguration().protocol == QStringLiteral("websocket"),
           "Android + Pico communication topology defaults");
     check(combinedModel.communicationConfiguration().messages.size() == 4, "digital pin message contract defaults");
+    {
+        ProjectModel addressModel;
+        check(manager.applyTemplate(&addressModel, combinedId), "endpoint default template applies");
+        addressModel.setProjectPath(fixture.filePath("endpoint-defaults"));
+        ProjectSetupPage setup(&addressModel, &manager, &persistence);
+        auto* addressA = setup.findChild<QLineEdit*>("communicationEndpointAAddress");
+        auto* addressB = setup.findChild<QLineEdit*>("communicationEndpointBAddress");
+        check(addressA && addressB && addressA->text() == QStringLiteral("android.local")
+                  && addressB->text() == QStringLiteral("ws://pico.local:8080"),
+              "Setup displays default endpoint addresses");
+        check(TemplateValidation::readiness(addressModel).isEmpty(), "default endpoints satisfy readiness");
+        if (addressA && addressB) {
+            addressA->setText(QStringLiteral("192.168.1.10"));
+            addressB->setText(QStringLiteral("ws://192.168.1.50:9000"));
+            const auto path = fixture.filePath("endpoint-addresses.aramf.json");
+            QString addressError;
+            check(persistence.save(addressModel, path, &addressError), "save edited endpoint addresses: " + addressError);
+            ProjectModel reloaded;
+            check(persistence.load(&reloaded, path, &addressError), "reload edited endpoint addresses: " + addressError);
+            const auto endpoints = reloaded.communicationConfiguration().endpoints;
+            check(endpoints.size() == 2 && endpoints[0].address == QStringLiteral("192.168.1.10")
+                      && endpoints[1].address == QStringLiteral("ws://192.168.1.50:9000"),
+                  "user endpoint addresses survive save and reload");
+        }
+    }
     check(combinedModel.communicationConfiguration().messages.first().name == QStringLiteral("WRITE_DIGITAL_PIN")
               && combinedModel.communicationConfiguration().messages.first().fields.first().name == QStringLiteral("pinId")
               && combinedModel.communicationConfiguration().messages.first().fields.first().type == QStringLiteral("string"),
@@ -198,6 +223,17 @@ int main(int argc, char** argv)
                   QStringLiteral("ARAMF_WORKER_ANDROID_PICO/ARAMF_WORKER_ANDROID_PICO.json"))),
           "worker identity JSON matches resolved directory");
     check(!generation.generate(suffixedModel, suffixedModel.generationOptions()).success, "existing suffixed worker is not overwritten");
+    const auto suffixVerification = verification.verify(suffixedModel, suffixedModel.generationOptions());
+    check(suffixVerification.overallStatus == VerificationStatus::Pass, "suffixed worker Verify including cold-start passes");
+    check(finalization.finalize(suffixedModel, suffixedModel.generationOptions()).success,
+          "suffixed worker Finalize passes");
+    check(finalization.finalize(suffixedModel, suffixedModel.generationOptions()).alreadyFinalized,
+          "suffixed worker Finalize remains idempotent");
+    QFile suffixStatus(QDir(suffixedModel.projectPath()).filePath(QStringLiteral("ARAMF_WORKER_ANDROID_PICO/PROJECT_STATUS.md")));
+    check(suffixStatus.open(QIODevice::ReadOnly) && suffixStatus.readAll().contains("Current state: Finalized"),
+          "Finalize updates status in selected worker");
+    check(!QDir(suffixedModel.projectPath()).exists(QStringLiteral("ARAMF_WORKER")),
+          "Verify and Finalize never create an unsuffixed worker");
     ProjectModel suffixReloaded;
     QString suffixError;
     check(persistence.save(suffixedModel, fixture.filePath("suffixed-roundtrip.aramf.json"))
