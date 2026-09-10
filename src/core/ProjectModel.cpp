@@ -422,6 +422,7 @@ void ProjectModel::setResourceNames(const QStringList& value)
             resource.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
             resource.name = name;
             resource.type = QStringLiteral("other");
+            resource.role = QStringLiteral("supporting-material");
             resource.authorityLevel = QStringLiteral("supporting-reference");
             resources_.append(resource);
         }
@@ -438,7 +439,7 @@ void ProjectModel::setResources(const QList<ProjectResource>& value)
             const auto& b = value.at(index);
             if (a.id != b.id || a.name != b.name || a.type != b.type || a.location != b.location
                 || a.description != b.description || a.enabled != b.enabled || a.locationMode != b.locationMode
-                || a.authorityLevel != b.authorityLevel || a.scopes != b.scopes || a.status != b.status
+                || a.role != b.role || a.authorityLevel != b.authorityLevel || a.scopes != b.scopes || a.status != b.status
                 || a.loadingStrategyOverride != b.loadingStrategyOverride || a.lastModified != b.lastModified
                 || a.fingerprint != b.fingerprint) {
                 unchanged = false;
@@ -448,6 +449,12 @@ void ProjectModel::setResources(const QList<ProjectResource>& value)
         if (unchanged) return;
     }
     resources_ = value;
+    // Preserve callers using the legacy authority-only Source of Truth API.
+    for (auto& resource : resources_) {
+        if (resource.role == QStringLiteral("supporting-material")
+            && resource.authorityLevel.compare(QStringLiteral("primary-source-of-truth"), Qt::CaseInsensitive) == 0)
+            resource.role = QStringLiteral("source-of-truth");
+    }
     resourceNames_.clear();
     for (const auto& resource : resources_) resourceNames_ << resource.name;
     resolveAndroidConstraints();
@@ -512,7 +519,7 @@ void ProjectModel::resolveAndroidConstraints()
     next.composeSelected = capabilities_.frameworks.contains("jetpack-compose");
     next.uiTechnology = next.composeSelected ? "compose" : "xml";
     for (const auto& resource : resources_) {
-        if (!resource.enabled || resource.authorityLevel.compare(QStringLiteral("primary-source-of-truth"), Qt::CaseInsensitive) != 0) continue;
+        if (!resource.enabled || resource.role.compare(QStringLiteral("source-of-truth"), Qt::CaseInsensitive) != 0) continue;
         const QString text = sourceText(this, resource);
         if (text.trimmed().isEmpty()) continue;
         const QString source = resource.id;
@@ -801,6 +808,7 @@ void ProjectModel::resetForNewProject()
     memoryConfiguration_ = {};
     certificationConfiguration_ = {};
     generationOptions_ = {};
+    communication_ = {};
     androidConstraints_ = {};
     profileSelections_.clear();
     ai_ = {};

@@ -294,6 +294,11 @@ int main(int argc, char** argv)
     auto* authorityList = authorityPage.findChild<QListWidget*>();
     auto* authorityCombo = authorityPage.findChild<QComboBox*>();
     ok &= require(authorityList && authorityCombo, "resource authority controls must exist");
+    QComboBox* roleCombo = nullptr;
+    for (auto* combo : authorityPage.findChildren<QComboBox*>()) {
+        if (combo->findData(QStringLiteral("instruction")) >= 0) { roleCombo = combo; break; }
+    }
+    ok &= require(roleCombo != nullptr, "governance role selector must exist");
     bool hasAuthorityHelp = false;
     for (auto* label : authorityPage.findChildren<QLabel*>()) {
         hasAuthorityHelp = label->text().contains(QStringLiteral("within its applicable scopes"));
@@ -551,6 +556,12 @@ int main(int argc, char** argv)
                       && authorityModel.resources().at(1).authorityLevel == QStringLiteral("authoritative")
                       && authorityModel.resources().at(2).authorityLevel == QStringLiteral("primary-source-of-truth"),
                       "constructing a second authority page must be read-only");
+    }
+    if (authorityList && roleCombo) {
+        authorityList->setCurrentRow(0);
+        roleCombo->setCurrentIndex(roleCombo->findData(QStringLiteral("instruction")));
+        ok &= require(authorityModel.resources().at(0).role == QStringLiteral("instruction"),
+                      "Instruction role must be selectable through the Source of Truth workflow");
     }
 
     ImprovementBacklogService::clearPathForTests();

@@ -23,6 +23,7 @@ private:
     ProjectModel* model_ = nullptr;
     QListWidget* resources_ = nullptr;
     QComboBox* authority_ = nullptr;
+    QComboBox* role_ = nullptr;
     CapabilityCheckGroup* scopes_ = nullptr;
     QString selectedResourceId_;
 };

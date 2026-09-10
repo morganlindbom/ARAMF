@@ -114,10 +114,15 @@ void ReviewPage::refreshFromModel()
     int enabled = 0;
     int authoritative = 0;
     int primarySources = 0;
+    QStringList resourceSummary;
     for (const auto& resource : resources) {
         if (resource.enabled) ++enabled;
         if (resource.authorityLevel != QStringLiteral("supporting-reference")) ++authoritative;
-        if (resource.authorityLevel == QStringLiteral("primary-source-of-truth")) ++primarySources;
+        if (resource.role == QStringLiteral("source-of-truth")) ++primarySources;
+        resourceSummary << QStringLiteral("%1 | Role: %2 | Authority: %3 | Scope: %4 | Active: %5")
+            .arg(resource.name, resource.role, resource.authorityLevel,
+                 resource.scopes.isEmpty() ? tr("all") : resource.scopes.join(QStringLiteral(", ")),
+                 resource.enabled ? tr("Yes") : tr("No"));
     }
 
     QString text;
@@ -187,8 +192,9 @@ void ReviewPage::refreshFromModel()
     text += tr("AI Configuration\n  Primary agent: %1\n  Additional agents: %2\n  Responsibilities: %3\n  Permissions: %4\n  ARAMF integrations: %5\n\n")
                 .arg(displayAiList({ai.primaryAgent}), displayAiList(ai.additionalAgents), listOrNone(ai.responsibilities),
                      listOrNone(ai.permissions), listOrNone(ai.aramfIntegrations));
-    text += tr("Resources\n  Enabled: %1\n  Authoritative: %2\n  Primary Sources of Truth: %3\n\n")
-                .arg(enabled).arg(authoritative).arg(primarySources);
+    text += tr("Resources\n  Enabled: %1\n  Authoritative: %2\n  Sources of Truth: %3\n%4\n\n")
+                .arg(enabled).arg(authoritative).arg(primarySources)
+                .arg(resourceSummary.isEmpty() ? tr("  None configured") : QStringLiteral("  ") + resourceSummary.join(QStringLiteral("\n  ")));
     text += tr("Rules\n  Enforcement: %1\n  Active categories: %2\n  Loading strategy: %3\n  Conflict policy: %4\n\n")
                 .arg(rules.enforcementLevel).arg(rules.activeCategories.size())
                 .arg(rules.loadingStrategy).arg(rules.conflictPolicy);

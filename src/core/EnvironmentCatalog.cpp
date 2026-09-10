@@ -56,6 +56,10 @@ QList<EnvironmentOption> toolchains()
         {QStringLiteral("Java JDK"), QStringLiteral("java-jdk")},
         {QStringLiteral("Node.js"), QStringLiteral("nodejs")},
         {QStringLiteral("Python"), QStringLiteral("python")},
+        {QStringLiteral("Python venv"), QStringLiteral("python-venv")},
+        {QStringLiteral("Conda"), QStringLiteral("conda")},
+        {QStringLiteral("Miniconda"), QStringLiteral("miniconda")},
+        {QStringLiteral("uv"), QStringLiteral("uv")},
         {QStringLiteral("Rust Toolchain"), QStringLiteral("rust")},
         {QStringLiteral("Go Toolchain"), QStringLiteral("go")},
         {QStringLiteral("Swift Toolchain"), QStringLiteral("swift")},
@@ -247,6 +251,21 @@ QList<EnvironmentOption> frameworks()
         {QStringLiteral("Vulkan"), QStringLiteral("vulkan")},
         {QStringLiteral("PyTorch"), QStringLiteral("pytorch")},
         {QStringLiteral("TensorFlow"), QStringLiteral("tensorflow")},
+        {QStringLiteral("scikit-learn"), QStringLiteral("scikit-learn")},
+        {QStringLiteral("Keras"), QStringLiteral("keras")},
+        {QStringLiteral("XGBoost"), QStringLiteral("xgboost")},
+        {QStringLiteral("LightGBM"), QStringLiteral("lightgbm")},
+        {QStringLiteral("Hugging Face Transformers"), QStringLiteral("hugging-face-transformers")},
+        {QStringLiteral("NumPy"), QStringLiteral("numpy")},
+        {QStringLiteral("pandas"), QStringLiteral("pandas")},
+        {QStringLiteral("SciPy"), QStringLiteral("scipy")},
+        {QStringLiteral("matplotlib"), QStringLiteral("matplotlib")},
+        {QStringLiteral("OpenCV"), QStringLiteral("opencv")},
+        {QStringLiteral("ONNX"), QStringLiteral("onnx")},
+        {QStringLiteral("ONNX Runtime"), QStringLiteral("onnx-runtime")},
+        {QStringLiteral("TensorFlow Lite"), QStringLiteral("tensorflow-lite")},
+        {QStringLiteral("CUDA"), QStringLiteral("cuda")},
+        {QStringLiteral("cuDNN"), QStringLiteral("cudnn")},
         {QStringLiteral("Custom Framework / SDK"), QStringLiteral("custom")}
     });
 }
@@ -254,7 +273,7 @@ QList<EnvironmentOption> frameworks()
 QList<EnvironmentOption> hardwareTargets()
 {
     return options({
-        {QStringLiteral("Desktop PC"), QStringLiteral("desktop-pc")}, {QStringLiteral("Laptop"), QStringLiteral("laptop")}, {QStringLiteral("Server"), QStringLiteral("server")}, {QStringLiteral("Virtual Machine"), QStringLiteral("virtual-machine")}, {QStringLiteral("Docker / Container Runtime"), QStringLiteral("docker")}, {QStringLiteral("Raspberry Pi"), QStringLiteral("raspberry-pi")}, {QStringLiteral("Raspberry Pi Pico"), QStringLiteral("raspberry-pi-pico")}, {QStringLiteral("Raspberry Pi Pico W"), QStringLiteral("raspberry-pi-pico-w")}, {QStringLiteral("Raspberry Pi Pico 2"), QStringLiteral("raspberry-pi-pico-2")}, {QStringLiteral("Raspberry Pi Pico 2 W"), QStringLiteral("raspberry-pi-pico-2-w")}, {QStringLiteral("ESP32"), QStringLiteral("esp32")}, {QStringLiteral("Arduino-compatible MCU"), QStringLiteral("arduino-mcu")}, {QStringLiteral("Other Microcontroller"), QStringLiteral("other-microcontroller")}, {QStringLiteral("Mobile Device"), QStringLiteral("mobile-device")}, {QStringLiteral("Cloud Environment"), QStringLiteral("cloud-environment")}, {QStringLiteral("Other / Custom"), QStringLiteral("custom")}
+        {QStringLiteral("CPU"), QStringLiteral("cpu")}, {QStringLiteral("NVIDIA GPU"), QStringLiteral("nvidia-gpu")}, {QStringLiteral("Desktop PC"), QStringLiteral("desktop-pc")}, {QStringLiteral("Laptop"), QStringLiteral("laptop")}, {QStringLiteral("Server"), QStringLiteral("server")}, {QStringLiteral("Virtual Machine"), QStringLiteral("virtual-machine")}, {QStringLiteral("Docker / Container Runtime"), QStringLiteral("docker")}, {QStringLiteral("Raspberry Pi"), QStringLiteral("raspberry-pi")}, {QStringLiteral("Raspberry Pi Pico"), QStringLiteral("raspberry-pi-pico")}, {QStringLiteral("Raspberry Pi Pico W"), QStringLiteral("raspberry-pi-pico-w")}, {QStringLiteral("Raspberry Pi Pico 2"), QStringLiteral("raspberry-pi-pico-2")}, {QStringLiteral("Raspberry Pi Pico 2 W"), QStringLiteral("raspberry-pi-pico-2-w")}, {QStringLiteral("ESP32"), QStringLiteral("esp32")}, {QStringLiteral("Arduino-compatible MCU"), QStringLiteral("arduino-mcu")}, {QStringLiteral("Other Microcontroller"), QStringLiteral("other-microcontroller")}, {QStringLiteral("Mobile Device"), QStringLiteral("mobile-device")}, {QStringLiteral("Cloud Environment"), QStringLiteral("cloud-environment")}, {QStringLiteral("Other / Custom"), QStringLiteral("custom")}
     });
 }
 
@@ -275,7 +294,7 @@ QList<EnvironmentOption> versionControlSystems()
 
 QList<EnvironmentOption> developmentSupport()
 {
-    return options({{"Debugger", "debugger"}, {"Remote Debugging", "remote-debugging"}, {"Hardware Debug Probe", "hardware-debug-probe"}, {"Profiling", "profiling"}, {"Memory Analysis", "memory-analysis"}, {"Android SDK", "android-sdk"}, {"Arduino IDE", "arduino-ide"}});
+    return options({{"Debugger", "debugger"}, {"Remote Debugging", "remote-debugging"}, {"Hardware Debug Probe", "hardware-debug-probe"}, {"Profiling", "profiling"}, {"Memory Analysis", "memory-analysis"}, {"Android SDK", "android-sdk"}, {"Arduino IDE", "arduino-ide"}, {"Jupyter Notebook", "jupyter-notebook"}, {"JupyterLab", "jupyterlab"}});
 }
 
 QList<EnvironmentOption> processorFamilies()
@@ -451,6 +470,16 @@ QList<EnvironmentOption> authorityLevels()
         {QStringLiteral("Historical / Legacy"), QStringLiteral("historical")},
         {QStringLiteral("Informational"), QStringLiteral("informational")},
         {QStringLiteral("Untrusted / Do Not Rely On"), QStringLiteral("untrusted")}
+    });
+}
+
+QList<EnvironmentOption> governanceRoles()
+{
+    return options({
+        {QStringLiteral("Source of Truth"), QStringLiteral("source-of-truth")},
+        {QStringLiteral("Instruction"), QStringLiteral("instruction")},
+        {QStringLiteral("Reference"), QStringLiteral("reference")},
+        {QStringLiteral("Supporting Material"), QStringLiteral("supporting-material")}
     });
 }
 
