@@ -19,7 +19,7 @@ ResourceAuthorityPage::ResourceAuthorityPage(ProjectModel* model, QWidget* paren
 {
     auto* layout = new QVBoxLayout(this);
     layout->addWidget(new QLabel(
-        tr("<h2>Which sources are authoritative?</h2>Define which resources ARAMF should trust most and what areas of the project they govern."), this));
+        tr("<h2>Which sources are authoritative?</h2>Assign each project resource a governance role, authority, and scope."), this));
     layout->addWidget(new QLabel(tr("Resources"), this));
     resources_->setMinimumHeight(100);
     resources_->setMaximumHeight(200);
@@ -29,6 +29,9 @@ ResourceAuthorityPage::ResourceAuthorityPage(ProjectModel* model, QWidget* paren
     for (const auto& option : EnvironmentCatalog::authorityLevels()) authority_->addItem(option.first, option.second);
     scopes_ = new CapabilityCheckGroup(tr("Applies to"), EnvironmentCatalog::resourceScopes(), 3, this);
     auto* form = new QFormLayout;
+    role_ = new QComboBox(this);
+    for (const auto& option : EnvironmentCatalog::governanceRoles()) role_->addItem(option.first, option.second);
+    form->addRow(tr("Governance role"), role_);
     form->addRow(tr("Authority"), authority_);
     auto* authorityHelp = new QLabel(
         tr("Authority controls how strongly ARAMF treats this resource as a Source of Truth within its applicable scopes."),
@@ -43,6 +46,7 @@ ResourceAuthorityPage::ResourceAuthorityPage(ProjectModel* model, QWidget* paren
         refreshSelected();
     });
     connect(authority_, &QComboBox::currentIndexChanged, this, [this] { saveSelected(); });
+    connect(role_, &QComboBox::currentIndexChanged, this, [this] { saveSelected(); });
     connect(scopes_, &CapabilityCheckGroup::selectionChanged, this, [this] { saveSelected(); });
     connect(model_, &ProjectModel::modelChanged, this, &ResourceAuthorityPage::refresh);
     refresh();
@@ -96,12 +100,14 @@ void ResourceAuthorityPage::refreshSelected()
         return resource.id == selectedId;
     });
     const bool valid = resourceIt != values.cend();
-    authority_->setEnabled(valid); scopes_->setEnabled(valid);
+    role_->setEnabled(valid); authority_->setEnabled(valid); scopes_->setEnabled(valid);
     if (!valid) return;
     const auto& resource = *resourceIt;
     const QSignalBlocker authorityBlocker(authority_);
+    const QSignalBlocker roleBlocker(role_);
     const QSignalBlocker scopesBlocker(scopes_);
     authority_->setCurrentIndex(authority_->findData(resource.authorityLevel));
+    role_->setCurrentIndex(role_->findData(resource.role));
     scopes_->setSelectedIds(resource.scopes);
 }
 
@@ -111,6 +117,7 @@ void ResourceAuthorityPage::saveSelected()
     auto* resource = selectedResource(values);
     if (!resource) return;
     resource->authorityLevel = authority_->currentData().toString();
+    resource->role = role_->currentData().toString();
     resource->scopes = scopes_->selectedIds();
     model_->setResources(values);
 }

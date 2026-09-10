@@ -624,6 +624,7 @@ int main(int argc, char** argv)
     ok &= require(loaded.resourceNames() == model.resourceNames(), "resource names must survive persistence");
     ok &= require(loaded.resources().size() == 1, "structured resources must survive persistence");
     ok &= require(loaded.resources().first().authorityLevel == QStringLiteral("primary-source-of-truth"), "resource authority must survive persistence");
+    ok &= require(loaded.resources().first().role == QStringLiteral("source-of-truth"), "legacy authority-only Source of Truth must migrate to its canonical role");
     ok &= require(loaded.resources().first().scopes == resource.scopes, "resource scopes must survive persistence");
     ok &= require(loaded.resources().first().description == resource.description, "resource description must survive persistence");
 
@@ -680,6 +681,23 @@ int main(int argc, char** argv)
     ok &= require(sameResourceIdentity(urlA, urlB, root.path()), "equivalent URLs must share resource identity");
     ok &= require(loaded.resourcePolicy().options == resourcePolicy.options, "resource policy options must survive persistence");
     ok &= require(loaded.resourcePolicy().loadingStrategy == QStringLiteral("relevant"), "resource loading strategy must survive persistence");
+
+    ProjectResource instruction = resource;
+    instruction.id = QStringLiteral("instruction-resource");
+    instruction.name = QStringLiteral("Build instructions");
+    instruction.role = QStringLiteral("instruction");
+    instruction.authorityLevel = QStringLiteral("authoritative");
+    instruction.enabled = false;
+    instruction.scopes = {QStringLiteral("build-system"), QStringLiteral("testing")};
+    model.setResources({instruction});
+    const QString instructionProjectFile = root.filePath(QStringLiteral("instruction-project.aramf.json"));
+    ok &= require(persistence.save(model, instructionProjectFile, &error), "instruction resource save must succeed");
+    ProjectModel instructionLoaded;
+    ok &= require(persistence.load(&instructionLoaded, instructionProjectFile, &error), "instruction resource reload must succeed");
+    ok &= require(instructionLoaded.resources().first().role == QStringLiteral("instruction")
+                  && !instructionLoaded.resources().first().enabled
+                  && instructionLoaded.resources().first().scopes == instruction.scopes,
+                  "instruction role, disabled state, and scopes must survive persistence");
     ok &= require(loaded.ruleConfiguration().activeCategories == rules.activeCategories, "rule categories must survive persistence");
     ok &= require(loaded.ruleConfiguration().enforcementLevel == QStringLiteral("strict"), "rule enforcement must survive persistence");
     ok &= require(loaded.memoryConfiguration().maximumSizeBytes == memoryConfiguration.maximumSizeBytes, "memory size limit must survive persistence");
@@ -1108,6 +1126,8 @@ int main(int argc, char** argv)
         const auto generatedResource = generatedResources.first().toObject();
         ok &= require(generatedResource.value(QStringLiteral("authority")).toString() == generationResource.authorityLevel,
                       "generated resource authority must match the project resource");
+        ok &= require(generatedResource.value(QStringLiteral("role")).toString() == QStringLiteral("source-of-truth"),
+                      "generated resource role must be canonical and preserved");
         const auto generatedScopes = generatedResource.value(QStringLiteral("scopes")).toArray();
         ok &= require(generatedScopes.size() == generationResource.scopes.size()
                       && generatedScopes.first().toString() == generationResource.scopes.first(),

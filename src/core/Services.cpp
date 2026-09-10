@@ -99,7 +99,8 @@ QString projectTypeLabel(const ProjectModel& model)
 
 void addGeneratedFiles(GenerationResult& result, const QStringList& files)
 {
-    result.generatedFiles.append(files);
+    for (const auto& file : files)
+        result.generatedFiles.append(file == QStringLiteral("AGENTS.md") ? file : AramfPaths::resolveWorkerRelativePath(file));
 }
 
 QString statusName(VerificationStatus status)
@@ -141,14 +142,14 @@ void addCheck(VerificationResult& result, const QString& id, const QString& name
     result.checks.append({id, name, status, details});
 }
 
-QString managedBootstrapBlock()
+QString managedBootstrapBlock(const QString& workerName = AramfPaths::ControlDirectory)
 {
     return QStringLiteral("<!-- ARAMF-BEGIN -->\n"
                           "This project is managed by ARAMF.\n\n"
                           "Read and follow:\n\n"
-                          "ARAMF_WORKER/AGENTS.md\n\n"
-                          "ARAMF_WORKER contains the canonical project rules, routing, resources, memory and project status.\n"
-                          "<!-- ARAMF-END -->\n");
+                          ) + workerName + QStringLiteral("/AGENTS.md\n\n")
+        + workerName + QStringLiteral(" contains the canonical project rules, routing, resources, memory and project status.\n"
+                                      "<!-- ARAMF-END -->\n");
 }
 
 bool writeManagedFile(const QString& path, const QString& block,
@@ -254,6 +255,7 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
         {QStringLiteral("aiIntegrations"), toJsonArray(ai.aramfIntegrations)},
         {QStringLiteral("resources"), model.resources().size()},
         {QStringLiteral("resourceIds"), [&] { QJsonArray a; for (const auto& r : model.resources()) a.append(r.id); return a; }()},
+        {QStringLiteral("resourceRoles"), [&] { QJsonArray a; for (const auto& r : model.resources()) a.append(r.role); return a; }()},
         {QStringLiteral("rules"), toJsonArray(rules.activeCategories)},
         {QStringLiteral("ruleEnforcement"), rules.enforcementLevel},
         {QStringLiteral("memoryMaximum"), QString::number(memory.maximumSizeBytes)},
@@ -284,7 +286,11 @@ GenerationServices::GenerationServices(QObject* parent)
 GenerationResult GenerationServices::generate(const ProjectModel& model,
                                                const GenerationOptions& options) const
 {
-    AramfPaths::setRuntimeWorkerNameSuffix({});
+    class WorkerNameScope final {
+    public:
+        explicit WorkerNameScope(const QString& suffix) { AramfPaths::setRuntimeWorkerNameSuffix(suffix); }
+        ~WorkerNameScope() { AramfPaths::setRuntimeWorkerNameSuffix({}); }
+    } workerNameScope(model.workerNameSuffix());
     GenerationResult result;
     const auto configurationErrors = TemplateValidation::readiness(model);
     if (!configurationErrors.isEmpty()) {
@@ -349,7 +355,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
 
     QString error;
     if (options.generateAgentRules) {
-        const QString rootAgent = QStringLiteral("<!-- AGENTS.md -->\n\n") + managedBootstrapBlock();
+        const QString workerName = AramfPaths::runtimeWorkerDirectoryName();
+        const QString rootAgent = QStringLiteral("<!-- AGENTS.md -->\n\n") + managedBootstrapBlock(workerName);
         QString canonicalAgent = QStringLiteral(
             "<!-- AGENTS.md -->\n\n# Canonical ARAMF Agent Instructions\n\n"
             "Read `PROJECT_STATUS.md` and `memory/decisions.md` before project work.\n");
@@ -361,21 +368,34 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         canonicalAgent += QStringLiteral(
             "Read `rules/generated-rules.md` when rule output is present.\n\n"
             "Respect Sources of Truth, durable decisions, and the user-owned `custom/` directory.\n"
+            "Project resources have explicit governance roles in resources/resources.json: source-of-truth is authoritative project fact/requirement, instruction is a directive within its authority and scope, reference is informational and does not override governing sources, and supporting-material is contextual with lower governance authority. Ignore disabled resources. Do not infer roles from filenames or file types. If active instructions conflict at equal effective authority, surface the conflict and require governance resolution; never silently choose or merge them.\n"
             "Authority order: explicit current user instruction, current Source of Truth, current durable project decisions, approved Framework Knowledge, templates/defaults, then AI inference.\n"
             "When a corrected approach is verified and reusable, record a Framework Knowledge candidate with evidence. Never self-approve it; explicit user approval is required before changing its status to `approved`. Superseded entries remain auditable but are not active.\n"
             "Keep PROJECT_STATUS.md current as human-readable present state; it is distinct from append-only historical evidence. Project Memory ownership is explicit in memory/memory-contract.json.\n"
-            "The generated control directory is `ARAMF_WORKER/`.\n"
+            "The generated control directory is `%1/`.\n"
             "When communication-contract.json is present, it is the canonical communication Source of Truth. Do not invent message IDs, rename contract fields, change logical field types or protocol versions independently, or change wire encoding for only one endpoint; update the shared contract first and run compatibility validation for every affected endpoint.\n"
             "Communication commands use symbolic hardware resource IDs. Resolve physical pins only through `hardware/hardware-resources.json`; validate endpoint ownership and capabilities, and never invent or access arbitrary numeric GPIOs in communication code.\n"
             "Framework Knowledge has distinct built-in, global, and project-local layers. The global user library is stored under `ARAMF_DATA/` at the resolved ARAMF program root; build directories are disposable. Only explicitly approved portable knowledge may be promoted there; use the memory knowledge promotion command and never edit knowledge stores directly. New projects seed approved global knowledge without replacing project-local authority.\n"
-            "UPDATE is a separate human-controlled workflow: review approved Framework Knowledge, analyze the whole project, prepare a plan, then explicitly execute it through the configured agent. Read `update/update-plan.json` and `update/update-contract.json` when present; the managed project root is the implementation target and `ARAMF_WORKER/` is orchestration only. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes and validation are required. Preserve higher-authority instructions and use the scope-aware validation policy.\n");
+            "UPDATE is a separate human-controlled workflow: review approved Framework Knowledge, analyze the whole project, prepare a plan, then explicitly execute it through the configured agent. Read `update/update-plan.json` and `update/update-contract.json` when present; the managed project root is the implementation target and `%1/` is orchestration only. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes are required. Preserve higher-authority instructions and use the scope-aware validation policy.\n").arg(workerName);
+        canonicalAgent += QStringLiteral("\n## Governed Project Resources\n\n");
+        if (model.resources().isEmpty()) {
+            canonicalAgent += QStringLiteral("No project resources are registered.\n");
+        } else {
+            for (const auto& resource : model.resources()) {
+                canonicalAgent += QStringLiteral("- `%1` — role `%2`, authority `%3`, scope `%4`, enabled `%5`; resolve the source from `resources/resources.json`.\n")
+                    .arg(resource.name, resource.role, resource.authorityLevel,
+                         resource.scopes.isEmpty() ? QStringLiteral("all") : resource.scopes.join(QStringLiteral(", ")),
+                         resource.enabled ? QStringLiteral("yes") : QStringLiteral("no"));
+            }
+        }
         if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")
             || model.templateId() == QStringLiteral("official-android-arduino-smart-home") || model.templateId() == QStringLiteral("android-arduino-smart-home")) {
             const auto android = model.androidConstraints();
             canonicalAgent += QStringLiteral(
                 "\n## Android / Kotlin project guidance\n\n"
                 "Template: Android Studio/Kotlin/Gemini. This is an ARAMF-managed Android project whose active control-plane capabilities come from the selected configuration.\n"
-                "Android Studio, Kotlin, Gradle, Android SDK, and Gemini are project tools/profiles; ARAMF governance remains agent-independent and canonical in ARAMF_WORKER/.\n"
+                "Android Studio, Kotlin, Gradle, Android SDK, and Gemini are project tools/profiles; ARAMF governance remains agent-independent and canonical in ")
+                + workerName + QStringLiteral("/.\n"
                 "Android Studio is the primary IDE for Android application development. Project-support work may also use governed VS Code, command-line tools, Python utilities, SQLite tools, generators, scripts, and validation utilities when they affect this same managed project; the primary IDE is not exclusive.\n"
                 "Effective Android constraints: Kotlin required; primary IDE %1; minimum SDK %2; UI technology %3; Compose allowed=%4 and effectively selected=%5; Room required=%6; unit tests required=%7; lint required=%8. These values are derived from the authoritative Source of Truth and are not Gradle source claims.\n"
                 "Read `memory/project-knowledge.json` when present and apply only approved, applicable project-local lessons; project knowledge remains distinct from Framework Knowledge and is not automatically global.\n"
@@ -457,6 +477,12 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                 "Recommended progression: validate existing KS0085 hardware and firmware; test sensors and actuators individually; validate Bluetooth with the original implementation; connect a minimal Kotlin Bluetooth client; send one command; control one actuator; read one sensor; build the dashboard; integrate remaining devices; then improve protocol robustness and validate the complete Android-to-hardware workflow.\n"
                 "The communication contract defines message structure, not a frozen legacy one-character protocol. Preserve UI/communication separation and make each increment observable and testable for a school project.\n");
         }
+        if (model.templateId() == QStringLiteral("machine-learning")
+            || model.context() == QStringLiteral("ai-machine-learning")) {
+            canonicalAgent += QStringLiteral(
+                "\n## Python Machine Learning guidance\n\n"
+                "Use the selected Python environment and keep dependencies explicit. Keep source code separate from generated or runtime training output, avoid committing temporary caches and large artifacts, and preserve reproducibility-related configuration when it is available. Treat the saved ProjectModel capabilities as the authoritative description of the Python Machine Learning stack.\n");
+        }
         canonicalAgent += QStringLiteral(
             "Run the minimum validation required by `routing/validation-policy.json`; do not run full regression campaigns for ordinary isolated changes. Escalate when scope, risk, failure, or explicit milestone policy requires it.\n");
         if (options.generateMemory) {
@@ -495,7 +521,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("AGENTS.md")), rootAgent.toUtf8(), &error, true)) {
             return fail(QStringLiteral("Agent rules"), error);
         }
-        const QString agentInstructionsPath = QDir(projectRoot).filePath(AramfPaths::AgentInstructions);
+        const QString agentInstructionsPath = QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::AgentInstructions));
         if (options.generateMemory) {
             const int memoryBegin = canonicalAgent.indexOf(QStringLiteral("<!-- ARAMF-MEMORY-BEGIN -->"));
             const QString memorySection = memoryBegin >= 0 ? canonicalAgent.mid(memoryBegin) : QString();
@@ -531,7 +557,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         markdown += QStringLiteral("\n## Context / Token Efficiency\n\n");
         for (const auto& id : rules.contextPolicies) markdown += QStringLiteral("- %1\n").arg(ruleDisplayName(id, RuleCatalog::contextPolicies()));
         markdown += QStringLiteral("\n## Conflict Policy\n\n%1\n").arg(rules.conflictPolicy);
-        if (!writeTextFile(QDir(projectRoot).filePath(AramfPaths::GeneratedRules), markdown.toUtf8(), &error)) {
+        if (!writeTextFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::GeneratedRules)), markdown.toUtf8(), &error)) {
             return fail(QStringLiteral("Agent rules"), error);
         }
 
@@ -557,7 +583,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                                .arg(model.androidConstraints().courseName);
             }
         }
-        if (!writeTextFile(QDir(projectRoot).filePath(AramfPaths::ProjectStatus), status.toUtf8(), &error, true)) {
+        if (!writeTextFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ProjectStatus)), status.toUtf8(), &error, true)) {
             return fail(QStringLiteral("Agent rules"), error);
         }
         addGeneratedFiles(result, {QStringLiteral("AGENTS.md"), AramfPaths::AgentInstructions,
@@ -573,9 +599,9 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             {QStringLiteral("conflictPolicy"), rules.conflictPolicy}
         };
         const QJsonObject scopeRoutes{{QStringLiteral("scopes"), toJsonArray(rules.projectScopes)}};
-        if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::TaskRoutes), taskRoutes, &error)
-            || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::ScopeRoutes), scopeRoutes, &error)
-            || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::ValidationPolicy), ValidationRouting::policy(), &error)) {
+        if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::TaskRoutes)), taskRoutes, &error)
+            || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ScopeRoutes)), scopeRoutes, &error)
+            || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ValidationPolicy)), ValidationRouting::policy(), &error)) {
             return fail(QStringLiteral("Routing"), error);
         }
         const QString readme = QStringLiteral(
@@ -585,10 +611,11 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "Scope routing selects relevant project areas: %3\n\n"
             "Routing minimizes irrelevant AI context by loading only applicable rules and scopes.\n")
                                   .arg(rules.loadingStrategy, rules.workScopes.join(QStringLiteral(", ")), rules.projectScopes.join(QStringLiteral(", ")));
-        if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/routing/README.md")), readme.toUtf8(), &error)) {
+        const QString routingReadmePath = AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/routing/README.md"));
+        if (!writeTextFile(QDir(projectRoot).filePath(routingReadmePath), readme.toUtf8(), &error)) {
             return fail(QStringLiteral("Routing"), error);
         }
-        addGeneratedFiles(result, {AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes, AramfPaths::ValidationPolicy, QStringLiteral("ARAMF_WORKER/routing/README.md")});
+        addGeneratedFiles(result, {AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes, AramfPaths::ValidationPolicy, routingReadmePath});
     }
 
     if (options.generatePlatforms) {
@@ -696,10 +723,10 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             effective.insert(QStringLiteral("unresolvedRequirements"), toJsonArray(android.unresolvedRequirements));
             effective.insert(QStringLiteral("sourceOfTruthTitle"), android.sourceOfTruthTitle);
             effective.insert(QStringLiteral("sourceOfTruthResource"), android.sourceOfTruthResource);
-            if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::AndroidEffectiveConfig), effective, &error)) return fail(QStringLiteral("Platform metadata"), error);
+            if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::AndroidEffectiveConfig)), effective, &error)) return fail(QStringLiteral("Platform metadata"), error);
             addGeneratedFiles(result, {AramfPaths::AndroidEffectiveConfig});
         }
-        const QString platformPath = QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json");
+        const QString platformPath = AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json"));
         if (!writeJsonFile(QDir(projectRoot).filePath(platformPath), platform, &error)) return fail(QStringLiteral("Platform metadata"), error);
         addGeneratedFiles(result, {platformPath});
         const auto communication = model.communicationConfiguration();
@@ -726,7 +753,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                 {QStringLiteral("reconnectPolicy"), communication.reconnectPolicy},
                 {QStringLiteral("errorHandling"), communication.errorHandling},
                 {QStringLiteral("integrationRequirements"), toJsonArray(communication.integrationRequirements)}};
-            const QString contractPath = QStringLiteral("ARAMF_WORKER/communication/communication-contract.json");
+            const QString contractPath = AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/communication/communication-contract.json"));
             if (!writeJsonFile(QDir(projectRoot).filePath(contractPath), contract, &error)) return fail(QStringLiteral("Communication contract"), error);
             addGeneratedFiles(result, {contractPath});
             const bool hasAndroid = capabilities.targetPlatforms.contains(QStringLiteral("android"));
@@ -744,7 +771,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                         QJsonObject{{QStringLiteral("id"), QStringLiteral("android")}, {QStringLiteral("name"), QStringLiteral("Android application")}, {QStringLiteral("buildSystem"), QStringLiteral("gradle")}, {QStringLiteral("environment"), QStringLiteral("Android Studio")}, {QStringLiteral("outputs"), QJsonArray{"APK", "AAB"}}, {QStringLiteral("tests"), QJsonArray{"JVM/unit", "instrumentation/UI"}}},
                         embeddedTarget}},
                     {QStringLiteral("orchestration"), hasArduino ? QJsonArray{"validate shared configuration", "build Arduino firmware", "run Arduino tests", "build Android application", "run Android tests", "run Bluetooth/serial contract tests", "verify combined system"} : QJsonArray{"validate shared configuration", "build Pico firmware", "run Pico tests", "build Android application", "run Android tests", "run communication contract tests", "verify combined system"}}};
-                const QString targetsPath = QStringLiteral("ARAMF_WORKER/communication/multi-target-build.json");
+                const QString targetsPath = AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/communication/multi-target-build.json"));
                 if (!writeJsonFile(QDir(projectRoot).filePath(targetsPath), targets, &error)) return fail(QStringLiteral("Multi-target build model"), error);
                 addGeneratedFiles(result, {targetsPath});
             }
@@ -753,7 +780,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             QJsonArray hardware;
             for (const auto& resource : model.hardwareResources())
                 hardware.append(QJsonObject{{QStringLiteral("id"), resource.id}, {QStringLiteral("endpointId"), resource.endpointId}, {QStringLiteral("resourceType"), resource.resourceType}, {QStringLiteral("physicalResource"), resource.physicalResource}, {QStringLiteral("direction"), resource.direction}, {QStringLiteral("logicalMode"), resource.logicalMode}, {QStringLiteral("activeLevel"), resource.activeLevel}, {QStringLiteral("purpose"), resource.purpose}, {QStringLiteral("ownership"), resource.ownership}, {QStringLiteral("capabilities"), toJsonArray(resource.capabilities)}});
-            const QString hardwarePath = QStringLiteral("ARAMF_WORKER/hardware/hardware-resources.json");
+            const QString hardwarePath = AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/hardware/hardware-resources.json"));
             if (!writeJsonFile(QDir(projectRoot).filePath(hardwarePath), QJsonObject{{QStringLiteral("resources"), hardware}}, &error)) return fail(QStringLiteral("Hardware resources"), error);
             addGeneratedFiles(result, {hardwarePath});
         }
@@ -773,6 +800,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                     && existing.description == resource.description
                     && existing.enabled == resource.enabled
                     && existing.locationMode == resource.locationMode
+                    && existing.role == resource.role
                     && existing.authorityLevel == resource.authorityLevel
                     && existing.scopes == resource.scopes
                     && existing.status == resource.status
@@ -788,14 +816,14 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                 {QStringLiteral("id"), resource.id}, {QStringLiteral("name"), resource.name},
                 {QStringLiteral("type"), resource.type}, {QStringLiteral("location"), resource.location},
                 {QStringLiteral("description"), resource.description}, {QStringLiteral("enabled"), resource.enabled},
-                {QStringLiteral("locationMode"), resource.locationMode}, {QStringLiteral("authority"), resource.authorityLevel},
+                {QStringLiteral("locationMode"), resource.locationMode}, {QStringLiteral("role"), resource.role}, {QStringLiteral("authority"), resource.authorityLevel},
                 {QStringLiteral("scopes"), toJsonArray(resource.scopes)}, {QStringLiteral("status"), resource.status},
                 {QStringLiteral("loadingPolicyOverride"), resource.loadingStrategyOverride}
             });
         }
         const QJsonObject manifest{{QStringLiteral("resources"), resources},
                                    {QStringLiteral("loadingStrategy"), model.resourcePolicy().loadingStrategy}};
-        if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::ResourceManifest), manifest, &error)) return fail(QStringLiteral("Resource manifest"), error);
+        if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ResourceManifest)), manifest, &error)) return fail(QStringLiteral("Resource manifest"), error);
         addGeneratedFiles(result, {AramfPaths::ResourceManifest});
     }
 
@@ -829,8 +857,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             {QStringLiteral("hardware"), toJsonArray(capabilities.hardwareTargets)}, {QStringLiteral("primaryAiAgent"), ai.primaryAgent},
             {QStringLiteral("resources"), model.resources().size()}, {QStringLiteral("rules"), toJsonArray(model.ruleConfiguration().activeCategories)},
             {QStringLiteral("memoryMaximumSizeBytes"), model.memoryConfiguration().maximumSizeBytes}};
-        if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::Provenance), provenance, &error)
-            || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::SelectionEffects), effects, &error)) {
+        if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::Provenance)), provenance, &error)
+            || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::SelectionEffects)), effects, &error)) {
             return fail(QStringLiteral("Provenance"), error);
         }
         addGeneratedFiles(result, {AramfPaths::Provenance, AramfPaths::SelectionEffects});
@@ -846,11 +874,12 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         {QStringLiteral("resources"), options.generateResources},
         {QStringLiteral("memory"), options.generateMemory},
         {QStringLiteral("provenance"), options.generateProvenance}};
-    if (!writeJsonFile(QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/verification/generation-state.json")),
+    const QString generationStatePath = AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/generation-state.json"));
+    if (!writeJsonFile(QDir(projectRoot).filePath(generationStatePath),
                        generationState, &error)) {
         return fail(QStringLiteral("Generation state"), error);
     }
-    addGeneratedFiles(result, {QStringLiteral("ARAMF_WORKER/verification/generation-state.json")});
+    addGeneratedFiles(result, {generationStatePath});
 
     // Generation writes the complete selected product set after ProjectMemory
     // initialization. Refresh derived state last so cold-start validation
@@ -862,44 +891,10 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             return fail(QStringLiteral("Project Memory derived state"), memoryError);
         addGeneratedFiles(result, {AramfPaths::CurrentState, AramfPaths::ColdStartValidation});
     }
-    const QString suffix = workerSuffix;
-    if (!suffix.isEmpty()) {
-        const QString canonical = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER"));
-        const QString resolved = QDir(projectRoot).filePath(AramfPaths::workerDirectoryName(suffix));
-        if (QDir(resolved).exists()) return fail(QStringLiteral("Project Memory"), QStringLiteral("Worker directory already exists: %1").arg(resolved));
-        if (!QDir(projectRoot).rename(QStringLiteral("ARAMF_WORKER"), AramfPaths::workerDirectoryName(suffix)))
-            return fail(QStringLiteral("Worker directory"), QStringLiteral("Could not rename worker directory to %1").arg(resolved));
-        AramfPaths::setRuntimeWorkerNameSuffix(suffix);
-        // The worker directory is renamed only after its contents are generated.
-        // Update both bootstrap documents so a fresh suffixed project points
-        // agents at the directory that actually exists.
-        const QString resolvedWorkerName = AramfPaths::workerDirectoryName(suffix);
-        for (const QString& relative : {QStringLiteral("AGENTS.md"), resolvedWorkerName + QStringLiteral("/AGENTS.md")}) {
-            const QString path = QDir(projectRoot).filePath(relative);
-            QFile file(path);
-            if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-                return fail(QStringLiteral("Agent bootstrap"), file.errorString());
-            QString text = QString::fromUtf8(file.readAll());
-            file.close();
-            text.replace(QStringLiteral("ARAMF_WORKER"), resolvedWorkerName);
-            if (!writeTextFile(path, text.toUtf8(), &error))
-                return fail(QStringLiteral("Agent bootstrap"), error);
-        }
-        // Bootstrap rewriting changes a cold-start input, so refresh derived
-        // memory artifacts after all suffix-specific files are final.
-        if (options.generateMemory) {
-            ProjectMemory memory;
-            if (!memory.refreshDerivedState(projectRoot, &error))
-                return fail(QStringLiteral("Project Memory derived state"), error);
-        }
-        for (auto& generated : result.generatedFiles)
-            generated.replace(QStringLiteral("ARAMF_WORKER"), resolvedWorkerName);
-        AramfPaths::setRuntimeWorkerNameSuffix({});
-    }
     // The worker identity JSON uses the same resolved basename as its
     // containing directory. Keep any legacy profile handling independent,
     // while publishing the canonical identity filename.
-    const QString resolvedWorkerName = AramfPaths::workerDirectoryName(suffix);
+    const QString resolvedWorkerName = AramfPaths::runtimeWorkerDirectoryName();
     const QString identityPath = QDir(projectRoot).filePath(
         resolvedWorkerName + QStringLiteral("/") + resolvedWorkerName + QStringLiteral(".json"));
     const QJsonObject identity{
@@ -1196,7 +1191,8 @@ AgentEntryPointResult AgentEntryPointService::createEntryPoints(const ProjectMod
     QString state;
     QString error;
     const QString rootBootstrapPath = QDir(projectRoot).filePath(QStringLiteral("AGENTS.md"));
-    if (!writeManagedFile(rootBootstrapPath, managedBootstrapBlock(), &state, &error)) {
+    const QString workerName = AramfPaths::workerDirectoryName(model.workerNameSuffix());
+    if (!writeManagedFile(rootBootstrapPath, managedBootstrapBlock(workerName), &state, &error)) {
         result.errors << error;
         return result;
     }
@@ -1231,7 +1227,7 @@ AgentEntryPointResult AgentEntryPointService::createEntryPoints(const ProjectMod
             result.conflicts << QStringLiteral("%1: target escapes Project Path").arg(definition->displayName);
             continue;
         }
-        if (!writeManagedFile(targetPath, managedBootstrapBlock(), &state, &error)) {
+        if (!writeManagedFile(targetPath, managedBootstrapBlock(workerName), &state, &error)) {
             result.conflicts << QStringLiteral("%1: %2").arg(definition->displayName, error);
             continue;
         }

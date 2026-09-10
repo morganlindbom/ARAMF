@@ -37,6 +37,7 @@ QList<EnvironmentOption> academicRequirements();
 QList<EnvironmentOption> academicDeliverables();
 QList<EnvironmentOption> resourceTypes();
 QList<EnvironmentOption> authorityLevels();
+QList<EnvironmentOption> governanceRoles();
 QList<EnvironmentOption> resourceScopes();
 QList<EnvironmentOption> resourcePolicyOptions();
 QList<EnvironmentOption> resourceLoadingStrategies();

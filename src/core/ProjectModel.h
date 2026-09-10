@@ -75,6 +75,9 @@ struct ProjectResource {
     QString description;
     bool enabled = true;
     QString locationMode = QStringLiteral("referenced");
+    // Governance role is independent from authority strength.  Keep this
+    // extensible string identifier rather than coupling behavior to labels.
+    QString role = QStringLiteral("supporting-material");
     QString authorityLevel = QStringLiteral("supporting-reference");
     QStringList scopes;
     QString status = QStringLiteral("unknown");
@@ -328,9 +331,9 @@ struct CommunicationTestVector {
 
 struct CommunicationConfiguration {
     bool enabled = false;
-    QString sourceTarget = QStringLiteral("android-application");
-    QString destinationTarget = QStringLiteral("raspberry-pi-pico-2-w");
-    QString transport = QStringLiteral("wifi");
+    QString sourceTarget;
+    QString destinationTarget;
+    QString transport;
     QString protocol;
     QString sourceRole;
     QString destinationRole;

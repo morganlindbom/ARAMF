@@ -169,6 +169,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
         object.insert(QStringLiteral("description"), resource.description);
         object.insert(QStringLiteral("enabled"), resource.enabled);
         object.insert(QStringLiteral("locationMode"), resource.locationMode);
+        object.insert(QStringLiteral("role"), resource.role);
         object.insert(QStringLiteral("authorityLevel"), resource.authorityLevel);
         object.insert(QStringLiteral("scopes"), toJsonArray(resource.scopes));
         object.insert(QStringLiteral("status"), resource.status);
@@ -555,12 +556,20 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
         resource.description = object.value(QStringLiteral("description")).toString();
         resource.enabled = object.value(QStringLiteral("enabled")).toBool(true);
         resource.locationMode = object.value(QStringLiteral("locationMode")).toString(QStringLiteral("referenced"));
+        resource.role = object.value(QStringLiteral("role")).toString();
         resource.authorityLevel = object.value(QStringLiteral("authorityLevel")).toString();
         if (resource.authorityLevel.isEmpty()) {
             const auto legacySourceOfTruth = object.value(QStringLiteral("sourceOfTruth"));
             resource.authorityLevel = legacySourceOfTruth.toBool(false)
                 ? QStringLiteral("primary-source-of-truth")
                 : QStringLiteral("supporting-reference");
+        }
+        // Pre-role projects used primary-source-of-truth/sourceOfTruth as the
+        // canonical meaning. Adapt them without changing their behavior.
+        if (resource.role.isEmpty()) {
+            resource.role = resource.authorityLevel.compare(QStringLiteral("primary-source-of-truth"), Qt::CaseInsensitive) == 0
+                || object.value(QStringLiteral("sourceOfTruth")).toBool(false)
+                ? QStringLiteral("source-of-truth") : QStringLiteral("supporting-material");
         }
         resource.scopes = fromJsonArray(object.value(QStringLiteral("scopes")));
         resource.status = object.value(QStringLiteral("status")).toString(QStringLiteral("unknown"));

@@ -168,7 +168,7 @@ void ResourceInventoryPage::refresh()
     int selectedRow = -1;
     for (int index = 0; index < values.size(); ++index) {
         const auto& resource = values.at(index);
-        auto* item = new QListWidgetItem(QStringLiteral("%1 — %2 — %3").arg(resource.name, resource.type, resource.location), resources_);
+        auto* item = new QListWidgetItem(QStringLiteral("%1 — %2 — %3 — %4").arg(resource.name, resource.type, resource.role, resource.location), resources_);
         item->setData(Qt::UserRole, resource.id); item->setCheckState(resource.enabled ? Qt::Checked : Qt::Unchecked);
         if (resource.id == selectedId) selectedRow = index;
     }

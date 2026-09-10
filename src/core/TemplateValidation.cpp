@@ -77,7 +77,7 @@ QMap<QString, QList<EnvironmentOption>> TemplateValidation::catalogs()
         {"memory.retentionLevel", choices({"minimal", "standard", "detailed", "audit"})},
         {"memory.updateStrategy", choices({"meaningful-task", "checkpoint", "before-milestone", "project-close", "manual"})},
         {"resourcePolicy.options", resourcePolicyOptions()}, {"resourcePolicy.loadingStrategy", resourceLoadingStrategies()},
-        {"resource.type", resourceTypes()}, {"resource.authorityLevel", authorityLevels()}, {"resource.scopes", resourceScopes()},
+        {"resource.type", resourceTypes()}, {"resource.role", governanceRoles()}, {"resource.authorityLevel", authorityLevels()}, {"resource.scopes", resourceScopes()},
         {"resource.loadingStrategyOverride", resourceLoadingStrategies()},
         {"resource.locationMode", choices({"referenced", "project-local-copy"})}
     };
