@@ -5,6 +5,8 @@
 #include "core/AramfPaths.h"
 #include "core/EnvironmentCatalog.h"
 #include "core/DocumentTemplate.h"
+#include "core/DocumentInstruction.h"
+#include "core/DocumentTemplateInspector.h"
 #include "ui/workflows/project/setup/ProjectSetupPage.h"
 #include "ui/workflows/output/review/ReviewPage.h"
 #include "ui/workflows/output/generate/GeneratePage.h"
@@ -712,6 +714,33 @@ int main(int argc, char** argv)
     checkDocument(thesisDefault, {"introduction", "theory-background", "method", "results", "discussion", "conclusion", "references"});
     checkDocument(reportDefault, {"introduction", "method", "execution", "results", "discussion", "conclusion", "references"});
     check(DocumentTemplates::manifest(true, "aramf-default", {}, true, "aramf-default", {}).value("documents").toArray().first().toObject().value("sections").toArray().size() == thesisDefault.sections.size(), "TOC/generation manifest derives from canonical Thesis sections");
+
+    const auto thesisInstruction = DocumentInstructions::thesis();
+    const auto reportInstruction = DocumentInstructions::report();
+    check(thesisInstruction.id == "aramf-thesis-instruction" && thesisInstruction.version == 1, "Thesis canonical instruction identity/version");
+    check(reportInstruction.id == "aramf-report-instruction" && reportInstruction.version == 1, "Report canonical instruction identity/version");
+    check(thesisInstruction.id != reportInstruction.id && thesisInstruction.purpose != reportInstruction.purpose
+              && thesisInstruction.rules.join(" ").contains("research questions")
+              && !reportInstruction.rules.join(" ").contains("research questions"), "Thesis and Report instructions are independent");
+    check(documentationModel.academicConfiguration().thesisDocumentation.instructionId == thesisInstruction.id
+              && documentationModel.academicConfiguration().reportDocumentation.instructionId == reportInstruction.id,
+          "Thesis and Report resolve their own canonical instructions");
+    QFile markdown(fixture.filePath("custom-thesis.md"));
+    check(markdown.open(QIODevice::WriteOnly), "custom markdown source opens");
+    markdown.write("# Introduction\n\n## Method\n\n### Evidence\n");
+    markdown.close();
+    ProjectResource customResource; customResource.id = "custom-thesis"; customResource.role = "thesis-template"; customResource.location = markdown.fileName(); customResource.enabled = true;
+    const auto inspectedMarkdown = DocumentTemplateInspector::inspect(customResource);
+    check(inspectedMarkdown.format == "md" && inspectedMarkdown.capability == "text-structured" && inspectedMarkdown.structurallyParsed && inspectedMarkdown.sections.size() == 3, "Markdown custom template is classified and parsed");
+    check(inspectedMarkdown.sections.at(1).level == 2 && inspectedMarkdown.sections.at(1).titleEn == "Method", "Markdown heading order/level/title preserved");
+    const auto repeatedInspection = DocumentTemplateInspector::inspect(customResource);
+    check(repeatedInspection.contentHash == inspectedMarkdown.contentHash && repeatedInspection.sections.size() == inspectedMarkdown.sections.size(), "Custom inspection is deterministic");
+    QFile docx(fixture.filePath("custom-report.docx"));
+    check(docx.open(QIODevice::WriteOnly), "custom DOCX source opens"); docx.write("opaque bytes"); docx.close();
+    ProjectResource officeResource; officeResource.id = "custom-report"; officeResource.role = "report-template"; officeResource.location = docx.fileName();
+    const auto inspectedOffice = DocumentTemplateInspector::inspect(officeResource);
+    check(inspectedOffice.format == "docx" && inspectedOffice.capability == "office-structured" && !inspectedOffice.structurallyParsed && inspectedOffice.sections.isEmpty(), "DOCX is recognized without false parsing");
+    check(markdown.size() == QFileInfo(markdown.fileName()).size(), "Custom source remains unchanged after inspection");
 
     audit.insert("validation", QJsonObject{{"checks", checks}, {"failures", failures}, {"catalogFingerprint", TemplateValidation::catalogFingerprint()}});
     saveJson(fixture.filePath("template-audit.json"), audit);

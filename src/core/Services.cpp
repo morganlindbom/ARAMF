@@ -3,6 +3,8 @@
 #include "Services.h"
 #include "TemplateValidation.h"
 #include "DocumentTemplate.h"
+#include "DocumentInstruction.h"
+#include "DocumentTemplateInspector.h"
 
 #include "AramfPaths.h"
 #include "ControlPlaneMigration.h"
@@ -392,14 +394,17 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             }
         }
         const auto academic = model.academicConfiguration();
-        const auto documentLine = [](const QString& name, const AcademicConfiguration::DocumentationConfiguration& document) {
-            return QStringLiteral("- %1: enabled=%2, templateMode=%3, templateSourceId=%4\n")
+        const auto documentLine = [](const QString& name, const AcademicConfiguration::DocumentationConfiguration& document, const QString& instructionId) {
+            const QString structure = document.templateMode == QStringLiteral("source") ? QStringLiteral("selected custom source controls structure; do not inject or map default headings") : QStringLiteral("ARAMF built-in structure is active");
+            return QStringLiteral("- %1: enabled=%2, templateMode=%3, templateSourceId=%4, instruction=%5/v%6; %7. Preserve the original source, apply only this document-type instruction, and treat guidance as authoring assistance rather than final prose.\n")
                 .arg(name, document.enabled ? QStringLiteral("yes") : QStringLiteral("no"), document.templateMode,
-                     document.templateSourceId.isEmpty() ? QStringLiteral("ARAMF default") : document.templateSourceId);
+                     document.templateSourceId.isEmpty() ? QStringLiteral("ARAMF default") : document.templateSourceId,
+                     instructionId, QString::number(document.instructionVersion), structure);
         };
         canonicalAgent += QStringLiteral("\n## Documentation Template Routing\n\n")
-            + documentLine(QStringLiteral("Thesis"), academic.thesisDocumentation)
-            + documentLine(QStringLiteral("Report"), academic.reportDocumentation)
+            + documentLine(QStringLiteral("Thesis"), academic.thesisDocumentation, QStringLiteral("aramf-thesis-instruction"))
+            + documentLine(QStringLiteral("Report"), academic.reportDocumentation, QStringLiteral("aramf-report-instruction"))
+            + QStringLiteral("Thesis never uses the Report instruction; Report never uses the Thesis instruction. Custom template structure remains custom and external instructions retain their governed authority.\n")
             + QStringLiteral("The canonical built-in section hierarchy and bilingual authoring guidance are in `documentation/documentation-manifest.json` when documentation is enabled. Guidance is authoring assistance, not final document prose.\n");
         if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")
             || model.templateId() == QStringLiteral("official-android-arduino-smart-home") || model.templateId() == QStringLiteral("android-arduino-smart-home")) {
@@ -885,11 +890,64 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
 
     const auto academic = model.academicConfiguration();
     if (options.generateAgentRules && (academic.thesisDocumentation.enabled || academic.reportDocumentation.enabled)) {
-        const auto documentationManifest = DocumentTemplates::manifest(
+        const auto validateSelectedSource = [&](const AcademicConfiguration::DocumentationConfiguration& configuration, const QString& role, const QString& label) {
+            if (!configuration.enabled || configuration.templateMode != QStringLiteral("source")) return QString();
+            const auto selected = std::find_if(model.resources().cbegin(), model.resources().cend(), [&](const ProjectResource& resource) { return resource.id == configuration.templateSourceId; });
+            if (selected == model.resources().cend()) return label + QStringLiteral(" custom template resource is missing");
+            if (selected->role != role) return label + QStringLiteral(" custom template resource has the wrong role");
+            if (!selected->enabled) return label + QStringLiteral(" custom template resource is disabled");
+            const auto inspection = DocumentTemplateInspector::inspect(*selected, projectRoot);
+            if (!inspection.exists) return label + QStringLiteral(" custom template source file is missing");
+            if (!inspection.formatRecognized) return label + QStringLiteral(" custom template format is unsupported");
+            return QString();
+        };
+        const QString thesisSourceError = validateSelectedSource(academic.thesisDocumentation, QStringLiteral("thesis-template"), QStringLiteral("Thesis"));
+        const QString reportSourceError = validateSelectedSource(academic.reportDocumentation, QStringLiteral("report-template"), QStringLiteral("Report"));
+        if (!thesisSourceError.isEmpty()) return fail(QStringLiteral("Thesis documentation template"), thesisSourceError);
+        if (!reportSourceError.isEmpty()) return fail(QStringLiteral("Report documentation template"), reportSourceError);
+        auto documentationManifest = DocumentTemplates::manifest(
             academic.thesisDocumentation.enabled, academic.thesisDocumentation.templateMode, academic.thesisDocumentation.templateSourceId,
             academic.reportDocumentation.enabled,
             academic.reportDocumentation.templateMode, academic.reportDocumentation.templateSourceId,
             academic.thesisDocumentation.language, academic.reportDocumentation.language);
+        QJsonArray documents = documentationManifest.value(QStringLiteral("documents")).toArray();
+        const auto enrichDocument = [&](QJsonObject document, const AcademicConfiguration::DocumentationConfiguration& configuration, const QString& role, const DocumentInstruction& instruction) {
+            document.insert(QStringLiteral("instructionId"), instruction.id);
+            document.insert(QStringLiteral("instructionVersion"), instruction.version);
+            document.insert(QStringLiteral("templateRole"), role);
+            document.insert(QStringLiteral("validationState"), QStringLiteral("valid"));
+            if (configuration.templateMode == QStringLiteral("source")) {
+                ProjectResource selected;
+                bool found = false;
+                for (const auto& resource : model.resources()) if (resource.id == configuration.templateSourceId && resource.role == role) { selected = resource; found = true; break; }
+                if (!found) {
+                    document.insert(QStringLiteral("validationState"), QStringLiteral("invalid-resource"));
+                    document.insert(QStringLiteral("sourceId"), configuration.templateSourceId);
+                    document.insert(QStringLiteral("capability"), QStringLiteral("unknown"));
+                } else {
+                    const auto inspection = DocumentTemplateInspector::inspect(selected, projectRoot);
+                    document.insert(QStringLiteral("sourceIdentity"), canonicalResourceIdentity(selected, projectRoot));
+                    document.insert(QStringLiteral("sourcePath"), selected.location);
+                    document.insert(QStringLiteral("fileName"), inspection.fileName);
+                    document.insert(QStringLiteral("format"), inspection.format);
+                    document.insert(QStringLiteral("capability"), inspection.capability);
+                    document.insert(QStringLiteral("structurallyParsed"), inspection.structurallyParsed);
+                    document.insert(QStringLiteral("present"), inspection.exists);
+                    document.insert(QStringLiteral("sourceEnabled"), selected.enabled);
+                    document.insert(QStringLiteral("contentHash"), inspection.contentHash);
+                    document.insert(QStringLiteral("changed"), !selected.fingerprint.isEmpty() && selected.fingerprint != inspection.contentHash);
+                    document.insert(QStringLiteral("parsedSectionCount"), inspection.structurallyParsed ? inspection.sections.size() : 0);
+                    document.insert(QStringLiteral("warnings"), QJsonArray::fromStringList(inspection.warnings));
+                    if (!selected.enabled) document.insert(QStringLiteral("validationState"), QStringLiteral("disabled-resource"));
+                    else if (!inspection.exists) document.insert(QStringLiteral("validationState"), QStringLiteral("missing-source"));
+                    else if (!inspection.formatRecognized) document.insert(QStringLiteral("validationState"), QStringLiteral("unsupported-format"));
+                }
+            }
+            return document;
+        };
+        documents[0] = enrichDocument(documents[0].toObject(), academic.thesisDocumentation, QStringLiteral("thesis-template"), DocumentInstructions::thesis());
+        documents[1] = enrichDocument(documents[1].toObject(), academic.reportDocumentation, QStringLiteral("report-template"), DocumentInstructions::report());
+        documentationManifest.insert(QStringLiteral("documents"), documents);
         const QString documentationPath = QStringLiteral("ARAMF_WORKER/documentation/documentation-manifest.json");
         if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(documentationPath)), documentationManifest, &error))
             return fail(QStringLiteral("Documentation template manifest"), error);

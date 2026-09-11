@@ -1,5 +1,6 @@
 #include "TemplateValidation.h"
 #include "DocumentTemplate.h"
+#include "DocumentInstruction.h"
 #include "Services.h"
 #include "AiCatalog.h"
 #include "RuleCatalog.h"
@@ -104,6 +105,8 @@ QString TemplateValidation::catalogFingerprint()
 QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
 {
     QStringList errors;
+    for (const auto& instruction : {DocumentInstructions::thesis(), DocumentInstructions::report()})
+        for (const auto& error : DocumentInstructions::validate(instruction)) errors << error;
     for (const auto& document : {DocumentTemplates::thesis(), DocumentTemplates::report()})
         for (const auto& error : DocumentTemplates::validate(document)) errors << error;
     ProjectModel empty;
@@ -140,6 +143,11 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
         const QString sourceId = document.value(QStringLiteral("templateSourceId")).toString();
         const QString templateId = document.value(QStringLiteral("templateId")).toString();
         const int templateVersion = document.value(QStringLiteral("templateVersion")).toInt(0);
+        const QString instructionId = document.value(QStringLiteral("instructionId")).toString();
+        const int instructionVersion = document.value(QStringLiteral("instructionVersion")).toInt(0);
+        const QString expectedInstruction = label == QStringLiteral("Thesis") ? QStringLiteral("aramf-thesis-instruction") : QStringLiteral("aramf-report-instruction");
+        require(instructionId == expectedInstruction, label + " canonical instruction identity is invalid");
+        require(instructionVersion >= 1, label + " canonical instruction version is invalid");
         require(mode == QStringLiteral("aramf-default") || mode == QStringLiteral("source"), label + " has an invalid template mode");
         if (mode == QStringLiteral("aramf-default")) {
             const QString expectedId = label == QStringLiteral("Thesis") ? QStringLiteral("aramf-default-thesis") : QStringLiteral("aramf-default-report");
@@ -148,6 +156,7 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
         }
         if (!enabled) require(mode == QStringLiteral("aramf-default") && sourceId.isEmpty(), label + " disabled state must not retain a template source");
         if (enabled && mode == QStringLiteral("source")) {
+            require(templateId.isEmpty() && templateVersion == 0, label + " custom mode must not retain built-in template identity");
             QJsonObject selected;
             for (const auto& value : resources) if (value.toObject().value(QStringLiteral("id")).toString() == sourceId) selected = value.toObject();
             require(!sourceId.isEmpty() && !selected.isEmpty(), label + " template source does not exist");

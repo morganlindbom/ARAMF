@@ -161,7 +161,9 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
                            {QStringLiteral("templateSourceId"), document.templateSourceId},
                            {QStringLiteral("templateId"), document.templateId},
                            {QStringLiteral("templateVersion"), document.templateVersion},
-                           {QStringLiteral("language"), document.language}};
+                           {QStringLiteral("language"), document.language},
+                           {QStringLiteral("instructionId"), document.instructionId},
+                           {QStringLiteral("instructionVersion"), document.instructionVersion}};
     };
     academicObject.insert(QStringLiteral("thesisDocumentation"), documentJson(academic.thesisDocumentation));
     academicObject.insert(QStringLiteral("reportDocumentation"), documentJson(academic.reportDocumentation));
@@ -367,6 +369,8 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
             document.templateId = object.value(QStringLiteral("templateId")).toString();
             document.templateVersion = object.value(QStringLiteral("templateVersion")).toInt(0);
             document.language = object.value(QStringLiteral("language")).toString();
+            document.instructionId = object.value(QStringLiteral("instructionId")).toString();
+            document.instructionVersion = object.value(QStringLiteral("instructionVersion")).toInt(0);
             return document;
         };
         academic.thesisDocumentation = readDocument(QStringLiteral("thesisDocumentation"));

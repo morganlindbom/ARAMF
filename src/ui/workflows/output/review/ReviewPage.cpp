@@ -7,6 +7,8 @@
 #include "core/ProjectPersistence.h"
 #include "core/AramfPaths.h"
 #include "core/DocumentTemplate.h"
+#include "core/DocumentInstruction.h"
+#include "core/DocumentTemplateInspector.h"
 #include <QJsonArray>
 #include <QRegularExpression>
 #include <QFileInfo>
@@ -196,22 +198,32 @@ void ReviewPage::refreshFromModel()
     text += tr("Resources\n  Enabled: %1\n  Authoritative: %2\n  Sources of Truth: %3\n%4\n\n")
                 .arg(enabled).arg(authoritative).arg(primarySources)
                 .arg(resourceSummary.isEmpty() ? tr("  None configured") : QStringLiteral("  ") + resourceSummary.join(QStringLiteral("\n  ")));
-    const auto documentSummary = [&resources](const QString& label, const AcademicConfiguration::DocumentationConfiguration& document, const QString& role) {
+    const auto documentSummary = [this, &resources](const QString& label, const AcademicConfiguration::DocumentationConfiguration& document, const QString& role) {
         const auto builtIn = label == QStringLiteral("Thesis") ? DocumentTemplates::thesis() : DocumentTemplates::report();
+        const auto& instruction = label == QStringLiteral("Thesis") ? DocumentInstructions::thesis() : DocumentInstructions::report();
         QString source = document.templateMode == QStringLiteral("source") ? document.templateSourceId : QStringLiteral("ARAMF Default %1 Template").arg(label);
         QString state = document.enabled ? QObject::tr("enabled") : QObject::tr("disabled");
+        QString details = QStringLiteral("instruction=%1/v%2").arg(instruction.id).arg(instruction.version);
         if (document.enabled && document.templateMode == QStringLiteral("source")) {
             auto it = std::find_if(resources.cbegin(), resources.cend(), [&](const ProjectResource& resource) { return resource.id == document.templateSourceId; });
-            if (it == resources.cend()) source += QObject::tr(" [INVALID: missing source]");
+            if (it == resources.cend()) { source += QObject::tr(" [INVALID: missing source]"); details += QStringLiteral("; validation=invalid-resource; capability=unknown"); }
             else if (!it->enabled) source += QObject::tr(" [INVALID: source disabled]");
             else if (it->role != role) source += QObject::tr(" [INVALID: role is %1]").arg(it->role);
-            else source += QObject::tr(" (%1)").arg(it->name);
+            else {
+                source += QObject::tr(" (%1)").arg(it->name);
+                const auto inspection = DocumentTemplateInspector::inspect(*it, model_->projectPath());
+                details += QStringLiteral("; role=%1; file=%2; format=%3; capability=%4; %5; sections=%6; validation=%7")
+                    .arg(it->role, inspection.fileName, inspection.format, inspection.capability,
+                         inspection.exists ? QStringLiteral("present") : QStringLiteral("missing"),
+                         inspection.structurallyParsed ? QString::number(inspection.sections.size()) : QStringLiteral("unparsed"),
+                         !it->enabled ? QStringLiteral("disabled-resource") : !inspection.exists ? QStringLiteral("missing-source") : !inspection.formatRecognized ? QStringLiteral("unsupported-format") : QStringLiteral("valid"));
+            }
         }
         const bool builtInSelected = document.templateMode == QStringLiteral("aramf-default");
-        return QObject::tr("  %1: %2; mode=%3; template=%4; id=%5; version=%6; language=%7; sections=%8\n")
+        return QObject::tr("  %1: %2; mode=%3; template=%4; id=%5; version=%6; language=%7; sections=%8; %9\n")
             .arg(label, state, document.templateMode, source, builtInSelected ? (document.templateId.isEmpty() ? builtIn.id : document.templateId) : QObject::tr("external-resource"),
                  builtInSelected ? QString::number(document.templateVersion > 0 ? document.templateVersion : builtIn.version) : QObject::tr("external"), document.language,
-                 document.templateMode == QStringLiteral("source") ? QObject::tr("external") : QString::number(builtIn.sections.size()));
+                 document.templateMode == QStringLiteral("source") ? QObject::tr("external") : QString::number(builtIn.sections.size()), details);
     };
     const auto academic = model_->academicConfiguration();
     text += tr("Documentation\n")

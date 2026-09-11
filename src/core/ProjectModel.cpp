@@ -355,6 +355,8 @@ void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
             document.templateVersion = 1;
         }
         if (document.language.isEmpty()) document.language = QStringLiteral("sv");
+        document.instructionId = defaultId == QStringLiteral("aramf-default-thesis") ? QStringLiteral("aramf-thesis-instruction") : QStringLiteral("aramf-report-instruction");
+        document.instructionVersion = 1;
     };
     normalize(next.thesisDocumentation, QStringLiteral("aramf-default-thesis"));
     normalize(next.reportDocumentation, QStringLiteral("aramf-default-report"));
@@ -376,12 +378,16 @@ void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
         && academic_.thesisDocumentation.templateId == next.thesisDocumentation.templateId
         && academic_.thesisDocumentation.templateVersion == next.thesisDocumentation.templateVersion
         && academic_.thesisDocumentation.language == next.thesisDocumentation.language
+        && academic_.thesisDocumentation.instructionId == next.thesisDocumentation.instructionId
+        && academic_.thesisDocumentation.instructionVersion == next.thesisDocumentation.instructionVersion
         && academic_.reportDocumentation.enabled == next.reportDocumentation.enabled
         && academic_.reportDocumentation.templateMode == next.reportDocumentation.templateMode
         && academic_.reportDocumentation.templateSourceId == next.reportDocumentation.templateSourceId
         && academic_.reportDocumentation.templateId == next.reportDocumentation.templateId
         && academic_.reportDocumentation.templateVersion == next.reportDocumentation.templateVersion
-        && academic_.reportDocumentation.language == next.reportDocumentation.language;
+        && academic_.reportDocumentation.language == next.reportDocumentation.language
+        && academic_.reportDocumentation.instructionId == next.reportDocumentation.instructionId
+        && academic_.reportDocumentation.instructionVersion == next.reportDocumentation.instructionVersion;
     if (unchanged) {
         return;
     }

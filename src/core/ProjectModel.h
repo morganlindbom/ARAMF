@@ -64,8 +64,10 @@ struct AcademicConfiguration {
         QString templateId;
         int templateVersion = 0;
         QString language;
-    } thesisDocumentation{false, QStringLiteral("aramf-default"), {}, QStringLiteral("aramf-default-thesis"), 1, QStringLiteral("sv")};
-    DocumentationConfiguration reportDocumentation{false, QStringLiteral("aramf-default"), {}, QStringLiteral("aramf-default-report"), 1, QStringLiteral("sv")};
+        QString instructionId;
+        int instructionVersion = 0;
+    } thesisDocumentation{false, QStringLiteral("aramf-default"), {}, QStringLiteral("aramf-default-thesis"), 1, QStringLiteral("sv"), QStringLiteral("aramf-thesis-instruction"), 1};
+    DocumentationConfiguration reportDocumentation{false, QStringLiteral("aramf-default"), {}, QStringLiteral("aramf-default-report"), 1, QStringLiteral("sv"), QStringLiteral("aramf-report-instruction"), 1};
 };
 
 struct AiConfiguration {

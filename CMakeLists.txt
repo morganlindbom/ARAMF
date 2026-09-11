@@ -50,6 +50,10 @@ set(ARAMF_CORE_SOURCES
     src/core/TemplateManager.cpp
     src/core/DocumentTemplate.h
     src/core/DocumentTemplate.cpp
+    src/core/DocumentInstruction.h
+    src/core/DocumentInstruction.cpp
+    src/core/DocumentTemplateInspector.h
+    src/core/DocumentTemplateInspector.cpp
     src/core/TemplateValidation.cpp
     src/core/ValidationRouting.h
     src/core/ValidationRouting.cpp
@@ -190,6 +194,10 @@ if(BUILD_TESTING)
         src/core/Services.cpp
         src/core/DocumentTemplate.h
         src/core/DocumentTemplate.cpp
+        src/core/DocumentInstruction.h
+        src/core/DocumentInstruction.cpp
+        src/core/DocumentTemplateInspector.h
+        src/core/DocumentTemplateInspector.cpp
     src/core/TemplateManager.cpp
     src/core/TemplateValidation.cpp
     )
