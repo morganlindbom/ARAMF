@@ -155,6 +155,14 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     academicObject.insert(QStringLiteral("academicLanguage"), academic.academicLanguage);
     academicObject.insert(QStringLiteral("academicRequirements"), toJsonArray(academic.academicRequirements));
     academicObject.insert(QStringLiteral("academicDeliverables"), toJsonArray(academic.academicDeliverables));
+    const auto documentJson = [](const AcademicConfiguration::DocumentationConfiguration& document) {
+        return QJsonObject{{QStringLiteral("enabled"), document.enabled},
+                           {QStringLiteral("templateMode"), document.templateMode},
+                           {QStringLiteral("templateSourceId"), document.templateSourceId},
+                           {QStringLiteral("language"), document.language}};
+    };
+    academicObject.insert(QStringLiteral("thesisDocumentation"), documentJson(academic.thesisDocumentation));
+    academicObject.insert(QStringLiteral("reportDocumentation"), documentJson(academic.reportDocumentation));
     root.insert(QStringLiteral("academic"), academicObject);
     root.insert(QStringLiteral("environment"), environment);
     root.insert(QStringLiteral("capabilities"), capabilityObject);
@@ -348,6 +356,17 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
         academic.academicLanguage = academicObject.value(QStringLiteral("academicLanguage")).toString();
         academic.academicRequirements = fromJsonArray(academicObject.value(QStringLiteral("academicRequirements")));
         academic.academicDeliverables = fromJsonArray(academicObject.value(QStringLiteral("academicDeliverables")));
+        const auto readDocument = [&academicObject](const QString& key) {
+            AcademicConfiguration::DocumentationConfiguration document;
+            const auto object = academicObject.value(key).toObject();
+            document.enabled = object.value(QStringLiteral("enabled")).toBool(false);
+            document.templateMode = object.value(QStringLiteral("templateMode")).toString(QStringLiteral("aramf-default"));
+            document.templateSourceId = object.value(QStringLiteral("templateSourceId")).toString();
+            document.language = object.value(QStringLiteral("language")).toString();
+            return document;
+        };
+        academic.thesisDocumentation = readDocument(QStringLiteral("thesisDocumentation"));
+        academic.reportDocumentation = readDocument(QStringLiteral("reportDocumentation"));
     }
     AiConfiguration ai;
     const auto aiObject = root.value(QStringLiteral("ai")).toObject();

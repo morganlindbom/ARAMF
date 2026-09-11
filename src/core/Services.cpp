@@ -370,6 +370,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "Read `rules/generated-rules.md` when rule output is present.\n\n"
             "Respect Sources of Truth, durable decisions, and the user-owned `custom/` directory.\n"
             "Project resources have explicit governance roles in resources/resources.json: source-of-truth is authoritative project fact/requirement, instruction is a directive within its authority and scope, reference is informational and does not override governing sources, and supporting-material is contextual with lower governance authority. Ignore disabled resources. Do not infer roles from filenames or file types. If active instructions conflict at equal effective authority, surface the conflict and require governance resolution; never silently choose or merge them.\n"
+            "Thesis Template and Report Template are distinct canonical resource roles. Thesis and Report may both be enabled. Use the ARAMF Default Thesis Template or ARAMF Default Report Template automatically when their document is enabled without a custom source; custom sources must resolve by resource ID and matching role from resources/resources.json.\n"
             "Authority order: explicit current user instruction, current Source of Truth, current durable project decisions, approved Framework Knowledge, templates/defaults, then AI inference.\n"
             "When a corrected approach is verified and reusable, record a Framework Knowledge candidate with evidence. Never self-approve it; explicit user approval is required before changing its status to `approved`. Superseded entries remain auditable but are not active.\n"
             "Keep PROJECT_STATUS.md current as human-readable present state; it is distinct from append-only historical evidence. Project Memory ownership is explicit in memory/memory-contract.json.\n"
@@ -389,6 +390,15 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                          resource.enabled ? QStringLiteral("yes") : QStringLiteral("no"));
             }
         }
+        const auto academic = model.academicConfiguration();
+        const auto documentLine = [](const QString& name, const AcademicConfiguration::DocumentationConfiguration& document) {
+            return QStringLiteral("- %1: enabled=%2, templateMode=%3, templateSourceId=%4\n")
+                .arg(name, document.enabled ? QStringLiteral("yes") : QStringLiteral("no"), document.templateMode,
+                     document.templateSourceId.isEmpty() ? QStringLiteral("ARAMF default") : document.templateSourceId);
+        };
+        canonicalAgent += QStringLiteral("\n## Documentation Template Routing\n\n")
+            + documentLine(QStringLiteral("Thesis"), academic.thesisDocumentation)
+            + documentLine(QStringLiteral("Report"), academic.reportDocumentation);
         if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")
             || model.templateId() == QStringLiteral("official-android-arduino-smart-home") || model.templateId() == QStringLiteral("android-arduino-smart-home")) {
             const auto android = model.androidConstraints();
@@ -861,7 +871,9 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             {QStringLiteral("frameworks"), toJsonArray(capabilities.frameworks)}, {QStringLiteral("platforms"), toJsonArray(capabilities.targetPlatforms)},
             {QStringLiteral("hardware"), toJsonArray(capabilities.hardwareTargets)}, {QStringLiteral("primaryAiAgent"), ai.primaryAgent},
             {QStringLiteral("resources"), model.resources().size()}, {QStringLiteral("rules"), toJsonArray(model.ruleConfiguration().activeCategories)},
-            {QStringLiteral("memoryMaximumSizeBytes"), model.memoryConfiguration().maximumSizeBytes}};
+            {QStringLiteral("memoryMaximumSizeBytes"), model.memoryConfiguration().maximumSizeBytes},
+            {QStringLiteral("thesisDocumentation"), QJsonObject{{QStringLiteral("enabled"), model.academicConfiguration().thesisDocumentation.enabled}, {QStringLiteral("templateMode"), model.academicConfiguration().thesisDocumentation.templateMode}, {QStringLiteral("templateSourceId"), model.academicConfiguration().thesisDocumentation.templateSourceId}}},
+            {QStringLiteral("reportDocumentation"), QJsonObject{{QStringLiteral("enabled"), model.academicConfiguration().reportDocumentation.enabled}, {QStringLiteral("templateMode"), model.academicConfiguration().reportDocumentation.templateMode}, {QStringLiteral("templateSourceId"), model.academicConfiguration().reportDocumentation.templateSourceId}}}};
         if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::Provenance)), provenance, &error)
             || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::SelectionEffects)), effects, &error)) {
             return fail(QStringLiteral("Provenance"), error);

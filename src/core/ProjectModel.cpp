@@ -338,6 +338,18 @@ void ProjectModel::setDevelopmentCapabilities(const DevelopmentCapabilities& val
 
 void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
 {
+    AcademicConfiguration next = value;
+    auto normalize = [](AcademicConfiguration::DocumentationConfiguration& document) {
+        if (!document.enabled) {
+            document.templateMode = QStringLiteral("aramf-default");
+            document.templateSourceId.clear();
+        } else if (document.templateMode != QStringLiteral("source")) {
+            document.templateMode = QStringLiteral("aramf-default");
+            document.templateSourceId.clear();
+        }
+    };
+    normalize(next.thesisDocumentation);
+    normalize(next.reportDocumentation);
     const bool unchanged = academic_.academicMode == value.academicMode
         && academic_.thesisLevel == value.thesisLevel
         && academic_.thesisApproaches == value.thesisApproaches
@@ -349,11 +361,19 @@ void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
         && academic_.citationStyle == value.citationStyle
         && academic_.academicLanguage == value.academicLanguage
         && academic_.academicRequirements == value.academicRequirements
-        && academic_.academicDeliverables == value.academicDeliverables;
+        && academic_.academicDeliverables == next.academicDeliverables
+        && academic_.thesisDocumentation.enabled == next.thesisDocumentation.enabled
+        && academic_.thesisDocumentation.templateMode == next.thesisDocumentation.templateMode
+        && academic_.thesisDocumentation.templateSourceId == next.thesisDocumentation.templateSourceId
+        && academic_.thesisDocumentation.language == next.thesisDocumentation.language
+        && academic_.reportDocumentation.enabled == next.reportDocumentation.enabled
+        && academic_.reportDocumentation.templateMode == next.reportDocumentation.templateMode
+        && academic_.reportDocumentation.templateSourceId == next.reportDocumentation.templateSourceId
+        && academic_.reportDocumentation.language == next.reportDocumentation.language;
     if (unchanged) {
         return;
     }
-    academic_ = value;
+    academic_ = next;
     notifyChanged();
 }
 

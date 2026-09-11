@@ -55,6 +55,15 @@ struct AcademicConfiguration {
     QString academicLanguage;
     QStringList academicRequirements;
     QStringList academicDeliverables;
+    // Thesis and Report are independent document products.  The resource
+    // system owns external source identity; these fields only select it.
+    struct DocumentationConfiguration {
+        bool enabled = false;
+        QString templateMode = QStringLiteral("aramf-default");
+        QString templateSourceId;
+        QString language;
+    } thesisDocumentation;
+    DocumentationConfiguration reportDocumentation;
 };
 
 struct AiConfiguration {

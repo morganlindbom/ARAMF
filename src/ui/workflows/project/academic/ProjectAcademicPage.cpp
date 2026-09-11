@@ -4,6 +4,7 @@
 #include "ui/shared/CapabilityCheckGroup.h"
 
 #include <QButtonGroup>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -48,6 +49,16 @@ ProjectAcademicPage::ProjectAcademicPage(ProjectModel* model, QWidget* parent)
         }
     }
     layout->addWidget(modeSection);
+
+    auto* documentation = new QGroupBox(tr("Documentation"), this);
+    auto* documentationLayout = new QFormLayout(documentation);
+    thesisEnabled_ = new QCheckBox(tr("Thesis"), documentation);
+    reportEnabled_ = new QCheckBox(tr("Report"), documentation);
+    thesisTemplate_ = new QComboBox(documentation);
+    reportTemplate_ = new QComboBox(documentation);
+    documentationLayout->addRow(thesisEnabled_, thesisTemplate_);
+    documentationLayout->addRow(reportEnabled_, reportTemplate_);
+    layout->addWidget(documentation);
 
     details_ = new QGroupBox(this);
     details_->setFlat(true);
@@ -128,6 +139,10 @@ ProjectAcademicPage::ProjectAcademicPage(ProjectModel* model, QWidget* parent)
     }
     connect(citationStyle_, &QComboBox::currentIndexChanged, this, [this] { persist(); });
     connect(academicLanguage_, &QComboBox::currentIndexChanged, this, [this] { persist(); });
+    connect(thesisEnabled_, &QCheckBox::toggled, this, [this] { persist(); });
+    connect(reportEnabled_, &QCheckBox::toggled, this, [this] { persist(); });
+    connect(thesisTemplate_, &QComboBox::currentIndexChanged, this, [this] { persist(); });
+    connect(reportTemplate_, &QComboBox::currentIndexChanged, this, [this] { persist(); });
     connect(model_, &ProjectModel::modelChanged, this, &ProjectAcademicPage::refresh);
     refresh();
 }
@@ -178,7 +193,31 @@ void ProjectAcademicPage::persist()
     value.academicLanguage = comboValue(academicLanguage_, languageCustom_);
     value.academicRequirements = requirements_->selectedIds();
     value.academicDeliverables = deliverables_->selectedIds();
+    value.thesisDocumentation.enabled = thesisEnabled_->isChecked();
+    value.thesisDocumentation.templateMode = thesisTemplate_->currentData().toString() == QStringLiteral("source") ? QStringLiteral("source") : QStringLiteral("aramf-default");
+    value.thesisDocumentation.templateSourceId = value.thesisDocumentation.templateMode == QStringLiteral("source") ? thesisTemplate_->currentData(Qt::UserRole).toString() : QString();
+    value.reportDocumentation.enabled = reportEnabled_->isChecked();
+    value.reportDocumentation.templateMode = reportTemplate_->currentData().toString() == QStringLiteral("source") ? QStringLiteral("source") : QStringLiteral("aramf-default");
+    value.reportDocumentation.templateSourceId = value.reportDocumentation.templateMode == QStringLiteral("source") ? reportTemplate_->currentData(Qt::UserRole).toString() : QString();
     model_->setAcademicConfiguration(value);
+}
+
+void ProjectAcademicPage::refreshDocumentSources()
+{
+    const auto populate = [this](QComboBox* combo, const QString& role, const QString& selectedId) {
+        const QSignalBlocker blocker(combo);
+        combo->clear();
+        combo->addItem(tr("ARAMF Default Template"), QStringLiteral("aramf-default"));
+        for (const auto& resource : model_->resources()) {
+            if (resource.role == role) combo->addItem(resource.name, QStringLiteral("source")), combo->setItemData(combo->count() - 1, resource.id, Qt::UserRole);
+        }
+        for (int i = 0; i < combo->count(); ++i) if (combo->itemData(i, Qt::UserRole).toString() == selectedId) combo->setCurrentIndex(i);
+    };
+    const auto academic = model_->academicConfiguration();
+    populate(thesisTemplate_, QStringLiteral("thesis-template"), academic.thesisDocumentation.templateSourceId);
+    populate(reportTemplate_, QStringLiteral("report-template"), academic.reportDocumentation.templateSourceId);
+    thesisTemplate_->setEnabled(thesisEnabled_->isChecked());
+    reportTemplate_->setEnabled(reportEnabled_->isChecked());
 }
 
 void ProjectAcademicPage::updateVisibility()
@@ -215,5 +254,12 @@ void ProjectAcademicPage::refresh()
     setComboValue(academicLanguage_, languageCustom_, value.academicLanguage);
     requirements_->setSelectedIds(value.academicRequirements);
     deliverables_->setSelectedIds(value.academicDeliverables);
+    {
+        const QSignalBlocker thesisBlocker(thesisEnabled_);
+        const QSignalBlocker reportBlocker(reportEnabled_);
+        thesisEnabled_->setChecked(value.thesisDocumentation.enabled);
+        reportEnabled_->setChecked(value.reportDocumentation.enabled);
+    }
+    refreshDocumentSources();
     updateVisibility();
 }

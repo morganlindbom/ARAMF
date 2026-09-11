@@ -480,6 +480,8 @@ QList<EnvironmentOption> governanceRoles()
         {QStringLiteral("Instruction"), QStringLiteral("instruction")},
         {QStringLiteral("Reference"), QStringLiteral("reference")},
         {QStringLiteral("Supporting Material"), QStringLiteral("supporting-material")}
+        ,{QStringLiteral("Thesis Template"), QStringLiteral("thesis-template")}
+        ,{QStringLiteral("Report Template"), QStringLiteral("report-template")}
     });
 }
 

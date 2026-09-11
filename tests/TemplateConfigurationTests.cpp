@@ -3,6 +3,7 @@
 #include "core/ProjectPersistence.h"
 #include "core/ProjectMemory.h"
 #include "core/AramfPaths.h"
+#include "core/EnvironmentCatalog.h"
 #include "ui/workflows/project/setup/ProjectSetupPage.h"
 #include "ui/workflows/output/review/ReviewPage.h"
 #include "ui/workflows/output/generate/GeneratePage.h"
@@ -661,6 +662,33 @@ int main(int argc, char** argv)
         }
     }
     responsive.close();
+
+    // Thesis/Report source-role regression coverage: canonical IDs, independent
+    // defaults, role filtering/validation, and persistence.
+    const auto governance = EnvironmentCatalog::governanceRoles();
+    check(std::any_of(governance.cbegin(), governance.cend(), [](const auto& option) { return option.second == "thesis-template" && option.first == "Thesis Template"; }), "Thesis Template role is canonical and exposed");
+    check(std::any_of(governance.cbegin(), governance.cend(), [](const auto& option) { return option.second == "report-template" && option.first == "Report Template"; }), "Report Template role is canonical and exposed");
+    ProjectModel documentationModel;
+    auto documentation = documentationModel.academicConfiguration();
+    documentation.thesisDocumentation.enabled = true;
+    documentation.reportDocumentation.enabled = true;
+    documentation.reportDocumentation.templateMode = QStringLiteral("source");
+    documentation.reportDocumentation.templateSourceId = QStringLiteral("report-resource");
+    ProjectResource reportResource; reportResource.id = QStringLiteral("report-resource"); reportResource.name = QStringLiteral("Report source"); reportResource.role = QStringLiteral("report-template"); reportResource.enabled = true;
+    documentationModel.setResources({reportResource});
+    documentationModel.setAcademicConfiguration(documentation);
+    check(documentationModel.academicConfiguration().thesisDocumentation.templateMode == "aramf-default", "Thesis enabling auto-selects ARAMF default");
+    check(documentationModel.academicConfiguration().reportDocumentation.templateMode == "source" && documentationModel.academicConfiguration().reportDocumentation.templateSourceId == "report-resource", "Report custom source remains independent");
+    auto invalidDocumentation = documentation;
+    invalidDocumentation.reportDocumentation.templateSourceId = QStringLiteral("missing");
+    documentationModel.setAcademicConfiguration(invalidDocumentation);
+    const auto invalidErrors = TemplateValidation::validateConfiguration(ProjectPersistence().configuration(documentationModel));
+    check(std::any_of(invalidErrors.cbegin(), invalidErrors.cend(), [](const QString& error) { return error.contains("Report") && error.contains("does not exist"); }), "Missing document source is detected structurally");
+    documentationModel.setAcademicConfiguration(documentation);
+    const auto documentationJson = persistence.toJson(documentationModel);
+    ProjectModel reopenedDocumentation;
+    check(persistence.fromJson(&reopenedDocumentation, documentationJson), "Documentation configuration reloads");
+    check(reopenedDocumentation.academicConfiguration().thesisDocumentation.enabled && reopenedDocumentation.academicConfiguration().reportDocumentation.templateSourceId == "report-resource", "Thesis/Report persistence remains independent");
 
     audit.insert("validation", QJsonObject{{"checks", checks}, {"failures", failures}, {"catalogFingerprint", TemplateValidation::catalogFingerprint()}});
     saveJson(fixture.filePath("template-audit.json"), audit);

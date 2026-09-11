@@ -129,6 +129,26 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
     }
     auto has = [&](const QString& path, const QString& id) { return strings(at(config, path)).contains(id); };
     auto require = [&](bool condition, const QString& reason) { if (!condition) errors << reason; };
+    const auto resources = config.value(QStringLiteral("resources")).toArray();
+    const auto validateDocument = [&](const QString& label, const QString& key, const QString& role) {
+        const auto document = config.value(QStringLiteral("academic")).toObject().value(key).toObject();
+        const bool enabled = document.value(QStringLiteral("enabled")).toBool(false);
+        const QString mode = document.value(QStringLiteral("templateMode")).toString(QStringLiteral("aramf-default"));
+        const QString sourceId = document.value(QStringLiteral("templateSourceId")).toString();
+        require(mode == QStringLiteral("aramf-default") || mode == QStringLiteral("source"), label + " has an invalid template mode");
+        if (!enabled) require(mode == QStringLiteral("aramf-default") && sourceId.isEmpty(), label + " disabled state must not retain a template source");
+        if (enabled && mode == QStringLiteral("source")) {
+            QJsonObject selected;
+            for (const auto& value : resources) if (value.toObject().value(QStringLiteral("id")).toString() == sourceId) selected = value.toObject();
+            require(!sourceId.isEmpty() && !selected.isEmpty(), label + " template source does not exist");
+            if (!selected.isEmpty()) {
+                require(selected.value(QStringLiteral("enabled")).toBool(false), label + " template source is disabled");
+                require(selected.value(QStringLiteral("role")).toString() == role, label + " template source must have role " + role);
+            }
+        }
+    };
+    validateDocument(QStringLiteral("Thesis"), QStringLiteral("thesisDocumentation"), QStringLiteral("thesis-template"));
+    validateDocument(QStringLiteral("Report"), QStringLiteral("reportDocumentation"), QStringLiteral("report-template"));
     for (const auto& domain : {"languages", "ides", "hostOperatingSystems", "targetPlatforms", "targetArchitectures", "toolchains", "buildSystems", "buildConfigurations"})
         require(!strings(at(config, "capabilities." + QString(domain))).isEmpty(), "Configure " + QString(domain));
     // Each selected framework declares its required language/toolchain rather than assuming one global stack.

@@ -195,6 +195,22 @@ void ReviewPage::refreshFromModel()
     text += tr("Resources\n  Enabled: %1\n  Authoritative: %2\n  Sources of Truth: %3\n%4\n\n")
                 .arg(enabled).arg(authoritative).arg(primarySources)
                 .arg(resourceSummary.isEmpty() ? tr("  None configured") : QStringLiteral("  ") + resourceSummary.join(QStringLiteral("\n  ")));
+    const auto documentSummary = [&resources](const QString& label, const AcademicConfiguration::DocumentationConfiguration& document, const QString& role) {
+        QString source = document.templateMode == QStringLiteral("source") ? document.templateSourceId : QStringLiteral("ARAMF Default %1 Template").arg(label);
+        QString state = document.enabled ? QObject::tr("enabled") : QObject::tr("disabled");
+        if (document.enabled && document.templateMode == QStringLiteral("source")) {
+            auto it = std::find_if(resources.cbegin(), resources.cend(), [&](const ProjectResource& resource) { return resource.id == document.templateSourceId; });
+            if (it == resources.cend()) source += QObject::tr(" [INVALID: missing source]");
+            else if (!it->enabled) source += QObject::tr(" [INVALID: source disabled]");
+            else if (it->role != role) source += QObject::tr(" [INVALID: role is %1]").arg(it->role);
+            else source += QObject::tr(" (%1)").arg(it->name);
+        }
+        return QObject::tr("  %1: %2; mode=%3; template=%4\n").arg(label, state, document.templateMode, source);
+    };
+    const auto academic = model_->academicConfiguration();
+    text += tr("Documentation\n")
+        + documentSummary(QStringLiteral("Thesis"), academic.thesisDocumentation, QStringLiteral("thesis-template"))
+        + documentSummary(QStringLiteral("Report"), academic.reportDocumentation, QStringLiteral("report-template")) + QLatin1Char('\n');
     text += tr("Rules\n  Enforcement: %1\n  Active categories: %2\n  Loading strategy: %3\n  Conflict policy: %4\n\n")
                 .arg(rules.enforcementLevel).arg(rules.activeCategories.size())
                 .arg(rules.loadingStrategy).arg(rules.conflictPolicy);
