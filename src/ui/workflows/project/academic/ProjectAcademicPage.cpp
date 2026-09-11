@@ -207,7 +207,7 @@ void ProjectAcademicPage::refreshDocumentSources()
     const auto populate = [this](QComboBox* combo, const QString& role, const QString& selectedId) {
         const QSignalBlocker blocker(combo);
         combo->clear();
-        combo->addItem(tr("ARAMF Default Template"), QStringLiteral("aramf-default"));
+        combo->addItem(role == QStringLiteral("thesis-template") ? tr("ARAMF Default Thesis Template") : tr("ARAMF Default Report Template"), QStringLiteral("aramf-default"));
         for (const auto& resource : model_->resources()) {
             if (resource.role == role) combo->addItem(resource.name, QStringLiteral("source")), combo->setItemData(combo->count() - 1, resource.id, Qt::UserRole);
         }

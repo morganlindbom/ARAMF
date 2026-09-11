@@ -6,6 +6,7 @@
 #include "core/TemplateValidation.h"
 #include "core/ProjectPersistence.h"
 #include "core/AramfPaths.h"
+#include "core/DocumentTemplate.h"
 #include <QJsonArray>
 #include <QRegularExpression>
 #include <QFileInfo>
@@ -196,6 +197,7 @@ void ReviewPage::refreshFromModel()
                 .arg(enabled).arg(authoritative).arg(primarySources)
                 .arg(resourceSummary.isEmpty() ? tr("  None configured") : QStringLiteral("  ") + resourceSummary.join(QStringLiteral("\n  ")));
     const auto documentSummary = [&resources](const QString& label, const AcademicConfiguration::DocumentationConfiguration& document, const QString& role) {
+        const auto builtIn = label == QStringLiteral("Thesis") ? DocumentTemplates::thesis() : DocumentTemplates::report();
         QString source = document.templateMode == QStringLiteral("source") ? document.templateSourceId : QStringLiteral("ARAMF Default %1 Template").arg(label);
         QString state = document.enabled ? QObject::tr("enabled") : QObject::tr("disabled");
         if (document.enabled && document.templateMode == QStringLiteral("source")) {
@@ -205,7 +207,11 @@ void ReviewPage::refreshFromModel()
             else if (it->role != role) source += QObject::tr(" [INVALID: role is %1]").arg(it->role);
             else source += QObject::tr(" (%1)").arg(it->name);
         }
-        return QObject::tr("  %1: %2; mode=%3; template=%4\n").arg(label, state, document.templateMode, source);
+        const bool builtInSelected = document.templateMode == QStringLiteral("aramf-default");
+        return QObject::tr("  %1: %2; mode=%3; template=%4; id=%5; version=%6; language=%7; sections=%8\n")
+            .arg(label, state, document.templateMode, source, builtInSelected ? (document.templateId.isEmpty() ? builtIn.id : document.templateId) : QObject::tr("external-resource"),
+                 builtInSelected ? QString::number(document.templateVersion > 0 ? document.templateVersion : builtIn.version) : QObject::tr("external"), document.language,
+                 document.templateMode == QStringLiteral("source") ? QObject::tr("external") : QString::number(builtIn.sections.size()));
     };
     const auto academic = model_->academicConfiguration();
     text += tr("Documentation\n")

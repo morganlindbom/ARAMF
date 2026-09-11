@@ -1,4 +1,5 @@
 #include "TemplateValidation.h"
+#include "DocumentTemplate.h"
 #include "Services.h"
 #include "AiCatalog.h"
 #include "RuleCatalog.h"
@@ -103,6 +104,8 @@ QString TemplateValidation::catalogFingerprint()
 QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
 {
     QStringList errors;
+    for (const auto& document : {DocumentTemplates::thesis(), DocumentTemplates::report()})
+        for (const auto& error : DocumentTemplates::validate(document)) errors << error;
     ProjectModel empty;
     const auto expected = ProjectPersistence().configuration(empty);
     for (auto it = expected.begin(); it != expected.end(); ++it) {
@@ -135,7 +138,14 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
         const bool enabled = document.value(QStringLiteral("enabled")).toBool(false);
         const QString mode = document.value(QStringLiteral("templateMode")).toString(QStringLiteral("aramf-default"));
         const QString sourceId = document.value(QStringLiteral("templateSourceId")).toString();
+        const QString templateId = document.value(QStringLiteral("templateId")).toString();
+        const int templateVersion = document.value(QStringLiteral("templateVersion")).toInt(0);
         require(mode == QStringLiteral("aramf-default") || mode == QStringLiteral("source"), label + " has an invalid template mode");
+        if (mode == QStringLiteral("aramf-default")) {
+            const QString expectedId = label == QStringLiteral("Thesis") ? QStringLiteral("aramf-default-thesis") : QStringLiteral("aramf-default-report");
+            require(templateId == expectedId, label + " default template identity is invalid");
+            require(templateVersion >= 1, label + " default template version is invalid");
+        }
         if (!enabled) require(mode == QStringLiteral("aramf-default") && sourceId.isEmpty(), label + " disabled state must not retain a template source");
         if (enabled && mode == QStringLiteral("source")) {
             QJsonObject selected;

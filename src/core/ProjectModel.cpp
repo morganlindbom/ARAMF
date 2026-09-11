@@ -339,7 +339,7 @@ void ProjectModel::setDevelopmentCapabilities(const DevelopmentCapabilities& val
 void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
 {
     AcademicConfiguration next = value;
-    auto normalize = [](AcademicConfiguration::DocumentationConfiguration& document) {
+    auto normalize = [](AcademicConfiguration::DocumentationConfiguration& document, const QString& defaultId) {
         if (!document.enabled) {
             document.templateMode = QStringLiteral("aramf-default");
             document.templateSourceId.clear();
@@ -347,9 +347,17 @@ void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
             document.templateMode = QStringLiteral("aramf-default");
             document.templateSourceId.clear();
         }
+        if (document.templateMode == QStringLiteral("source")) {
+            document.templateId.clear();
+            document.templateVersion = 0;
+        } else {
+            document.templateId = defaultId;
+            document.templateVersion = 1;
+        }
+        if (document.language.isEmpty()) document.language = QStringLiteral("sv");
     };
-    normalize(next.thesisDocumentation);
-    normalize(next.reportDocumentation);
+    normalize(next.thesisDocumentation, QStringLiteral("aramf-default-thesis"));
+    normalize(next.reportDocumentation, QStringLiteral("aramf-default-report"));
     const bool unchanged = academic_.academicMode == value.academicMode
         && academic_.thesisLevel == value.thesisLevel
         && academic_.thesisApproaches == value.thesisApproaches
@@ -365,10 +373,14 @@ void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
         && academic_.thesisDocumentation.enabled == next.thesisDocumentation.enabled
         && academic_.thesisDocumentation.templateMode == next.thesisDocumentation.templateMode
         && academic_.thesisDocumentation.templateSourceId == next.thesisDocumentation.templateSourceId
+        && academic_.thesisDocumentation.templateId == next.thesisDocumentation.templateId
+        && academic_.thesisDocumentation.templateVersion == next.thesisDocumentation.templateVersion
         && academic_.thesisDocumentation.language == next.thesisDocumentation.language
         && academic_.reportDocumentation.enabled == next.reportDocumentation.enabled
         && academic_.reportDocumentation.templateMode == next.reportDocumentation.templateMode
         && academic_.reportDocumentation.templateSourceId == next.reportDocumentation.templateSourceId
+        && academic_.reportDocumentation.templateId == next.reportDocumentation.templateId
+        && academic_.reportDocumentation.templateVersion == next.reportDocumentation.templateVersion
         && academic_.reportDocumentation.language == next.reportDocumentation.language;
     if (unchanged) {
         return;

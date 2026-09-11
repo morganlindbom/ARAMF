@@ -159,6 +159,8 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
         return QJsonObject{{QStringLiteral("enabled"), document.enabled},
                            {QStringLiteral("templateMode"), document.templateMode},
                            {QStringLiteral("templateSourceId"), document.templateSourceId},
+                           {QStringLiteral("templateId"), document.templateId},
+                           {QStringLiteral("templateVersion"), document.templateVersion},
                            {QStringLiteral("language"), document.language}};
     };
     academicObject.insert(QStringLiteral("thesisDocumentation"), documentJson(academic.thesisDocumentation));
@@ -362,6 +364,8 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
             document.enabled = object.value(QStringLiteral("enabled")).toBool(false);
             document.templateMode = object.value(QStringLiteral("templateMode")).toString(QStringLiteral("aramf-default"));
             document.templateSourceId = object.value(QStringLiteral("templateSourceId")).toString();
+            document.templateId = object.value(QStringLiteral("templateId")).toString();
+            document.templateVersion = object.value(QStringLiteral("templateVersion")).toInt(0);
             document.language = object.value(QStringLiteral("language")).toString();
             return document;
         };

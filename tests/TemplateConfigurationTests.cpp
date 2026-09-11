@@ -4,6 +4,7 @@
 #include "core/ProjectMemory.h"
 #include "core/AramfPaths.h"
 #include "core/EnvironmentCatalog.h"
+#include "core/DocumentTemplate.h"
 #include "ui/workflows/project/setup/ProjectSetupPage.h"
 #include "ui/workflows/output/review/ReviewPage.h"
 #include "ui/workflows/output/generate/GeneratePage.h"
@@ -689,6 +690,28 @@ int main(int argc, char** argv)
     ProjectModel reopenedDocumentation;
     check(persistence.fromJson(&reopenedDocumentation, documentationJson), "Documentation configuration reloads");
     check(reopenedDocumentation.academicConfiguration().thesisDocumentation.enabled && reopenedDocumentation.academicConfiguration().reportDocumentation.templateSourceId == "report-resource", "Thesis/Report persistence remains independent");
+
+    const auto thesisDefault = DocumentTemplates::thesis();
+    const auto reportDefault = DocumentTemplates::report();
+    check(thesisDefault.id == "aramf-default-thesis" && thesisDefault.version == 1, "Default Thesis identity and version are stable");
+    check(reportDefault.id == "aramf-default-report" && reportDefault.version == 1, "Default Report identity and version are stable");
+    check(!thesisDefault.sections.isEmpty() && !reportDefault.sections.isEmpty(), "Default document templates are non-empty");
+    check(thesisDefault.sections.size() != reportDefault.sections.size() || thesisDefault.sections.first().id != reportDefault.sections.first().id, "Thesis and Report structures are distinct");
+    const auto checkDocument = [&](const DocumentTemplate& document, const QStringList& requiredIds) {
+        check(DocumentTemplates::validate(document).isEmpty(), document.documentType + " canonical structure validates");
+        QSet<QString> ids;
+        int previousOrder = 0;
+        for (const auto& item : DocumentTemplates::tableOfContents(document)) {
+            ids.insert(item.id);
+            check(item.order > previousOrder && item.level >= 1 && item.level <= 6, document.documentType + " section order and level are valid");
+            check(!item.titleSv.isEmpty() && !item.titleEn.isEmpty() && !item.guidanceSv.isEmpty() && !item.guidanceEn.isEmpty(), document.documentType + " section is bilingual and guided");
+            previousOrder = item.order;
+        }
+        for (const auto& id : requiredIds) check(ids.contains(id), document.documentType + " contains " + id);
+    };
+    checkDocument(thesisDefault, {"introduction", "theory-background", "method", "results", "discussion", "conclusion", "references"});
+    checkDocument(reportDefault, {"introduction", "method", "execution", "results", "discussion", "conclusion", "references"});
+    check(DocumentTemplates::manifest(true, "aramf-default", {}, true, "aramf-default", {}).value("documents").toArray().first().toObject().value("sections").toArray().size() == thesisDefault.sections.size(), "TOC/generation manifest derives from canonical Thesis sections");
 
     audit.insert("validation", QJsonObject{{"checks", checks}, {"failures", failures}, {"catalogFingerprint", TemplateValidation::catalogFingerprint()}});
     saveJson(fixture.filePath("template-audit.json"), audit);

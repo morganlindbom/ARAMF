@@ -2,6 +2,7 @@
 
 #include "Services.h"
 #include "TemplateValidation.h"
+#include "DocumentTemplate.h"
 
 #include "AramfPaths.h"
 #include "ControlPlaneMigration.h"
@@ -398,7 +399,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         };
         canonicalAgent += QStringLiteral("\n## Documentation Template Routing\n\n")
             + documentLine(QStringLiteral("Thesis"), academic.thesisDocumentation)
-            + documentLine(QStringLiteral("Report"), academic.reportDocumentation);
+            + documentLine(QStringLiteral("Report"), academic.reportDocumentation)
+            + QStringLiteral("The canonical built-in section hierarchy and bilingual authoring guidance are in `documentation/documentation-manifest.json` when documentation is enabled. Guidance is authoring assistance, not final document prose.\n");
         if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")
             || model.templateId() == QStringLiteral("official-android-arduino-smart-home") || model.templateId() == QStringLiteral("android-arduino-smart-home")) {
             const auto android = model.androidConstraints();
@@ -879,6 +881,19 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             return fail(QStringLiteral("Provenance"), error);
         }
         addGeneratedFiles(result, {AramfPaths::Provenance, AramfPaths::SelectionEffects});
+    }
+
+    const auto academic = model.academicConfiguration();
+    if (options.generateAgentRules && (academic.thesisDocumentation.enabled || academic.reportDocumentation.enabled)) {
+        const auto documentationManifest = DocumentTemplates::manifest(
+            academic.thesisDocumentation.enabled, academic.thesisDocumentation.templateMode, academic.thesisDocumentation.templateSourceId,
+            academic.reportDocumentation.enabled,
+            academic.reportDocumentation.templateMode, academic.reportDocumentation.templateSourceId,
+            academic.thesisDocumentation.language, academic.reportDocumentation.language);
+        const QString documentationPath = QStringLiteral("ARAMF_WORKER/documentation/documentation-manifest.json");
+        if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(documentationPath)), documentationManifest, &error))
+            return fail(QStringLiteral("Documentation template manifest"), error);
+        addGeneratedFiles(result, {documentationPath});
     }
 
     const QJsonObject generationState{
