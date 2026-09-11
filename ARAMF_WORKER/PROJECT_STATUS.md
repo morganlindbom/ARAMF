@@ -226,6 +226,11 @@ changes only the project path and does not save.
   an idempotent PROJECT_FINALIZED event, and updates generated project status.
   It does not build, test, deploy, commit, or push.
 
+- Consumer-project generation now maintains an idempotent, ARAMF-scoped
+  `.gitignore` block. ARAMF self-hosting is excluded using the canonical
+  program-root identity, and generated root `AGENTS.md` is ignored only when
+  its ARAMF ownership marker is present.
+
 - The page 21 action is now `Save & Generate`. It validates Project Path and
   selected products, reuses the existing Setup Save/Save As mechanism, blocks
   generation on save failure or cancellation, and generates from the exact

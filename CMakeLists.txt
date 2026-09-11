@@ -15,6 +15,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
 set(ARAMF_CORE_SOURCES
     src/core/AramfPaths.h
+    src/core/GitIgnoreService.h
+    src/core/GitIgnoreService.cpp
     src/core/ControlPlaneMigration.h
     src/core/ControlPlaneMigration.cpp
     src/core/ProjectMemory.h
@@ -139,6 +141,8 @@ include(CTest)
 if(BUILD_TESTING)
     add_executable(aramf_core_tests
         tests/ProjectMemoryTests.cpp
+        src/core/GitIgnoreService.h
+        src/core/GitIgnoreService.cpp
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
         src/core/ProjectMemoryCompaction.h
@@ -193,6 +197,8 @@ if(BUILD_TESTING)
     add_executable(aramf_workflow_tests
         tests/WorkflowNavigationTests.cpp
         src/core/AramfPaths.h
+        src/core/GitIgnoreService.h
+        src/core/GitIgnoreService.cpp
         src/core/FrameworkKnowledge.h
         src/core/FrameworkKnowledge.cpp
         src/core/ProjectModel.h

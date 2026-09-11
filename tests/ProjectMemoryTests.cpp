@@ -10,6 +10,8 @@
 #include "core/ProjectPersistence.h"
 #include "core/ProjectRootRebindService.h"
 #include "core/Services.h"
+#include "core/GitIgnoreService.h"
+#include "core/AramfPaths.h"
 #include "core/ValidationRouting.h"
 
 #include <QCoreApplication>
@@ -62,6 +64,65 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    bool ok = true;
+    GitIgnoreService gitIgnore;
+    QTemporaryDir privacyProject;
+    const auto createdIgnore = gitIgnore.ensureProjectGitIgnore(privacyProject.path());
+    const QString createdIgnoreText = QString::fromUtf8(readTextFile(QDir(privacyProject.path()).filePath(QStringLiteral(".gitignore"))));
+    ok &= require(createdIgnore.success && createdIgnore.changed, "consumer project .gitignore must be created");
+    ok &= require(createdIgnoreText.contains(QStringLiteral("# BEGIN ARAMF MANAGED IGNORE"))
+                      && createdIgnoreText.contains(QStringLiteral("/ARAMF_WORKER/"))
+                      && createdIgnoreText.contains(QStringLiteral("/ARAMF_WORKER_*/"))
+                      && createdIgnoreText.contains(QStringLiteral("/ARAMF/"))
+                      && createdIgnoreText.contains(QStringLiteral("/aramf/")),
+                  "consumer .gitignore must contain scoped ARAMF rules");
+    ok &= require(!createdIgnoreText.contains(QStringLiteral("app/src/"))
+                      && !createdIgnoreText.contains(QStringLiteral("*.kt"))
+                      && !createdIgnoreText.contains(QStringLiteral("*.cpp")),
+                  "consumer .gitignore must not hide normal source files");
+    const auto repeatedIgnore = gitIgnore.ensureProjectGitIgnore(privacyProject.path());
+    const QString repeatedIgnoreText = QString::fromUtf8(readTextFile(QDir(privacyProject.path()).filePath(QStringLiteral(".gitignore"))));
+    ok &= require(repeatedIgnore.success && !repeatedIgnore.changed && repeatedIgnoreText == createdIgnoreText,
+                  "repeated .gitignore management must be idempotent");
+
+    QTemporaryDir existingIgnoreProject;
+    const QString existingIgnorePath = QDir(existingIgnoreProject.path()).filePath(QStringLiteral(".gitignore"));
+    QFile existingIgnore(existingIgnorePath);
+    existingIgnore.open(QIODevice::WriteOnly | QIODevice::Text);
+    existingIgnore.write("# User rules\n*.local\n");
+    existingIgnore.close();
+    const auto preservedIgnore = gitIgnore.ensureProjectGitIgnore(existingIgnoreProject.path());
+    const QString preservedIgnoreText = QString::fromUtf8(readTextFile(existingIgnorePath));
+    ok &= require(preservedIgnore.success && preservedIgnoreText.startsWith(QStringLiteral("# User rules\n*.local\n"))
+                      && preservedIgnoreText.count(QStringLiteral("# BEGIN ARAMF MANAGED IGNORE")) == 1,
+                  "existing .gitignore content must be preserved with one managed block");
+
+    QFile privacyUserAgents(QDir(existingIgnoreProject.path()).filePath(QStringLiteral("AGENTS.md")));
+    privacyUserAgents.open(QIODevice::WriteOnly | QIODevice::Text);
+    privacyUserAgents.write("User-owned instructions\n");
+    privacyUserAgents.close();
+    const auto userAgentIgnore = gitIgnore.ensureProjectGitIgnore(existingIgnoreProject.path());
+    const QString userAgentIgnoreText = QString::fromUtf8(readTextFile(existingIgnorePath));
+    ok &= require(userAgentIgnore.success && !userAgentIgnoreText.contains(QStringLiteral("/AGENTS.md\n")),
+                  "user-owned AGENTS.md must not be hidden");
+
+    QFile generatedAgents(QDir(existingIgnoreProject.path()).filePath(QStringLiteral("AGENTS.md")));
+    generatedAgents.open(QIODevice::WriteOnly | QIODevice::Text);
+    generatedAgents.write("<!-- AGENTS.md -->\nRead ARAMF_WORKER/AGENTS.md\n");
+    generatedAgents.close();
+    const auto generatedAgentIgnore = gitIgnore.ensureProjectGitIgnore(existingIgnoreProject.path());
+    const QString generatedAgentIgnoreText = QString::fromUtf8(readTextFile(existingIgnorePath));
+    ok &= require(generatedAgentIgnore.success && generatedAgentIgnoreText.contains(QStringLiteral("/AGENTS.md\n")),
+                  "ARAMF-generated AGENTS.md must be protected");
+
+    QTemporaryDir selfProject;
+    AramfPaths::setProgramRootForTests(selfProject.path());
+    const auto selfIgnore = gitIgnore.ensureProjectGitIgnore(selfProject.path());
+    AramfPaths::clearProgramRootForTests();
+    ok &= require(selfIgnore.success && selfIgnore.selfProject
+                      && !QFile::exists(QDir(selfProject.path()).filePath(QStringLiteral(".gitignore"))),
+                  "ARAMF self-project must not receive consumer privacy rules");
+
     ProjectModel model;
     model.setProjectName(QStringLiteral("Memory Test Project"));
     model.setProjectPath(temporaryProject.path());
@@ -83,7 +144,6 @@ int main(int argc, char** argv)
     }
 
     const QDir root(temporaryProject.path());
-    bool ok = true;
 
     const auto focusedPlan = ValidationRouting::route({QStringLiteral("src/ui/workflows/resources/authority/ResourceAuthorityPage.cpp"),
                                                        QStringLiteral("tests/WorkflowNavigationTests.cpp")},
