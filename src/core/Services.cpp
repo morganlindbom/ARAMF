@@ -10,6 +10,7 @@
 #include "CertificationService.h"
 #include "RuleCatalog.h"
 #include "ValidationRouting.h"
+#include "GitIgnoreService.h"
 
 #include <QDir>
 #include <QFile>
@@ -589,6 +590,10 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         addGeneratedFiles(result, {QStringLiteral("AGENTS.md"), AramfPaths::AgentInstructions,
                                    AramfPaths::ProjectStatus, AramfPaths::GeneratedRules});
     }
+
+    const auto gitIgnore = GitIgnoreService().ensureProjectGitIgnore(projectRoot);
+    if (!gitIgnore.success) return fail(QStringLiteral("Project privacy (.gitignore)"), gitIgnore.error);
+    if (gitIgnore.changed) result.generatedFiles.append(QStringLiteral(".gitignore"));
 
     if (options.generateRouting) {
         const auto rules = model.ruleConfiguration();

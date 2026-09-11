@@ -153,4 +153,15 @@ inline QString programRoot()
         return executableDirectory;
     return executableDirectory;
 }
+
+inline bool isAramfSelfProject(const QString& directory)
+{
+    const QFileInfo targetInfo(directory);
+    const QFileInfo frameworkInfo(programRoot());
+    const QString target = targetInfo.canonicalFilePath().isEmpty()
+        ? targetInfo.absoluteFilePath() : targetInfo.canonicalFilePath();
+    const QString framework = frameworkInfo.canonicalFilePath().isEmpty()
+        ? frameworkInfo.absoluteFilePath() : frameworkInfo.canonicalFilePath();
+    return QDir::cleanPath(target).compare(QDir::cleanPath(framework), Qt::CaseInsensitive) == 0;
+}
 } // namespace AramfPaths
