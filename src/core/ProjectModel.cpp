@@ -1,4 +1,5 @@
 #include "ProjectModel.h"
+#include <QJsonArray>
 #include "AramfPaths.h"
 
 #include <QUuid>
@@ -544,14 +545,31 @@ void ProjectModel::setResourcePolicy(const ResourcePolicy& value)
 
 void ProjectModel::setRuleConfiguration(const RuleConfiguration& value)
 {
+    auto normalized = value;
+    for (auto it = normalized.scopeMetadata.begin(); it != normalized.scopeMetadata.end(); ++it) {
+        auto metadata = it.value().toObject();
+        if (!it.value().isObject()) continue;
+        for (auto field = metadata.begin(); field != metadata.end(); ++field) {
+            if (!field.value().isArray()) continue;
+            QStringList entries;
+            bool stringSet = true;
+            for (const auto& entry : field.value().toArray()) {
+                if (!entry.isString()) { stringSet = false; break; }
+                entries.append(entry.toString());
+            }
+            if (stringSet) { entries.removeDuplicates(); entries.sort(); field.value() = QJsonArray::fromStringList(entries); }
+        }
+        it.value() = metadata;
+    }
     if (ruleConfiguration_.activeCategories == value.activeCategories
         && ruleConfiguration_.enforcementLevel == value.enforcementLevel
         && ruleConfiguration_.loadingStrategy == value.loadingStrategy
         && ruleConfiguration_.workScopes == value.workScopes
         && ruleConfiguration_.projectScopes == value.projectScopes
+        && ruleConfiguration_.scopeMetadata == normalized.scopeMetadata
         && ruleConfiguration_.contextPolicies == value.contextPolicies
         && ruleConfiguration_.conflictPolicy == value.conflictPolicy) return;
-    ruleConfiguration_ = value;
+    ruleConfiguration_ = normalized;
     notifyChanged();
 }
 

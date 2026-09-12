@@ -13,6 +13,7 @@
 #include "CertificationService.h"
 #include "RuleCatalog.h"
 #include "ValidationRouting.h"
+#include "WorkerContextResolver.h"
 #include "GitIgnoreService.h"
 
 #include <QDir>
@@ -33,8 +34,10 @@ namespace
 {
 class WorkerNameScope final {
 public:
-    explicit WorkerNameScope(const QString& suffix) { AramfPaths::setRuntimeWorkerNameSuffix(suffix); }
-    ~WorkerNameScope() { AramfPaths::setRuntimeWorkerNameSuffix({}); }
+    explicit WorkerNameScope(const QString& suffix) : previous_(AramfPaths::detail::workerSuffixOverride()) { AramfPaths::setRuntimeWorkerNameSuffix(suffix); }
+    ~WorkerNameScope() { AramfPaths::setRuntimeWorkerNameSuffix(previous_); }
+private:
+    QString previous_;
 };
 
 QJsonArray toJsonArray(const QStringList& values)
@@ -140,6 +143,7 @@ QJsonObject workerManifest(const ProjectModel& model, const GenerationOptions& o
 {
     return QJsonObject{
         {QStringLiteral("workerSchemaVersion"), 1}, {QStringLiteral("workerIdentity"), AramfPaths::runtimeWorkerDirectoryName()},
+        {QStringLiteral("taskContract"), QJsonObject{{"schemaVersion", 1}, {"authority", "DERIVED"}, {"policyOwner", "ProjectModel.rules.scopeMetadata"}, {"routingSource", AramfPaths::ScopeRoutes}, {"preflightRequired", true}}},
         {QStringLiteral("projectId"), model.projectId()}, {QStringLiteral("generatedFromFingerprint"), fingerprint},
         {QStringLiteral("canonicalFiles"), QJsonObject{{QStringLiteral("projectConfiguration"), AramfPaths::ProjectConfiguration}, {QStringLiteral("routing"), AramfPaths::TaskRoutes}, {QStringLiteral("currentState"), AramfPaths::CurrentState}, {QStringLiteral("validation"), AramfPaths::ColdStartValidation}, {QStringLiteral("decisions"), AramfPaths::Decisions}, {QStringLiteral("eventHistory"), AramfPaths::EventLog}}},
         {QStringLiteral("fileRoles"), QJsonObject{{QStringLiteral("projectConfiguration"), QStringLiteral("DERIVED")}, {QStringLiteral("workerManifest"), QStringLiteral("DERIVED")}, {QStringLiteral("routing"), QStringLiteral("DERIVED")}, {QStringLiteral("currentState"), QStringLiteral("CANONICAL")}, {QStringLiteral("decisions"), QStringLiteral("CANONICAL")}, {QStringLiteral("eventHistory"), QStringLiteral("HISTORICAL")}, {QStringLiteral("latestValidation"), QStringLiteral("DERIVED")}, {QStringLiteral("validationEvidence"), QStringLiteral("VALIDATION_EVIDENCE")}}},
@@ -310,6 +314,8 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
         {QStringLiteral("resourceRoles"), [&] { QJsonArray a; for (const auto& r : model.resources()) a.append(r.role); return a; }()},
         {QStringLiteral("rules"), toJsonArray(rules.activeCategories)},
         {QStringLiteral("ruleEnforcement"), rules.enforcementLevel},
+        {QStringLiteral("scopeMetadata"), rules.scopeMetadata},
+        {QStringLiteral("projectScopes"), [&] { auto scopes = rules.projectScopes; scopes.removeDuplicates(); scopes.sort(); return toJsonArray(scopes); }()},
         {QStringLiteral("memoryMaximum"), QString::number(memory.maximumSizeBytes)},
         {QStringLiteral("certificationEnabled"), certification.enabled},
         {QStringLiteral("certificationLevel"), certification.defaultVerificationLevel},
@@ -413,6 +419,10 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "3. Read `memory/current-state.md` and the latest validation summary.\n"
             "4. Determine the task scope, then follow `routing/task-routes.json` and `routing/scope-routes.json`.\n"
             "5. Read only the selected scope's instructions/resources; defer `memory/event-log.jsonl` unless history is explicitly required.\n\n"
+            "Before scoped AI edits, derive a task contract with `aramf task prepare --config <saved-project> --request <task.json>`. "
+            "Continue only from READY or READY_WITH_WARNINGS; unmapped source files require canonical scopeMetadata. "
+            "After edits, use `aramf task postflight --config <saved-project> --contract <prepared.json> --evidence <evidence.json>` "
+            "and satisfy its evidence requirements before claiming VERIFIED. Task contracts are derived views, not independent authority.\n\n"
             "Read `PROJECT_STATUS.md` and `memory/decisions.md` when the task requires current project detail or durable architectural context.\n");
         if (options.generateMemory) {
             canonicalAgent += QStringLiteral(
@@ -672,23 +682,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
 
     if (options.generateRouting) {
         const auto rules = model.ruleConfiguration();
-        const QJsonObject taskRoutes{
-            {QStringLiteral("schemaVersion"), 1},
-            {QStringLiteral("strategy"), rules.loadingStrategy},
-            {QStringLiteral("workTypes"), toJsonArray(rules.workScopes)},
-            {QStringLiteral("contextPolicies"), toJsonArray(rules.contextPolicies)},
-            {QStringLiteral("conflictPolicy"), rules.conflictPolicy},
-            {QStringLiteral("inputFingerprint"), result.fingerprint},
-            {QStringLiteral("readSet"), QJsonObject{{QStringLiteral("mandatory"), QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::WorkerManifest, AramfPaths::CurrentState, AramfPaths::ColdStartValidation}}, {QStringLiteral("historyRequired"), false}, {QStringLiteral("scopeOrder"), toJsonArray(rules.projectScopes)}}}
-        };
-        QJsonArray scopedRoutes;
-        for (const auto& scope : rules.projectScopes) {
-            QJsonArray instructions;
-            if (scope == QStringLiteral("thesis")) instructions.append(QStringLiteral("aramf-thesis-instruction"));
-            if (scope == QStringLiteral("report")) instructions.append(QStringLiteral("aramf-report-instruction"));
-            scopedRoutes.append(QJsonObject{{QStringLiteral("id"), scope}, {QStringLiteral("required"), QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::CurrentState}}, {QStringLiteral("optional"), QJsonArray{AramfPaths::GeneratedRules, AramfPaths::ResourceManifest}}, {QStringLiteral("instructions"), instructions}, {QStringLiteral("historyRequired"), false}});
-        }
-        const QJsonObject scopeRoutes{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("inputFingerprint"), result.fingerprint}, {QStringLiteral("scopes"), scopedRoutes}};
+        const auto taskRoutes = WorkerContextResolver::taskRoutes(rules, result.fingerprint);
+        const QJsonObject scopeRoutes = WorkerContextResolver::scopeRoutes(rules, result.fingerprint);
         if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::TaskRoutes)), taskRoutes, &error)
             || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ScopeRoutes)), scopeRoutes, &error)
             || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ValidationPolicy)), ValidationRouting::policy(), &error)) {
@@ -1085,10 +1080,24 @@ VerificationServices::VerificationServices(QObject* parent)
 {
 }
 
-VerificationResult VerificationServices::verify(const ProjectModel& model,
-                                                const GenerationOptions& expectedOptions) const
+QJsonObject GenerationServices::derivedTaskArtifacts(const ProjectModel& model, const GenerationOptions& options)
 {
-    AramfPaths::setRuntimeWorkerNameSuffix(model.workerNameSuffix());
+    WorkerNameScope scope(model.workerNameSuffix());
+    const QString fingerprint = projectConfigurationFingerprint(model, options);
+    QJsonObject outputs;
+    outputs.insert(AramfPaths::resolveWorkerRelativePath(AramfPaths::ProjectConfiguration), projectConfiguration(model, fingerprint));
+    outputs.insert(AramfPaths::resolveWorkerRelativePath(AramfPaths::WorkerManifest), workerManifest(model, options, fingerprint));
+    if (options.generateRouting) {
+        outputs.insert(AramfPaths::resolveWorkerRelativePath(AramfPaths::TaskRoutes), WorkerContextResolver::taskRoutes(model.ruleConfiguration(), fingerprint));
+        outputs.insert(AramfPaths::resolveWorkerRelativePath(AramfPaths::ScopeRoutes), WorkerContextResolver::scopeRoutes(model.ruleConfiguration(), fingerprint));
+    }
+    return outputs;
+}
+
+VerificationResult VerificationServices::verify(const ProjectModel& model,
+                                                const GenerationOptions& expectedOptions, bool persistEvidence) const
+{
+    WorkerNameScope workerScope(model.workerNameSuffix());
     VerificationResult result;
     result.fingerprint = projectConfigurationFingerprint(model, expectedOptions);
     const QString root = QDir::cleanPath(model.projectPath());
@@ -1303,7 +1312,7 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     if (expectedOptions.generateMemory) {
         ProjectMemory memory;
         QString error;
-        const auto report = memory.validate(root, &error);
+        const auto report = memory.validate(root, &error, persistEvidence);
         addCheck(result, QStringLiteral("memory-consistency"), QStringLiteral("Memory consistency"),
                  report.value(QStringLiteral("status")).toString() == QStringLiteral("PASS") ? VerificationStatus::Pass : VerificationStatus::Fail,
                  error.isEmpty() ? report.value(QStringLiteral("status")).toString() : error);
@@ -1341,8 +1350,12 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     result.overallStatus = hasFail ? VerificationStatus::Fail : hasWarning ? VerificationStatus::Warning : VerificationStatus::Pass;
     QJsonArray checks;
     for (const auto& check : result.checks) checks.append(QJsonObject{{QStringLiteral("id"), check.id}, {QStringLiteral("name"), check.name}, {QStringLiteral("status"), statusName(check.status)}, {QStringLiteral("details"), check.details}});
-    writeJsonFile(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/verification-result.json"))),
-                  QJsonObject{{QStringLiteral("fingerprint"), result.fingerprint}, {QStringLiteral("projectRoot"), root}, {QStringLiteral("overallStatus"), statusName(result.overallStatus)}, {QStringLiteral("checkedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}, {QStringLiteral("checks"), checks}}, nullptr);
+    result.evidence = QJsonObject{{QStringLiteral("fingerprint"), result.fingerprint}, {QStringLiteral("projectRoot"), root}, {QStringLiteral("overallStatus"), statusName(result.overallStatus)}, {QStringLiteral("checks"), checks}};
+    if (persistEvidence) {
+        auto evidence = result.evidence;
+        evidence.insert(QStringLiteral("checkedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+        writeJsonFile(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/verification-result.json"))), evidence, nullptr);
+    }
     const auto checkPassed = [&result](const QString& id) {
         for (const auto& check : result.checks) if (check.id == id) return check.status == VerificationStatus::Pass;
         return false;
@@ -1356,7 +1369,8 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
         {QStringLiteral("instructionsReachable"), checkPassed(QStringLiteral("aramf-worker-agents"))}, {QStringLiteral("resourcesReachable"), checkPassed(QStringLiteral("resources"))},
         {QStringLiteral("documentationRoutingValid"), !model.academicConfiguration().enabled || checkPassed(QStringLiteral("project-status"))}, {QStringLiteral("staleArtifactCount"), staleCount},
         {QStringLiteral("routingConflictCount"), 0}, {QStringLiteral("checks"), checks}};
-    writeJsonFile(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::LatestValidation)), summary, nullptr);
+    result.summary = summary;
+    if (persistEvidence) writeJsonFile(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::LatestValidation)), summary, nullptr);
     return result;
 }
 
@@ -1384,15 +1398,8 @@ GenerationResult GenerationServices::repairDerivedArtifacts(const ProjectModel& 
     addGeneratedFiles(result, {AramfPaths::ProjectConfiguration});
     if (options.generateRouting) {
         const auto rules = model.ruleConfiguration();
-        QJsonArray scopedRoutes;
-        for (const auto& scope : rules.projectScopes) {
-            QJsonArray instructions;
-            if (scope == QStringLiteral("thesis")) instructions.append(QStringLiteral("aramf-thesis-instruction"));
-            if (scope == QStringLiteral("report")) instructions.append(QStringLiteral("aramf-report-instruction"));
-            scopedRoutes.append(QJsonObject{{QStringLiteral("id"), scope}, {QStringLiteral("required"), QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::CurrentState}}, {QStringLiteral("optional"), QJsonArray{AramfPaths::GeneratedRules, AramfPaths::ResourceManifest}}, {QStringLiteral("instructions"), instructions}, {QStringLiteral("historyRequired"), false}});
-        }
-        const QJsonObject taskRoutes{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("strategy"), rules.loadingStrategy}, {QStringLiteral("workTypes"), toJsonArray(rules.workScopes)}, {QStringLiteral("contextPolicies"), toJsonArray(rules.contextPolicies)}, {QStringLiteral("conflictPolicy"), rules.conflictPolicy}, {QStringLiteral("inputFingerprint"), result.fingerprint}, {QStringLiteral("readSet"), QJsonObject{{QStringLiteral("mandatory"), QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::WorkerManifest, AramfPaths::CurrentState, AramfPaths::ColdStartValidation}}, {QStringLiteral("historyRequired"), false}, {QStringLiteral("scopeOrder"), toJsonArray(rules.projectScopes)}}}};
-        const QJsonObject scopeRoutes{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("inputFingerprint"), result.fingerprint}, {QStringLiteral("scopes"), scopedRoutes}};
+        const auto taskRoutes = WorkerContextResolver::taskRoutes(rules, result.fingerprint);
+        const QJsonObject scopeRoutes = WorkerContextResolver::scopeRoutes(rules, result.fingerprint);
         if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::TaskRoutes)), taskRoutes, &error)
             || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ScopeRoutes)), scopeRoutes, &error)) {
             result.error = QStringLiteral("Repair failed in routing: %1").arg(error);

@@ -288,15 +288,20 @@ QJsonObject CertificationService::contract(const QString& projectRoot, QString* 
     return readObject(path(projectRoot, AramfPaths::CertificationContract), error);
 }
 
-bool CertificationService::refreshCurrentState(const QString& projectRoot, QString* error) const
+QJsonObject CertificationService::derivedCurrentState(const QString& projectRoot, QString* error) const
 {
     const auto values = certificates(projectRoot, error);
-    if (error && !error->isEmpty()) return false;
+    if (error && !error->isEmpty()) return {};
     QJsonObject subjects;
     for (const auto& certificate : values) {
         const QString subject = certificate.value(QStringLiteral("subject")).toString();
         if (!subject.isEmpty()) subjects.insert(subject, certificate);
     }
-    return writeObject(path(projectRoot, AramfPaths::CurrentCertificationState),
-                       QJsonObject{{QStringLiteral("version"), 1}, {QStringLiteral("subjects"), subjects}}, error);
+    return QJsonObject{{QStringLiteral("version"), 1}, {QStringLiteral("subjects"), subjects}};
+}
+
+bool CertificationService::refreshCurrentState(const QString& projectRoot, QString* error) const
+{
+    const auto state = derivedCurrentState(projectRoot, error);
+    return !state.isEmpty() && writeObject(path(projectRoot, AramfPaths::CurrentCertificationState), state, error);
 }

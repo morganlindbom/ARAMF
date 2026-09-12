@@ -232,6 +232,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     rulesObject.insert(QStringLiteral("loadingStrategy"), rules.loadingStrategy);
     rulesObject.insert(QStringLiteral("workScopes"), toJsonArray(rules.workScopes));
     rulesObject.insert(QStringLiteral("projectScopes"), toJsonArray(rules.projectScopes));
+    rulesObject.insert(QStringLiteral("scopeMetadata"), rules.scopeMetadata);
     rulesObject.insert(QStringLiteral("contextPolicies"), toJsonArray(rules.contextPolicies));
     rulesObject.insert(QStringLiteral("conflictPolicy"), rules.conflictPolicy);
     root.insert(QStringLiteral("rules"), rulesObject);
@@ -347,6 +348,11 @@ bool ProjectPersistence::load(ProjectModel* model, const QString& filePath, QStr
 bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, QString* error) const
 {
     if (!model) { if (error) *error = "Project model is not available."; return false; }
+    const auto taskMetadata = root.value("rules").toObject().value("scopeMetadata");
+    if (!taskMetadata.isUndefined() && !taskMetadata.isObject()) {
+        if (error) *error = "rules.scopeMetadata must be an object when present.";
+        return false;
+    }
     AcademicConfiguration academic;
     const auto academicObject = root.value(QStringLiteral("academic")).toObject();
     if (!academicObject.isEmpty()) {
@@ -499,6 +505,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
     rules.loadingStrategy = rulesObject.value(QStringLiteral("loadingStrategy")).toString(QStringLiteral("relevant"));
     rules.workScopes = fromJsonArray(rulesObject.value(QStringLiteral("workScopes")));
     rules.projectScopes = fromJsonArray(rulesObject.value(QStringLiteral("projectScopes")));
+    rules.scopeMetadata = rulesObject.value(QStringLiteral("scopeMetadata")).toObject();
     rules.contextPolicies = fromJsonArray(rulesObject.value(QStringLiteral("contextPolicies")));
     rules.conflictPolicy = rulesObject.value(QStringLiteral("conflictPolicy")).toString(QStringLiteral("prefer-user-instruction"));
     if (rules.activeCategories.isEmpty()) rules.activeCategories = migrateRuleCategories(fromJsonArray(root.value(QStringLiteral("options")).toObject().value(QStringLiteral("rules-routing"))));

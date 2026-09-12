@@ -1,6 +1,7 @@
 #include "WorkerContextResolver.h"
 
 #include "AramfPaths.h"
+#include "ProjectModel.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -58,10 +59,13 @@ QJsonObject WorkerContextResolver::resolve(const QString& workerRoot, QStringLis
     if (!error.isEmpty() || (routes.value(QStringLiteral("schemaVersion")).toInt(-1) != 1 && !legacyRoutes)) {
         result.insert(QStringLiteral("valid"), false);
         result.insert(QStringLiteral("diagnostics"), QJsonArray{error.isEmpty() ? QStringLiteral("Unsupported scope-route schema.") : error});
+        result.insert(QStringLiteral("errors"), QJsonArray{QJsonObject{{"code", error.isEmpty() ? "WORKER_SCHEMA_UNSUPPORTED" : "WORKER_ROUTE_MISSING"},
+            {"message", error.isEmpty() ? QStringLiteral("Unsupported scope-route schema.") : error}}});
         return result;
     }
 
     QHash<QString, QJsonObject> byScope;
+    QStringList duplicateScopes;
     for (const auto& value : routes.value(QStringLiteral("scopes")).toArray()) {
         if (value.isString()) {
             const QString id = value.toString();
@@ -72,6 +76,7 @@ QJsonObject WorkerContextResolver::resolve(const QString& workerRoot, QStringLis
         }
         const auto route = value.toObject();
         const QString id = route.value(QStringLiteral("id")).toString();
+        if (byScope.contains(id)) duplicateScopes.append(id);
         if (!id.isEmpty()) byScope.insert(id, route);
     }
 
@@ -80,6 +85,12 @@ QJsonObject WorkerContextResolver::resolve(const QString& workerRoot, QStringLis
     QStringList optional;
     QStringList instructions;
     QStringList diagnostics;
+    QJsonArray errors;
+    for (const auto& id : duplicateScopes) {
+        diagnostics.append(QStringLiteral("Duplicate route owner: %1").arg(id));
+        errors.append(QJsonObject{{"code", "CANONICAL_OWNER_DUPLICATE"}, {"message", diagnostics.last()}, {"scope", id}});
+    }
+    QJsonArray resolvedRoutes;
     bool history = false;
     for (const auto& scope : scopes) {
         // History is an explicit audit context, not a normal project scope.
@@ -91,9 +102,11 @@ QJsonObject WorkerContextResolver::resolve(const QString& workerRoot, QStringLis
         }
         if (!byScope.contains(scope)) {
             diagnostics.append(QStringLiteral("No route defined for scope: %1").arg(scope));
+            errors.append(QJsonObject{{"code", "WORKER_SCOPE_UNRESOLVED"}, {"message", diagnostics.last()}, {"scope", scope}});
             continue;
         }
         const auto route = byScope.value(scope);
+        resolvedRoutes.append(route);
         for (const auto& value : route.value(QStringLiteral("required")).toArray()) mandatory.append(value.toString());
         for (const auto& value : route.value(QStringLiteral("optional")).toArray()) optional.append(value.toString());
         for (const auto& value : route.value(QStringLiteral("instructions")).toArray()) instructions.append(value.toString());
@@ -110,13 +123,14 @@ QJsonObject WorkerContextResolver::resolve(const QString& workerRoot, QStringLis
     QJsonArray selectedResources;
     if (!resourceError.isEmpty()) {
         diagnostics.append(resourceError);
+        errors.append(QJsonObject{{"code", "WORKER_ROUTE_MISSING"}, {"message", resourceError}});
     } else {
         for (const auto& value : resources.value(QStringLiteral("resources")).toArray()) {
             const auto resource = value.toObject();
             if (!resource.value(QStringLiteral("enabled")).toBool()) continue;
             QStringList resourceScopes;
             for (const auto& scope : resource.value(QStringLiteral("scopes")).toArray()) resourceScopes.append(scope.toString());
-            bool relevant = resourceScopes.isEmpty() && scopes.isEmpty();
+            bool relevant = resourceScopes.isEmpty() || resourceScopes.contains(QStringLiteral("all"));
             for (const auto& scope : scopes) if (resourceScopes.contains(scope)) relevant = true;
             if (relevant) selectedResources.append(QJsonObject{{QStringLiteral("id"), resource.value(QStringLiteral("id"))},
                 {QStringLiteral("role"), resource.value(QStringLiteral("role"))}, {QStringLiteral("authority"), resource.value(QStringLiteral("authority"))},
@@ -133,5 +147,47 @@ QJsonObject WorkerContextResolver::resolve(const QString& workerRoot, QStringLis
     result.insert(QStringLiteral("historyRequired"), history);
     result.insert(QStringLiteral("historyFiles"), history ? QJsonArray{AramfPaths::EventLog} : QJsonArray{});
     result.insert(QStringLiteral("diagnostics"), array(diagnostics));
+    result.insert(QStringLiteral("errors"), errors);
+    result.insert(QStringLiteral("resolvedRoutes"), resolvedRoutes);
     return result;
+}
+
+QJsonObject WorkerContextResolver::scopeRoutes(const RuleConfiguration& rules, const QString& fingerprint)
+{
+    QJsonArray routes;
+    for (const auto& scope : uniqueSorted(rules.projectScopes)) {
+        QJsonArray instructions;
+        if (scope == QStringLiteral("thesis")) instructions.append(QStringLiteral("aramf-thesis-instruction"));
+        if (scope == QStringLiteral("report")) instructions.append(QStringLiteral("aramf-report-instruction"));
+        routes.append(QJsonObject{{"id", scope}, {"required", QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::CurrentState}},
+            {"optional", QJsonArray{AramfPaths::GeneratedRules, AramfPaths::ResourceManifest}}, {"instructions", instructions},
+            {"historyRequired", false}, {"taskMetadata", rules.scopeMetadata.value(scope).toObject()}});
+    }
+    return {{"schemaVersion", 1}, {"inputFingerprint", fingerprint}, {"scopes", routes}};
+}
+
+QJsonObject WorkerContextResolver::taskRoutes(const RuleConfiguration& rules, const QString& fingerprint)
+{
+    return {{"schemaVersion", 1}, {"strategy", rules.loadingStrategy}, {"workTypes", array(rules.workScopes)},
+        {"contextPolicies", array(rules.contextPolicies)}, {"conflictPolicy", rules.conflictPolicy}, {"inputFingerprint", fingerprint},
+        {"readSet", QJsonObject{{"mandatory", QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::WorkerManifest, AramfPaths::CurrentState, AramfPaths::ColdStartValidation}},
+            {"historyRequired", false}, {"scopeOrder", array(uniqueSorted(rules.projectScopes))}}}};
+}
+
+QJsonObject WorkerContextResolver::resolveImpact(const QString& workerRoot, QStringList scopes)
+{
+    QStringList visited;
+    QStringList pending = uniqueSorted(scopes);
+    while (!pending.isEmpty()) {
+        const QString scope = pending.takeFirst();
+        if (visited.contains(scope)) continue;
+        visited.append(scope);
+        const auto context = resolve(workerRoot, {scope});
+        for (const auto& value : context.value("resolvedRoutes").toArray()) {
+            for (const auto& affected : value.toObject().value("taskMetadata").toObject().value("affects").toArray())
+                if (!visited.contains(affected.toString())) pending.append(affected.toString());
+        }
+        pending = uniqueSorted(pending);
+    }
+    return resolve(workerRoot, visited);
 }

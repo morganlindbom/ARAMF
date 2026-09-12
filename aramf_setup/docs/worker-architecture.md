@@ -70,3 +70,151 @@ valid fixtures, resolver median approximately 199 microseconds, generation
 median approximately 176 milliseconds, and aggregate fixture output of 384
 files. Timing is environment-sensitive and future campaigns should compare
 the same benchmark method.
+
+## P0 task execution governance
+
+`WorkerTaskServices` derives schema-v1 task contracts; it does not replace
+Worker schema v1, ProjectModel, WorkerContextResolver, ValidationRouting,
+ProjectMemory, or CertificationService. The production headless commands are:
+
+```
+aramf task prepare --config <saved-project> --request <request.json>
+aramf task postflight --config <saved-project> --contract <prepared.json> --evidence <evidence.json>
+```
+
+Prepare emits `{ "contract": ... }`. Requests contain `goal`, `type`, `scopes`,
+exact project-relative `files`, `definitionOfDone`, and optional `history` and
+`destructive` booleans. Intent never grants permission. The canonical saved
+`rules.scopeMetadata` must map each active scope to string sets:
+
+```
+"thesis": {
+  "files": ["docs/thesis.md"],
+  "affects": [],
+  "tests": ["thesis-focused-tests"],
+  "riskTraits": [],
+  "generatedArtifacts": []
+}
+```
+
+`affects` is directional change propagation, resolved through the existing
+scope routes, with cycle-safe traversal. Direct, transitive, potential, and
+unrelated scope/file sets remain separate. Shared files cannot be edited
+until all owning scopes are resolved. Resources use their canonical scopes;
+unscoped resources are global. Thesis/Report instruction IDs are checked
+against DocumentInstructions. Legacy unscoped durable decisions remain global;
+P0 does not guess decision applicability from prose.
+
+Metadata sets are normalized and persisted deterministically. Older projects
+load with empty metadata (safe, not implicit write permission). New Project
+and template replacement clear old task metadata. Workers with legacy routes
+remain readable by the resolver, but must be regenerated from the saved model
+before task execution. Contract hashes bind normalized content, project ID,
+root, Worker suffix, configuration, canonical sources, and the observed baseline.
+
+### Permissions and preflight
+
+Ownership comes from the manifest, memory contract, canonical resource registry,
+and service boundaries. Only exact mapped source files selected by the request
+receive MODIFY; new sources also require canonical `create-files` permission.
+Derived artifacts receive REGENERATE only through their owning service.
+External resources, Sources of Truth, custom files and durable decisions remain
+protected. History is APPEND_ONLY/NEVER_REWRITE through its canonical recorder.
+Deletion requires a separate governed maintenance workflow and is denied here.
+
+Preflight returns READY, READY_WITH_WARNINGS, BLOCKED, or FATAL. It checks
+canonical generation content, read-only verification, scope/test mappings,
+permissions, sources, authority conflicts, parallel state and repository safety.
+Unknown mappings/traits and unavailable authoritative sources block; unsafe
+paths, Git-root mismatches and unmerged index entries are fatal. Non-Git
+projects receive a warning and filesystem checks. Remote resources need verified
+local availability; P0 does not fetch them or invent their contents.
+
+Negative constraints prohibit parallel state, out-of-scope changes, authority
+overrides, external overwrite, history rewrite, full-Worker fallback, and
+validation weakening. File/scope/ownership constraints are machine checked;
+behavioral requirements such as preserving public behavior still require genuine
+test and review evidence, not lexical guessing about source changes.
+
+### Risk and validation
+
+Risk takes the strongest applicable rule. LOW is isolated mapped work. MEDIUM
+is multiple scopes or an existing subsystem validation route. HIGH includes
+memory, persistence, hardware, topology, three or more scopes, or an existing
+full-regression route. CRITICAL includes governance, schema, migration,
+cross-project impact or destructive intent (the latter remains blocked).
+Reasons are emitted. `runtime` and `ui` traits add launch evidence.
+
+`ValidationRouting::taskPlan` extends its existing route with mapped focused
+tests and acceptance/diff/impacted-validation evidence. MEDIUM/HIGH add workflow
+and targeted regression; HIGH/CRITICAL require CTest and topology. CRITICAL uses
+the existing full-regression policy, including memory, cold start, launch and
+historical automated campaigns. Persistence/migration/hardware traits add their
+specific checks. Global pre-commit policy is never reduced by iterative routing.
+
+### Baseline, regeneration and postflight
+
+The baseline fingerprints actual tracked/untracked non-ignored files, the Worker,
+explicit mapped dependencies even when ignored, and local external resources.
+Unchanged pre-existing dirt is not attributed to the task. New edits to dirty
+files are still checked. Ignored build products are not blanket-scanned.
+Fingerprint scanning is not a mandatory agent context read set; event history
+remains excluded from ordinary context and `history: true` opts it in explicitly.
+
+Postflight checks the contract hash and rederives permission, impact, risk and
+evidence requirements from canonical state. It observes actual file bytes,
+not a caller-provided changed-file list. Declared generated outputs are accepted
+only when ownership permits them and their content equals the current canonical
+producer: GenerationServices for project/manifest/routes, VerificationServices
+for summary/evidence. Ownership alone, arbitrary content and unrelated generated
+changes fail. Recorder changes require append-prefix and existing memory
+consistency checks. Certification state is compared with CertificationService's
+own derivation; historical append integrity remains independent of freshness.
+
+Diagnostics contain stable codes, human messages, paths and severity. Distinct
+families cover invalid/tampered contracts, unknown ownership, scope/permission
+violations, unavailable routes/sources, authority conflicts, stale canonical
+state, unexpected regeneration, GENERATED_CONTENT_MISMATCH, STALE_EVIDENCE,
+EVIDENCE_INTEGRITY_INVALID, missing evidence, validation failure and certification.
+
+### Current evidence and completion
+
+An evidence index contains `evidence: [{check, artifact, artifactFingerprint}]`.
+Artifacts are local JSON records with `check`, `status`, `contractId` and
+`dependencyFingerprint`. Postflight exposes `evidenceFingerprints` for producers
+to capture **before** executing each check; producers must confirm dependencies
+did not change during execution. A prior result-wide `resultFingerprint` remains
+supported conservatively. SHA-256 binds file content and dependency sets.
+Mapped focused tests depend on their owning scopes and resources; shared build,
+workflow, launch and validation checks cover the task dependency union. A Report
+edit stales Report/shared checks without staling independent Thesis tests.
+Mapped names cannot narrow built-in shared checks. Accepted/missing evidence and
+observed modifications are returned as structured postflight evidence.
+
+Derived task/evidence envelopes may be retained under `verification/tasks/`;
+these are not a second memory store. Recognized envelopes are excluded from
+their own baseline to avoid circular checksums, while reserved canonical filenames
+remain subject to parallel-state detection. Keep the original prepared contract
+in the trusted caller/review workflow. These APIs validate producer attestations
+and detect accidental/unauthorized drift; hashes are not signatures, an OS
+sandbox, or proof that a caller really ran a command. A caller able to replace
+both trusted inputs and all evidence is outside this integrity threat model.
+
+Prepare starts at NOT_STARTED. Postflight returns IN_PROGRESS when no changes
+and incomplete evidence exist, IMPLEMENTED_UNVERIFIED for changed but insufficiently
+verified work, BLOCKED for safety violations, and VERIFIED only for complete
+current software evidence. Software VERIFIED does not require a physical test.
+CERTIFIED additionally requires a current PASS certificate from CertificationService
+for the contract ID and result fingerprint, with intact hashed evidence references.
+Hardware tasks require HARDWARE_CERTIFIED plus physical/on-target evidence;
+arbitrary test JSON cannot supply that certification. Stale physical evidence
+removes CERTIFIED without invalidating independent current software verification.
+The command returns zero only for READY preparation or VERIFIED/CERTIFIED
+postflight; invalid arguments, blocked preparation and unverified completion
+return 2. Commands do not run tests, modify source, commit or push.
+
+P0 regression is included in `aramf_core_tests`; `--worker-tasks` runs its focused
+matrix independently. Certificate fixtures test the software gate with synthetic
+evidence and do not claim that physical hardware was tested. Context indexing,
+compression, task DAGs, handoffs, adapters and agent-effectiveness evaluation
+remain outside P0.

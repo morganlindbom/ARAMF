@@ -35,6 +35,7 @@ public:
                           QJsonObject* result,
                           QString* error = nullptr) const;
     QJsonObject currentState(const QString& projectRoot, QString* error = nullptr) const;
+    QJsonObject derivedCurrentState(const QString& projectRoot, QString* error = nullptr) const;
     QJsonObject contract(const QString& projectRoot, QString* error = nullptr) const;
 
 private:

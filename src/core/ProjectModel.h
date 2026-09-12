@@ -251,6 +251,9 @@ struct RuleConfiguration {
     QString loadingStrategy = QStringLiteral("relevant");
     QStringList workScopes;
     QStringList projectScopes;
+    // Canonical, project-supplied scope ownership/dependency/test metadata.
+    // No source-file permissions are inferred from display names or AI text.
+    QJsonObject scopeMetadata;
     QStringList contextPolicies;
     QString conflictPolicy = QStringLiteral("prefer-user-instruction");
 };

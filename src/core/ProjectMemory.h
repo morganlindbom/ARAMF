@@ -93,7 +93,7 @@ public:
                           QString* error = nullptr) const;
     bool recordingEnabled(const QString& projectRoot, QString* error = nullptr) const;
     static QStringList supportedRecordOperations();
-    QJsonObject validate(const QString& projectRoot, QString* error = nullptr) const;
+    QJsonObject validate(const QString& projectRoot, QString* error = nullptr, bool persistReport = true) const;
     QJsonObject validateColdStart(const QString& projectRoot, QString* error = nullptr) const;
     bool refreshDerivedState(const QString& projectRoot, QString* error = nullptr) const;
     bool refreshMemoryContract(const QString& projectRoot, QString* error = nullptr) const;

@@ -53,6 +53,8 @@ QByteArray readTextFile(const QString& path)
 }
 }
 
+bool runWorkerTaskTests();
+
 int main(int argc, char** argv)
 {
     /**Exercise the native C++ project-memory lifecycle.
@@ -62,6 +64,7 @@ int main(int argc, char** argv)
     QCoreApplication app(argc, argv);
     QTemporaryDir globalData;
     FrameworkKnowledgeService::setGlobalLibraryPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")));
+    if (app.arguments().contains(QStringLiteral("--worker-tasks"))) return runWorkerTaskTests() ? 0 : 1;
     QTemporaryDir temporaryProject;
     if (!require(temporaryProject.isValid(), "temporary project directory must be valid")) {
         return 1;
@@ -2005,5 +2008,6 @@ int main(int argc, char** argv)
         QDir(AramfPaths::programRoot()).filePath(QStringLiteral("ARAMF_WORKER")), {QStringLiteral("source-code")});
     ok &= require(legacyContext.value(QStringLiteral("legacyRouteFormat")).toBool(), "legacy scope route arrays remain readable");
 
+    ok &= runWorkerTaskTests();
     return ok ? 0 : 1;
 }

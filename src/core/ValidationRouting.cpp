@@ -4,6 +4,33 @@
 #include <QSet>
 
 namespace {
+QStringList strings(const QJsonValue& value) {
+    QStringList out;
+    for (const auto& entry : value.toArray()) out.append(entry.toString());
+    out.removeDuplicates(); out.sort(); return out;
+}
+QJsonArray array(QStringList values) { values.removeDuplicates(); values.sort(); return QJsonArray::fromStringList(values); }
+}
+
+QJsonObject ValidationRouting::taskPlan(const QStringList& changedFiles, const QString& taskType, const QJsonObject& impact, const QString& risk)
+{
+    const auto plan = ValidationRouting::route(changedFiles, taskType, risk == "CRITICAL");
+    QStringList required = plan.requiredChecks;
+    required << strings(impact.value("tests")) << "diff-boundary" << "impacted-validation" << "acceptance-criteria";
+    if (risk == "MEDIUM" || risk == "HIGH" || risk == "CRITICAL") required << "affected-workflow-tests" << "targeted-regression";
+    if (risk == "HIGH" || risk == "CRITICAL") required << "ctest" << "worker-topology";
+    const auto traits = strings(impact.value("riskTraits"));
+    if (traits.contains("memory") || traits.contains("governance")) required << "memory-consistency" << "cold-start";
+    if (traits.contains("runtime") || traits.contains("ui")) required << "application-startup";
+    if (traits.contains("persistence")) required << "persistence-regression";
+    if (traits.contains("migration")) required << "aramf-worker-migration";
+    if (traits.contains("hardware")) required << "physical-certification";
+    return {{"iterationChecks", array(plan.requiredChecks + strings(impact.value("tests")))},
+        {"completionChecks", array(required)}, {"existingValidationLevel", ValidationRouting::levelName(plan.level)},
+        {"rationale", plan.rationale}, {"commitPolicy", "Global commit validation remains mandatory when applicable."}};
+}
+
+namespace {
 bool containsAny(const QStringList& files, const QStringList& needles)
 {
     for (const auto& file : files) {

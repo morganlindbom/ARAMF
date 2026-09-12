@@ -1222,7 +1222,7 @@ bool ProjectMemory::withinConfiguredLimit(const QString& projectRoot, qint64 add
     return false;
 }
 
-QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error) const
+QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error, bool persistReport) const
 {
     /**Validate ordering, uniqueness, counts, and manifest sequence integrity.
 
@@ -1485,7 +1485,7 @@ QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error) 
     report.insert(QStringLiteral("unsupportedValidations"), unsupportedOptions);
 
     QString writeError;
-    writeValidationReport(projectRoot, report, &writeError);
+    if (persistReport) writeValidationReport(projectRoot, report, &writeError);
     if (!writeError.isEmpty() && error) {
         *error = writeError;
     } else if (!localError.isEmpty() && error) {

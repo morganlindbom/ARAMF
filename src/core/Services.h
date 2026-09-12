@@ -34,6 +34,8 @@ struct VerificationResult {
     QString fingerprint;
     QList<VerificationCheck> checks;
     QString error;
+    QJsonObject summary;
+    QJsonObject evidence;
 };
 
 struct FinalizationResult {
@@ -132,6 +134,8 @@ public:
     // append-only history are deliberately outside this operation.
     GenerationResult repairDerivedArtifacts(const ProjectModel& model,
                                             const GenerationOptions& options) const;
+    // Pure expected outputs from the same writers used by Generate/Repair.
+    static QJsonObject derivedTaskArtifacts(const ProjectModel& model, const GenerationOptions& options);
 };
 
 class VerificationServices final : public QObject
@@ -140,7 +144,7 @@ class VerificationServices final : public QObject
 public:
     explicit VerificationServices(QObject* parent = nullptr);
     VerificationResult verify(const ProjectModel& model,
-                              const GenerationOptions& expectedOptions) const;
+                              const GenerationOptions& expectedOptions, bool persistEvidence = true) const;
 };
 
 class FinalizationServices final : public QObject

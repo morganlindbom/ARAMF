@@ -22,5 +22,7 @@ public:
                                 bool focusedValidationFailed = false,
                                 bool broadImpactUncertain = false);
     static QJsonObject policy();
+    static QJsonObject taskPlan(const QStringList& changedFiles, const QString& taskType,
+                                const QJsonObject& impact, const QString& risk);
     static QString levelName(ValidationLevel level);
 };

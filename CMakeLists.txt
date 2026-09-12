@@ -149,6 +149,7 @@ include(CTest)
 if(BUILD_TESTING)
     add_executable(aramf_core_tests
         tests/ProjectMemoryTests.cpp
+        tests/WorkerTaskTests.cpp
         src/core/GitIgnoreService.h
         src/core/GitIgnoreService.cpp
         src/core/ProjectMemory.h
@@ -299,6 +300,13 @@ if(BUILD_TESTING)
     target_link_libraries(aramf_update_campaign_runner PRIVATE Qt6::Core Qt6::Widgets)
     add_test(NAME aramf_update_campaign COMMAND aramf_update_campaign_runner)
 endif()
+
+# Task policy is shared by every consumer of the existing core services.
+foreach(ARAMF_TASK_TARGET aramf aramf_core_tests aramf_template_tests aramf_update_campaign_runner)
+    if(TARGET ${ARAMF_TASK_TARGET})
+        target_sources(${ARAMF_TASK_TARGET} PRIVATE src/core/WorkerTaskServices.h src/core/WorkerTaskServices.cpp)
+    endif()
+endforeach()
 
 if(WIN32)
     # windeployqt installs Qt DLLs but does not deploy the MinGW runtime used
