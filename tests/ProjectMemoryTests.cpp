@@ -88,9 +88,12 @@ int main(int argc, char** argv)
     QTemporaryDir existingIgnoreProject;
     const QString existingIgnorePath = QDir(existingIgnoreProject.path()).filePath(QStringLiteral(".gitignore"));
     QFile existingIgnore(existingIgnorePath);
-    existingIgnore.open(QIODevice::WriteOnly | QIODevice::Text);
-    existingIgnore.write("# User rules\n*.local\n");
-    existingIgnore.close();
+    const bool existingIgnoreOpened = existingIgnore.open(QIODevice::WriteOnly | QIODevice::Text);
+    ok &= require(existingIgnoreOpened, "existing .gitignore fixture must be writable");
+    if (existingIgnoreOpened) {
+        existingIgnore.write("# User rules\n*.local\n");
+        existingIgnore.close();
+    }
     const auto preservedIgnore = gitIgnore.ensureProjectGitIgnore(existingIgnoreProject.path());
     const QString preservedIgnoreText = QString::fromUtf8(readTextFile(existingIgnorePath));
     ok &= require(preservedIgnore.success && preservedIgnoreText.startsWith(QStringLiteral("# User rules\n*.local\n"))
@@ -98,18 +101,24 @@ int main(int argc, char** argv)
                   "existing .gitignore content must be preserved with one managed block");
 
     QFile privacyUserAgents(QDir(existingIgnoreProject.path()).filePath(QStringLiteral("AGENTS.md")));
-    privacyUserAgents.open(QIODevice::WriteOnly | QIODevice::Text);
-    privacyUserAgents.write("User-owned instructions\n");
-    privacyUserAgents.close();
+    const bool privacyUserAgentsOpened = privacyUserAgents.open(QIODevice::WriteOnly | QIODevice::Text);
+    ok &= require(privacyUserAgentsOpened, "user-owned AGENTS fixture must be writable");
+    if (privacyUserAgentsOpened) {
+        privacyUserAgents.write("User-owned instructions\n");
+        privacyUserAgents.close();
+    }
     const auto userAgentIgnore = gitIgnore.ensureProjectGitIgnore(existingIgnoreProject.path());
     const QString userAgentIgnoreText = QString::fromUtf8(readTextFile(existingIgnorePath));
     ok &= require(userAgentIgnore.success && !userAgentIgnoreText.contains(QStringLiteral("/AGENTS.md\n")),
                   "user-owned AGENTS.md must not be hidden");
 
     QFile generatedAgents(QDir(existingIgnoreProject.path()).filePath(QStringLiteral("AGENTS.md")));
-    generatedAgents.open(QIODevice::WriteOnly | QIODevice::Text);
-    generatedAgents.write("<!-- AGENTS.md -->\nRead ARAMF_WORKER/AGENTS.md\n");
-    generatedAgents.close();
+    const bool generatedAgentsOpened = generatedAgents.open(QIODevice::WriteOnly | QIODevice::Text);
+    ok &= require(generatedAgentsOpened, "generated AGENTS fixture must be writable");
+    if (generatedAgentsOpened) {
+        generatedAgents.write("<!-- AGENTS.md -->\nRead ARAMF_WORKER/AGENTS.md\n");
+        generatedAgents.close();
+    }
     const auto generatedAgentIgnore = gitIgnore.ensureProjectGitIgnore(existingIgnoreProject.path());
     const QString generatedAgentIgnoreText = QString::fromUtf8(readTextFile(existingIgnorePath));
     ok &= require(generatedAgentIgnore.success && generatedAgentIgnoreText.contains(QStringLiteral("/AGENTS.md\n")),
@@ -390,8 +399,8 @@ int main(int argc, char** argv)
 
     QBuffer commandOutput;
     QBuffer commandError;
-    commandOutput.open(QIODevice::ReadWrite);
-    commandError.open(QIODevice::ReadWrite);
+    ok &= require(commandOutput.open(QIODevice::ReadWrite), "memory command output buffer must be writable");
+    ok &= require(commandError.open(QIODevice::ReadWrite), "memory command error buffer must be writable");
     QTextStream commandOut(&commandOutput);
     QTextStream commandErr(&commandError);
     const int commandStatus = runMemoryCommand({QStringLiteral("memory"), QStringLiteral("record"),
@@ -511,8 +520,8 @@ int main(int argc, char** argv)
 
     QBuffer malformedOutput;
     QBuffer malformedError;
-    malformedOutput.open(QIODevice::ReadWrite);
-    malformedError.open(QIODevice::ReadWrite);
+    ok &= require(malformedOutput.open(QIODevice::ReadWrite), "malformed command output buffer must be writable");
+    ok &= require(malformedError.open(QIODevice::ReadWrite), "malformed command error buffer must be writable");
     QTextStream malformedOut(&malformedOutput);
     QTextStream malformedErr(&malformedError);
     const int malformedStatus = runMemoryCommand({QStringLiteral("memory"), QStringLiteral("record"),
@@ -583,7 +592,11 @@ int main(int argc, char** argv)
     ok &= require(androidAgentText.contains(QStringLiteral("gradlew.bat")), "ANDROID-013 Windows Gradle wrapper guidance generated");
     ok &= require(androidAgentText.contains(QStringLiteral("Compose")) && androidAgentText.contains(QStringLiteral("XML")) && androidAgentText.contains(QStringLiteral("higher authority")), "ANDROID-011 course Source of Truth overrides defaults");
     ok &= require(androidAgentText.contains(QStringLiteral("minimum SDK 26")) && androidAgentText.contains(QStringLiteral("VS Code")) && androidAgentText.contains(QStringLiteral("unit tests required")), "ANDROID-CONSTRAINT-013/014 generated effective governance");
-    QFile effectiveConfig(QDir(androidProject.path()).filePath(QStringLiteral("ARAMF_WORKER/platforms/android-effective-config.json"))); effectiveConfig.open(QIODevice::ReadOnly); const auto effective = QJsonDocument::fromJson(effectiveConfig.readAll()).object(); effectiveConfig.close();
+    QFile effectiveConfig(QDir(androidProject.path()).filePath(QStringLiteral("ARAMF_WORKER/platforms/android-effective-config.json")));
+    const bool effectiveConfigOpened = effectiveConfig.open(QIODevice::ReadOnly);
+    ok &= require(effectiveConfigOpened, "Android effective configuration must be readable");
+    const auto effective = effectiveConfigOpened ? QJsonDocument::fromJson(effectiveConfig.readAll()).object() : QJsonObject{};
+    effectiveConfig.close();
     ok &= require(effective.value(QStringLiteral("minSdk")).toInt() == 26 && effective.value(QStringLiteral("minSdkSource")).toString() == QStringLiteral("course-assignment"), "ANDROID-CONSTRAINT-011 generated constraint provenance");
     ok &= require(effective.value(QStringLiteral("composeAvailable")).toBool() && !effective.value(QStringLiteral("composeAllowed")).toBool() && !effective.value(QStringLiteral("composeSelected")).toBool(), "ANDROID-CONSTRAINT-012 Source of Truth remains distinct from Framework Knowledge");
     const auto androidRoute = ValidationRouting::route({QStringLiteral("app/src/main/java/MainActivity.kt")}, QStringLiteral("coding"));
@@ -1037,8 +1050,8 @@ int main(int argc, char** argv)
     auto runReadCommand = [&](const QStringList& arguments, QByteArray* commandResult) {
         QBuffer commandOut;
         QBuffer commandErr;
-        commandOut.open(QIODevice::ReadWrite);
-        commandErr.open(QIODevice::ReadWrite);
+        ok &= require(commandOut.open(QIODevice::ReadWrite), "cold-start command output buffer must be writable");
+        ok &= require(commandErr.open(QIODevice::ReadWrite), "cold-start command error buffer must be writable");
         QTextStream out(&commandOut);
         QTextStream err(&commandErr);
         const int status = runMemoryCommand(arguments, out, err);
@@ -1628,26 +1641,39 @@ int main(int argc, char** argv)
                                               QJsonObject{{QStringLiteral("status"), QStringLiteral("FAIL")}}, &rebindError),
                   "ROOT-REBIND fixture history must be valid");
     QFile stalePlan(QDir(newRoot.path()).filePath(QStringLiteral("ARAMF_WORKER/update/update-plan.json")));
-    stalePlan.open(QIODevice::WriteOnly | QIODevice::Text);
-    stalePlan.write(QJsonDocument(QJsonObject{{QStringLiteral("projectRoot"), oldRoot.path()}}).toJson());
-    stalePlan.close();
+    const bool stalePlanOpened = stalePlan.open(QIODevice::WriteOnly | QIODevice::Text);
+    ok &= require(stalePlanOpened, "ROOT-REBIND stale plan fixture must be writable");
+    if (stalePlanOpened) {
+        stalePlan.write(QJsonDocument(QJsonObject{{QStringLiteral("projectRoot"), oldRoot.path()}}).toJson());
+        stalePlan.close();
+    }
     const auto rebinding = ProjectRootRebindService().rebind(&movedModel, newRoot.path(), true);
     if (!rebinding.success) std::cerr << "ROOT-REBIND error: " << rebinding.error.toStdString() << '\n';
     ok &= require(rebinding.success && rebinding.rebound && movedModel.projectPath() == QDir::cleanPath(newRoot.path()), "ROOT-REBIND-001/002/013 active root must win");
     ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/update/update-plan.json")), "ROOT-REBIND-003 update target must remain current");
-    QFile plan(QDir(newRoot.path()).filePath("ARAMF_WORKER/update/update-plan.json")); plan.open(QIODevice::ReadOnly);
-    const QString planText = QString::fromUtf8(plan.readAll()); plan.close();
+    QFile plan(QDir(newRoot.path()).filePath("ARAMF_WORKER/update/update-plan.json"));
+    const bool planOpened = plan.open(QIODevice::ReadOnly);
+    ok &= require(planOpened, "ROOT-REBIND update plan must be readable");
+    const QString planText = planOpened ? QString::fromUtf8(plan.readAll()) : QString();
+    plan.close();
     ok &= require(!planText.contains(oldRoot.path(), Qt::CaseInsensitive) && planText.contains(newRoot.path(), Qt::CaseInsensitive), "ROOT-REBIND-003/014 active update state must not retain old root");
     if (!movedModel.resources().isEmpty() && !movedModel.resources().first().location.startsWith(newRoot.path(), Qt::CaseInsensitive))
         std::cerr << "ROOT-REBIND resource=" << movedModel.resources().first().location.toStdString() << " new=" << newRoot.path().toStdString() << '\n';
     ok &= require(!movedModel.resources().isEmpty() && movedModel.resources().first().location.startsWith(newRoot.path(), Qt::CaseInsensitive), "ROOT-REBIND-005 resources must rebase");
     ok &= require(movedModel.memoryConfiguration().writerMode == QStringLiteral("agent-direct"), "ROOT-REBIND-006/007 agent-direct memory must remain enabled");
     ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/memory-contract.json")), "ROOT-REBIND-006 memory contract must regenerate");
-    QFile contract(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/memory-contract.json")); contract.open(QIODevice::ReadOnly);
-    const QString contractText = QString::fromUtf8(contract.readAll()); contract.close();
+    QFile contract(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/memory-contract.json"));
+    const bool contractOpened = contract.open(QIODevice::ReadOnly);
+    ok &= require(contractOpened, "ROOT-REBIND memory contract must be readable");
+    const QString contractText = contractOpened ? QString::fromUtf8(contract.readAll()) : QString();
+    contract.close();
     ok &= require(contractText.contains(QStringLiteral("agent-direct")) && !contractText.contains(QStringLiteral("aramf.exe")), "ROOT-REBIND-006 current contract must not require an external recorder");
     ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/certification/certification-contract.json")), "ROOT-REBIND-008 certification must be generated on update");
-    QFile preservedHistory(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/event-log.jsonl")); preservedHistory.open(QIODevice::ReadOnly); const QByteArray historyText = preservedHistory.readAll(); preservedHistory.close();
+    QFile preservedHistory(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/event-log.jsonl"));
+    const bool preservedHistoryOpened = preservedHistory.open(QIODevice::ReadOnly);
+    ok &= require(preservedHistoryOpened, "ROOT-REBIND historical event log must be readable");
+    const QByteArray historyText = preservedHistoryOpened ? preservedHistory.readAll() : QByteArray{};
+    preservedHistory.close();
     ok &= require(historyText.contains("BUILD_RESULT") && historyText.contains("FAIL"), "ROOT-REBIND-009 historical event log must be preserved");
     ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/framework-knowledge.json")), "ROOT-REBIND-010 Framework Knowledge must be preserved");
     ok &= require(QFileInfo::exists(QDir(newRoot.path()).filePath("ARAMF_WORKER/memory/decisions.md")), "ROOT-REBIND-011 durable decisions must be preserved");
@@ -1667,9 +1693,18 @@ int main(int argc, char** argv)
     QString compactError;
     ok &= require(compactMemory.initialize(compactProject.path(), &compactModel, &compactError), "MEM-COMPACT fixture initializes");
     const QString configPath = QDir(compactProject.path()).filePath("ARAMF_WORKER/memory/memory-config.json");
-    QFile configFile(configPath); configFile.open(QIODevice::ReadOnly); auto compactConfig = QJsonDocument::fromJson(configFile.readAll()).object(); configFile.close();
+    QFile configFile(configPath);
+    const bool configOpened = configFile.open(QIODevice::ReadOnly);
+    ok &= require(configOpened, "MEM-COMPACT configuration must be readable");
+    auto compactConfig = configOpened ? QJsonDocument::fromJson(configFile.readAll()).object() : QJsonObject{};
+    configFile.close();
     compactConfig.insert(QStringLiteral("compactionReviewThreshold"), 3);
-    configFile.open(QIODevice::WriteOnly | QIODevice::Truncate); configFile.write(QJsonDocument(compactConfig).toJson()); configFile.close();
+    const bool configWritten = configFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    ok &= require(configWritten, "MEM-COMPACT configuration must be writable");
+    if (configWritten) {
+        configFile.write(QJsonDocument(compactConfig).toJson());
+        configFile.close();
+    }
     ok &= require(ProjectMemoryCompaction::reviewThreshold(compactProject.path()) == 3, "MEM-COMPACT-001 configurable threshold detection");
     QTemporaryDir belowProject; ProjectModel belowModel; belowModel.setProjectPath(belowProject.path()); ProjectMemory().initialize(belowProject.path(), &belowModel, &compactError);
     ok &= require(!ProjectMemoryCompaction::reviewDue(belowProject.path()), "MEM-COMPACT-002 below threshold no compaction");
@@ -1686,10 +1721,21 @@ int main(int argc, char** argv)
     ok &= require(preview.value(QStringLiteral("knowledgeCandidates")).toArray().first().toObject().value(QStringLiteral("sourceEventIds")).toArray().size() >= 3, "MEM-COMPACT-010 source-event provenance preserved");
     const auto beforeEvents = compactMemory.events(compactProject.path(), &compactError); const qint64 oldMax = beforeEvents.last().value(QStringLiteral("sequenceNumber")).toVariant().toLongLong();
     auto invalidOptions = compactConfig.value(QStringLiteral("validationOptions")).toArray(); invalidOptions.append(QStringLiteral("forced-invalid-validation")); compactConfig.insert(QStringLiteral("validationOptions"), invalidOptions);
-    configFile.open(QIODevice::WriteOnly | QIODevice::Truncate); configFile.write(QJsonDocument(compactConfig).toJson()); configFile.close();
+    const bool invalidConfigWritten = configFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    ok &= require(invalidConfigWritten, "MEM-COMPACT invalid configuration must be writable");
+    if (invalidConfigWritten) {
+        configFile.write(QJsonDocument(compactConfig).toJson());
+        configFile.close();
+    }
     QString failedCompactionError; const bool failedCompaction = ProjectMemoryCompaction().compact(compactProject.path(), true, nullptr, &failedCompactionError);
     ok &= require(!failedCompaction && compactMemory.events(compactProject.path(), &compactError).size() == beforeEvents.size(), "MEM-COMPACT-014 failed validation prevents deletion");
-    invalidOptions.removeLast(); compactConfig.insert(QStringLiteral("validationOptions"), invalidOptions); configFile.open(QIODevice::WriteOnly | QIODevice::Truncate); configFile.write(QJsonDocument(compactConfig).toJson()); configFile.close();
+    invalidOptions.removeLast(); compactConfig.insert(QStringLiteral("validationOptions"), invalidOptions);
+    const bool restoredConfigWritten = configFile.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    ok &= require(restoredConfigWritten, "MEM-COMPACT restored configuration must be writable");
+    if (restoredConfigWritten) {
+        configFile.write(QJsonDocument(compactConfig).toJson());
+        configFile.close();
+    }
     QJsonObject compactResult; const bool compactedOk = ProjectMemoryCompaction().compact(compactProject.path(), true, &compactResult, &compactError); if (!compactedOk) std::cerr << "MEM-COMPACT error: " << compactError.toStdString() << '\n'; ok &= require(compactedOk, "MEM-COMPACT-011 sequence numbers are not renumbered");
     const auto afterEvents = compactMemory.events(compactProject.path(), &compactError); bool gapsRemain = false; for (int i = 1; i < afterEvents.size(); ++i) gapsRemain |= afterEvents.at(i).value(QStringLiteral("sequenceNumber")).toVariant().toLongLong() > afterEvents.at(i - 1).value(QStringLiteral("sequenceNumber")).toVariant().toLongLong() + 1;
     ok &= require(gapsRemain || afterEvents.size() == beforeEvents.size(), "MEM-COMPACT-012 event IDs and sequence identity preserved");

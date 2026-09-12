@@ -72,6 +72,14 @@ bool initialize(const QString& root, ProjectModel* model, QString* error)
     ProjectMemory memory;
     return memory.initialize(root, model, error);
 }
+
+bool openOrReport(QFile& file, QIODevice::OpenMode mode, const char* purpose)
+{
+    if (file.open(mode)) return true;
+    std::cerr << purpose << " (" << file.fileName().toStdString() << "): "
+              << file.errorString().toStdString() << '\n';
+    return false;
+}
 }
 
 int main(int argc, char** argv)
@@ -811,7 +819,8 @@ int main(int argc, char** argv)
     QTemporaryDir pvdProject;
     QDir(pvdProject.path()).mkpath(QStringLiteral("ARAMF_WORKER"));
     QFile pvdProfile(QDir(pvdProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json")));
-    pvdProfile.open(QIODevice::WriteOnly); pvdProfile.write(QJsonDocument(QJsonObject{{QStringLiteral("projectId"), QStringLiteral("pvd-project")}, {QStringLiteral("projectName"), QStringLiteral("Pico Visual Designer")}}).toJson()); pvdProfile.close();
+    if (!openOrReport(pvdProfile, QIODevice::WriteOnly, "Unable to create PVD profile fixture")) return 1;
+    pvdProfile.write(QJsonDocument(QJsonObject{{QStringLiteral("projectId"), QStringLiteral("pvd-project")}, {QStringLiteral("projectName"), QStringLiteral("Pico Visual Designer")}}).toJson()); pvdProfile.close();
     ImprovementBacklogService backlog;
     QJsonObject reportResult; QString backlogError;
     const QString gapTitle = QStringLiteral("Missing canonical hardware resource conflict workflow");
@@ -888,14 +897,26 @@ int main(int argc, char** argv)
     const bool completed = backlog.setStatus(gapId, QStringLiteral("COMPLETED"), &backlogError); campaign.check(QStringLiteral("UPDATE-232"), QStringLiteral("COMPLETED requires validation"), completed && backlog.items(&backlogError).first().value(QStringLiteral("status")).toString() == QStringLiteral("COMPLETED"));
     const auto restartedItems = ImprovementBacklogService().items(&backlogError); campaign.check(QStringLiteral("UPDATE-233"), QStringLiteral("backlog persists across service restart"), !restartedItems.isEmpty());
     QDir(QDir(backlogRoot.path()).filePath(QStringLiteral("build"))).removeRecursively(); campaign.check(QStringLiteral("UPDATE-234"), QStringLiteral("disposable build deletion cannot remove backlog"), QFileInfo::exists(backlogPath));
-    QFile backlogBackup(backlogPath); backlogBackup.open(QIODevice::ReadOnly); const QByteArray validBacklog = backlogBackup.readAll(); backlogBackup.close(); backlogBackup.open(QIODevice::WriteOnly); backlogBackup.write("{ malformed"); backlogBackup.close(); QString malformedError; const bool malformedRead = !ImprovementBacklogService().items(&malformedError).isEmpty() || malformedError.isEmpty(); backlogBackup.open(QIODevice::WriteOnly); backlogBackup.write(validBacklog); backlogBackup.close(); campaign.check(QStringLiteral("UPDATE-235"), QStringLiteral("malformed backlog fails explicitly without replacement"), !malformedRead && malformedError.contains(QStringLiteral("malformed")));
+    QFile backlogBackup(backlogPath);
+    if (!openOrReport(backlogBackup, QIODevice::ReadOnly, "Unable to read backlog fixture")) return 1;
+    const QByteArray validBacklog = backlogBackup.readAll(); backlogBackup.close();
+    if (!openOrReport(backlogBackup, QIODevice::WriteOnly, "Unable to write malformed backlog fixture")) return 1;
+    backlogBackup.write("{ malformed"); backlogBackup.close();
+    QString malformedError; const bool malformedRead = !ImprovementBacklogService().items(&malformedError).isEmpty() || malformedError.isEmpty();
+    if (!openOrReport(backlogBackup, QIODevice::WriteOnly, "Unable to restore backlog fixture")) return 1;
+    backlogBackup.write(validBacklog); backlogBackup.close();
+    campaign.check(QStringLiteral("UPDATE-235"), QStringLiteral("malformed backlog fails explicitly without replacement"), !malformedRead && malformedError.contains(QStringLiteral("malformed")));
     campaign.check(QStringLiteral("UPDATE-236"), QStringLiteral("atomic persistence keeps a valid prior backlog"), ImprovementBacklogService().items(&backlogError).size() >= restartedItems.size());
     campaign.check(QStringLiteral("UPDATE-237"), QStringLiteral("gap reporting does not create Framework Knowledge"), !QFileInfo::exists(QDir(pvdProject.path()).filePath(AramfPaths::FrameworkKnowledge)));
     campaign.check(QStringLiteral("UPDATE-238"), QStringLiteral("gap reporting does not create a durable decision"), !QFileInfo::exists(QDir(pvdProject.path()).filePath(AramfPaths::Decisions)));
     campaign.check(QStringLiteral("UPDATE-239"), QStringLiteral("reporting a gap does not modify ARAMF production source"), QFileInfo::exists(QDir(pvdProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json"))));
     campaign.check(QStringLiteral("UPDATE-240"), QStringLiteral("managed Pico Visual Designer fixture reports to global backlog"), std::any_of(restartedItems.cbegin(), restartedItems.cend(), [](const auto& item) { return item.value(QStringLiteral("originProjects")).toArray().first().toObject().value(QStringLiteral("projectName")).toString() == QStringLiteral("Pico Visual Designer"); }));
-    QBuffer cliOutput; cliOutput.open(QIODevice::ReadWrite); QTextStream cliStream(&cliOutput); QTextStream cliErrorStream(&cliOutput); const int cliReportCode = runMemoryCommand({QStringLiteral("improvement"), QStringLiteral("report"), QStringLiteral("--project"), pvdProject.path(), QStringLiteral("--title"), QStringLiteral("CLI gap"), QStringLiteral("--observation"), QStringLiteral("CLI reported framework gap")}, cliStream, cliErrorStream); cliStream.flush(); const auto cliText = QString::fromUtf8(cliOutput.data()); campaign.check(QStringLiteral("UPDATE-246"), QStringLiteral("CLI report returns stable item ID"), cliReportCode == 0 && cliText.contains(QStringLiteral("gap-"))); campaign.check(QStringLiteral("UPDATE-247"), QStringLiteral("CLI report identifies NEW or existing occurrence"), cliText.contains(QStringLiteral("outcome=NEW")) || cliText.contains(QStringLiteral("EXISTING_OCCURRENCE_APPENDED")));
-    QBuffer listOutput; listOutput.open(QIODevice::ReadWrite); QTextStream listStream(&listOutput); QTextStream listError(&listOutput); const int cliListCode = runMemoryCommand({QStringLiteral("improvement"), QStringLiteral("list"), QStringLiteral("--stage"), QStringLiteral("todo")}, listStream, listError); listStream.flush(); campaign.check(QStringLiteral("UPDATE-248"), QStringLiteral("CLI list shows persisted backlog"), cliListCode == 0 && QString::fromUtf8(listOutput.data()).contains(QStringLiteral("TODO-")));
+     QBuffer cliOutput;
+     if (!cliOutput.open(QIODevice::ReadWrite)) return 1;
+     QTextStream cliStream(&cliOutput); QTextStream cliErrorStream(&cliOutput); const int cliReportCode = runMemoryCommand({QStringLiteral("improvement"), QStringLiteral("report"), QStringLiteral("--project"), pvdProject.path(), QStringLiteral("--title"), QStringLiteral("CLI gap"), QStringLiteral("--observation"), QStringLiteral("CLI reported framework gap")}, cliStream, cliErrorStream); cliStream.flush(); const auto cliText = QString::fromUtf8(cliOutput.data()); campaign.check(QStringLiteral("UPDATE-246"), QStringLiteral("CLI report returns stable item ID"), cliReportCode == 0 && cliText.contains(QStringLiteral("gap-"))); campaign.check(QStringLiteral("UPDATE-247"), QStringLiteral("CLI report identifies NEW or existing occurrence"), cliText.contains(QStringLiteral("outcome=NEW")) || cliText.contains(QStringLiteral("EXISTING_OCCURRENCE_APPENDED")));
+     QBuffer listOutput;
+     if (!listOutput.open(QIODevice::ReadWrite)) return 1;
+     QTextStream listStream(&listOutput); QTextStream listError(&listOutput); const int cliListCode = runMemoryCommand({QStringLiteral("improvement"), QStringLiteral("list"), QStringLiteral("--stage"), QStringLiteral("todo")}, listStream, listError); listStream.flush(); campaign.check(QStringLiteral("UPDATE-248"), QStringLiteral("CLI list shows persisted backlog"), cliListCode == 0 && QString::fromUtf8(listOutput.data()).contains(QStringLiteral("TODO-")));
     QTemporaryDir instructionProject; ProjectModel instructionModel; instructionModel.setProjectPath(instructionProject.path()); ProjectMemory instructionMemory; QString instructionError; const bool initializedInstructions = instructionMemory.initialize(instructionProject.path(), &instructionModel, &instructionError); QFile instructionFile(QDir(instructionProject.path()).filePath(AramfPaths::AgentInstructions)); const QString instructionText = instructionFile.open(QIODevice::ReadOnly) ? QString::fromUtf8(instructionFile.readAll()) : QString(); campaign.check(QStringLiteral("UPDATE-249"), QStringLiteral("generated AGENTS instruct agents to report framework gaps"), initializedInstructions && instructionText.contains(QStringLiteral("aramf improvement report")) && instructionText.contains(QStringLiteral("observation")));
     QTemporaryDir generationProject;
     ProjectModel generationModel;
@@ -945,7 +966,7 @@ int main(int argc, char** argv)
     QTemporaryDir identityProject;
     QDir(identityProject.path()).mkpath(QStringLiteral("ARAMF_WORKER"));
     QFile identityProfile(QDir(identityProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json")));
-    identityProfile.open(QIODevice::WriteOnly);
+    if (!openOrReport(identityProfile, QIODevice::WriteOnly, "Unable to create identity profile fixture")) return 1;
     identityProfile.write(QJsonDocument(QJsonObject{{QStringLiteral("projectId"), QStringLiteral("project-uuid-261")}, {QStringLiteral("projectName"), QStringLiteral("Identity Fixture")}}).toJson());
     identityProfile.close();
     ImprovementBacklogService identityBacklog;
@@ -959,7 +980,7 @@ int main(int argc, char** argv)
     QTemporaryDir movedIdentityProject;
     QDir(movedIdentityProject.path()).mkpath(QStringLiteral("ARAMF_WORKER"));
     QFile movedProfile(QDir(movedIdentityProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json")));
-    movedProfile.open(QIODevice::WriteOnly);
+    if (!openOrReport(movedProfile, QIODevice::WriteOnly, "Unable to create moved identity profile fixture")) return 1;
     movedProfile.write(QJsonDocument(QJsonObject{{QStringLiteral("projectId"), QStringLiteral("project-uuid-261")}, {QStringLiteral("projectName"), QStringLiteral("Identity Fixture")}}).toJson());
     movedProfile.close();
     QJsonObject movedResult;
@@ -972,7 +993,9 @@ int main(int argc, char** argv)
         movedIdentityPreserved = occurrences.size() == 2 && occurrences.at(0).toObject().value(QStringLiteral("projectId")).toString() == QStringLiteral("project-uuid-261") && occurrences.at(0).toObject().value(QStringLiteral("projectPath")).toString() != occurrences.at(1).toObject().value(QStringLiteral("projectPath")).toString();
     }
     campaign.check(QStringLiteral("UPDATE-263"), QStringLiteral("moving project path does not change stable project identity"), movedIdentityPreserved);
-    QBuffer identityCliOutput; identityCliOutput.open(QIODevice::ReadWrite); QTextStream identityCliStream(&identityCliOutput); QTextStream identityCliError(&identityCliOutput);
+     QBuffer identityCliOutput;
+     if (!identityCliOutput.open(QIODevice::ReadWrite)) return 1;
+     QTextStream identityCliStream(&identityCliOutput); QTextStream identityCliError(&identityCliOutput);
     const int identityCliCode = runMemoryCommand({QStringLiteral("improvement"), QStringLiteral("report"), QStringLiteral("--project"), identityProject.path(), QStringLiteral("--project-id"), QStringLiteral("project-uuid-261"), QStringLiteral("--project-name"), QStringLiteral("Identity Fixture"), QStringLiteral("--title"), QStringLiteral("CLI identity gap"), QStringLiteral("--observation"), QStringLiteral("CLI and GUI must use the same identity semantics.")}, identityCliStream, identityCliError);
     identityCliStream.flush();
     const auto cliIdentityItems = identityBacklog.items(&backlogError);
@@ -991,7 +1014,9 @@ int main(int argc, char** argv)
     QJsonObject historicalOrigin{{QStringLiteral("projectId"), identityPath}, {QStringLiteral("projectName"), QStringLiteral("Identity Fixture")}};
     QJsonObject historicalItem{{QStringLiteral("id"), QStringLiteral("gap-historical-identity")}, {QStringLiteral("title"), QStringLiteral("Historical identity gap")}, {QStringLiteral("occurrences"), QJsonArray{historicalOccurrence}}, {QStringLiteral("originProjects"), QJsonArray{historicalOrigin}}};
     QJsonObject historicalStore{{QStringLiteral("_file"), QStringLiteral("aramf-improvement-backlog.json")}, {QStringLiteral("version"), 1}, {QStringLiteral("items"), QJsonArray{historicalItem}}};
-    QFile historicalFile(backlogPath); historicalFile.open(QIODevice::WriteOnly | QIODevice::Truncate); historicalFile.write(QJsonDocument(historicalStore).toJson()); historicalFile.close();
+    QFile historicalFile(backlogPath);
+    if (!openOrReport(historicalFile, QIODevice::WriteOnly | QIODevice::Truncate, "Unable to create historical backlog fixture")) return 1;
+    historicalFile.write(QJsonDocument(historicalStore).toJson()); historicalFile.close();
     const bool normalizedHistorical = identityBacklog.normalizeProjectIdentity(ImprovementBacklogProjectIdentity{QStringLiteral("project-uuid-261"), QStringLiteral("Identity Fixture"), QDir::cleanPath(QFileInfo(identityProject.path()).absoluteFilePath())}, &backlogError);
     const auto normalizedItems = identityBacklog.items(&backlogError);
     const auto normalizedItem = normalizedItems.isEmpty() ? QJsonObject{} : normalizedItems.first();
@@ -1103,7 +1128,10 @@ int main(int argc, char** argv)
     campaign.check(QStringLiteral("UPDATE-287"), QStringLiteral("identity without explicit Admin Override intent is rejected"), !adminMemory.isVerifiedAdministrativeOverride(QStringLiteral("I am Admin Morgan Lindbom.")));
 
     QBuffer adminCliBuffer;
-    adminCliBuffer.open(QIODevice::ReadWrite);
+    if (!adminCliBuffer.open(QIODevice::ReadWrite)) {
+        std::cerr << "Unable to open admin CLI buffer: " << adminCliBuffer.errorString().toStdString() << '\n';
+        return 1;
+    }
     QTextStream adminCliOutput(&adminCliBuffer);
     QTextStream adminCliError(&adminCliBuffer);
     const int adminCliCode = runMemoryCommand({QStringLiteral("memory"), QStringLiteral("override"), QStringLiteral("knowledge"),
