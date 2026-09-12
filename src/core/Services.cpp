@@ -402,6 +402,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                      instructionId, QString::number(document.instructionVersion), structure);
         };
         canonicalAgent += QStringLiteral("\n## Documentation Template Routing\n\n")
+            + QStringLiteral("Academic project types are independently selected: ")
+            + (academic.projectTypes.isEmpty() ? QStringLiteral("none") : academic.projectTypes.join(QStringLiteral(", "))) + QStringLiteral(". Do not treat them as mutually exclusive.\n")
             + documentLine(QStringLiteral("Thesis"), academic.thesisDocumentation, QStringLiteral("aramf-thesis-instruction"))
             + documentLine(QStringLiteral("Report"), academic.reportDocumentation, QStringLiteral("aramf-report-instruction"))
             + QStringLiteral("Thesis never uses the Report instruction; Report never uses the Thesis instruction. Custom template structure remains custom and external instructions retain their governed authority.\n")
@@ -879,6 +881,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             {QStringLiteral("hardware"), toJsonArray(capabilities.hardwareTargets)}, {QStringLiteral("primaryAiAgent"), ai.primaryAgent},
             {QStringLiteral("resources"), model.resources().size()}, {QStringLiteral("rules"), toJsonArray(model.ruleConfiguration().activeCategories)},
             {QStringLiteral("memoryMaximumSizeBytes"), model.memoryConfiguration().maximumSizeBytes},
+            {QStringLiteral("academic"), QJsonObject{{QStringLiteral("enabled"), model.academicConfiguration().enabled}, {QStringLiteral("projectTypes"), toJsonArray(model.academicConfiguration().projectTypes)}}},
             {QStringLiteral("thesisDocumentation"), QJsonObject{{QStringLiteral("enabled"), model.academicConfiguration().thesisDocumentation.enabled}, {QStringLiteral("templateMode"), model.academicConfiguration().thesisDocumentation.templateMode}, {QStringLiteral("templateSourceId"), model.academicConfiguration().thesisDocumentation.templateSourceId}}},
             {QStringLiteral("reportDocumentation"), QJsonObject{{QStringLiteral("enabled"), model.academicConfiguration().reportDocumentation.enabled}, {QStringLiteral("templateMode"), model.academicConfiguration().reportDocumentation.templateMode}, {QStringLiteral("templateSourceId"), model.academicConfiguration().reportDocumentation.templateSourceId}}}};
         if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::Provenance)), provenance, &error)
@@ -891,7 +894,12 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
     const auto academic = model.academicConfiguration();
     if (options.generateAgentRules && (academic.thesisDocumentation.enabled || academic.reportDocumentation.enabled)) {
         const auto validateSelectedSource = [&](const AcademicConfiguration::DocumentationConfiguration& configuration, const QString& role, const QString& label) {
-            if (!configuration.enabled || configuration.templateMode != QStringLiteral("source")) return QString();
+            if (!configuration.enabled) return QString();
+            if (configuration.templateMode != QStringLiteral("source")) {
+                int candidates = 0;
+                for (const auto& resource : model.resources()) if (resource.enabled && resource.role == role) ++candidates;
+                return candidates > 1 ? label + QStringLiteral(" custom template resources are ambiguous; resolve authority in Resources") : QString();
+            }
             const auto selected = std::find_if(model.resources().cbegin(), model.resources().cend(), [&](const ProjectResource& resource) { return resource.id == configuration.templateSourceId; });
             if (selected == model.resources().cend()) return label + QStringLiteral(" custom template resource is missing");
             if (selected->role != role) return label + QStringLiteral(" custom template resource has the wrong role");

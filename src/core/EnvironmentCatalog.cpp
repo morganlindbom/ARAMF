@@ -330,11 +330,11 @@ QList<EnvironmentOption> deliveryCapabilities()
 QList<EnvironmentOption> academicModes()
 {
     return options({
-        {QStringLiteral("Disabled"), QStringLiteral("disabled")},
         {QStringLiteral("Academic Assignment"), QStringLiteral("academic-assignment")},
         {QStringLiteral("Research Project"), QStringLiteral("research-project")},
-        {QStringLiteral("Thesis"), QStringLiteral("thesis")},
-        {QStringLiteral("Other / Custom"), QStringLiteral("custom")}
+        {QStringLiteral("Thesis"), QStringLiteral("thesis-project")},
+        {QStringLiteral("Report"), QStringLiteral("report-project")},
+        {QStringLiteral("Other / Custom"), QStringLiteral("other-custom")}
     });
 }
 

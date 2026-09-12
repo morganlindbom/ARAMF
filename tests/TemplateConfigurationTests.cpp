@@ -14,6 +14,7 @@
 #include "ui/workflows/output/finalize/FinalizePage.h"
 #include "ui/workflows/project/languages/ProjectLanguagesPage.h"
 #include "ui/workflows/project/frameworks/ProjectFrameworksPage.h"
+#include "ui/workflows/project/academic/ProjectAcademicPage.h"
 #include "ui/mainwindow/MainWindow.h"
 #include <QApplication>
 #include <QComboBox>
@@ -542,8 +543,15 @@ int main(int argc, char** argv)
     // Exercise the actual save dialog, not just the service.
     ProjectSetupPage setup(&custom, &manager, &persistence);
     QTimer::singleShot(0, [] {
-        auto* dialog = qobject_cast<QInputDialog*>(QApplication::activeModalWidget());
-        if (dialog) { dialog->setTextValue("Saved through GUI"); dialog->accept(); }
+        QTimer::singleShot(100, [] {
+            for (auto* widget : QApplication::topLevelWidgets()) {
+                if (auto* dialog = qobject_cast<QInputDialog*>(widget)) {
+                    dialog->setTextValue("Saved through GUI");
+                    dialog->accept();
+                    break;
+                }
+            }
+        });
     });
     setup.findChild<QPushButton*>("saveCustomTemplate")->click();
     bool guiSaved = false;
@@ -741,6 +749,41 @@ int main(int argc, char** argv)
     const auto inspectedOffice = DocumentTemplateInspector::inspect(officeResource);
     check(inspectedOffice.format == "docx" && inspectedOffice.capability == "office-structured" && !inspectedOffice.structurallyParsed && inspectedOffice.sections.isEmpty(), "DOCX is recognized without false parsing");
     check(markdown.size() == QFileInfo(markdown.fileName()).size(), "Custom source remains unchanged after inspection");
+
+    AcademicConfiguration multi;
+    multi.enabled = true;
+    multi.projectTypes = {QStringLiteral("academic-assignment"), QStringLiteral("research-project"), QStringLiteral("thesis-project"), QStringLiteral("report-project")};
+    documentationModel.setAcademicConfiguration(multi);
+    const auto multiValue = documentationModel.academicConfiguration();
+    check(multiValue.projectTypes.size() == 4 && multiValue.projectTypes.contains(QStringLiteral("research-project")) && multiValue.projectTypes.contains(QStringLiteral("thesis-project")), "Academic project types support simultaneous selections");
+    check(multiValue.thesisDocumentation.enabled && multiValue.reportDocumentation.enabled, "Thesis and Report project types enable their independent documentation outputs");
+    multi.projectTypes.removeAll(QStringLiteral("research-project"));
+    documentationModel.setAcademicConfiguration(multi);
+    check(documentationModel.academicConfiguration().projectTypes.size() == 3 && documentationModel.academicConfiguration().projectTypes.contains(QStringLiteral("thesis-project")), "Deselecting one academic project type preserves the others");
+    auto legacyProject = persistence.toJson(documentationModel);
+    auto legacyAcademic = legacyProject.value(QStringLiteral("academic")).toObject();
+    legacyAcademic.remove(QStringLiteral("enabled")); legacyAcademic.remove(QStringLiteral("projectTypes")); legacyAcademic.remove(QStringLiteral("reportDocumentation")); legacyAcademic.insert(QStringLiteral("academicMode"), QStringLiteral("thesis"));
+    legacyProject.insert(QStringLiteral("academic"), legacyAcademic);
+    ProjectModel migratedLegacy;
+    check(persistence.fromJson(&migratedLegacy, legacyProject), "Legacy academic project loads");
+    check(migratedLegacy.academicConfiguration().enabled && migratedLegacy.academicConfiguration().projectTypes == QStringList{QStringLiteral("thesis-project")}, "Legacy Thesis migrates to Thesis Project");
+    ProjectModel legacyDisabled;
+    legacyProject.insert(QStringLiteral("academic"), QJsonObject{{QStringLiteral("academicMode"), QStringLiteral("disabled")} });
+    check(persistence.fromJson(&legacyDisabled, legacyProject) && !legacyDisabled.academicConfiguration().enabled && legacyDisabled.academicConfiguration().projectTypes.isEmpty(), "Legacy Disabled migrates to disabled academic state");
+    ProjectModel thesisTemplateModel;
+    check(manager.applyTemplate(&thesisTemplateModel, QStringLiteral("bachelor-thesis")), "Thesis template initializes academic project type");
+    check(thesisTemplateModel.academicConfiguration().projectTypes.contains(QStringLiteral("thesis-project")), "Official Thesis template uses multi-select project types");
+
+    ProjectModel academicUiModel;
+    ProjectAcademicPage academicPage(&academicUiModel);
+    const auto academicChecks = academicPage.findChildren<QCheckBox*>();
+    const auto hasExactText = [&](const QString& label) {
+        return std::count_if(academicChecks.cbegin(), academicChecks.cend(), [&label](QCheckBox* box) { return box->text() == label; });
+    };
+    check(hasExactText(QStringLiteral("Thesis")) == 1 && hasExactText(QStringLiteral("Report")) == 1, "Academic UI exposes one Thesis and one Report selection");
+    check(hasExactText(QStringLiteral("Enabled")) == 0, "Academic UI has no redundant Enabled checkbox");
+    check(hasExactText(QStringLiteral("Thesis Project")) == 0 && hasExactText(QStringLiteral("Report Project")) == 0, "Academic UI hides internal project-type labels");
+    academicPage.close();
 
     audit.insert("validation", QJsonObject{{"checks", checks}, {"failures", failures}, {"catalogFingerprint", TemplateValidation::catalogFingerprint()}});
     saveJson(fixture.filePath("template-audit.json"), audit);

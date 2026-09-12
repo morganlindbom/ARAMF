@@ -61,7 +61,7 @@ QMap<QString, QList<EnvironmentOption>> TemplateValidation::catalogs()
         {"capabilities.dependencyManagers", dependencyManagers()}, {"capabilities.buildConfigurations", buildConfigurations()},
         {"capabilities.testingCapabilities", testingCapabilities()}, {"capabilities.qualityCapabilities", qualityCapabilities()},
         {"capabilities.automationCapabilities", automationCapabilities()}, {"capabilities.deliveryCapabilities", deliveryCapabilities()},
-        {"academic.academicMode", academicModes()}, {"academic.thesisLevel", thesisLevels()},
+        {"academic.academicMode", choices({"disabled", "academic-assignment", "research-project", "thesis", "custom", "thesis-project", "report-project", "other-custom"})}, {"academic.projectTypes", academicModes()}, {"academic.thesisLevel", thesisLevels()},
         {"academic.thesisApproaches", thesisApproaches()}, {"academic.researchMethods", researchMethods()},
         {"academic.citationStyle", citationStyles()}, {"academic.academicLanguage", academicLanguages()},
         {"academic.academicRequirements", academicRequirements()}, {"academic.academicDeliverables", academicDeliverables()},
@@ -153,8 +153,21 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
             const QString expectedId = label == QStringLiteral("Thesis") ? QStringLiteral("aramf-default-thesis") : QStringLiteral("aramf-default-report");
             require(templateId == expectedId, label + " default template identity is invalid");
             require(templateVersion >= 1, label + " default template version is invalid");
+            if (enabled && sourceId.isEmpty()) {
+                int candidates = 0;
+                for (const auto& resource : resources) {
+                    const auto object = resource.toObject();
+                    if (object.value(QStringLiteral("enabled")).toBool(false) && object.value(QStringLiteral("role")).toString() == role) ++candidates;
+                }
+                require(candidates < 2, label + " custom template sources are ambiguous; resolve authority in Resources");
+            }
         }
-        if (!enabled) require(mode == QStringLiteral("aramf-default") && sourceId.isEmpty(), label + " disabled state must not retain a template source");
+        if (!enabled) {
+            // Inactive documentation must not be generated, but retaining a
+            // previously selected source is intentional: re-selecting the
+            // consolidated Thesis/Report option restores that provenance.
+            require(mode == QStringLiteral("aramf-default") || mode == QStringLiteral("source"), label + " disabled state has an invalid template mode");
+        }
         if (enabled && mode == QStringLiteral("source")) {
             require(templateId.isEmpty() && templateVersion == 0, label + " custom mode must not retain built-in template identity");
             QJsonObject selected;
@@ -315,10 +328,10 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
             }
         }
     }
-    if (has("academic.academicMode", "disabled")) {
+    if (!config.value(QStringLiteral("academic")).toObject().value(QStringLiteral("enabled")).toBool(false)) {
+        require(strings(at(config, "academic.projectTypes")).isEmpty(), "Disabled academic state has active project types");
         for (const auto& path : {"academic.thesisLevel", "academic.thesisApproaches", "academic.researchMethods", "academic.academicRequirements", "academic.academicDeliverables"})
             require(strings(at(config, path)).isEmpty(), "Disabled academic mode has active selections: " + QString(path));
-        require(!has("rules.activeCategories", "academic-documentation"), "Academic documentation requires academic mode");
     }
     const bool agent = !has("ai.primaryAgent", "none") || !strings(at(config, "ai.additionalAgents")).isEmpty();
     if (!agent) {

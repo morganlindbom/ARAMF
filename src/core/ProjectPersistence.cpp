@@ -143,7 +143,9 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     root.insert(QStringLiteral("ai"), aiObject);
     const auto academic = model.academicConfiguration();
     QJsonObject academicObject;
+    academicObject.insert(QStringLiteral("enabled"), academic.enabled);
     academicObject.insert(QStringLiteral("academicMode"), academic.academicMode);
+    academicObject.insert(QStringLiteral("projectTypes"), toJsonArray(academic.projectTypes));
     academicObject.insert(QStringLiteral("thesisLevel"), academic.thesisLevel);
     academicObject.insert(QStringLiteral("thesisApproaches"), toJsonArray(academic.thesisApproaches));
     academicObject.insert(QStringLiteral("researchMethods"), toJsonArray(academic.researchMethods));
@@ -348,7 +350,10 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
     AcademicConfiguration academic;
     const auto academicObject = root.value(QStringLiteral("academic")).toObject();
     if (!academicObject.isEmpty()) {
+        academic.enabled = academicObject.value(QStringLiteral("enabled")).toBool(false);
         academic.academicMode = academicObject.value(QStringLiteral("academicMode")).toString(QStringLiteral("disabled"));
+        const bool hasProjectTypes = academicObject.contains(QStringLiteral("projectTypes"));
+        academic.projectTypes = fromJsonArray(academicObject.value(QStringLiteral("projectTypes")));
         academic.thesisLevel = academicObject.value(QStringLiteral("thesisLevel")).toString();
         academic.thesisApproaches = fromJsonArray(academicObject.value(QStringLiteral("thesisApproaches")));
         academic.researchMethods = fromJsonArray(academicObject.value(QStringLiteral("researchMethods")));
@@ -375,6 +380,13 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
         };
         academic.thesisDocumentation = readDocument(QStringLiteral("thesisDocumentation"));
         academic.reportDocumentation = readDocument(QStringLiteral("reportDocumentation"));
+        // Projects written before projectTypes existed encoded academic intent
+        // in academicMode and/or the document enable flags. Preserve all of
+        // that intent during the one-way normalization into the multi-select.
+        if (!hasProjectTypes) {
+            if (academic.thesisDocumentation.enabled) academic.projectTypes << QStringLiteral("thesis-project");
+            if (academic.reportDocumentation.enabled) academic.projectTypes << QStringLiteral("report-project");
+        }
     }
     AiConfiguration ai;
     const auto aiObject = root.value(QStringLiteral("ai")).toObject();

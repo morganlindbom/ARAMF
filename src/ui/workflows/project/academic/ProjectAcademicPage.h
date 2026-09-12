@@ -4,8 +4,6 @@
 
 #include "core/ProjectModel.h"
 
-class QButtonGroup;
-class QCheckBox;
 class QComboBox;
 class QGroupBox;
 class QLineEdit;
@@ -22,13 +20,11 @@ private:
     void refresh();
     void persist();
     void updateVisibility();
-    void refreshDocumentSources();
     static QString comboValue(const QComboBox* combo, const QLineEdit* customEdit);
     static void setComboValue(QComboBox* combo, QLineEdit* customEdit, const QString& value);
 
     ProjectModel* model_ = nullptr;
-    QButtonGroup* modeGroup_ = nullptr;
-    QLineEdit* modeCustom_ = nullptr;
+    CapabilityCheckGroup* projectTypes_ = nullptr;
     QGroupBox* details_ = nullptr;
     QGroupBox* thesisLevelSection_ = nullptr;
     QComboBox* thesisLevel_ = nullptr;
@@ -45,8 +41,4 @@ private:
     QLineEdit* languageCustom_ = nullptr;
     CapabilityCheckGroup* requirements_ = nullptr;
     CapabilityCheckGroup* deliverables_ = nullptr;
-    QCheckBox* thesisEnabled_ = nullptr;
-    QCheckBox* reportEnabled_ = nullptr;
-    QComboBox* thesisTemplate_ = nullptr;
-    QComboBox* reportTemplate_ = nullptr;
 };

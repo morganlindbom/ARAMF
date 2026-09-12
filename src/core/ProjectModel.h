@@ -43,7 +43,9 @@ struct DevelopmentCapabilities {
 };
 
 struct AcademicConfiguration {
+    bool enabled = false;
     QString academicMode = QStringLiteral("disabled");
+    QStringList projectTypes;
     QString thesisLevel;
     QStringList thesisApproaches;
     QStringList researchMethods;

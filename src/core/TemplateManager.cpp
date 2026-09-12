@@ -219,7 +219,7 @@ QList<TemplateDefinition> builtIns()
             c.qualityCapabilities << QStringLiteral("linting");
             c.deliveryCapabilities << QStringLiteral("firmware-image") << QStringLiteral("package-installer");
             d.rules.projectScopes << QStringLiteral("hardware-firmware");
-            d.academic.academicMode = QStringLiteral("academic-assignment");
+            d.academic.enabled = true; d.academic.projectTypes = {QStringLiteral("academic-assignment")}; d.academic.academicMode = QStringLiteral("academic-assignment");
             d.ai.primaryAgent = QStringLiteral("gemini");
             assistantDefaults(d, QStringLiteral("gemini"));
             d.ai.responsibilities << QStringLiteral("ui-ux-design") << QStringLiteral("accessibility-review");
@@ -255,7 +255,7 @@ QList<TemplateDefinition> builtIns()
             d.ai.responsibilities.removeDuplicates();
         }
         if (d.id == "bachelor-thesis") {
-            d.academic.academicMode = "thesis"; d.academic.thesisLevel = "bachelor";
+            d.academic.enabled = true; d.academic.projectTypes = {QStringLiteral("thesis-project")}; d.academic.academicMode = "thesis"; d.academic.thesisLevel = "bachelor";
             d.academic.thesisApproaches = {"software-system-development"};
             d.academic.researchMethods = {"literature-review", "prototype-evaluation"};
             d.academic.academicRequirements = {"source-citations", "reference-list", "methodology-section", "related-work-background", "research-questions", "ethics-consideration", "reproducibility", "academic-formatting", "originality-check"};
@@ -329,7 +329,7 @@ QList<TemplateDefinition> TemplateManager::moduleDefinitions() const
                 source.capabilities.targetPlatforms = {QStringLiteral("command-line")};
                 source.capabilities.targetArchitectures = {QStringLiteral("x86_64")};
                 source.capabilities.toolchains = {QStringLiteral("msys2-ucrt64-gcc")};
-                source.academic.academicMode = QStringLiteral("academic-assignment");
+                source.academic.enabled = true; source.academic.projectTypes = {QStringLiteral("academic-assignment")}; source.academic.academicMode = QStringLiteral("academic-assignment");
                 source.academic.thesisLevel.clear();
                 source.academic.thesisApproaches.clear();
                 source.academic.researchMethods.clear();
@@ -638,7 +638,7 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
              && (model->developmentCapabilities().languages != QStringList{QStringLiteral("cpp")}
                  || model->developmentCapabilities().frameworks != QStringList{QStringLiteral("none")}
                  || model->developmentCapabilities().targetPlatforms != QStringList{QStringLiteral("desktop")}
-                 || model->academicConfiguration().academicMode != QStringLiteral("disabled")
+                 || model->academicConfiguration().enabled
                  || model->aiConfiguration().primaryAgent != QStringLiteral("none"))) root = previous;
     else root = selected.first().configuration;
     QJsonObject provenance;
@@ -663,7 +663,7 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
             root.insert(QStringLiteral("communication"), source.value(QStringLiteral("communication")));
         if (source.contains(QStringLiteral("hardwareResources"))) root.insert(QStringLiteral("hardwareResources"), source.value(QStringLiteral("hardwareResources")));
         const auto academic = source.value("academic").toObject();
-        if (academic.value("academicMode").toString() != QStringLiteral("disabled")) root.insert("academic", academic);
+        if (academic.value("enabled").toBool(false) || !academic.value("projectTypes").toArray().isEmpty() || academic.value("academicMode").toString() != QStringLiteral("disabled")) root.insert("academic", academic);
         if (root.value("context").toString().isEmpty() && !d.projectType.isEmpty()) root.insert("context", d.projectType);
     }
     auto ai = root.value("ai").toObject();

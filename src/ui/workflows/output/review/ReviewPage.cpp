@@ -143,11 +143,12 @@ void ReviewPage::refreshFromModel()
     const QString workerName = AramfPaths::workerDirectoryName(model_->workerNameSuffix());
     const QString projectFile = model_->projectFilePath().isEmpty()
         ? workerName + QStringLiteral(".aramf.json") : QFileInfo(model_->projectFilePath()).fileName();
-    text += tr("  Name: %1\n  Worker name: %2\n  Project file: %3\n  ID: %4\n  Path: %5\n  Active modules: %6\n  Active templates: %7\n  Academic: %8\n\n")
+    text += tr("  Name: %1\n  Worker name: %2\n  Project file: %3\n  ID: %4\n  Path: %5\n  Active modules: %6\n  Active templates: %7\n  Academic Documentation: %8\n  Selected documentation types: %9\n\n")
                 .arg(model_->projectName(), workerName, projectFile, model_->projectId(),
                      model_->projectPath().isEmpty() ? tr("Project Path is not configured.") : model_->projectPath(),
                      listOrNone(activeModules), listOrNone(activeTemplates),
-                     model_->academicConfiguration().academicMode);
+                     model_->academicConfiguration().enabled ? tr("Enabled") : tr("Disabled"),
+                     displayList(model_->academicConfiguration().projectTypes, EnvironmentCatalog::academicModes()));
     text += tr("Project Configuration\n");
     text += tr("  Languages: %1\n  Frameworks / SDKs: %2\n  Development tools: %3\n  Platforms: %4\n  Hardware / Architecture: %5\n  Build / Testing / Delivery: %6\n\n")
                 .arg(displayList(capabilities.languages, EnvironmentCatalog::languages()), displayList(capabilities.frameworks, EnvironmentCatalog::frameworks()),
@@ -220,6 +221,11 @@ void ReviewPage::refreshFromModel()
             }
         }
         const bool builtInSelected = document.templateMode == QStringLiteral("aramf-default");
+        if (document.enabled && builtInSelected) {
+            int candidates = 0;
+            for (const auto& resource : resources) if (resource.enabled && resource.role == role) ++candidates;
+            if (candidates > 1) details += QStringLiteral("; validation=ambiguous-resource");
+        }
         return QObject::tr("  %1: %2; mode=%3; template=%4; id=%5; version=%6; language=%7; sections=%8; %9\n")
             .arg(label, state, document.templateMode, source, builtInSelected ? (document.templateId.isEmpty() ? builtIn.id : document.templateId) : QObject::tr("external-resource"),
                  builtInSelected ? QString::number(document.templateVersion > 0 ? document.templateVersion : builtIn.version) : QObject::tr("external"), document.language,

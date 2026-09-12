@@ -339,10 +339,23 @@ void ProjectModel::setDevelopmentCapabilities(const DevelopmentCapabilities& val
 void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
 {
     AcademicConfiguration next = value;
+    if (next.projectTypes.isEmpty() && !value.academicMode.isEmpty() && value.academicMode != QStringLiteral("disabled")) {
+        const QString legacy = value.academicMode.startsWith(QStringLiteral("custom:")) ? QStringLiteral("other-custom") : value.academicMode == QStringLiteral("thesis") ? QStringLiteral("thesis-project") : value.academicMode;
+        next.projectTypes << legacy;
+    }
+    next.projectTypes.removeDuplicates();
+    next.enabled = value.enabled || !next.projectTypes.isEmpty() || (!value.academicMode.isEmpty() && value.academicMode != QStringLiteral("disabled"));
+    if (!next.enabled) next.projectTypes.clear();
+    if (next.projectTypes.isEmpty()) next.academicMode = QStringLiteral("disabled");
+    else if (value.academicMode.isEmpty() || value.academicMode == QStringLiteral("disabled")) next.academicMode = next.projectTypes.first();
+    else next.academicMode = value.academicMode;
+    if (next.projectTypes.contains(QStringLiteral("thesis-project"))) next.thesisDocumentation.enabled = true;
+    if (next.projectTypes.contains(QStringLiteral("report-project"))) next.reportDocumentation.enabled = true;
     auto normalize = [](AcademicConfiguration::DocumentationConfiguration& document, const QString& defaultId) {
         if (!document.enabled) {
-            document.templateMode = QStringLiteral("aramf-default");
-            document.templateSourceId.clear();
+            // Keep a previously selected source while inactive so removing a
+            // checkbox does not discard the user's authoritative resource.
+            if (document.templateSourceId.isEmpty()) document.templateMode = QStringLiteral("aramf-default");
         } else if (document.templateMode != QStringLiteral("source")) {
             document.templateMode = QStringLiteral("aramf-default");
             document.templateSourceId.clear();
@@ -360,7 +373,27 @@ void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
     };
     normalize(next.thesisDocumentation, QStringLiteral("aramf-default-thesis"));
     normalize(next.reportDocumentation, QStringLiteral("aramf-default-report"));
-    const bool unchanged = academic_.academicMode == value.academicMode
+    const auto resolveSource = [this](AcademicConfiguration::DocumentationConfiguration& document, const QString& role) {
+        if (!document.enabled || !document.templateSourceId.isEmpty()) return;
+        QList<const ProjectResource*> candidates;
+        for (const auto& resource : resources_) {
+            if (resource.enabled && resource.role == role) candidates.append(&resource);
+        }
+        // A single matching source is deterministic. Multiple sources stay
+        // unresolved so the authority/resource workflow can surface the
+        // conflict instead of silently selecting one.
+        if (candidates.size() == 1) {
+            document.templateMode = QStringLiteral("source");
+            document.templateSourceId = candidates.first()->id;
+            document.templateId.clear();
+            document.templateVersion = 0;
+        }
+    };
+    resolveSource(next.thesisDocumentation, QStringLiteral("thesis-template"));
+    resolveSource(next.reportDocumentation, QStringLiteral("report-template"));
+    const bool unchanged = academic_.enabled == next.enabled
+        && academic_.projectTypes == next.projectTypes
+        && academic_.academicMode == next.academicMode
         && academic_.thesisLevel == value.thesisLevel
         && academic_.thesisApproaches == value.thesisApproaches
         && academic_.researchMethods == value.researchMethods
@@ -496,6 +529,9 @@ void ProjectModel::setResources(const QList<ProjectResource>& value)
     resourceNames_.clear();
     for (const auto& resource : resources_) resourceNames_ << resource.name;
     resolveAndroidConstraints();
+    // Resources own custom-template selection. Re-normalize documentation so
+    // a resource added after Academic selection is resolved automatically.
+    setAcademicConfiguration(academic_);
     notifyChanged();
 }
 
