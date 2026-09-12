@@ -89,6 +89,12 @@ inline QString resolveWorkerRelativePath(QString relative)
     return relative;
 }
 
+inline QString workerReference(const QString& relative = {})
+{
+    return relative.isEmpty() ? runtimeWorkerDirectoryName()
+                              : resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/") + relative);
+}
+
 inline QString& applicationDirectoryOverride()
 {
     static QString value;

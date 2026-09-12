@@ -58,7 +58,7 @@ QJsonObject emptyStore()
 
 QString storePath(const QString& projectRoot)
 {
-    return QDir(projectRoot).filePath(AramfPaths::FrameworkKnowledge);
+    return QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::FrameworkKnowledge));
 }
 
 QString libraryPath()

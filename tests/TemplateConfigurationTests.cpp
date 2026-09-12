@@ -254,6 +254,19 @@ int main(int argc, char** argv)
     check(QFile::exists(QDir(suffixedModel.projectPath()).filePath(
                   QStringLiteral("ARAMF_WORKER_ANDROID_PICO/ARAMF_WORKER_ANDROID_PICO.json"))),
           "worker identity JSON matches resolved directory");
+    QFile suffixedRootAgent(QDir(suffixedModel.projectPath()).filePath(QStringLiteral("AGENTS.md")));
+    QFile suffixedWorkerAgent(QDir(suffixedModel.projectPath()).filePath(QStringLiteral("ARAMF_WORKER_ANDROID_PICO/AGENTS.md")));
+    QString suffixedRootText;
+    QString suffixedWorkerText;
+    if (suffixedRootAgent.open(QIODevice::ReadOnly)) suffixedRootText = QString::fromUtf8(suffixedRootAgent.readAll());
+    if (suffixedWorkerAgent.open(QIODevice::ReadOnly)) suffixedWorkerText = QString::fromUtf8(suffixedWorkerAgent.readAll());
+    check(suffixedRootText.contains(QStringLiteral("ARAMF_WORKER_ANDROID_PICO/AGENTS.md"))
+              && !suffixedRootText.contains(QStringLiteral("ARAMF_WORKER/AGENTS.md")), "suffixed root AGENTS.md uses resolved worker");
+    check(suffixedWorkerText.contains(QStringLiteral("ARAMF_WORKER_ANDROID_PICO/"))
+              && !suffixedWorkerText.contains(QStringLiteral("ARAMF_WORKER/")), "suffixed worker AGENTS.md uses resolved worker");
+    check(std::none_of(suffixedGeneration.generatedFiles.cbegin(), suffixedGeneration.generatedFiles.cend(), [](const QString& path) {
+              return path.contains(QStringLiteral("ARAMF_WORKER_")) && path.contains(QStringLiteral("ARAMF_WORKER_WORKER"));
+          }), "suffixed generated paths do not duplicate worker prefix");
     check(!generation.generate(suffixedModel, suffixedModel.generationOptions()).success, "existing suffixed worker is not overwritten");
     const auto suffixVerification = verification.verify(suffixedModel, suffixedModel.generationOptions());
     check(suffixVerification.overallStatus == VerificationStatus::Pass, "suffixed worker Verify including cold-start passes");

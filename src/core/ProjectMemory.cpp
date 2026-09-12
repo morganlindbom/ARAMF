@@ -1184,7 +1184,7 @@ qint64 ProjectMemory::managedMemoryUsage(const QString& projectRoot) const
 {
     qint64 total = 0;
     QStack<QString> directories;
-    directories.push(QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/memory")));
+    directories.push(absolutePath(projectRoot, QStringLiteral("ARAMF_WORKER/memory")));
     while (!directories.isEmpty()) {
         const QDir directory(directories.pop());
         for (const auto& entry : directory.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot)) {
@@ -1494,18 +1494,18 @@ bool ProjectMemory::ensureDirectories(const QString& projectRoot, QString* error
     Custom content is isolated from generated and memory data so automation can protect user ownership boundaries.
     */
     const QStringList directories {
-        AramfPaths::ControlDirectory,
-        QStringLiteral("ARAMF_WORKER/memory"),
-        QStringLiteral("ARAMF_WORKER/rules"),
-        QStringLiteral("ARAMF_WORKER/routing"),
-        QStringLiteral("ARAMF_WORKER/update"),
-        QStringLiteral("ARAMF_WORKER/update/history"),
-        QStringLiteral("ARAMF_WORKER/resources"),
-        QStringLiteral("ARAMF_WORKER/templates"),
-        QStringLiteral("ARAMF_WORKER/platforms"),
-        QStringLiteral("ARAMF_WORKER/verification"),
-        QStringLiteral("ARAMF_WORKER/custom"),
-        QStringLiteral("ARAMF_WORKER/docs")
+        AramfPaths::resolveWorkerRelativePath(AramfPaths::ControlDirectory),
+        AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/memory")),
+        AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/rules")),
+        AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/routing")),
+        AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/update")),
+        AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/update/history")),
+        AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/resources")),
+        AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/templates")),
+        AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/platforms")),
+        AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification")),
+        AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/custom")),
+        AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/docs"))
     };
 
     QDir root(projectRoot);
@@ -1522,8 +1522,9 @@ bool ProjectMemory::ensureDirectories(const QString& projectRoot, QString* error
 
 bool ProjectMemory::ensureMemoryDirectories(const QString& projectRoot, QString* error) const
 {
-    if (!QDir(projectRoot).mkpath(QStringLiteral("ARAMF_WORKER/memory"))) {
-        if (error) *error = QStringLiteral("Could not create %1").arg(QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/memory")));
+    const QString memoryDirectory = absolutePath(projectRoot, QStringLiteral("ARAMF_WORKER/memory"));
+    if (!QDir().mkpath(memoryDirectory)) {
+        if (error) *error = QStringLiteral("Could not create %1").arg(memoryDirectory);
         return false;
     }
     return true;
@@ -1645,17 +1646,18 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
     */
     const QString projectName = model ? model->projectName() : QStringLiteral("Unnamed Project");
     const QString projectId = model ? model->projectId() : QUuid::createUuid().toString(QUuid::WithoutBraces);
+    const QString workerName = model ? AramfPaths::workerDirectoryName(model->workerNameSuffix()) : AramfPaths::runtimeWorkerDirectoryName();
 
-    const QByteArray rootAgent = QByteArrayLiteral(
+    const QByteArray rootAgent = QStringLiteral(
         "<!-- AGENTS.md -->\n\n"
         "# ARAMF Agent Entry Point\n\n"
-        "Read and follow `ARAMF_WORKER/AGENTS.md` before making project changes.\n"
-        "All ARAMF rule, memory, status, routing, resource, and verification context is stored under `ARAMF_WORKER/`.\n");
+        "Read and follow `%1/AGENTS.md` before making project changes.\n"
+        "All ARAMF rule, memory, status, routing, resource, and verification context is stored under `%1/`.\n").arg(workerName).toUtf8();
     if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("AGENTS.md")), rootAgent, error, true)) {
         return false;
     }
 
-    const QByteArray canonicalAgent = QByteArrayLiteral(
+    const QByteArray canonicalAgent = QStringLiteral(
         "<!-- AGENTS.md -->\n\n"
         "# Canonical ARAMF Agent Instructions\n\n"
         "## Required startup order\n\n"
@@ -1668,7 +1670,7 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         "## Project status contract\n\n"
         "Update `PROJECT_STATUS.md` after every meaningful implementation task. Keep it current with what exists, what was changed, verified results, known issues, and the next concrete work. Do not use it as an append-only history.\n\n"
         "## UPDATE workflow\n\n"
-        "UPDATE is a deliberate human-controlled workflow. Review approved Framework Knowledge, analyze the whole project, prepare a plan, and explicitly execute it through the configured agent. The managed project root is the implementation target; `ARAMF_WORKER/` is orchestration only. Read `update/update-plan.json` and `update/update-contract.json` when present. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes and validation are required. Preserve higher-authority instructions and follow `routing/validation-policy.json`. Do not treat candidates as approved and do not create routine update noise.\n\n"
+        "UPDATE is a deliberate human-controlled workflow. Review approved Framework Knowledge, analyze the whole project, prepare a plan, and explicitly execute it through the configured agent. The managed project root is the implementation target; `%1/` is orchestration only. Read `update/update-plan.json` and `update/update-contract.json` when present. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes and validation are required. Preserve higher-authority instructions and follow `routing/validation-policy.json`. Do not treat candidates as approved and do not create routine update noise.\n\n"
         "## ARAMF improvement backlog\n\n"
         "When work reveals that ARAMF itself lacks a canonical workflow, rule, representation, validation path, resource model, or other framework capability, do not abandon the managed project to redesign ARAMF. If the current work can safely continue under existing authority, report the gap with `aramf improvement report --project <project-root> --title <title> --observation <observation> ...` and continue. A report is an observation, not an approved TODO or Framework Knowledge. Do not report ordinary project bugs as ARAMF gaps.\n\n"
         "## Memory contract\n\n"
@@ -1677,12 +1679,12 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         "## Live Framework Knowledge contract\n\n"
         "`memory/framework-knowledge.json` is live project memory. Approved entries apply immediately in this project and do not require ARAMF regeneration. The authority order is: explicit current user instruction, current Source of Truth, current durable project decisions, approved Framework Knowledge, templates/defaults, then AI inference. When a corrected approach is verified and appears reusable, add or enrich a `candidate` entry with evidence instead of silently changing framework behavior. Never self-approve a candidate. Only after explicit user approval may its status become `approved`; once approved, use it immediately. Keep superseded entries for auditability but do not apply them.\n\n"
         "## TOP PRIORITY: Destructive cleanup prohibition\n\n"
-        "Never use recursive shell deletion for cleanup or fixture removal, including `cmd.exe /c rmdir /s /q`, `rd /s /q`, PowerShell `Remove-Item -Recurse`, Unix `rm -rf`, or equivalents. Never delete repositories, project roots, `ARAMF_WORKER/`, build trees, or generated state to clean up temporary work. Do not translate paths between shells or compose quoted destructive commands. If removal is genuinely required and explicitly authorized, use a narrow target with boundary validation and request confirmation of the exact resolved file list first; otherwise leave uniquely named temporary fixtures and report them.\n\n"
+        "Never use recursive shell deletion for cleanup or fixture removal, including `cmd.exe /c rmdir /s /q`, `rd /s /q`, PowerShell `Remove-Item -Recurse`, Unix `rm -rf`, or equivalents. Never delete repositories, project roots, `%1/`, build trees, or generated state to clean up temporary work. Do not translate paths between shells or compose quoted destructive commands. If removal is genuinely required and explicitly authorized, use a narrow target with boundary validation and request confirmation of the exact resolved file list first; otherwise leave uniquely named temporary fixtures and report them.\n\n"
         "## Project Memory\n\n"
         "Read `memory/memory-contract.json` before recording development results. In the default `agent-direct` mode, the active coding agent is the project-local Project Memory writer; no external executable, global CLI, recorder daemon, or external service is required unless the contract explicitly selects another mechanism. Identify canonical targets, read files and schemas, preserve unrelated state, perform the narrowest valid mutation, write the existing schema, reload from disk, parse/validate, and verify uniqueness, ordering, and cross-file consistency.\n\n"
         "`memory/event-log.jsonl` is append-only historical evidence. Preserve failed attempts, successful corrections, original IDs, sequences, timestamps, ordering, and PASS/FAIL results. Never edit, delete, reorder, renumber, truncate, or regenerate prior events. `PROJECT_STATUS.md` and current-state files describe current truth and remain distinct from historical truth.\n\n"
         "## Scope\n\n"
-        "All paths in this file are relative to the `ARAMF_WORKER/` directory. Do not depend on rule or memory files outside `ARAMF_WORKER/`.\n");
+        "All paths in this file are relative to the `%1/` directory. Do not depend on rule or memory files outside `%1/`.\n").arg(workerName).toUtf8();
     if (!writeTextFile(absolutePath(projectRoot, AramfPaths::AgentInstructions), canonicalAgent, error, true)) {
         return false;
     }
@@ -1727,7 +1729,7 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         {QStringLiteral("projectId"), projectId},
         {QStringLiteral("projectName"), projectName},
         {QStringLiteral("implementationLanguage"), QStringLiteral("C++")},
-        {QStringLiteral("controlDirectory"), AramfPaths::ControlDirectory}
+        {QStringLiteral("controlDirectory"), workerName}
     };
     if (!writeJsonFile(absolutePath(projectRoot, AramfPaths::Profile), profile, error, true)) {
         return false;
@@ -1749,7 +1751,7 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
         }
     }
 
-    const QString routingReadme = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/routing/README.md"));
+    const QString routingReadme = absolutePath(projectRoot, QStringLiteral("ARAMF_WORKER/routing/README.md"));
     const QByteArray routing = QByteArrayLiteral(
         "<!-- README.md -->\n\n"
         "# Routing\n\n"
@@ -1994,6 +1996,7 @@ bool ProjectMemory::refreshMemoryInstructions(const QString& projectRoot, QStrin
         if (error) *error = QStringLiteral("Managed memory instruction section is missing.");
         return false;
     }
+    const QString workerName = AramfPaths::runtimeWorkerDirectoryName();
     const QString section = QStringLiteral(
         "<!-- ARAMF-MEMORY-BEGIN -->\n\n"
         "## Project Memory Feedback\n\n"
@@ -2007,7 +2010,7 @@ bool ProjectMemory::refreshMemoryInstructions(const QString& projectRoot, QStrin
         "- Run the minimum validation required by `routing/validation-policy.json`; do not run full regression campaigns for ordinary isolated changes. Escalate when scope, risk, failure, or explicit milestone policy requires it.\n"
         "- Follow current durable decisions; explicitly superseded decisions remain historical and inactive.\n\n"
         "`memory/event-log.jsonl` is append-only historical evidence. Append task, build, test, and validation events when they occur; preserve both PASS and FAIL attempts. Never edit, delete, reorder, renumber, truncate, or regenerate prior events. Generate new IDs, timestamps, and monotonic sequences only from the current persisted log. Current-state files and PROJECT_STATUS.md describe what is true now and must remain distinct from history.\n\n"
-        "<!-- ARAMF-MEMORY-END -->");
+        "<!-- ARAMF-MEMORY-END -->").arg(workerName);
     content.replace(beginAt, endAt + end.size() - beginAt, section);
     if (!writeTextFile(path, content.toUtf8(), error)) return false;
     return writeJsonFile(absolutePath(projectRoot, AramfPaths::ValidationPolicy), ValidationRouting::policy(), error);

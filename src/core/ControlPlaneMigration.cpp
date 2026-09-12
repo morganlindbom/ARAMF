@@ -63,7 +63,7 @@ ControlPlanePreparation prepareControlPlane(const QString& projectRoot)
     ControlPlanePreparation preparation;
     const QDir root(QDir::cleanPath(projectRoot));
     const QString legacyPath = root.filePath(AramfPaths::LegacyControlDirectory);
-    const QString canonicalPath = root.filePath(AramfPaths::ControlDirectory);
+    const QString canonicalPath = root.filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ControlDirectory));
     preparation.legacyDetected = QDir(legacyPath).exists();
     preparation.bothDetected = preparation.legacyDetected && QDir(canonicalPath).exists();
 

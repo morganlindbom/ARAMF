@@ -92,10 +92,10 @@ bool isKnownLevel(const QString& level)
 bool CertificationService::initialize(const QString& projectRoot, const ProjectModel* model, QString* error) const
 {
     if (!model || !model->certificationConfiguration().enabled) return true;
-    if (!QDir(projectRoot).mkpath(AramfPaths::CertificationEvidenceDirectory)
+    if (!QDir(projectRoot).mkpath(AramfPaths::resolveWorkerRelativePath(AramfPaths::CertificationEvidenceDirectory))
         || !QFileInfo::exists(path(projectRoot, AramfPaths::CertificationDirectory))) {
-        if (!QDir(projectRoot).mkpath(AramfPaths::CertificationDirectory)
-            || !QDir(projectRoot).mkpath(AramfPaths::CertificationEvidenceDirectory)) {
+        if (!QDir(projectRoot).mkpath(AramfPaths::resolveWorkerRelativePath(AramfPaths::CertificationDirectory))
+            || !QDir(projectRoot).mkpath(AramfPaths::resolveWorkerRelativePath(AramfPaths::CertificationEvidenceDirectory))) {
             if (error) *error = QStringLiteral("Could not create certification directories.");
             return false;
         }

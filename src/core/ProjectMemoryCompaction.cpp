@@ -17,7 +17,7 @@
 #include <QUuid>
 
 namespace {
-QString path(const QString& root, const QString& relative) { return QDir(root).filePath(relative); }
+QString path(const QString& root, const QString& relative) { return QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(relative)); }
 QJsonObject readObject(const QString& fileName)
 {
     QFile file(fileName);
