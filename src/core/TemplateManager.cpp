@@ -164,6 +164,7 @@ QList<TemplateDefinition> builtIns()
         base("raspberry-pi-pico-firmware", "Raspberry Pi Pico Firmware", "embedded-firmware", {"cpp", "c", "pio-assembly"}, {"pico-sdk"}, {"microcontroller", "bare-metal"}, {"arm-gnu"}, {"cmake", "ninja"}, {"cmake-fetchcontent"}),
         base("react-frontend", "React Frontend", "frontend-web-application", {"typescript", "html", "css"}, {"react"}, {"web-browser"}, {"nodejs"}, {"npm"}, {"npm"}),
         base("python-backend", "Python Backend", "backend-service", {"python"}, {"fastapi"}, {"server"}, {"python"}, {"python-setuptools"}, {"pip"}),
+        base("machine-learning", "Machine Learning", "ai-machine-learning", {"python"}, {"scikit-learn", "numpy", "pandas", "scipy", "matplotlib"}, {"ai-machine-learning"}, {"python", "python-venv"}, {"none"}, {"pip"}),
         base("csharp-backend", "C# Backend", "backend-service", {"csharp"}, {"dotnet", "aspnet"}, {"server"}, {"dotnet-sdk"}, {"msbuild"}, {"nuget"}),
         base("mobile-application", "Mobile Application", "android-application", {"kotlin"}, {"android-sdk", "jetpack-compose", "android-emulator"}, {"android"}, {"java-jdk", "kotlin-jvm"}, {"gradle"}, {"gradle"}),
         base("full-stack-web-application", "Full Stack Web Application", "full-stack-web-application", {"typescript", "html", "css"}, {"react", "nodejs", "express"}, {"web-browser", "server"}, {"nodejs"}, {"npm"}, {"npm"}),
@@ -195,6 +196,14 @@ QList<TemplateDefinition> builtIns()
             d.exclusions << "RISC-V alternative, RTOS, networking libraries and physical hardware-in-loop tests require explicit project needs";
         }
         if (c.frameworks.contains("qt")) { c.deliveryCapabilities << "package-installer"; c.developmentTools << "memory-analysis"; }
+        if (d.id == "machine-learning") {
+            c.ides = {QStringLiteral("visual-studio-code")};
+            c.developmentTools << QStringLiteral("jupyterlab");
+            c.hardwareTargets = {QStringLiteral("cpu")};
+            c.testingCapabilities << QStringLiteral("benchmarking");
+            d.rules.projectScopes << QStringLiteral("database-data");
+            d.exclusions << QStringLiteral("GPU acceleration, alternative Python environments, additional frameworks and model export are optional project decisions");
+        }
         if (android) {
             c.ides = {"android-studio"}; c.hardwareTargets = {"mobile-device"};
             c.developmentTools << "android-sdk";
@@ -345,6 +354,7 @@ QList<TemplateDefinition> TemplateManager::moduleDefinitions() const
     copyModule(QStringLiteral("cpp-command-line"), QStringLiteral("cpp"), QStringLiteral("C++"));
     copyModule(QStringLiteral("qt-desktop-application"), QStringLiteral("desktop-application"), QStringLiteral("Desktop Application"));
     copyModule(QStringLiteral("bachelor-thesis"), QStringLiteral("academic-school-project"), QStringLiteral("Academic / School Project"));
+    copyModule(QStringLiteral("machine-learning"), QStringLiteral("machine-learning"), QStringLiteral("Machine Learning"));
     const auto focused = [&result, &sources](const QString& sourceId, const QString& id, const QString& name,
                                               const QStringList& languages, const QStringList& frameworks,
                                               const QStringList& tools, const QStringList& targets) {
@@ -432,10 +442,10 @@ QList<TemplateDefinition> TemplateManager::officialDefinitions() const
 {
     QList<TemplateDefinition> result;
     for (const auto& source : builtIns()) {
-        if (source.id != QStringLiteral("pico-2w-visual-designer") && source.id != QStringLiteral("qt-desktop-application") && source.id != QStringLiteral("android-arduino-smart-home")) continue;
+        if (source.id != QStringLiteral("pico-2w-visual-designer") && source.id != QStringLiteral("qt-desktop-application") && source.id != QStringLiteral("android-arduino-smart-home") && source.id != QStringLiteral("machine-learning")) continue;
         auto d = source;
-        d.id = source.id == QStringLiteral("pico-2w-visual-designer") ? QStringLiteral("official-pico-visual-designer") : source.id == QStringLiteral("qt-desktop-application") ? QStringLiteral("official-aramf-development") : QStringLiteral("official-android-arduino-smart-home");
-        d.displayName = source.id == QStringLiteral("pico-2w-visual-designer") ? QStringLiteral("Pico Visual Designer") : source.id == QStringLiteral("qt-desktop-application") ? QStringLiteral("ARAMF Development") : QStringLiteral("Android Arduino Smart Home");
+        d.id = source.id == QStringLiteral("pico-2w-visual-designer") ? QStringLiteral("official-pico-visual-designer") : source.id == QStringLiteral("qt-desktop-application") ? QStringLiteral("official-aramf-development") : source.id == QStringLiteral("android-arduino-smart-home") ? QStringLiteral("official-android-arduino-smart-home") : QStringLiteral("machine-learning");
+        d.displayName = source.id == QStringLiteral("pico-2w-visual-designer") ? QStringLiteral("Pico Visual Designer") : source.id == QStringLiteral("qt-desktop-application") ? QStringLiteral("ARAMF Development") : source.id == QStringLiteral("android-arduino-smart-home") ? QStringLiteral("Android Arduino Smart Home") : QStringLiteral("Machine Learning");
         d.official = true;
         result << d;
     }
@@ -538,8 +548,8 @@ QString TemplateManager::libraryError() const { QString error; readLibrary(libra
 TemplateDefinition TemplateManager::definition(const QString& id) const
 {
     const QString canonical = id == "android-kotlin-lite" ? "android-studio-kotlin-gemini" : id == "Android_Arduino_Smart_Home" ? "official-android-arduino-smart-home" : id;
-    for (const auto& d : moduleDefinitions()) if (d.id == canonical) return d;
     for (const auto& d : officialDefinitions()) if (d.id == canonical) return d;
+    for (const auto& d : moduleDefinitions()) if (d.id == canonical) return d;
     for (const auto& d : definitions()) if (d.id == canonical) return d;
     return {};
 }

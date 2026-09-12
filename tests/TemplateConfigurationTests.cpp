@@ -75,14 +75,127 @@ int main(int argc, char** argv)
     ProjectMemory memory;
     QJsonObject audit;
     const auto definitions = manager.definitions();
-    check(definitions.size() == 13, "all 13 built-ins audited");
+    check(definitions.size() == 14, "all 14 built-ins audited");
     const auto officialDefinitions = manager.officialDefinitions();
-    check(officialDefinitions.size() == 4, "four official templates available");
+    check(officialDefinitions.size() == 5, "five official templates available");
     for (const auto& official : officialDefinitions) {
         ProjectModel officialModel;
         check(manager.applyTemplate(&officialModel, official.id), official.id + " official template applies");
         check(officialModel.templateModules().contains(official.id), official.id + " provenance retained");
     }
+    const auto hasCatalogId = [](const QList<EnvironmentOption>& options, const QString& id) {
+        return std::any_of(options.cbegin(), options.cend(), [&id](const EnvironmentOption& option) { return option.second == id; });
+    };
+    for (const auto& id : {QStringLiteral("python"), QStringLiteral("scikit-learn"), QStringLiteral("numpy"), QStringLiteral("pandas"), QStringLiteral("scipy"), QStringLiteral("matplotlib"), QStringLiteral("jupyterlab"), QStringLiteral("python-venv"), QStringLiteral("cpu"), QStringLiteral("pytorch"), QStringLiteral("tensorflow"), QStringLiteral("keras"), QStringLiteral("xgboost"), QStringLiteral("lightgbm"), QStringLiteral("hugging-face-transformers"), QStringLiteral("opencv"), QStringLiteral("conda"), QStringLiteral("miniconda"), QStringLiteral("uv"), QStringLiteral("nvidia-gpu"), QStringLiteral("cuda"), QStringLiteral("cudnn"), QStringLiteral("onnx"), QStringLiteral("onnx-runtime"), QStringLiteral("tensorflow-lite")}) {
+        const bool found = hasCatalogId(EnvironmentCatalog::languages(), id)
+            || hasCatalogId(EnvironmentCatalog::frameworks(), id)
+            || hasCatalogId(EnvironmentCatalog::developmentSupport(), id)
+            || hasCatalogId(EnvironmentCatalog::toolchains(), id)
+            || hasCatalogId(EnvironmentCatalog::hardwareTargets(), id);
+        check(found, "ML catalog contains " + id);
+    }
+    ProjectModel mlModel;
+    QString mlError;
+    check(manager.applyTemplate(&mlModel, QStringLiteral("machine-learning"), &mlError), "Machine Learning template applies: " + mlError);
+    const auto cleanCommunication = [](const CommunicationConfiguration& communication) {
+        return !communication.enabled && communication.sourceRole.isEmpty() && communication.sourceTarget.isEmpty()
+            && communication.destinationRole.isEmpty() && communication.destinationTarget.isEmpty()
+            && communication.endpoint.isEmpty() && communication.transport.isEmpty() && communication.protocol.isEmpty()
+            && !communication.authenticationRequired && !communication.encryptionRequired
+            && communication.endpoints.isEmpty() && communication.links.isEmpty() && communication.messages.isEmpty()
+            && communication.testVectors.isEmpty();
+    };
+    check(cleanCommunication(mlModel.communicationConfiguration()), "Machine Learning communication is clean and disabled");
+    ProjectModel freshModel;
+    freshModel.resetForNewProject();
+    check(cleanCommunication(freshModel.communicationConfiguration()), "fresh new project communication is clean and disabled");
+    ProjectModel androidToMl;
+    check(manager.applyTemplate(&androidToMl, QStringLiteral("official-android-arduino-smart-home")), "Android Arduino Smart Home transition source applies");
+    check(!cleanCommunication(androidToMl.communicationConfiguration()), "Android Arduino Smart Home has communication defaults");
+    check(manager.applyTemplate(&androidToMl, QStringLiteral("machine-learning")), "Android Arduino Smart Home to Machine Learning applies");
+    check(cleanCommunication(androidToMl.communicationConfiguration()), "Android Arduino Smart Home to Machine Learning clears communication");
+    ProjectModel roundTripTemplates;
+    check(manager.applyTemplate(&roundTripTemplates, QStringLiteral("machine-learning")), "Machine Learning transition source applies");
+    check(manager.applyTemplate(&roundTripTemplates, QStringLiteral("official-android-arduino-smart-home")), "Machine Learning to Android Arduino Smart Home applies");
+    check(manager.applyTemplate(&roundTripTemplates, QStringLiteral("machine-learning")), "Machine Learning round trip applies");
+    check(cleanCommunication(roundTripTemplates.communicationConfiguration()), "Machine Learning to Android to Machine Learning remains clean");
+    const auto mlCapabilities = mlModel.developmentCapabilities();
+    check(mlModel.templateId() == QStringLiteral("machine-learning") && mlModel.context() == QStringLiteral("ai-machine-learning"), "Machine Learning identity and context");
+    check(mlCapabilities.languages == QStringList{QStringLiteral("python")}, "Machine Learning selects Python only");
+    check(mlCapabilities.frameworks == QStringList{QStringLiteral("scikit-learn"), QStringLiteral("numpy"), QStringLiteral("pandas"), QStringLiteral("scipy"), QStringLiteral("matplotlib")}, "Machine Learning scientific baseline");
+    check(mlCapabilities.ides == QStringList{QStringLiteral("visual-studio-code")} && mlCapabilities.developmentTools.contains(QStringLiteral("jupyterlab")), "Machine Learning selects VS Code and JupyterLab");
+    check(mlCapabilities.toolchains == QStringList{QStringLiteral("python"), QStringLiteral("python-venv")} && mlCapabilities.dependencyManagers == QStringList{QStringLiteral("pip")}, "Machine Learning selects Python venv and pip");
+    check(mlCapabilities.targetPlatforms == QStringList{QStringLiteral("ai-machine-learning")} && mlCapabilities.hardwareTargets == QStringList{QStringLiteral("cpu")}, "Machine Learning target and CPU baseline");
+    check(!mlCapabilities.frameworks.contains(QStringLiteral("pytorch")) && !mlCapabilities.frameworks.contains(QStringLiteral("tensorflow"))
+              && !mlCapabilities.hardwareTargets.contains(QStringLiteral("nvidia-gpu")) && !mlCapabilities.frameworks.contains(QStringLiteral("cuda")),
+          "Machine Learning does not force optional acceleration stacks");
+    const auto mlDefinition = manager.definition(QStringLiteral("machine-learning"));
+    check(mlDefinition.official && mlDefinition.displayName == QStringLiteral("Machine Learning"), "Machine Learning official definition");
+    check(TemplateValidation::validateDefinition(mlDefinition).isEmpty(), "Machine Learning template validates");
+    const QString mlFile = fixture.filePath("machine-learning.aramf.json");
+    check(persistence.save(mlModel, mlFile, &mlError), "Machine Learning project saves: " + mlError);
+    ProjectModel mlReloaded;
+    check(persistence.load(&mlReloaded, mlFile, &mlError), "Machine Learning project reloads: " + mlError);
+    check(mlReloaded.developmentCapabilities().frameworks == mlCapabilities.frameworks
+              && mlReloaded.developmentCapabilities().developmentTools == mlCapabilities.developmentTools
+              && mlReloaded.developmentCapabilities().hardwareTargets == mlCapabilities.hardwareTargets,
+          "Machine Learning baseline persists exactly");
+    ProjectModel mlGuiModel;
+    ProjectSetupPage mlGuiPage(&mlGuiModel, &manager, &persistence);
+    auto mlTemplateBoxes = mlGuiPage.findChildren<QCheckBox*>();
+    auto mlTemplateBox = std::find_if(mlTemplateBoxes.cbegin(), mlTemplateBoxes.cend(), [](QCheckBox* box) { return box->text() == QStringLiteral("Machine Learning"); });
+    check(mlTemplateBox != mlTemplateBoxes.cend(), "Machine Learning template is visible in Project Setup");
+    if (mlTemplateBox != mlTemplateBoxes.cend()) {
+        (*mlTemplateBox)->click();
+        QApplication::processEvents();
+        check(mlGuiModel.templateId() == QStringLiteral("machine-learning") && mlGuiModel.developmentCapabilities().languages == QStringList{QStringLiteral("python")}, "Project Setup applies Machine Learning template through GUI control");
+    }
+    auto mlOptional = mlReloaded.developmentCapabilities();
+    mlOptional.frameworks << QStringLiteral("pytorch") << QStringLiteral("cuda") << QStringLiteral("onnx-runtime");
+    mlOptional.hardwareTargets << QStringLiteral("nvidia-gpu");
+    mlReloaded.setDevelopmentCapabilities(mlOptional);
+    check(persistence.save(mlReloaded, mlFile, &mlError), "Machine Learning optional selections save: " + mlError);
+    ProjectModel mlOptionalReloaded;
+    check(persistence.load(&mlOptionalReloaded, mlFile, &mlError), "Machine Learning optional selections reload: " + mlError);
+    check(mlOptionalReloaded.developmentCapabilities().frameworks == mlOptional.frameworks
+              && mlOptionalReloaded.developmentCapabilities().hardwareTargets == mlOptional.hardwareTargets,
+          "Machine Learning optional selections persist exactly");
+    auto cleanRoundTrip = mlReloaded.communicationConfiguration();
+    cleanRoundTrip.sourceTarget = QStringLiteral("should-not-be-persisted-as-ML-default");
+    cleanRoundTrip.enabled = false;
+    mlReloaded.setCommunicationConfiguration(cleanRoundTrip);
+    check(persistence.save(mlReloaded, mlFile, &mlError), "Machine Learning communication save: " + mlError);
+    ProjectModel mlCommunicationReloaded;
+    check(persistence.load(&mlCommunicationReloaded, mlFile, &mlError), "Machine Learning communication reload: " + mlError);
+    check(mlCommunicationReloaded.communicationConfiguration().sourceTarget == QStringLiteral("should-not-be-persisted-as-ML-default"), "explicit communication remains user-persisted");
+    ProjectModel cleanSavedMl;
+    check(manager.applyTemplate(&cleanSavedMl, QStringLiteral("machine-learning")), "clean Machine Learning save source applies");
+    const QString cleanMlFile = fixture.filePath("clean-machine-learning.aramf.json");
+    check(persistence.save(cleanSavedMl, cleanMlFile, &mlError), "clean Machine Learning project saves: " + mlError);
+    ProjectModel cleanSavedMlReloaded;
+    check(persistence.load(&cleanSavedMlReloaded, cleanMlFile, &mlError), "clean Machine Learning project reloads: " + mlError);
+    check(cleanCommunication(cleanSavedMlReloaded.communicationConfiguration()), "clean Machine Learning save/reload preserves communication state");
+    mlModel.setProjectPath(fixture.filePath("machine-learning-target"));
+    const auto mlGeneration = generation.generate(mlModel, mlModel.generationOptions());
+    check(mlGeneration.success, "Machine Learning worker generation");
+    QFile mlMetadata(QDir(mlModel.projectPath()).filePath(QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json")));
+    check(mlMetadata.open(QIODevice::ReadOnly), "Machine Learning platform metadata readable");
+    const auto mlPlatform = QJsonDocument::fromJson(mlMetadata.readAll()).object();
+    const auto contains = [](const QJsonValue& value, const QString& id) { return list(value).contains(id); };
+    check(contains(mlPlatform.value(QStringLiteral("languages")), "python")
+              && contains(mlPlatform.value(QStringLiteral("frameworks")), "scikit-learn")
+              && contains(mlPlatform.value(QStringLiteral("frameworks")), "numpy")
+              && contains(mlPlatform.value(QStringLiteral("frameworks")), "pandas")
+              && contains(mlPlatform.value(QStringLiteral("frameworks")), "scipy")
+              && contains(mlPlatform.value(QStringLiteral("frameworks")), "matplotlib")
+              && contains(mlPlatform.value(QStringLiteral("developmentTools")), "jupyterlab")
+              && contains(mlPlatform.value(QStringLiteral("hardwareTargets")), "cpu"),
+          "Machine Learning metadata exposes baseline capabilities");
+    QFile mlAgent(QDir(mlModel.projectPath()).filePath(QStringLiteral("ARAMF_WORKER/AGENTS.md")));
+    check(mlAgent.open(QIODevice::ReadOnly) && QString::fromUtf8(mlAgent.readAll()).contains(QStringLiteral("Python Machine Learning guidance")), "Machine Learning guidance generated");
+    QFile mlRootAgent(QDir(mlModel.projectPath()).filePath(QStringLiteral("AGENTS.md")));
+    check(mlRootAgent.open(QIODevice::ReadOnly) && QString::fromUtf8(mlRootAgent.readAll()).contains(QStringLiteral("ARAMF_WORKER/AGENTS.md")), "unsuffixed root AGENTS.md uses canonical worker");
+    check(QFile::exists(QDir(mlModel.projectPath()).filePath(QStringLiteral("ARAMF_WORKER/ARAMF_WORKER.json"))), "unsuffixed identity JSON matches worker directory");
     ProjectModel combinedModel;
     const QString combinedId = QStringLiteral("official-android-pico-2w");
     QString combinedError;
@@ -286,6 +399,29 @@ int main(int argc, char** argv)
               && suffixReloaded.workerNameSuffix() == QStringLiteral("ANDROID_PICO")
               && suffixReloaded.projectName() == QStringLiteral("ARAMF_WORKER_ANDROID_PICO")
               && QFileInfo(suffixReloaded.projectFilePath()).fileName() == QStringLiteral("ARAMF_WORKER_ANDROID_PICO.aramf.json"), "worker suffix save/reload");
+    ProjectModel mlSuffixedModel;
+    check(manager.applyTemplate(&mlSuffixedModel, QStringLiteral("machine-learning")), "explicit-suffix ML template setup");
+    mlSuffixedModel.setProjectPath(fixture.filePath("machine-learning-suffixed"));
+    mlSuffixedModel.setWorkerNameSuffix(QStringLiteral("Experiment 01"));
+    const QString mlSuffixFile = fixture.filePath("machine-learning-suffixed.aramf.json");
+    check(persistence.save(mlSuffixedModel, mlSuffixFile, &suffixError), "explicit-suffix ML save");
+    ProjectModel mlSuffixedReloaded;
+    check(persistence.load(&mlSuffixedReloaded, mlSuffixFile, &suffixError)
+              && mlSuffixedReloaded.workerNameSuffix() == QStringLiteral("EXPERIMENT_01"), "explicit-suffix ML save/reload");
+    mlSuffixedReloaded.setProjectPath(fixture.filePath("machine-learning-suffixed"));
+    const auto mlSuffixedGeneration = generation.generate(mlSuffixedReloaded, mlSuffixedReloaded.generationOptions());
+    const QString mlSuffixedName = QStringLiteral("ARAMF_WORKER_EXPERIMENT_01");
+    check(mlSuffixedGeneration.success && QDir(mlSuffixedReloaded.projectPath()).exists(mlSuffixedName), "explicit-suffix ML generation uses resolved directory");
+    QFile mlSuffixedRoot(QDir(mlSuffixedReloaded.projectPath()).filePath(QStringLiteral("AGENTS.md")));
+    QFile mlSuffixedWorker(QDir(mlSuffixedReloaded.projectPath()).filePath(mlSuffixedName + QStringLiteral("/AGENTS.md")));
+    QString mlSuffixedRootText;
+    QString mlSuffixedWorkerText;
+    if (mlSuffixedRoot.open(QIODevice::ReadOnly)) mlSuffixedRootText = QString::fromUtf8(mlSuffixedRoot.readAll());
+    if (mlSuffixedWorker.open(QIODevice::ReadOnly)) mlSuffixedWorkerText = QString::fromUtf8(mlSuffixedWorker.readAll());
+    check(mlSuffixedRootText.contains(mlSuffixedName + QStringLiteral("/AGENTS.md"))
+              && mlSuffixedWorkerText.contains(mlSuffixedName + QStringLiteral("/"))
+              && QFile::exists(QDir(mlSuffixedReloaded.projectPath()).filePath(mlSuffixedName + QStringLiteral("/") + mlSuffixedName + QStringLiteral(".json"))),
+          "explicit-suffix ML AGENTS and identity names match");
     ProjectModel composed;
     QString compositionError;
     check(manager.applyModules(&composed, {"android-application", "kotlin", "academic-school-project"}, &compositionError), "Android + Kotlin + Academic composition: " + compositionError);
@@ -335,7 +471,7 @@ int main(int argc, char** argv)
         {"raspberry-pi-pico-firmware", {"cpp", "c", "pio-assembly"}}, {"react-frontend", {"typescript", "html", "css"}},
         {"python-backend", {"python"}}, {"csharp-backend", {"csharp"}}, {"mobile-application", {"kotlin"}},
         {"full-stack-web-application", {"typescript", "html", "css"}}, {"bachelor-thesis", {"cpp"}}
-        , {"android-arduino-smart-home", {"kotlin", "cpp", "c"}}
+        , {"android-arduino-smart-home", {"kotlin", "cpp", "c"}}, {"machine-learning", {"python"}}
     };
     for (const auto& d : definitions) {
         const auto issues = TemplateValidation::validateDefinition(d);
