@@ -1,8 +1,8 @@
 {
     "_file": "memory-manifest.json",
-    "eventCount": 202,
-    "latestEventId": "event-f3d3ef04-1a17-45c5-b73e-3e5b9c3f0c71",
+    "eventCount": 225,
+    "latestEventId": "event-1ba3daed-879c-4ead-b093-b5629cc8999f",
     "memoryVersion": "3",
-    "nextSequenceNumber": 203,
+    "nextSequenceNumber": 226,
     "workEntryCount": 0
 }

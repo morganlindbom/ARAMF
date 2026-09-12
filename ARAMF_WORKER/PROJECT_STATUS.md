@@ -405,57 +405,13 @@ descriptions, scopes, and canonical identities were preserved.
 
 
 
+
+
+
+
+
+
 ## Latest Agent Task
 
-## Android Arduino Smart Home Template Checkpoint
-
-- Added official `Android Arduino Smart Home` template with canonical alias
-  `Android_Arduino_Smart_Home`.
-- Defaults select Kotlin, C, C++, Android Studio, Android SDK, Gradle, Arduino,
-  Arduino IDE, AVR, Android plus Arduino-compatible microcontroller targets,
-  Bluetooth, and UART/serial communication; Raspberry Pi Pico and Wi-Fi are not
-  selected.
-- The generated communication contract models Android → HM-10 Bluetooth →
-  Arduino UART/serial with symbolic KS0085 hardware resources for LEDs, relay,
-  PIR and analog sensors. Generated worker guidance includes school-friendly
-  Android/Arduino responsibilities and phased development guidance.
-- Full CTest passed 4/4, including template, core, workflow and UPDATE suites.
-- No physical KS0085, HM-10 or Android-device certification is claimed.
-
-- Task: Restore MSYS2 Qt toolchain for include resolution
+- Task: default-thesis-report-template-content
 - Status: PASS
-
-## Codex Executable Discovery Checkpoint
-
-- UPDATE-105 now uses a hermetic temporary Codex installation fixture rather
-  than depending on a developer-specific `%LOCALAPPDATA%` path.
-- Codex resolution remains ordered as explicit configured path,
-  `CODEX_CLI_PATH`, process `PATH`, and the supported dynamic
-  `%LOCALAPPDATA%/OpenAI/Codex/bin/<version>` locations.
-- Local discovery accepts both `codex.exe` and the Windows package-manager
-  `codex.cmd` entry point; executable validation still launches `--version`.
-- UPDATE campaign and full CTest pass after the change. A real Codex
-  installation is not required by the resolver test; production reports an
-  unavailable installation when none can be resolved.
-
-## Combined Android + Pico Communication Checkpoint
-
-- ProjectModel now carries an optional, generic cross-target communication contract with source/destination targets, Wi-Fi transport, protocol, roles, endpoint, data format, protocol version, security flags, reconnect/error handling, and integration requirements.
-- The built-in `wifi-communication` module contributes the communication capability without forcing a protocol. The official `Android + Pico 2 W` template composes Android/Gradle and Pico/CMake modules plus Wi-Fi communication.
-- Generation emits `ARAMF_WORKER/communication/communication-contract.json` and, for combined Android/Pico selections, `multi-target-build.json` describing separate Android and Pico pipelines and their integration orchestration.
-- Project Setup exposes editable communication settings; Review summarizes the resolved contract. Persistence and custom template configuration include communication state while project identity remains separate.
-- Validation covers module/template application, generation, worker verification, communication persistence round-trip, target/build dependency checks, and the existing Android-only/Pico-only/template regressions. Full CTest remains 4/4 PASS; no physical Android device, Pico board, or network is required for these hermetic checks.
-
-## ARAMF_WORKER Name Suffix Checkpoint
-
-- ProjectModel now stores an optional worker directory suffix. The UI accepts human-readable text (including spaces), while the shared normalizer converts it to uppercase letters, digits and underscores; empty input remains exactly `ARAMF_WORKER`.
-- Generation resolves names such as `ANDROID_PICO` to `ARAMF_WORKER_ANDROID_PICO`, preserves the canonical base prefix, and rejects an existing suffixed worker directory rather than overwriting it.
-- Project Setup exposes the suffix and live directory preview. Save/reload and reusable template configuration preserve the suffix; generated internal paths and verification resolve the selected worker directory.
-- Regression coverage includes normalization, empty/default behavior, generation path selection, collision handling, persistence round-trip, and existing template/generation tests.
-
-## Generic Message and Wire Contract Foundation
-
-- Communication now supports target-neutral message definitions, logical field schemas, message direction, and request/response relationships alongside endpoint/link models.
-- Link contracts persist direction, transport, protocol, framing, logical data model, wire encoding, protocol version, byte order, and packet-size policy; the Android + Pico template defaults to binary structured messages over CBOR/WebSocket.
-- Generated `communication-contract.json` is the canonical contract and generated governance instructions require endpoint implementations to keep IDs, fields, versions, and encoding synchronized through that contract.
-- Validation checks endpoint/message references, unique IDs and field names, logical field types, relationships, protocol versions, and packet-size constraints. CBOR remains a declared contract encoding; no encoder/decoder library is bundled.
