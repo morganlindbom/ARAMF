@@ -127,6 +127,11 @@ public:
     explicit GenerationServices(QObject* parent = nullptr);
     GenerationResult generate(const ProjectModel& model,
                               const GenerationOptions& options) const;
+    // Repairs only ARAMF-owned derived topology files and the consolidated
+    // validation entry point. User resources, decisions, templates, and
+    // append-only history are deliberately outside this operation.
+    GenerationResult repairDerivedArtifacts(const ProjectModel& model,
+                                            const GenerationOptions& options) const;
 };
 
 class VerificationServices final : public QObject

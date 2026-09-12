@@ -13,10 +13,12 @@
 #include "core/GitIgnoreService.h"
 #include "core/AramfPaths.h"
 #include "core/ValidationRouting.h"
+#include "core/WorkerContextResolver.h"
 
 #include <QCoreApplication>
 #include <QBuffer>
 #include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -25,6 +27,7 @@
 #include <QProcess>
 #include <QTemporaryDir>
 #include <QTextStream>
+#include <QElapsedTimer>
 #include <algorithm>
 #include <iostream>
 
@@ -1185,10 +1188,37 @@ int main(int argc, char** argv)
     ok &= require(generationResult.success, "selective generation must succeed");
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/rules/generated-rules.md")), "generated rules must exist");
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/routing/task-routes.json")), "task routes must exist");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/project.json")), "canonical project configuration must exist");
+    ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/worker-manifest.json")), "worker topology manifest must exist");
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/routing/validation-policy.json")), "validation policy must exist");
     ok &= require(QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/resources/resources.json")), "resource manifest must exist");
     ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/memory/memory-config.json")), "disabled memory must not initialize memory");
     ok &= require(!QFile::exists(QDir(generationProject.path()).filePath("ARAMF_WORKER/platforms/platform-metadata.json")), "disabled platforms must not generate metadata");
+    QFile workerManifest(QDir(generationProject.path()).filePath("ARAMF_WORKER/worker-manifest.json"));
+    ok &= require(workerManifest.open(QIODevice::ReadOnly | QIODevice::Text), "worker topology manifest must be readable");
+    const auto workerManifestJson = QJsonDocument::fromJson(workerManifest.readAll()).object();
+    workerManifest.close();
+    ok &= require(workerManifestJson.value(QStringLiteral("workerSchemaVersion")).toInt() == 1,
+                  "worker topology manifest must declare schema version");
+    ok &= require(workerManifestJson.value(QStringLiteral("coldStart")).toObject().value(QStringLiteral("historyExcluded")).toBool(),
+                  "cold-start read set must exclude event history");
+    const auto resolvedContext = WorkerContextResolver::resolve(
+        QDir(generationProject.path()).filePath(QStringLiteral("ARAMF_WORKER")), {QStringLiteral("source-code")});
+    const auto resolvedAgain = WorkerContextResolver::resolve(
+        QDir(generationProject.path()).filePath(QStringLiteral("ARAMF_WORKER")), {QStringLiteral("source-code")});
+    ok &= require(resolvedContext.value(QStringLiteral("valid")).toBool(), "known scope must resolve successfully");
+    ok &= require(resolvedContext == resolvedAgain, "scope resolution must be deterministic and idempotent");
+    ok &= require(resolvedContext.value(QStringLiteral("resources")).toArray().isEmpty(),
+                  "out-of-scope resources must be excluded from the read set");
+    ok &= require(!resolvedContext.value(QStringLiteral("historyRequired")).toBool()
+                  && !resolvedContext.value(QStringLiteral("historyFiles")).toArray().contains(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl")),
+                  "ordinary cold-start resolution must exclude event history");
+    const auto historicalContext = WorkerContextResolver::resolve(
+        QDir(generationProject.path()).filePath(QStringLiteral("ARAMF_WORKER")), {QStringLiteral("source-code"), QStringLiteral("history")});
+    ok &= require(historicalContext.value(QStringLiteral("valid")).toBool()
+                  && historicalContext.value(QStringLiteral("historyRequired")).toBool()
+                  && historicalContext.value(QStringLiteral("historyFiles")).toArray().contains(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl")),
+                  "historical resolution must opt in to event history");
     QFile generationManifest(QDir(generationProject.path()).filePath("ARAMF_WORKER/resources/resources.json"));
     ok &= require(generationManifest.open(QIODevice::ReadOnly | QIODevice::Text), "generated resource metadata must be readable");
     const auto generationManifestJson = QJsonDocument::fromJson(generationManifest.readAll()).object();
@@ -1440,10 +1470,34 @@ int main(int argc, char** argv)
     eventLog.close();
     ok &= require(firstEvents.count("PROJECT_MEMORY_ACTIVATED") == repeatedEvents.count("PROJECT_MEMORY_ACTIVATED"),
                   "repeated memory generation must not duplicate activation events");
+    const auto readBytes = [&generationProject](const QString& relative) {
+        QFile file(QDir(generationProject.path()).filePath(relative));
+        return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{};
+    };
+    const QByteArray projectBefore = readBytes(QStringLiteral("ARAMF_WORKER/project.json"));
+    const QByteArray manifestBefore = readBytes(QStringLiteral("ARAMF_WORKER/worker-manifest.json"));
+    const QByteArray routesBefore = readBytes(QStringLiteral("ARAMF_WORKER/routing/task-routes.json"));
+    const GenerationResult identicalGeneration = generationServices.generate(generationModel, generationOptions);
+    ok &= require(identicalGeneration.success, "identical generation must succeed");
+    ok &= require(projectBefore == readBytes(QStringLiteral("ARAMF_WORKER/project.json")), "project.json remains byte-identical");
+    ok &= require(manifestBefore == readBytes(QStringLiteral("ARAMF_WORKER/worker-manifest.json")), "worker-manifest remains byte-identical");
+    ok &= require(routesBefore == readBytes(QStringLiteral("ARAMF_WORKER/routing/task-routes.json")), "task-routes remains byte-identical");
 
     const VerificationResult verification = verificationServices.verify(generationModel, generationOptions);
+    if (verification.overallStatus != VerificationStatus::Pass) {
+        for (const auto& check : verification.checks) if (check.status != VerificationStatus::Pass && check.status != VerificationStatus::NotApplicable)
+            std::cerr << "WORKER verification check " << check.id.toStdString() << ": " << check.details.toStdString() << '\n';
+    }
     ok &= require(verification.overallStatus == VerificationStatus::Pass,
                   "verification must pass for the generated selected products");
+    QFile latestValidation(QDir(generationProject.path()).filePath("ARAMF_WORKER/verification/latest-validation.json"));
+    ok &= require(latestValidation.open(QIODevice::ReadOnly | QIODevice::Text), "latest Worker validation summary must exist");
+    const auto latestValidationJson = QJsonDocument::fromJson(latestValidation.readAll()).object();
+    latestValidation.close();
+    ok &= require(latestValidationJson.value(QStringLiteral("overallStatus")).toString() == QStringLiteral("PASS")
+                  && latestValidationJson.value(QStringLiteral("workerSchemaValid")).toBool()
+                  && latestValidationJson.value(QStringLiteral("staleArtifactCount")).toInt() == 0,
+                  "latest Worker validation summary must be concise and valid");
     const FinalizationResult finalized = finalizationServices.finalize(generationModel, generationOptions);
     ok &= require(finalized.success && !finalized.alreadyFinalized,
                   "finalization must record a verified lifecycle completion");
@@ -1498,6 +1552,19 @@ int main(int argc, char** argv)
     ok &= require(generatedRoot.open(QIODevice::ReadOnly | QIODevice::Text), "migrated root AGENTS.md must be readable");
     ok &= require(QString::fromUtf8(generatedRoot.readAll()).contains(QStringLiteral("ARAMF_WORKER/AGENTS.md")), "root AGENTS.md must route to ARAMF_WORKER");
     generatedRoot.close();
+    const auto migrationBytes = [&spacedProject](const QString& relative) {
+        QFile file(QDir(spacedProject).filePath(relative));
+        return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{};
+    };
+    const QByteArray normalizedProject = migrationBytes(QStringLiteral("ARAMF_WORKER/project.json"));
+    const QByteArray normalizedManifest = migrationBytes(QStringLiteral("ARAMF_WORKER/worker-manifest.json"));
+    const QByteArray normalizedRoutes = migrationBytes(QStringLiteral("ARAMF_WORKER/routing/scope-routes.json"));
+    const GenerationResult migratedAgain = generationServices.generate(legacyModel, migrationOptions);
+    ok &= require(migratedAgain.success
+                  && normalizedProject == migrationBytes(QStringLiteral("ARAMF_WORKER/project.json"))
+                  && normalizedManifest == migrationBytes(QStringLiteral("ARAMF_WORKER/worker-manifest.json"))
+                  && normalizedRoutes == migrationBytes(QStringLiteral("ARAMF_WORKER/routing/scope-routes.json")),
+                  "legacy migration must be semantically and byte idempotent");
 
     const QString bothRoot = QDir(migrationRoot.path()).filePath(QStringLiteral("Both Directories"));
     ok &= require(QDir().mkpath(QDir(bothRoot).filePath("ARAMF_WORKER/custom")), "canonical worker fixture must be creatable");
@@ -1518,6 +1585,89 @@ int main(int argc, char** argv)
     ok &= require(canonicalReadback.open(QIODevice::ReadOnly), "canonical sentinel must remain readable");
     ok &= require(QString::fromUtf8(canonicalReadback.readAll()).contains("canonical"), "canonical content must remain authoritative");
     ok &= require(QFile::exists(QDir(bothRoot).filePath("ARAMF/custom/sentinel.txt")), "legacy conflicting content must remain preserved");
+
+    QTemporaryDir parallelProject;
+    ProjectModel parallelModel;
+    parallelModel.setProjectId(QStringLiteral("parallel-fixture"));
+    parallelModel.setProjectPath(parallelProject.path());
+    ok &= require(generationServices.generate(parallelModel, GenerationOptions{}).success, "parallel-state fixture generation must succeed");
+    const QString parallelWorker = QDir(parallelProject.path()).filePath(QStringLiteral("ARAMF_WORKER"));
+    QDir().mkpath(QDir(parallelWorker).filePath(QStringLiteral("duplicate")));
+    QFile duplicateParallel(QDir(parallelWorker).filePath(QStringLiteral("duplicate/project.json")));
+    ok &= require(duplicateParallel.open(QIODevice::WriteOnly | QIODevice::Text), "duplicate project state must be writable");
+    duplicateParallel.write("{}\n"); duplicateParallel.close();
+    ok &= require(verificationServices.verify(parallelModel, GenerationOptions{}).overallStatus == VerificationStatus::Fail,
+                  "duplicate canonical project state must fail validation");
+    QFile::remove(duplicateParallel.fileName());
+    QFile agentStatus(QDir(parallelWorker).filePath(QStringLiteral("agent-status.json")));
+    ok &= require(agentStatus.open(QIODevice::WriteOnly | QIODevice::Text), "ad-hoc agent status must be writable");
+    agentStatus.write("{}\n"); agentStatus.close();
+    ok &= require(verificationServices.verify(parallelModel, GenerationOptions{}).overallStatus == VerificationStatus::Fail,
+                  "ad-hoc agent status store must fail validation");
+    QFile::remove(agentStatus.fileName());
+    QDir().mkpath(QDir(parallelWorker).filePath(QStringLiteral("custom")));
+    QFile legitimateDetail(QDir(parallelWorker).filePath(QStringLiteral("custom/project.json")));
+    ok &= require(legitimateDetail.open(QIODevice::WriteOnly | QIODevice::Text), "custom detail file must be writable");
+    legitimateDetail.write("{}\n"); legitimateDetail.close();
+    ok &= require(verificationServices.verify(parallelModel, GenerationOptions{}).overallStatus == VerificationStatus::Pass,
+                  "user custom detail file must not be treated as competing canonical state");
+
+    // Derived-artifact repair and canonical ownership boundaries.
+    QTemporaryDir repairProject;
+    ProjectModel repairModel;
+    repairModel.setProjectId(QStringLiteral("repair-fixture"));
+    repairModel.setProjectName(QStringLiteral("Repair Fixture"));
+    repairModel.setProjectPath(repairProject.path());
+    auto repairRules = repairModel.ruleConfiguration();
+    repairRules.projectScopes = {QStringLiteral("thesis"), QStringLiteral("pico")};
+    repairModel.setRuleConfiguration(repairRules);
+    ProjectResource userResource;
+    userResource.id = QStringLiteral("repair-source");
+    userResource.name = QStringLiteral("User Source");
+    userResource.location = QStringLiteral("external/user-source.md");
+    userResource.scopes = {QStringLiteral("thesis")};
+    repairModel.setResources({userResource});
+    ok &= require(generationServices.generate(repairModel, GenerationOptions{}).success, "repair fixture generation must succeed");
+    const QString repairWorker = QDir(repairProject.path()).filePath(QStringLiteral("ARAMF_WORKER"));
+    const QString repairEventPath = QDir(repairWorker).filePath(QStringLiteral("memory/event-log.jsonl"));
+    QDir().mkpath(QDir(repairWorker).filePath(QStringLiteral("custom")));
+    QFile userOwned(QDir(repairWorker).filePath(QStringLiteral("custom/user-note.txt")));
+    ok &= require(userOwned.open(QIODevice::WriteOnly | QIODevice::Text), "repair user-owned file must be writable");
+    userOwned.write("preserve me\n"); userOwned.close();
+    ok &= require(QFile::remove(QDir(repairWorker).filePath(QStringLiteral("worker-manifest.json"))), "derived manifest must be removable for repair test");
+    ok &= require(generationServices.repairDerivedArtifacts(repairModel, GenerationOptions{}).success
+                  && QFileInfo::exists(QDir(repairWorker).filePath(QStringLiteral("worker-manifest.json"))), "missing derived manifest must self-heal");
+    QFile corruptRoutes(QDir(repairWorker).filePath(QStringLiteral("routing/task-routes.json")));
+    ok &= require(corruptRoutes.open(QIODevice::WriteOnly | QIODevice::Truncate), "derived routes must be corruptible for repair test");
+    corruptRoutes.write("not json"); corruptRoutes.close();
+    ok &= require(generationServices.repairDerivedArtifacts(repairModel, GenerationOptions{}).success, "corrupt derived routes must self-heal");
+    ok &= require(QFile::remove(QDir(repairWorker).filePath(QStringLiteral("verification/latest-validation.json")))
+                  && generationServices.repairDerivedArtifacts(repairModel, GenerationOptions{}).success,
+                  "missing latest validation must self-heal");
+    QFile repairManifest(QDir(repairWorker).filePath(QStringLiteral("worker-manifest.json")));
+    ok &= require(repairManifest.open(QIODevice::ReadOnly | QIODevice::Text), "repair manifest must be readable");
+    auto repairManifestJson = QJsonDocument::fromJson(repairManifest.readAll()).object(); repairManifest.close();
+    repairManifestJson.insert(QStringLiteral("generatedFromFingerprint"), QStringLiteral("stale"));
+    ok &= require(repairManifest.open(QIODevice::WriteOnly | QIODevice::Truncate), "repair manifest must be writable");
+    repairManifest.write(QJsonDocument(repairManifestJson).toJson(QJsonDocument::Indented)); repairManifest.close();
+    ok &= require(verificationServices.verify(repairModel, GenerationOptions{}).overallStatus == VerificationStatus::Warning,
+                  "fingerprint mismatch must be detected as stale");
+    ok &= require(generationServices.repairDerivedArtifacts(repairModel, GenerationOptions{}).success, "stale derived manifest must be repairable");
+    QFile latestCorrupt(QDir(repairWorker).filePath(QStringLiteral("verification/latest-validation.json")));
+    ok &= require(latestCorrupt.open(QIODevice::WriteOnly | QIODevice::Truncate), "latest validation must be corruptible");
+    latestCorrupt.write("{broken"); latestCorrupt.close();
+    ok &= require(verificationServices.verify(repairModel, GenerationOptions{}).overallStatus == VerificationStatus::Fail,
+                  "malformed validation summary must not be trusted");
+    ok &= require(generationServices.repairDerivedArtifacts(repairModel, GenerationOptions{}).success, "malformed derived summary must self-heal");
+    QFile repairUserRead(QDir(repairWorker).filePath(QStringLiteral("custom/user-note.txt")));
+    ok &= require(repairUserRead.open(QIODevice::ReadOnly | QIODevice::Text) && repairUserRead.readAll() == QByteArray("preserve me\n"),
+                  "repair must preserve user-owned files");
+    repairUserRead.close();
+    const QByteArray eventBeforeBoundary = [&] { QFile file(repairEventPath); return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{}; }();
+    ok &= require(QFile::remove(repairEventPath), "event history must be removable for boundary test");
+    const auto historyRepair = generationServices.repairDerivedArtifacts(repairModel, GenerationOptions{});
+    ok &= require(!historyRepair.success && !QFileInfo::exists(repairEventPath), "repair must not fabricate missing event history");
+    Q_UNUSED(eventBeforeBoundary);
 
     // CERT-GEN-001..012: first-class generic test certification.
     QTemporaryDir certificationProject;
@@ -1748,6 +1898,112 @@ int main(int argc, char** argv)
     ok &= require(ProjectMemoryCompaction().applicableKnowledge(compactProject.path(), &compactError).value(QStringLiteral("entries")).toArray().size() >= 1
                   && ProjectMemoryCompaction().dryRun(compactProject.path(), &compactError).value(QStringLiteral("knowledgeCandidates")).toArray().size() <= 1, "MEM-COMPACT-019 second cycle rediscovers applicable knowledge without duplicate IDs");
     ok &= require(compactResult.value(QStringLiteral("compactionManifest")).toObject().value(QStringLiteral("protectedEvents")).isArray(), "MEM-COMPACT-020 protected event references are retained");
+
+    // WORKER-EFFICIENCY fixture matrix: every generated topology uses the
+    // same canonical generator and resolver, so this exercises scope union,
+    // resource filtering, instruction routing and cold-start exclusion.
+    const QList<QPair<QString, QStringList>> efficiencyFixtures{
+        {QStringLiteral("minimal-generic"), {QStringLiteral("software-development")} },
+        {QStringLiteral("android"), {QStringLiteral("android")} },
+        {QStringLiteral("pico"), {QStringLiteral("pico")} },
+        {QStringLiteral("android-pico"), {QStringLiteral("android"), QStringLiteral("pico")} },
+        {QStringLiteral("machine-learning"), {QStringLiteral("machine-learning")} },
+        {QStringLiteral("thesis"), {QStringLiteral("thesis")} },
+        {QStringLiteral("report"), {QStringLiteral("report")} },
+        {QStringLiteral("thesis-report"), {QStringLiteral("thesis"), QStringLiteral("report")} },
+        {QStringLiteral("research-thesis"), {QStringLiteral("research"), QStringLiteral("thesis")} },
+        {QStringLiteral("android-thesis"), {QStringLiteral("android"), QStringLiteral("thesis")} },
+        {QStringLiteral("android-pico-thesis"), {QStringLiteral("android"), QStringLiteral("pico"), QStringLiteral("thesis")} },
+        {QStringLiteral("complex-multi-scope"), {QStringLiteral("android"), QStringLiteral("pico"), QStringLiteral("thesis"), QStringLiteral("report"), QStringLiteral("research"), QStringLiteral("testing"), QStringLiteral("hardware")} }
+    };
+    int fixtureFailures = 0;
+    QList<qint64> resolverMicros;
+    QList<qint64> generationMicros;
+    qint64 fixtureBytes = 0;
+    int fixtureFiles = 0;
+    const auto jsonStrings = [](const QJsonValue& value) {
+        QStringList values;
+        for (const auto& item : value.toArray()) values.append(item.toString());
+        return values;
+    };
+    for (const auto& fixture : efficiencyFixtures) {
+        QTemporaryDir fixtureRoot;
+        ProjectModel fixtureModel;
+        fixtureModel.setProjectId(QStringLiteral("fixture-") + fixture.first);
+        fixtureModel.setProjectName(fixture.first);
+        fixtureModel.setProjectPath(fixtureRoot.path());
+        auto fixtureRules = fixtureModel.ruleConfiguration();
+        fixtureRules.projectScopes = fixture.second;
+        fixtureRules.loadingStrategy = QStringLiteral("relevant");
+        fixtureModel.setRuleConfiguration(fixtureRules);
+        QList<ProjectResource> fixtureResources;
+        for (const auto& scope : fixture.second) {
+            ProjectResource resource;
+            resource.id = QStringLiteral("resource-") + scope;
+            resource.name = resource.id;
+            resource.location = QStringLiteral("fixture/") + scope + QStringLiteral(".md");
+            resource.scopes = {scope};
+            fixtureResources.append(resource);
+        }
+        ProjectResource unrelated;
+        unrelated.id = QStringLiteral("unrelated-resource");
+        unrelated.name = unrelated.id;
+        unrelated.location = QStringLiteral("fixture/unrelated.md");
+        unrelated.scopes = {QStringLiteral("unrelated")};
+        fixtureResources.append(unrelated);
+        fixtureModel.setResources(fixtureResources);
+        GenerationOptions fixtureOptions;
+        const QString workerRoot = QDir(fixtureRoot.path()).filePath(QStringLiteral("ARAMF_WORKER"));
+        QElapsedTimer generationTimer;
+        generationTimer.start();
+        const auto generated = GenerationServices().generate(fixtureModel, fixtureOptions);
+        generationMicros.append(generationTimer.nsecsElapsed() / 1000);
+        const auto verification = VerificationServices().verify(fixtureModel, fixtureOptions);
+        QElapsedTimer resolverTimer;
+        resolverTimer.start();
+        const auto context = WorkerContextResolver::resolve(QDir(fixtureRoot.path()).filePath(QStringLiteral("ARAMF_WORKER")), fixture.second);
+        resolverMicros.append(resolverTimer.nsecsElapsed() / 1000);
+        QDirIterator workerIterator(workerRoot, QDir::Files, QDirIterator::Subdirectories);
+        while (workerIterator.hasNext()) { const QFileInfo file(workerIterator.next()); ++fixtureFiles; fixtureBytes += file.size(); }
+        const bool filesValid = QFileInfo::exists(QDir(workerRoot).filePath(QStringLiteral("project.json")))
+            && QFileInfo::exists(QDir(workerRoot).filePath(QStringLiteral("worker-manifest.json")))
+            && QFileInfo::exists(QDir(workerRoot).filePath(QStringLiteral("memory/current-state.md")))
+            && QFileInfo::exists(QDir(workerRoot).filePath(QStringLiteral("memory/event-log.jsonl")));
+        const auto resolvedScopes = jsonStrings(context.value(QStringLiteral("scopes")));
+        const auto resolvedResources = context.value(QStringLiteral("resources")).toArray();
+        bool hasUnrelated = false;
+        for (const auto& resource : resolvedResources) hasUnrelated |= resource.toObject().value(QStringLiteral("id")).toString() == unrelated.id;
+        const auto instructions = jsonStrings(context.value(QStringLiteral("instructions")));
+        const bool thesisInstruction = instructions.contains(QStringLiteral("aramf-thesis-instruction"));
+        const bool reportInstruction = instructions.contains(QStringLiteral("aramf-report-instruction"));
+        const bool instructionRouting = thesisInstruction == fixture.second.contains(QStringLiteral("thesis"))
+            && reportInstruction == fixture.second.contains(QStringLiteral("report"));
+        const auto mandatory = jsonStrings(context.value(QStringLiteral("mandatoryFiles")));
+        QSet<QString> mandatorySet;
+        for (const auto& path : mandatory) mandatorySet.insert(path);
+        auto expectedScopes = fixture.second;
+        expectedScopes.sort();
+        const bool noDuplicates = mandatory.size() == mandatorySet.size()
+            && !mandatory.contains(AramfPaths::EventLog);
+        const bool fixtureOk = generated.success && verification.overallStatus == VerificationStatus::Pass
+            && context.value(QStringLiteral("valid")).toBool() && resolvedScopes == expectedScopes
+            && filesValid && !hasUnrelated && instructionRouting && noDuplicates
+            && QFileInfo::exists(QDir(workerRoot).filePath(QStringLiteral("verification/latest-validation.json")));
+        if (!fixtureOk) ++fixtureFailures;
+        ok &= require(fixtureOk, (QStringLiteral("fixture matrix: ") + fixture.first).toUtf8().constData());
+    }
+    ok &= require(fixtureFailures == 0, "all representative Worker fixtures must pass");
+    auto median = [](QList<qint64> values) {
+        std::sort(values.begin(), values.end());
+        return values.isEmpty() ? qint64(0) : values.at(values.size() / 2);
+    };
+    std::cout << "WORKER-EFFICIENCY fixtures=" << efficiencyFixtures.size()
+              << " failures=" << fixtureFailures << " files=" << fixtureFiles
+              << " bytes=" << fixtureBytes << " resolverMedianUs=" << median(resolverMicros)
+              << " generationMedianUs=" << median(generationMicros) << '\n';
+    const auto legacyContext = WorkerContextResolver::resolve(
+        QDir(AramfPaths::programRoot()).filePath(QStringLiteral("ARAMF_WORKER")), {QStringLiteral("source-code")});
+    ok &= require(legacyContext.value(QStringLiteral("legacyRouteFormat")).toBool(), "legacy scope route arrays remain readable");
 
     return ok ? 0 : 1;
 }

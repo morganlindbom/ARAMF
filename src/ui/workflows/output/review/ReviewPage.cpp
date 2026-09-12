@@ -10,6 +10,9 @@
 #include "core/DocumentInstruction.h"
 #include "core/DocumentTemplateInspector.h"
 #include <QJsonArray>
+#include <QJsonDocument>
+#include <QFile>
+#include <QDir>
 #include <QRegularExpression>
 #include <QFileInfo>
 
@@ -249,6 +252,18 @@ void ReviewPage::refreshFromModel()
                      options.generateResources ? tr("selected") : tr("not selected"),
                      options.generateMemory ? tr("selected") : tr("not selected"),
                      options.generateProvenance ? tr("selected") : tr("not selected"));
+    QJsonObject workerValidation;
+    const QString workerValidationPath = QDir(model_->projectPath()).filePath(
+        AramfPaths::workerDirectoryName(model_->workerNameSuffix()) + QStringLiteral("/verification/latest-validation.json"));
+    QFile workerValidationFile(workerValidationPath);
+    if (workerValidationFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        workerValidation = QJsonDocument::fromJson(workerValidationFile.readAll()).object();
+    const QString workerStatus = workerValidation.isEmpty()
+        ? tr("not generated") : workerValidation.value(QStringLiteral("overallStatus")).toString(tr("invalid"));
+    text += tr("Worker Diagnostics\n  Validity: %1\n  Active scopes: %2\n  Stale artifacts: %3\n  Routing ambiguities: %4\n\n")
+                .arg(workerStatus, listOrNone(model_->ruleConfiguration().projectScopes),
+                     workerValidation.isEmpty() ? tr("unknown") : QString::number(workerValidation.value(QStringLiteral("staleArtifactCount")).toInt()),
+                     workerValidation.isEmpty() ? tr("unknown") : QString::number(workerValidation.value(QStringLiteral("routingConflictCount")).toInt()));
     const auto issues = TemplateValidation::readiness(*model_);
     text += tr("Review Status: %1\n").arg(issues.isEmpty() ? tr("READY - review is optional") : issues.join('\n'));
     if (!model_->templateState().isEmpty()) {

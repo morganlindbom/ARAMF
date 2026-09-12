@@ -16,6 +16,7 @@
 #include "GitIgnoreService.h"
 
 #include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
@@ -30,6 +31,12 @@
 
 namespace
 {
+class WorkerNameScope final {
+public:
+    explicit WorkerNameScope(const QString& suffix) { AramfPaths::setRuntimeWorkerNameSuffix(suffix); }
+    ~WorkerNameScope() { AramfPaths::setRuntimeWorkerNameSuffix({}); }
+};
+
 QJsonArray toJsonArray(const QStringList& values)
 {
     QJsonArray result;
@@ -40,6 +47,8 @@ QJsonArray toJsonArray(const QStringList& values)
 bool writeTextFile(const QString& path, const QByteArray& data, QString* error, bool onlyIfMissing = false)
 {
     if (onlyIfMissing && QFile::exists(path)) return true;
+    if (QFile existing(path); existing.exists() && existing.open(QIODevice::ReadOnly)
+        && existing.readAll() == data) return true;
     QDir().mkpath(QFileInfo(path).absolutePath());
     QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -99,6 +108,45 @@ QString ruleDisplayName(const QString& id, const QList<EnvironmentOption>& optio
 QString projectTypeLabel(const ProjectModel& model)
 {
     return model.context().isEmpty() ? QStringLiteral("not classified") : model.context();
+}
+
+QJsonObject projectConfiguration(const ProjectModel& model, const QString& fingerprint)
+{
+    const auto environment = model.developmentEnvironment();
+    const auto capabilities = model.developmentCapabilities();
+    const auto academic = model.academicConfiguration();
+    const auto ai = model.aiConfiguration();
+    const auto communication = model.communicationConfiguration();
+    return QJsonObject{
+        {QStringLiteral("schemaVersion"), 1}, {QStringLiteral("projectId"), model.projectId()},
+        {QStringLiteral("projectName"), model.projectName()}, {QStringLiteral("workerIdentity"), AramfPaths::runtimeWorkerDirectoryName()},
+        {QStringLiteral("workerSchemaVersion"), 1}, {QStringLiteral("configurationFingerprint"), fingerprint}, {QStringLiteral("context"), model.context()},
+        {QStringLiteral("templateId"), model.templateId()}, {QStringLiteral("templateModules"), toJsonArray(model.templateModules())},
+        {QStringLiteral("environment"), QJsonObject{{QStringLiteral("language"), environment.language}, {QStringLiteral("framework"), environment.framework},
+            {QStringLiteral("ide"), environment.ide}, {QStringLiteral("compiler"), environment.compiler}, {QStringLiteral("operatingSystem"), environment.operatingSystem},
+            {QStringLiteral("targetPlatform"), environment.targetPlatform}, {QStringLiteral("targetArchitecture"), environment.targetArchitecture}, {QStringLiteral("buildSystem"), environment.buildSystem},
+            {QStringLiteral("packageManager"), environment.packageManager}, {QStringLiteral("versionControl"), environment.versionControl}}},
+        {QStringLiteral("languages"), toJsonArray(capabilities.languages)}, {QStringLiteral("frameworks"), toJsonArray(capabilities.frameworks)},
+        {QStringLiteral("tools"), toJsonArray(capabilities.developmentTools)}, {QStringLiteral("targetPlatforms"), toJsonArray(capabilities.targetPlatforms)},
+        {QStringLiteral("hardware"), toJsonArray(capabilities.hardwareTargets)}, {QStringLiteral("architectures"), toJsonArray(capabilities.targetArchitectures)},
+        {QStringLiteral("academic"), QJsonObject{{QStringLiteral("enabled"), academic.enabled}, {QStringLiteral("projectTypes"), toJsonArray(academic.projectTypes)}, {QStringLiteral("thesis"), academic.thesisDocumentation.enabled}, {QStringLiteral("report"), academic.reportDocumentation.enabled}}},
+        {QStringLiteral("ai"), QJsonObject{{QStringLiteral("primaryAgent"), ai.primaryAgent}, {QStringLiteral("additionalAgents"), toJsonArray(ai.additionalAgents)}}},
+        {QStringLiteral("communication"), QJsonObject{{QStringLiteral("enabled"), communication.enabled}, {QStringLiteral("transport"), communication.transport}, {QStringLiteral("protocol"), communication.protocol}}},
+        {QStringLiteral("canonicalPaths"), QJsonObject{{QStringLiteral("worker"), AramfPaths::runtimeWorkerDirectoryName()}, {QStringLiteral("status"), AramfPaths::ProjectStatus}, {QStringLiteral("currentState"), AramfPaths::CurrentState}, {QStringLiteral("routing"), AramfPaths::TaskRoutes}, {QStringLiteral("validation"), AramfPaths::ColdStartValidation}}}
+    };
+}
+
+QJsonObject workerManifest(const ProjectModel& model, const GenerationOptions& options, const QString& fingerprint)
+{
+    return QJsonObject{
+        {QStringLiteral("workerSchemaVersion"), 1}, {QStringLiteral("workerIdentity"), AramfPaths::runtimeWorkerDirectoryName()},
+        {QStringLiteral("projectId"), model.projectId()}, {QStringLiteral("generatedFromFingerprint"), fingerprint},
+        {QStringLiteral("canonicalFiles"), QJsonObject{{QStringLiteral("projectConfiguration"), AramfPaths::ProjectConfiguration}, {QStringLiteral("routing"), AramfPaths::TaskRoutes}, {QStringLiteral("currentState"), AramfPaths::CurrentState}, {QStringLiteral("validation"), AramfPaths::ColdStartValidation}, {QStringLiteral("decisions"), AramfPaths::Decisions}, {QStringLiteral("eventHistory"), AramfPaths::EventLog}}},
+        {QStringLiteral("fileRoles"), QJsonObject{{QStringLiteral("projectConfiguration"), QStringLiteral("DERIVED")}, {QStringLiteral("workerManifest"), QStringLiteral("DERIVED")}, {QStringLiteral("routing"), QStringLiteral("DERIVED")}, {QStringLiteral("currentState"), QStringLiteral("CANONICAL")}, {QStringLiteral("decisions"), QStringLiteral("CANONICAL")}, {QStringLiteral("eventHistory"), QStringLiteral("HISTORICAL")}, {QStringLiteral("latestValidation"), QStringLiteral("DERIVED")}, {QStringLiteral("validationEvidence"), QStringLiteral("VALIDATION_EVIDENCE")}}},
+        {QStringLiteral("derivedFiles"), QJsonObject{{QStringLiteral("status"), AramfPaths::ProjectStatus}, {QStringLiteral("coldStartValidation"), AramfPaths::ColdStartValidation}, {QStringLiteral("latestValidation"), AramfPaths::LatestValidation}}},
+        {QStringLiteral("coldStart"), QJsonObject{{QStringLiteral("files"), QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::WorkerManifest, AramfPaths::AgentInstructions, AramfPaths::CurrentState, AramfPaths::ColdStartValidation, AramfPaths::LatestValidation, AramfPaths::ValidationPolicy}}, {QStringLiteral("historyExcluded"), true}}},
+        {QStringLiteral("generationOptions"), QJsonObject{{QStringLiteral("agentRules"), options.generateAgentRules}, {QStringLiteral("routing"), options.generateRouting}, {QStringLiteral("memory"), options.generateMemory}}}
+    };
 }
 
 void addGeneratedFiles(GenerationResult& result, const QStringList& files)
@@ -290,11 +338,7 @@ GenerationServices::GenerationServices(QObject* parent)
 GenerationResult GenerationServices::generate(const ProjectModel& model,
                                                const GenerationOptions& options) const
 {
-    class WorkerNameScope final {
-    public:
-        explicit WorkerNameScope(const QString& suffix) { AramfPaths::setRuntimeWorkerNameSuffix(suffix); }
-        ~WorkerNameScope() { AramfPaths::setRuntimeWorkerNameSuffix({}); }
-    } workerNameScope(model.workerNameSuffix());
+    WorkerNameScope workerNameScope(model.workerNameSuffix());
     GenerationResult result;
     const auto configurationErrors = TemplateValidation::readiness(model);
     if (!configurationErrors.isEmpty()) {
@@ -363,7 +407,13 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         const QString rootAgent = QStringLiteral("<!-- AGENTS.md -->\n\n") + managedBootstrapBlock(workerName);
         QString canonicalAgent = QStringLiteral(
             "<!-- AGENTS.md -->\n\n# Canonical ARAMF Agent Instructions\n\n"
-            "Read `PROJECT_STATUS.md` and `memory/decisions.md` before project work.\n");
+            "## Mandatory startup router\n\n"
+            "1. Read `project.json` to identify the project and stable capabilities.\n"
+            "2. Read `worker-manifest.json` to resolve canonical ownership and the cold-start read set.\n"
+            "3. Read `memory/current-state.md` and the latest validation summary.\n"
+            "4. Determine the task scope, then follow `routing/task-routes.json` and `routing/scope-routes.json`.\n"
+            "5. Read only the selected scope's instructions/resources; defer `memory/event-log.jsonl` unless history is explicitly required.\n\n"
+            "Read `PROJECT_STATUS.md` and `memory/decisions.md` when the task requires current project detail or durable architectural context.\n");
         if (options.generateMemory) {
             canonicalAgent += QStringLiteral(
                 "Read `memory/framework-knowledge.json` and apply only entries whose status is `approved`.\n"
@@ -610,6 +660,12 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                                    AramfPaths::ProjectStatus, AramfPaths::GeneratedRules});
     }
 
+    {
+        if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ProjectConfiguration)), projectConfiguration(model, result.fingerprint), &error))
+            return fail(QStringLiteral("Project configuration"), error);
+        addGeneratedFiles(result, {AramfPaths::ProjectConfiguration});
+    }
+
     const auto gitIgnore = GitIgnoreService().ensureProjectGitIgnore(projectRoot);
     if (!gitIgnore.success) return fail(QStringLiteral("Project privacy (.gitignore)"), gitIgnore.error);
     if (gitIgnore.changed) result.generatedFiles.append(QStringLiteral(".gitignore"));
@@ -617,12 +673,22 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
     if (options.generateRouting) {
         const auto rules = model.ruleConfiguration();
         const QJsonObject taskRoutes{
+            {QStringLiteral("schemaVersion"), 1},
             {QStringLiteral("strategy"), rules.loadingStrategy},
             {QStringLiteral("workTypes"), toJsonArray(rules.workScopes)},
             {QStringLiteral("contextPolicies"), toJsonArray(rules.contextPolicies)},
-            {QStringLiteral("conflictPolicy"), rules.conflictPolicy}
+            {QStringLiteral("conflictPolicy"), rules.conflictPolicy},
+            {QStringLiteral("inputFingerprint"), result.fingerprint},
+            {QStringLiteral("readSet"), QJsonObject{{QStringLiteral("mandatory"), QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::WorkerManifest, AramfPaths::CurrentState, AramfPaths::ColdStartValidation}}, {QStringLiteral("historyRequired"), false}, {QStringLiteral("scopeOrder"), toJsonArray(rules.projectScopes)}}}
         };
-        const QJsonObject scopeRoutes{{QStringLiteral("scopes"), toJsonArray(rules.projectScopes)}};
+        QJsonArray scopedRoutes;
+        for (const auto& scope : rules.projectScopes) {
+            QJsonArray instructions;
+            if (scope == QStringLiteral("thesis")) instructions.append(QStringLiteral("aramf-thesis-instruction"));
+            if (scope == QStringLiteral("report")) instructions.append(QStringLiteral("aramf-report-instruction"));
+            scopedRoutes.append(QJsonObject{{QStringLiteral("id"), scope}, {QStringLiteral("required"), QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::CurrentState}}, {QStringLiteral("optional"), QJsonArray{AramfPaths::GeneratedRules, AramfPaths::ResourceManifest}}, {QStringLiteral("instructions"), instructions}, {QStringLiteral("historyRequired"), false}});
+        }
+        const QJsonObject scopeRoutes{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("inputFingerprint"), result.fingerprint}, {QStringLiteral("scopes"), scopedRoutes}};
         if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::TaskRoutes)), taskRoutes, &error)
             || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ScopeRoutes)), scopeRoutes, &error)
             || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ValidationPolicy)), ValidationRouting::policy(), &error)) {
@@ -979,6 +1045,10 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
     }
     addGeneratedFiles(result, {generationStatePath});
 
+    if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::WorkerManifest)), workerManifest(model, options, result.fingerprint), &error))
+        return fail(QStringLiteral("Worker manifest"), error);
+    addGeneratedFiles(result, {AramfPaths::WorkerManifest});
+
     // Generation writes the complete selected product set after ProjectMemory
     // initialization. Refresh derived state last so cold-start validation
     // describes the final generated control plane, not the pre-generation tree.
@@ -1056,6 +1126,94 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
         addCheck(result, id, name, readableNonEmpty(path) ? VerificationStatus::Pass : VerificationStatus::Fail,
                  readableNonEmpty(path) ? relative : QStringLiteral("Missing or empty: %1").arg(relative));
     };
+    checkFile(QStringLiteral("project-configuration"), QStringLiteral("Canonical project configuration"), AramfPaths::ProjectConfiguration, true);
+    checkFile(QStringLiteral("worker-manifest"), QStringLiteral("Worker topology manifest"), AramfPaths::WorkerManifest, true);
+    QJsonObject topologyManifest;
+    QString topologyError;
+    const bool topologyReadable = readJson(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::WorkerManifest)), &topologyManifest, &topologyError);
+    const bool supportedTopology = topologyReadable
+        && topologyManifest.value(QStringLiteral("workerSchemaVersion")).toInt(-1) == 1
+        && topologyManifest.value(QStringLiteral("canonicalFiles")).toObject().contains(QStringLiteral("projectConfiguration"));
+    addCheck(result, QStringLiteral("worker-topology"), QStringLiteral("Worker topology schema"),
+             supportedTopology ? VerificationStatus::Pass : VerificationStatus::Fail,
+             supportedTopology ? QStringLiteral("Worker schema version 1 and canonical ownership are valid.")
+                               : (topologyError.isEmpty() ? QStringLiteral("Unsupported or incomplete Worker schema.") : topologyError));
+    const auto canonical = topologyManifest.value(QStringLiteral("canonicalFiles")).toObject();
+    QStringList canonicalPaths;
+    for (const auto& value : canonical) canonicalPaths.append(value.toString());
+    const bool duplicateOwners = canonicalPaths.size() != QSet<QString>(canonicalPaths.cbegin(), canonicalPaths.cend()).size();
+    addCheck(result, QStringLiteral("canonical-owners"), QStringLiteral("Unique canonical file ownership"),
+             duplicateOwners ? VerificationStatus::Fail : VerificationStatus::Pass,
+             duplicateOwners ? QStringLiteral("Worker manifest assigns one path to multiple canonical owners.") : QStringLiteral("Canonical ownership is unique."));
+    QHash<QString, int> canonicalFileCounts;
+    const QSet<QString> canonicalNames{QStringLiteral("project.json"), QStringLiteral("worker-manifest.json"), QStringLiteral("scope-routes.json"), QStringLiteral("task-routes.json"), QStringLiteral("current-state.md"), QStringLiteral("latest-validation.json"), QStringLiteral("resources.json")};
+    QStringList parallelStateFiles;
+    int routingRoots = 0;
+    int memoryRoots = 0;
+    QDirIterator workerFiles(worker, QDir::Files, QDirIterator::Subdirectories);
+    while (workerFiles.hasNext()) {
+        const QFileInfo file(workerFiles.next());
+        const QString relative = QDir(worker).relativeFilePath(file.absoluteFilePath());
+        if (relative.startsWith(QStringLiteral("custom/"), Qt::CaseInsensitive)) continue;
+        if (canonicalNames.contains(file.fileName())) {
+            ++canonicalFileCounts[file.fileName()];
+            if (canonicalFileCounts[file.fileName()] > 1) parallelStateFiles.append(relative);
+        }
+        const QString lowerName = file.fileName().toLower();
+        if (lowerName == QStringLiteral("agent-status.json") || lowerName == QStringLiteral("agent-memory.json")
+            || lowerName == QStringLiteral("memory-store.json") || lowerName == QStringLiteral("status.db")) parallelStateFiles.append(relative);
+    }
+    QDirIterator workerDirectories(worker, QDir::Dirs | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    while (workerDirectories.hasNext()) {
+        const QFileInfo directory(workerDirectories.next());
+        const QString relative = QDir(worker).relativeFilePath(directory.absoluteFilePath());
+        if (relative.startsWith(QStringLiteral("custom/"), Qt::CaseInsensitive)) continue;
+        if (directory.fileName().compare(QStringLiteral("routing"), Qt::CaseInsensitive) == 0) ++routingRoots;
+        if (directory.fileName().compare(QStringLiteral("memory"), Qt::CaseInsensitive) == 0) ++memoryRoots;
+    }
+    const auto expectedCount = [&canonicalFileCounts](const QString& name, bool expected) {
+        return !expected || canonicalFileCounts.value(name) == 1;
+    };
+    const bool parallelStateValid = parallelStateFiles.isEmpty()
+        && expectedCount(QStringLiteral("project.json"), true)
+        && expectedCount(QStringLiteral("worker-manifest.json"), true)
+        && expectedCount(QStringLiteral("scope-routes.json"), expectedOptions.generateRouting)
+        && expectedCount(QStringLiteral("task-routes.json"), expectedOptions.generateRouting)
+        && expectedCount(QStringLiteral("current-state.md"), expectedOptions.generateMemory)
+        && canonicalFileCounts.value(QStringLiteral("latest-validation.json")) <= 1
+        && expectedCount(QStringLiteral("resources.json"), expectedOptions.generateResources)
+        && (!expectedOptions.generateRouting || routingRoots == 1)
+        && (!expectedOptions.generateMemory || memoryRoots == 1);
+    addCheck(result, QStringLiteral("parallel-state"), QStringLiteral("No competing canonical state systems"),
+             parallelStateValid ? VerificationStatus::Pass : VerificationStatus::Fail,
+             parallelStateValid ? QStringLiteral("Canonical Worker state roots are unique.") : QStringLiteral("Competing canonical or ad-hoc Worker state detected: %1").arg(parallelStateFiles.join(QStringLiteral(", "))));
+    QJsonObject projectConfig;
+    QString projectConfigError;
+    const bool projectConfigReadable = readJson(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ProjectConfiguration)), &projectConfig, &projectConfigError);
+    const bool projectIdentityCurrent = projectConfigReadable
+        && projectConfig.value(QStringLiteral("projectId")).toString() == model.projectId()
+        && projectConfig.value(QStringLiteral("workerIdentity")).toString() == AramfPaths::runtimeWorkerDirectoryName();
+    addCheck(result, QStringLiteral("project-identity"), QStringLiteral("Project identity is current"),
+             projectIdentityCurrent ? VerificationStatus::Pass : VerificationStatus::Fail,
+             projectIdentityCurrent ? QStringLiteral("project.json matches the active ProjectModel.") : (projectConfigError.isEmpty() ? QStringLiteral("project.json is stale or belongs to another project.") : projectConfigError));
+    const bool projectFingerprintCurrent = projectConfigReadable
+        && projectConfig.value(QStringLiteral("configurationFingerprint")).toString() == result.fingerprint;
+    addCheck(result, QStringLiteral("stale-project-configuration"), QStringLiteral("Project configuration fingerprint"),
+             projectFingerprintCurrent ? VerificationStatus::Pass : VerificationStatus::Warning,
+             projectFingerprintCurrent ? QStringLiteral("project.json dependencies are current.") : QStringLiteral("project.json is stale; regenerate the Worker."));
+    const bool manifestFingerprintCurrent = supportedTopology
+        && topologyManifest.value(QStringLiteral("generatedFromFingerprint")).toString() == result.fingerprint;
+    addCheck(result, QStringLiteral("stale-worker-manifest"), QStringLiteral("Worker manifest fingerprint"),
+             manifestFingerprintCurrent ? VerificationStatus::Pass : VerificationStatus::Warning,
+             manifestFingerprintCurrent ? QStringLiteral("Worker topology dependencies are current.") : QStringLiteral("worker-manifest.json is stale; regenerate the Worker."));
+    if (expectedOptions.generateRouting) {
+        QJsonObject routes; QString routeError;
+        const bool routesReadable = readJson(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::TaskRoutes)), &routes, &routeError);
+        const bool routesCurrent = routesReadable && routes.value(QStringLiteral("inputFingerprint")).toString() == result.fingerprint;
+        addCheck(result, QStringLiteral("stale-routing"), QStringLiteral("Routing dependency fingerprint"),
+                 routesCurrent ? VerificationStatus::Pass : VerificationStatus::Warning,
+                 routesCurrent ? QStringLiteral("Routing dependencies are current.") : QStringLiteral("Routing metadata is stale; regenerate the Worker."));
+    }
     checkFile(QStringLiteral("root-agents"), QStringLiteral("Root AGENTS.md"), QStringLiteral("AGENTS.md"), expectedOptions.generateAgentRules);
     checkFile(QStringLiteral("aramf-worker-agents"), QStringLiteral("ARAMF_WORKER/AGENTS.md"), AramfPaths::AgentInstructions, expectedOptions.generateAgentRules);
     checkFile(QStringLiteral("project-status"), QStringLiteral("PROJECT_STATUS.md"), AramfPaths::ProjectStatus, expectedOptions.generateAgentRules);
@@ -1120,12 +1278,13 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
                  duplicate ? duplicateDetails : QStringLiteral("All configured resources have unique canonical identities."));
     }
 
-    const QStringList jsonFiles{AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes,
+    const QStringList jsonFiles{AramfPaths::ProjectConfiguration, AramfPaths::WorkerManifest, AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes,
         QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json"), AramfPaths::ResourceManifest,
         QStringLiteral("ARAMF_WORKER/communication/communication-contract.json"), QStringLiteral("ARAMF_WORKER/communication/multi-target-build.json"),
         AramfPaths::MemoryConfiguration, AramfPaths::FrameworkKnowledge, AramfPaths::Provenance, AramfPaths::SelectionEffects};
     for (const auto& relative : jsonFiles) {
-        const bool expected = (relative == AramfPaths::TaskRoutes || relative == AramfPaths::ScopeRoutes) ? expectedOptions.generateRouting
+        const bool expected = (relative == AramfPaths::ProjectConfiguration || relative == AramfPaths::WorkerManifest) ? true
+            : (relative == AramfPaths::TaskRoutes || relative == AramfPaths::ScopeRoutes) ? expectedOptions.generateRouting
             : relative == QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json") ? expectedOptions.generatePlatforms
             : relative == AramfPaths::ResourceManifest ? expectedOptions.generateResources
             : (relative == QStringLiteral("ARAMF_WORKER/communication/communication-contract.json")
@@ -1162,6 +1321,17 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     addCheck(result, QStringLiteral("freshness"), QStringLiteral("Generated configuration is current"),
              current ? VerificationStatus::Pass : VerificationStatus::Warning,
              current ? QStringLiteral("Fingerprint matches ProjectModel.") : QStringLiteral("Generated output is stale; run Generate again."));
+    const QString latestPath = QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::LatestValidation));
+    if (QFileInfo::exists(latestPath)) {
+        QJsonObject priorSummary;
+        QString summaryError;
+        const bool summaryReadable = readJson(latestPath, &priorSummary, &summaryError);
+        const bool summarySchemaValid = summaryReadable && priorSummary.value(QStringLiteral("schemaVersion")).toInt(-1) == 1;
+        const bool summaryCurrent = summarySchemaValid && priorSummary.value(QStringLiteral("fingerprint")).toString() == result.fingerprint;
+        addCheck(result, QStringLiteral("validation-summary-integrity"), QStringLiteral("Latest validation summary integrity"),
+                 !summaryReadable || !summarySchemaValid ? VerificationStatus::Fail : VerificationStatus::Pass,
+                 !summaryReadable ? summaryError : (!summarySchemaValid ? QStringLiteral("latest-validation.json has an unsupported schema.") : (!summaryCurrent ? QStringLiteral("latest-validation.json is stale and will be regenerated.") : QStringLiteral("Latest validation summary is structurally valid."))));
+    }
 
     bool hasFail = false; bool hasWarning = false;
     for (const auto& check : result.checks) {
@@ -1173,6 +1343,79 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     for (const auto& check : result.checks) checks.append(QJsonObject{{QStringLiteral("id"), check.id}, {QStringLiteral("name"), check.name}, {QStringLiteral("status"), statusName(check.status)}, {QStringLiteral("details"), check.details}});
     writeJsonFile(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/verification-result.json"))),
                   QJsonObject{{QStringLiteral("fingerprint"), result.fingerprint}, {QStringLiteral("projectRoot"), root}, {QStringLiteral("overallStatus"), statusName(result.overallStatus)}, {QStringLiteral("checkedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}, {QStringLiteral("checks"), checks}}, nullptr);
+    const auto checkPassed = [&result](const QString& id) {
+        for (const auto& check : result.checks) if (check.id == id) return check.status == VerificationStatus::Pass;
+        return false;
+    };
+    int staleCount = 0;
+    for (const auto& check : result.checks) if (check.id.contains(QStringLiteral("stale")) && check.status != VerificationStatus::Pass) ++staleCount;
+    QJsonObject summary{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("fingerprint"), result.fingerprint},
+        {QStringLiteral("overallStatus"), statusName(result.overallStatus)}, {QStringLiteral("workerSchemaValid"), supportedTopology},
+        {QStringLiteral("topologyValid"), supportedTopology && checkPassed(QStringLiteral("parallel-state"))}, {QStringLiteral("routingValid"), checkPassed(QStringLiteral("task-routes")) && checkPassed(QStringLiteral("scope-routes"))},
+        {QStringLiteral("coldStartValid"), checkPassed(QStringLiteral("cold-start"))}, {QStringLiteral("memoryConsistent"), checkPassed(QStringLiteral("memory-consistency"))},
+        {QStringLiteral("instructionsReachable"), checkPassed(QStringLiteral("aramf-worker-agents"))}, {QStringLiteral("resourcesReachable"), checkPassed(QStringLiteral("resources"))},
+        {QStringLiteral("documentationRoutingValid"), !model.academicConfiguration().enabled || checkPassed(QStringLiteral("project-status"))}, {QStringLiteral("staleArtifactCount"), staleCount},
+        {QStringLiteral("routingConflictCount"), 0}, {QStringLiteral("checks"), checks}};
+    writeJsonFile(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::LatestValidation)), summary, nullptr);
+    return result;
+}
+
+GenerationResult GenerationServices::repairDerivedArtifacts(const ProjectModel& model,
+                                                              const GenerationOptions& options) const
+{
+    WorkerNameScope workerNameScope(model.workerNameSuffix());
+    GenerationResult result;
+    result.fingerprint = projectConfigurationFingerprint(model, options);
+    const QString projectRoot = QDir::cleanPath(model.projectPath().trimmed());
+    if (projectRoot.isEmpty() || projectRoot == QStringLiteral(".")) {
+        result.error = QStringLiteral("Repair stopped: choose a project path first.");
+        return result;
+    }
+    const QString workerRoot = QDir(projectRoot).filePath(AramfPaths::runtimeWorkerDirectoryName());
+    if (!QDir(workerRoot).exists()) {
+        result.error = QStringLiteral("Repair stopped: ARAMF_WORKER does not exist.");
+        return result;
+    }
+    QString error;
+    if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ProjectConfiguration)), projectConfiguration(model, result.fingerprint), &error)) {
+        result.error = QStringLiteral("Repair failed in project configuration: %1").arg(error);
+        return result;
+    }
+    addGeneratedFiles(result, {AramfPaths::ProjectConfiguration});
+    if (options.generateRouting) {
+        const auto rules = model.ruleConfiguration();
+        QJsonArray scopedRoutes;
+        for (const auto& scope : rules.projectScopes) {
+            QJsonArray instructions;
+            if (scope == QStringLiteral("thesis")) instructions.append(QStringLiteral("aramf-thesis-instruction"));
+            if (scope == QStringLiteral("report")) instructions.append(QStringLiteral("aramf-report-instruction"));
+            scopedRoutes.append(QJsonObject{{QStringLiteral("id"), scope}, {QStringLiteral("required"), QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::CurrentState}}, {QStringLiteral("optional"), QJsonArray{AramfPaths::GeneratedRules, AramfPaths::ResourceManifest}}, {QStringLiteral("instructions"), instructions}, {QStringLiteral("historyRequired"), false}});
+        }
+        const QJsonObject taskRoutes{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("strategy"), rules.loadingStrategy}, {QStringLiteral("workTypes"), toJsonArray(rules.workScopes)}, {QStringLiteral("contextPolicies"), toJsonArray(rules.contextPolicies)}, {QStringLiteral("conflictPolicy"), rules.conflictPolicy}, {QStringLiteral("inputFingerprint"), result.fingerprint}, {QStringLiteral("readSet"), QJsonObject{{QStringLiteral("mandatory"), QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::WorkerManifest, AramfPaths::CurrentState, AramfPaths::ColdStartValidation}}, {QStringLiteral("historyRequired"), false}, {QStringLiteral("scopeOrder"), toJsonArray(rules.projectScopes)}}}};
+        const QJsonObject scopeRoutes{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("inputFingerprint"), result.fingerprint}, {QStringLiteral("scopes"), scopedRoutes}};
+        if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::TaskRoutes)), taskRoutes, &error)
+            || !writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ScopeRoutes)), scopeRoutes, &error)) {
+            result.error = QStringLiteral("Repair failed in routing: %1").arg(error);
+            return result;
+        }
+        addGeneratedFiles(result, {AramfPaths::TaskRoutes, AramfPaths::ScopeRoutes});
+    }
+    if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::WorkerManifest)), workerManifest(model, options, result.fingerprint), &error)) {
+        result.error = QStringLiteral("Repair failed in Worker manifest: %1").arg(error);
+        return result;
+    }
+    addGeneratedFiles(result, {AramfPaths::WorkerManifest});
+    const auto verification = VerificationServices().verify(model, options);
+    bool nonSummaryFailure = false;
+    for (const auto& check : verification.checks) {
+        if (check.status == VerificationStatus::Fail && check.id != QStringLiteral("validation-summary-integrity")) nonSummaryFailure = true;
+    }
+    if (verification.overallStatus == VerificationStatus::Fail && nonSummaryFailure) {
+        result.error = QStringLiteral("Repair completed derived files, but validation remains failed.");
+        return result;
+    }
+    addGeneratedFiles(result, {AramfPaths::LatestValidation});
+    result.success = true;
     return result;
 }
 
@@ -1253,6 +1496,7 @@ FinalizationResult FinalizationServices::finalize(const ProjectModel& model,
         result.error = error;
         return result;
     }
+
     result.success = true;
     return result;
 }

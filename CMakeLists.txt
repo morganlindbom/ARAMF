@@ -57,6 +57,8 @@ set(ARAMF_CORE_SOURCES
     src/core/TemplateValidation.cpp
     src/core/ValidationRouting.h
     src/core/ValidationRouting.cpp
+    src/core/WorkerContextResolver.h
+    src/core/WorkerContextResolver.cpp
     src/core/UpdateService.h
     src/core/UpdateService.cpp
     src/core/AgentExecutionAdapter.h
@@ -175,6 +177,8 @@ if(BUILD_TESTING)
         src/core/FrameworkKnowledge.cpp
         src/core/ValidationRouting.h
         src/core/ValidationRouting.cpp
+        src/core/WorkerContextResolver.h
+        src/core/WorkerContextResolver.cpp
         src/core/UpdateService.h
         src/core/UpdateService.cpp
         src/core/AgentExecutionAdapter.h
@@ -235,6 +239,8 @@ if(BUILD_TESTING)
         src/core/MemoryCatalog.cpp
         src/core/ValidationRouting.h
         src/core/ValidationRouting.cpp
+        src/core/WorkerContextResolver.h
+        src/core/WorkerContextResolver.cpp
         src/core/UpdateService.h
         src/core/UpdateService.cpp
         src/core/AgentExecutionAdapter.h

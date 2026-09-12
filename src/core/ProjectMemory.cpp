@@ -407,7 +407,7 @@ QString coldStartFingerprint(const QString& projectRoot, const QStringList& rela
     return QString::fromLatin1(hash.result().toHex());
 }
 
-QStringList coldStartPaths(bool requireControlPlane)
+QStringList coldStartPaths(const QString& projectRoot, bool requireControlPlane)
 {
     QStringList paths {
         AramfPaths::Decisions,
@@ -421,6 +421,13 @@ QStringList coldStartPaths(bool requireControlPlane)
         AramfPaths::CompactionManifest
     };
     if (requireControlPlane) paths << AramfPaths::AgentInstructions << AramfPaths::ProjectStatus;
+    // These topology files are optional during bare ProjectMemory bootstrap,
+    // but become part of the validated cold-start contract once generation
+    // has published them.
+    if (QFileInfo::exists(absolutePath(projectRoot, AramfPaths::ProjectConfiguration)))
+        paths << AramfPaths::ProjectConfiguration;
+    if (QFileInfo::exists(absolutePath(projectRoot, AramfPaths::WorkerManifest)))
+        paths << AramfPaths::WorkerManifest;
     return paths;
 }
 }
@@ -1405,7 +1412,7 @@ QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error) 
 
     if (validationOptions.contains(QStringLiteral("referenced-resources"))) {
         bool referencesOk = true;
-        for (const QString& relative : coldStartPaths(true)) {
+        for (const QString& relative : coldStartPaths(projectRoot, true)) {
             if (!QFileInfo::exists(absolutePath(projectRoot, relative))) referencesOk = false;
         }
         addCheck(QStringLiteral("referenced-resources"), referencesOk,
@@ -1436,7 +1443,7 @@ QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error) 
     if (validationOptions.contains(QStringLiteral("cold-start-validation"))) {
         const QString coldPath = absolutePath(projectRoot, AramfPaths::ColdStartValidation);
         const QJsonObject cold = readJsonObject(coldPath, nullptr);
-        const QString currentFingerprint = coldStartFingerprint(projectRoot, coldStartPaths(true));
+        const QString currentFingerprint = coldStartFingerprint(projectRoot, coldStartPaths(projectRoot, true));
         addCheck(QStringLiteral("cold-start-fresh"), cold.value(QStringLiteral("status")).toString() == QStringLiteral("PASS")
                      && cold.value(QStringLiteral("fingerprint")).toString() == currentFingerprint,
                  QStringLiteral("Persisted cold-start validation is missing, failed, or stale."));
@@ -1804,7 +1811,7 @@ bool ProjectMemory::generateCurrentState(const QString& projectRoot, QString* er
 
 bool ProjectMemory::generateColdStartValidation(const QString& projectRoot, QString* error, bool requireControlPlane) const
 {
-    const QStringList mandatory = coldStartPaths(requireControlPlane);
+    const QStringList mandatory = coldStartPaths(projectRoot, requireControlPlane);
     QJsonArray checks;
     QJsonArray errors;
     auto addCheck = [&checks, &errors](const QString& name, bool pass, const QString& message) {
