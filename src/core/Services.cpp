@@ -94,6 +94,7 @@ bool upsertManagedSection(const QString& path,
         if (end >= 0) content.replace(begin, end + endMarker.size() - begin, section);
         else content = content.left(begin) + section;
     } else {
+        while (content.endsWith(QStringLiteral("\n\n"))) content.chop(1);
         if (!content.isEmpty() && !content.endsWith(QLatin1Char('\n'))) content += QLatin1Char('\n');
         content += QLatin1Char('\n') + section;
     }
@@ -424,6 +425,15 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "After edits, use `aramf task postflight --config <saved-project> --contract <prepared.json> --evidence <evidence.json>` "
             "and satisfy its evidence requirements before claiming VERIFIED. Task contracts are derived views, not independent authority.\n\n"
             "Read `PROJECT_STATUS.md` and `memory/decisions.md` when the task requires current project detail or durable architectural context.\n");
+        canonicalAgent += QStringLiteral(
+            "<!-- ARAMF-TASK-GOVERNANCE-BEGIN -->\n"
+            "\n## Governed Task Execution Contract\n\n"
+            "Every governed task follows ANALYZE -> PREPARE -> EXECUTE -> VALIDATE. ANALYZE resolves the applicable scope and dependencies without mutating the project. PREPARE produces a READY TaskContract with exact permitted files/resources, ownership, canonical producers, ChangeImpact, ValidationRouting, and required evidence; PREPARE must not perform Execute. EXECUTE is the only implementation mutation boundary. VALIDATE performs postflight and evidence checks before completion.\n"
+            "Modify only files and resources explicitly permitted by the TaskContract. Unmapped files, path traversal, protected files, user-owned Sources of Truth, and ownership conflicts are blocked. Permission to write generated output never overrides its canonical producer or resource ownership. Generated/service-owned files must be produced or repaired by their authoritative ARAMF service, not recreated manually.\n"
+            "Project isolation is mandatory: preserve pre-existing dirty and unrelated files, exclude them from current-task attribution, and fail on new out-of-scope edits. Never broaden a task to the whole project or full ARAMF_WORKER because precise scope resolution is inconvenient. Use declared ChangeImpact and dependency scope to determine affected validation and evidence. Evidence is fresh only for the dependencies it covers; later relevant changes stale that evidence.\n"
+            "Follow the authoritative route in `routing/validation-policy.json`. VERIFIED requires all applicable valid software evidence and fresh fingerprints. CERTIFIED is a separate claim requiring its applicable certification evidence; software verification must not imply physical certification. HARDWARE_CERTIFIED or other physical claims require valid physical/on-target evidence and must never be fabricated.\n"
+            "Persist governed state through the canonical ARAMF services, save/reload it, and verify readback and cross-file consistency. Governance events use the append-only recorder and its current-state, manifest, metrics, PROJECT_STATUS, memory-consistency, and cold-start mechanisms; do not invent recorder files or rewrite history. Keep the generated Worker topology coherent and treat `ARAMF_WORKER/` as orchestration while the managed project root remains the implementation target.\n"
+            "<!-- ARAMF-TASK-GOVERNANCE-END -->\n");
         if (options.generateMemory) {
             canonicalAgent += QStringLiteral(
                 "Read `memory/framework-knowledge.json` and apply only entries whose status is `approved`.\n"
@@ -585,7 +595,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             addInstruction(QStringLiteral("update-current-state"), QStringLiteral("Let ProjectMemory refresh current-state from accepted events."));
             addInstruction(QStringLiteral("update-project-status"), QStringLiteral("Allow meaningful completed tasks to update PROJECT_STATUS through the recorder policy."));
             addInstruction(QStringLiteral("record-checkpoints"), QStringLiteral("Record a checkpoint only when an actual stable checkpoint is warranted."));
-            memorySection += QStringLiteral("- Record durable decisions only for genuine architecture or policy choices through the decision workflow.\n");
+            memorySection += QStringLiteral("\n- Record durable decisions only for genuine architecture or policy choices through the decision workflow.\n");
             memorySection += QStringLiteral("- Follow current durable decisions; explicitly superseded decisions remain historical and inactive.\n");
             memorySection += QStringLiteral("\nThe active agent owns governed writes in `agent-direct` mode. `PROJECT_STATUS.md` and current-state files describe current truth; `memory/event-log.jsonl` preserves historical truth. Corrections and durable decision changes are represented as new evidence with explicit supersession.\n\n<!-- ARAMF-MEMORY-END -->\n");
             canonicalAgent += memorySection;
@@ -605,13 +615,26 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         if (options.generateMemory) {
             const int memoryBegin = canonicalAgent.indexOf(QStringLiteral("<!-- ARAMF-MEMORY-BEGIN -->"));
             const QString memorySection = memoryBegin >= 0 ? canonicalAgent.mid(memoryBegin) : QString();
+            const int taskBegin = canonicalAgent.indexOf(QStringLiteral("<!-- ARAMF-TASK-GOVERNANCE-BEGIN -->"));
+            const int taskEnd = canonicalAgent.indexOf(QStringLiteral("<!-- ARAMF-TASK-GOVERNANCE-END -->"), taskBegin);
+            const QString taskSection = taskBegin >= 0 && taskEnd >= taskBegin
+                ? canonicalAgent.mid(taskBegin, taskEnd + QStringLiteral("<!-- ARAMF-TASK-GOVERNANCE-END -->").size() - taskBegin)
+                : QString();
             if (!QFile::exists(agentInstructionsPath)) {
                 if (!writeTextFile(agentInstructionsPath, canonicalAgent.toUtf8(), &error)) return fail(QStringLiteral("Agent rules"), error);
-            } else if (!upsertManagedSection(agentInstructionsPath,
-                                             QStringLiteral("<!-- ARAMF-MEMORY-BEGIN -->"),
-                                             QStringLiteral("<!-- ARAMF-MEMORY-END -->"),
-                                             memorySection, &error)) {
-                return fail(QStringLiteral("Agent rules"), error);
+            } else {
+                if (!taskSection.isEmpty() && !upsertManagedSection(agentInstructionsPath,
+                                                                      QStringLiteral("<!-- ARAMF-TASK-GOVERNANCE-BEGIN -->"),
+                                                                      QStringLiteral("<!-- ARAMF-TASK-GOVERNANCE-END -->"),
+                                                                      taskSection, &error)) {
+                    return fail(QStringLiteral("Agent rules"), error);
+                }
+                if (!upsertManagedSection(agentInstructionsPath,
+                                          QStringLiteral("<!-- ARAMF-MEMORY-BEGIN -->"),
+                                          QStringLiteral("<!-- ARAMF-MEMORY-END -->"),
+                                          memorySection, &error)) {
+                    return fail(QStringLiteral("Agent rules"), error);
+                }
             }
         } else if (!writeTextFile(agentInstructionsPath, canonicalAgent.toUtf8(), &error, true)) {
             return fail(QStringLiteral("Agent rules"), error);

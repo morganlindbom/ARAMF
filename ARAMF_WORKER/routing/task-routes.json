@@ -9,6 +9,29 @@
         "avoid-inactive",
         "avoid-unrelated"
     ],
+    "inputFingerprint": "105928b8b00ce15b636bc86c185acb752ab2b964ac65f7392e99f9c9b1549a64",
+    "readSet": {
+        "historyRequired": false,
+        "mandatory": [
+            "ARAMF_WORKER/project.json",
+            "ARAMF_WORKER/worker-manifest.json",
+            "ARAMF_WORKER/memory/current-state.md",
+            "ARAMF_WORKER/memory/cold-start-validation.json"
+        ],
+        "scopeOrder": [
+            "build-system",
+            "ci-cd",
+            "configuration",
+            "documentation",
+            "entire-project",
+            "generated-files",
+            "resources",
+            "source-code",
+            "tests",
+            "ui-ux"
+        ]
+    },
+    "schemaVersion": 1,
     "strategy": "relevant",
     "workTypes": [
         "planning",

@@ -1,6 +1,5 @@
 {
-    "_file": "verification-result.json",
-    "checkedAt": "2026-09-12T23:09:35Z",
+    "_file": "latest-validation.json",
     "checks": [
         {
             "details": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
@@ -255,7 +254,17 @@
             "status": "PASS"
         }
     ],
+    "coldStartValid": true,
+    "documentationRoutingValid": true,
     "fingerprint": "105928b8b00ce15b636bc86c185acb752ab2b964ac65f7392e99f9c9b1549a64",
+    "instructionsReachable": true,
+    "memoryConsistent": true,
     "overallStatus": "PASS",
-    "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF"
+    "resourcesReachable": true,
+    "routingConflictCount": 0,
+    "routingValid": true,
+    "schemaVersion": 1,
+    "staleArtifactCount": 0,
+    "topologyValid": true,
+    "workerSchemaValid": true
 }

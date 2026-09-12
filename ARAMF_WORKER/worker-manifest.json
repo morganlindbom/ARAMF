@@ -1,0 +1,54 @@
+{
+    "_file": "worker-manifest.json",
+    "canonicalFiles": {
+        "currentState": "ARAMF_WORKER/memory/current-state.md",
+        "decisions": "ARAMF_WORKER/memory/decisions.md",
+        "eventHistory": "ARAMF_WORKER/memory/event-log.jsonl",
+        "projectConfiguration": "ARAMF_WORKER/project.json",
+        "routing": "ARAMF_WORKER/routing/task-routes.json",
+        "validation": "ARAMF_WORKER/memory/cold-start-validation.json"
+    },
+    "coldStart": {
+        "files": [
+            "ARAMF_WORKER/project.json",
+            "ARAMF_WORKER/worker-manifest.json",
+            "ARAMF_WORKER/AGENTS.md",
+            "ARAMF_WORKER/memory/current-state.md",
+            "ARAMF_WORKER/memory/cold-start-validation.json",
+            "ARAMF_WORKER/verification/latest-validation.json",
+            "ARAMF_WORKER/routing/validation-policy.json"
+        ],
+        "historyExcluded": true
+    },
+    "derivedFiles": {
+        "coldStartValidation": "ARAMF_WORKER/memory/cold-start-validation.json",
+        "latestValidation": "ARAMF_WORKER/verification/latest-validation.json",
+        "status": "ARAMF_WORKER/PROJECT_STATUS.md"
+    },
+    "fileRoles": {
+        "currentState": "CANONICAL",
+        "decisions": "CANONICAL",
+        "eventHistory": "HISTORICAL",
+        "latestValidation": "DERIVED",
+        "projectConfiguration": "DERIVED",
+        "routing": "DERIVED",
+        "validationEvidence": "VALIDATION_EVIDENCE",
+        "workerManifest": "DERIVED"
+    },
+    "generatedFromFingerprint": "105928b8b00ce15b636bc86c185acb752ab2b964ac65f7392e99f9c9b1549a64",
+    "generationOptions": {
+        "agentRules": true,
+        "memory": true,
+        "routing": true
+    },
+    "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
+    "taskContract": {
+        "authority": "DERIVED",
+        "policyOwner": "ProjectModel.rules.scopeMetadata",
+        "preflightRequired": true,
+        "routingSource": "ARAMF_WORKER/routing/scope-routes.json",
+        "schemaVersion": 1
+    },
+    "workerIdentity": "ARAMF_WORKER",
+    "workerSchemaVersion": 1
+}

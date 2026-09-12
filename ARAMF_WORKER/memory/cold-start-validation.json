@@ -1,6 +1,6 @@
 {
     "_file": "cold-start-validation.json",
-    "checkedAt": "2026-09-12T22:35:17Z",
+    "checkedAt": "2026-09-12T23:09:38Z",
     "checks": [
         {
             "name": "ARAMF_WORKER/memory/decisions.md",
@@ -47,6 +47,14 @@
             "status": "PASS"
         },
         {
+            "name": "ARAMF_WORKER/project.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/worker-manifest.json",
+            "status": "PASS"
+        },
+        {
             "message": "Event log parsed through ProjectMemory read API.",
             "name": "event-log-semantic-recovery",
             "status": "PASS"
@@ -80,7 +88,7 @@
     "contractConfigConsistent": true,
     "errors": [
     ],
-    "fingerprint": "0f0be83445aaf43e2b080545d966dc1f5c8db2a6fce45b663a2b38e587ff1bcc",
+    "fingerprint": "3659223b0052270ab540850a9e34042e50a9219be3cbcdd14bda635c7379d67b",
     "recordingEnabled": true,
     "status": "PASS",
     "warnings": [

@@ -10,6 +10,8 @@
         "checkpoints",
         "certification-knowledge"
     ],
+    "compactionPolicy": "verified-compaction-only",
+    "compactionReviewThreshold": 500,
     "historyOptions": [
         "event-history",
         "decision-history",
@@ -31,8 +33,6 @@
         "preserve-append-only"
     ],
     "maximumSizeBytes": 10737418240,
-    "compactionReviewThreshold": 500,
-    "compactionPolicy": "verified-compaction-only",
     "retentionLevel": "standard",
     "updateStrategy": "meaningful-task",
     "validationOptions": [
@@ -43,5 +43,6 @@
         "stale-current-state",
         "referenced-resources",
         "project-status-consistency"
-    ]
+    ],
+    "writerMode": "agent-direct"
 }

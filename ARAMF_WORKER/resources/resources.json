@@ -11,6 +11,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250",
             "locationMode": "referenced",
             "name": "test_250",
+            "role": "supporting-material",
             "scopes": [
                 "architecture",
                 "software",
@@ -29,6 +30,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550",
             "locationMode": "referenced",
             "name": "test_550",
+            "role": "supporting-material",
             "scopes": [
                 "testing"
             ],
@@ -44,6 +46,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/CMakeLists.txt",
             "locationMode": "referenced",
             "name": "CMakeLists.txt",
+            "role": "source-of-truth",
             "scopes": [
                 "software",
                 "build-system"
@@ -60,6 +63,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/info.md",
             "locationMode": "referenced",
             "name": "info.md",
+            "role": "supporting-material",
             "scopes": [
             ],
             "status": "available",
@@ -74,6 +78,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/aramf_setup",
             "locationMode": "referenced",
             "name": "aramf_setup",
+            "role": "supporting-material",
             "scopes": [
                 "software"
             ],
@@ -89,6 +94,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/src",
             "locationMode": "referenced",
             "name": "src",
+            "role": "source-of-truth",
             "scopes": [
                 "architecture",
                 "software"
@@ -105,6 +111,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550/info.md",
             "locationMode": "referenced",
             "name": "info.md",
+            "role": "supporting-material",
             "scopes": [
             ],
             "status": "available",
@@ -119,6 +126,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER",
             "locationMode": "referenced",
             "name": "ARAMF_WORKER",
+            "role": "source-of-truth",
             "scopes": [
                 "project-requirements",
                 "current-project-state"
@@ -135,6 +143,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/tests",
             "locationMode": "referenced",
             "name": "tests",
+            "role": "supporting-material",
             "scopes": [
                 "testing"
             ],
@@ -150,6 +159,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/AGENTS.md",
             "locationMode": "referenced",
             "name": "AGENTS.md",
+            "role": "source-of-truth",
             "scopes": [
                 "project-requirements",
                 "architecture",

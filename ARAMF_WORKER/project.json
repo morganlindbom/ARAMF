@@ -1,0 +1,68 @@
+{
+    "_file": "project.json",
+    "academic": {
+        "enabled": false,
+        "projectTypes": [
+        ],
+        "report": false,
+        "thesis": false
+    },
+    "ai": {
+        "additionalAgents": [
+            "chatgpt",
+            "github-copilot"
+        ],
+        "primaryAgent": "openai-codex"
+    },
+    "architectures": [
+        "x86_64"
+    ],
+    "canonicalPaths": {
+        "currentState": "ARAMF_WORKER/memory/current-state.md",
+        "routing": "ARAMF_WORKER/routing/task-routes.json",
+        "status": "ARAMF_WORKER/PROJECT_STATUS.md",
+        "validation": "ARAMF_WORKER/memory/cold-start-validation.json",
+        "worker": "ARAMF_WORKER"
+    },
+    "communication": {
+        "enabled": false,
+        "protocol": "",
+        "transport": ""
+    },
+    "configurationFingerprint": "105928b8b00ce15b636bc86c185acb752ab2b964ac65f7392e99f9c9b1549a64",
+    "context": "desktop-application",
+    "environment": {
+        "buildSystem": "cmake",
+        "compiler": "msys2-ucrt64-gcc",
+        "framework": "qt",
+        "ide": "visual-studio-code",
+        "language": "cpp",
+        "operatingSystem": "",
+        "packageManager": "none",
+        "targetArchitecture": "x86_64",
+        "targetPlatform": "desktop",
+        "versionControl": "none"
+    },
+    "frameworks": [
+        "qt"
+    ],
+    "hardware": [
+    ],
+    "languages": [
+        "cpp"
+    ],
+    "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
+    "projectName": "ARAMF_WORKER",
+    "schemaVersion": 1,
+    "targetPlatforms": [
+        "desktop",
+        "windows-desktop"
+    ],
+    "templateId": "",
+    "templateModules": [
+    ],
+    "tools": [
+    ],
+    "workerIdentity": "ARAMF_WORKER",
+    "workerSchemaVersion": 1
+}

@@ -91,18 +91,38 @@ project paths remain relative to their `ARAMF_WORKER/` control directory.
 
 ## Project Memory Feedback
 
-Read `memory/memory-contract.json` before recording development results. Do not edit ProjectMemory-owned bookkeeping files directly. Use `aramf memory record --project <project-root> --operation <operation> ...`.
-Use the narrowest valid mutation, reload from disk, parse/validate, and verify cross-file consistency. Project Memory history is append-only during normal operation; verified compaction is the only governed maintenance boundary.
-At task start, read approved applicable knowledge and project-local `memory/project-knowledge.json`. When compaction review is due, run `aramf memory compact --project <project-root> --dry-run`; never remove history without reviewed, validated compaction approval.
-- Record task starts/completions, build results, test results, and validation outcomes when configured.
+Read `memory/memory-contract.json` before recording development results. In `agent-direct` mode the active coding agent is the project-local Project Memory writer; no aramf.exe, global `aramf` command, recorder daemon, or external service is required. Do not edit `memory/event-log.jsonl`, `memory/metrics.json`, `memory/current-state.md`, `memory/memory-manifest.json`, validation state, or `PROJECT_STATUS.md` bookkeeping fields outside the governed protocol. Identify canonical targets, read current files and schemas, preserve unrelated state, perform the narrowest valid mutation, write the existing schema, reload from disk, parse/validate, and verify uniqueness, ordering, and cross-file consistency.
+`memory/event-log.jsonl` is append-only historical evidence: preserve failed attempts, successful corrections, and their original IDs, sequences, timestamps, ordering, and PASS/FAIL results. Never rewrite prior events or regenerate history from current state.
+- Record meaningful task starts and completions.
+- Record completed build attempts and their PASS/FAIL result.
+- Record completed test attempts and their PASS/FAIL result.
+- Record meaningful validation outcomes.
+- Let ProjectMemory refresh current-state from accepted events.
+- Allow meaningful completed tasks to update PROJECT_STATUS through the recorder policy.
+- Record a checkpoint only when an actual stable checkpoint is warranted.
+
 - Record durable decisions only for genuine architecture or policy choices through the decision workflow.
-- Record a checkpoint only for a genuine stable recovery point with `aramf memory checkpoint --project <project-root> --title <title> --summary <summary>`; routine feedback does not create one.
-- Framework Knowledge has separate built-in, global, and project-local layers. The global user library is under `ARAMF_DATA/` at the resolved ARAMF program root; build directories are disposable. Promote an explicitly approved portable entry only through `aramf memory knowledge promote --project <project-root> --id <knowledge-id>`. Never edit the library or project knowledge files directly.
-- UPDATE is a deliberate human-controlled workflow: review approved knowledge, analyze the whole project, prepare a plan, and explicitly execute it through the configured agent. The managed project root is the implementation target; `ARAMF_WORKER/` is orchestration only. `READY_FOR_EXTERNAL_AGENT` is an incomplete handoff, not completion; actual project changes and validation are required. Read `update/update-plan.json` and `update/update-contract.json` when present. Candidates are never active.
-- When work reveals a deficiency in ARAMF's own canonical workflow, rules, representations, validation, resource model, or control plane, report it with `aramf improvement report --project <project-root> --title <title> --observation <observation> ...` and continue the managed project when safe. This creates an observation only; it does not create a TODO, durable decision, or Framework Knowledge. Do not report ordinary project bugs as ARAMF gaps. Use `aramf improvement list` to inspect the global backlog.
-- Run the minimum validation required by `routing/validation-policy.json`; do not run full regression campaigns for ordinary isolated changes. Escalate when scope, risk, failure, or explicit milestone policy requires it.
 - Follow current durable decisions; explicitly superseded decisions remain historical and inactive.
 
-The recorder owns event IDs, timestamps, sequences, metrics, pruning, validation, and current-state pointers.
+The active agent owns governed writes in `agent-direct` mode. `PROJECT_STATUS.md` and current-state files describe current truth; `memory/event-log.jsonl` preserves historical truth. Corrections and durable decision changes are represented as new evidence with explicit supersession.
 
 <!-- ARAMF-MEMORY-END -->
+
+
+
+
+
+
+
+
+
+<!-- ARAMF-TASK-GOVERNANCE-BEGIN -->
+
+## Governed Task Execution Contract
+
+Every governed task follows ANALYZE -> PREPARE -> EXECUTE -> VALIDATE. ANALYZE resolves the applicable scope and dependencies without mutating the project. PREPARE produces a READY TaskContract with exact permitted files/resources, ownership, canonical producers, ChangeImpact, ValidationRouting, and required evidence; PREPARE must not perform Execute. EXECUTE is the only implementation mutation boundary. VALIDATE performs postflight and evidence checks before completion.
+Modify only files and resources explicitly permitted by the TaskContract. Unmapped files, path traversal, protected files, user-owned Sources of Truth, and ownership conflicts are blocked. Permission to write generated output never overrides its canonical producer or resource ownership. Generated/service-owned files must be produced or repaired by their authoritative ARAMF service, not recreated manually.
+Project isolation is mandatory: preserve pre-existing dirty and unrelated files, exclude them from current-task attribution, and fail on new out-of-scope edits. Never broaden a task to the whole project or full ARAMF_WORKER because precise scope resolution is inconvenient. Use declared ChangeImpact and dependency scope to determine affected validation and evidence. Evidence is fresh only for the dependencies it covers; later relevant changes stale that evidence.
+Follow the authoritative route in `routing/validation-policy.json`. VERIFIED requires all applicable valid software evidence and fresh fingerprints. CERTIFIED is a separate claim requiring its applicable certification evidence; software verification must not imply physical certification. HARDWARE_CERTIFIED or other physical claims require valid physical/on-target evidence and must never be fabricated.
+Persist governed state through the canonical ARAMF services, save/reload it, and verify readback and cross-file consistency. Governance events use the append-only recorder and its current-state, manifest, metrics, PROJECT_STATUS, memory-consistency, and cold-start mechanisms; do not invent recorder files or rewrite history. Keep the generated Worker topology coherent and treat `ARAMF_WORKER/` as orchestration while the managed project root remains the implementation target.
+<!-- ARAMF-TASK-GOVERNANCE-END -->

@@ -1,5 +1,26 @@
 {
     "_file": "validation-policy.json",
+    "android": {
+        "commands": [
+            "./gradlew build",
+            "./gradlew test",
+            "./gradlew lint",
+            "gradlew.bat build",
+            "gradlew.bat test",
+            "gradlew.bat lint"
+        ],
+        "principle": "Do not fabricate sync, emulator, device, lifecycle, permission, navigation, or persistence results; report unavailable checks as not run or not verified.",
+        "states": [
+            "IMPLEMENTED",
+            "BUILD PASS",
+            "TEST PASS",
+            "LINT PASS",
+            "EMULATOR VERIFIED",
+            "DEVICE VERIFIED",
+            "APPLICATION VERIFIED",
+            "CERTIFIED"
+        ]
+    },
     "escalation": [
         "FOCUSED -> SUBSYSTEM on failure or cross-impact",
         "SUBSYSTEM -> FULL REGRESSION on failure or broad uncertainty"
@@ -58,6 +79,7 @@
     },
     "principle": "Validation is proportional to changed scope, task type, affected subsystem, and risk; use the minimum sufficient validation and escalate when evidence requires it.",
     "routes": {
+        "certification": "full-regression or the certification contract's explicitly required level; ordinary test PASS is not certification",
         "control-plane": "full-regression",
         "generation": "subsystem; full only for broad architecture or explicit certification",
         "migration": "full-regression",

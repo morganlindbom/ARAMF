@@ -1,15 +1,167 @@
 {
     "_file": "scope-routes.json",
+    "inputFingerprint": "105928b8b00ce15b636bc86c185acb752ab2b964ac65f7392e99f9c9b1549a64",
+    "schemaVersion": 1,
     "scopes": [
-        "entire-project",
-        "source-code",
-        "tests",
-        "build-system",
-        "documentation",
-        "resources",
-        "generated-files",
-        "configuration",
-        "ci-cd",
-        "ui-ux"
+        {
+            "historyRequired": false,
+            "id": "build-system",
+            "instructions": [
+            ],
+            "optional": [
+                "ARAMF_WORKER/rules/generated-rules.md",
+                "ARAMF_WORKER/resources/resources.json"
+            ],
+            "required": [
+                "ARAMF_WORKER/project.json",
+                "ARAMF_WORKER/memory/current-state.md"
+            ],
+            "taskMetadata": {
+            }
+        },
+        {
+            "historyRequired": false,
+            "id": "ci-cd",
+            "instructions": [
+            ],
+            "optional": [
+                "ARAMF_WORKER/rules/generated-rules.md",
+                "ARAMF_WORKER/resources/resources.json"
+            ],
+            "required": [
+                "ARAMF_WORKER/project.json",
+                "ARAMF_WORKER/memory/current-state.md"
+            ],
+            "taskMetadata": {
+            }
+        },
+        {
+            "historyRequired": false,
+            "id": "configuration",
+            "instructions": [
+            ],
+            "optional": [
+                "ARAMF_WORKER/rules/generated-rules.md",
+                "ARAMF_WORKER/resources/resources.json"
+            ],
+            "required": [
+                "ARAMF_WORKER/project.json",
+                "ARAMF_WORKER/memory/current-state.md"
+            ],
+            "taskMetadata": {
+            }
+        },
+        {
+            "historyRequired": false,
+            "id": "documentation",
+            "instructions": [
+            ],
+            "optional": [
+                "ARAMF_WORKER/rules/generated-rules.md",
+                "ARAMF_WORKER/resources/resources.json"
+            ],
+            "required": [
+                "ARAMF_WORKER/project.json",
+                "ARAMF_WORKER/memory/current-state.md"
+            ],
+            "taskMetadata": {
+            }
+        },
+        {
+            "historyRequired": false,
+            "id": "entire-project",
+            "instructions": [
+            ],
+            "optional": [
+                "ARAMF_WORKER/rules/generated-rules.md",
+                "ARAMF_WORKER/resources/resources.json"
+            ],
+            "required": [
+                "ARAMF_WORKER/project.json",
+                "ARAMF_WORKER/memory/current-state.md"
+            ],
+            "taskMetadata": {
+            }
+        },
+        {
+            "historyRequired": false,
+            "id": "generated-files",
+            "instructions": [
+            ],
+            "optional": [
+                "ARAMF_WORKER/rules/generated-rules.md",
+                "ARAMF_WORKER/resources/resources.json"
+            ],
+            "required": [
+                "ARAMF_WORKER/project.json",
+                "ARAMF_WORKER/memory/current-state.md"
+            ],
+            "taskMetadata": {
+            }
+        },
+        {
+            "historyRequired": false,
+            "id": "resources",
+            "instructions": [
+            ],
+            "optional": [
+                "ARAMF_WORKER/rules/generated-rules.md",
+                "ARAMF_WORKER/resources/resources.json"
+            ],
+            "required": [
+                "ARAMF_WORKER/project.json",
+                "ARAMF_WORKER/memory/current-state.md"
+            ],
+            "taskMetadata": {
+            }
+        },
+        {
+            "historyRequired": false,
+            "id": "source-code",
+            "instructions": [
+            ],
+            "optional": [
+                "ARAMF_WORKER/rules/generated-rules.md",
+                "ARAMF_WORKER/resources/resources.json"
+            ],
+            "required": [
+                "ARAMF_WORKER/project.json",
+                "ARAMF_WORKER/memory/current-state.md"
+            ],
+            "taskMetadata": {
+            }
+        },
+        {
+            "historyRequired": false,
+            "id": "tests",
+            "instructions": [
+            ],
+            "optional": [
+                "ARAMF_WORKER/rules/generated-rules.md",
+                "ARAMF_WORKER/resources/resources.json"
+            ],
+            "required": [
+                "ARAMF_WORKER/project.json",
+                "ARAMF_WORKER/memory/current-state.md"
+            ],
+            "taskMetadata": {
+            }
+        },
+        {
+            "historyRequired": false,
+            "id": "ui-ux",
+            "instructions": [
+            ],
+            "optional": [
+                "ARAMF_WORKER/rules/generated-rules.md",
+                "ARAMF_WORKER/resources/resources.json"
+            ],
+            "required": [
+                "ARAMF_WORKER/project.json",
+                "ARAMF_WORKER/memory/current-state.md"
+            ],
+            "taskMetadata": {
+            }
+        }
     ]
 }

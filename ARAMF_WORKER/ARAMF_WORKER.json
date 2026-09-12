@@ -1,0 +1,9 @@
+{
+    "_file": "ARAMF_WORKER.json",
+    "controlDirectory": "ARAMF_WORKER",
+    "implementationLanguage": "C++",
+    "name": "AI Rules & Memory Framework",
+    "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
+    "projectName": "ARAMF_WORKER",
+    "version": 2
+}

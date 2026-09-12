@@ -1,5 +1,10 @@
 {
     "_file": "selection-effects.json",
+    "academic": {
+        "enabled": false,
+        "projectTypes": [
+        ]
+    },
     "frameworks": [
         "qt"
     ],
@@ -14,6 +19,11 @@
         "windows-desktop"
     ],
     "primaryAiAgent": "openai-codex",
+    "reportDocumentation": {
+        "enabled": false,
+        "templateMode": "aramf-default",
+        "templateSourceId": ""
+    },
     "resources": 10,
     "rules": [
         "coding-standards",
@@ -74,5 +84,12 @@
         "changelog-maintenance",
         "source-references"
     ],
-    "template": ""
+    "template": "",
+    "templateModules": [
+    ],
+    "thesisDocumentation": {
+        "enabled": false,
+        "templateMode": "aramf-default",
+        "templateSourceId": ""
+    }
 }
