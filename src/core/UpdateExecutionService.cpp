@@ -135,11 +135,12 @@ bool UpdateExecutionService::execute(const QString& projectRoot, const ProjectMo
         emit stateChanged(QStringLiteral("FAILED"));
         return false;
     }
+    projectRoot_ = QFileInfo(projectRoot).canonicalFilePath();
+    preExecutionStatus_ = gitStatus(projectRoot_);
+    executionStartedAt_ = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     if (!requiresImplementation) {
         AgentExecutionResult noChange;
         noChange.succeeded = true;
-        projectRoot_ = QFileInfo(projectRoot).canonicalFilePath();
-        executionStartedAt_ = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
         writeResult(noChange, QStringLiteral("AWAITING_VALIDATION"));
         emit stateChanged(QStringLiteral("AWAITING_VALIDATION"));
         emit finished(noChange);
@@ -158,9 +159,6 @@ bool UpdateExecutionService::execute(const QString& projectRoot, const ProjectMo
         return false;
     }
 
-    projectRoot_ = request.projectRoot;
-    preExecutionStatus_ = gitStatus(projectRoot_);
-    executionStartedAt_ = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     adapter_ = new CodexExecutionAdapter(this);
     connect(adapter_, &AgentExecutionAdapter::started, this, [this](qint64) { emit stateChanged(QStringLiteral("EXECUTING")); });
     connect(adapter_, &AgentExecutionAdapter::outputReceived, this, &UpdateExecutionService::outputReceived);

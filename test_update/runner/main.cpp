@@ -32,6 +32,7 @@
 #include <QLabel>
 #include <QPlainTextEdit>
 #include <QMessageBox>
+#include <QProcess>
 #include <QTimer>
 
 #include <iostream>
@@ -507,6 +508,23 @@ int main(int argc, char** argv)
     const auto routed = ValidationRouting::route({QStringLiteral("src/core/UpdateService.cpp")}, QStringLiteral("Framework Knowledge self-application"));
     campaign.check(QStringLiteral("UPDATE-078"), QStringLiteral("self-application uses the subsystem validation route"), ValidationRouting::levelName(routed.level) == QStringLiteral("SUBSYSTEM"));
 
+    const QString previousCodexOverride = qEnvironmentVariable("CODEX_CLI_PATH");
+    const QByteArray previousPath = qgetenv("PATH");
+    const QByteArray previousLocalAppData = qgetenv("LOCALAPPDATA");
+    QTemporaryDir codexFixture;
+    const QString codexVersionDirectory = QDir(codexFixture.path()).filePath(QStringLiteral("OpenAI/Codex/bin/hermetic-test"));
+    QDir().mkpath(codexVersionDirectory);
+    QFile hermeticCodex(QDir(codexVersionDirectory).filePath(QStringLiteral("codex.cmd")));
+    const bool fixtureReady = hermeticCodex.open(QIODevice::WriteOnly | QIODevice::Text);
+    if (fixtureReady) {
+        hermeticCodex.write("@echo codex-cli hermetic-test\r\n");
+        hermeticCodex.close();
+    }
+    const QByteArray hermeticPath = codexVersionDirectory.toLocal8Bit() + QByteArrayLiteral(";") + previousPath;
+    qputenv("LOCALAPPDATA", codexFixture.path().toLocal8Bit());
+    qputenv("PATH", hermeticPath);
+    qputenv("CODEX_CLI_PATH", QDir(codexVersionDirectory).filePath(QStringLiteral("codex.cmd")).toLocal8Bit());
+
     ProjectModel executionModel;
     QString executionError;
     const bool executionReady = applicationFixture.isValid() && initialize(applicationFixture.path(), &executionModel, &executionError);
@@ -567,7 +585,6 @@ int main(int argc, char** argv)
     executionAi.permissions = {QStringLiteral("read-project-files"), QStringLiteral("modify-files")};
     executionModel.setAiConfiguration(executionAi);
     campaign.check(QStringLiteral("UPDATE-101"), QStringLiteral("self-host workflow lesson is satisfied when the configured adapter is available"), UpdateExecutionService().canExecute(executionModel, &executionError));
-    const QString previousCodexOverride = qEnvironmentVariable("CODEX_CLI_PATH");
     const QString pathCandidate = QStandardPaths::findExecutable(QStringLiteral("codex"));
     qunsetenv("CODEX_CLI_PATH");
     const auto discoveredCodex = CodexExecutableResolver::resolve();
@@ -579,18 +596,6 @@ int main(int argc, char** argv)
     const auto invalidOverride = CodexExecutableResolver::resolve();
     campaign.check(QStringLiteral("UPDATE-104"), QStringLiteral("invalid CODEX_CLI_PATH is reported explicitly"), !invalidOverride.available && invalidOverride.source == QStringLiteral("CODEX_CLI_PATH") && invalidOverride.error.contains(QStringLiteral("CODEX_CLI_PATH")));
     if (previousCodexOverride.isEmpty()) qunsetenv("CODEX_CLI_PATH"); else qputenv("CODEX_CLI_PATH", previousCodexOverride.toLocal8Bit());
-    const QByteArray previousPath = qgetenv("PATH");
-    const QByteArray previousLocalAppData = qgetenv("LOCALAPPDATA");
-    QTemporaryDir codexFixture;
-    const QString codexVersionDirectory = QDir(codexFixture.path()).filePath(QStringLiteral("OpenAI/Codex/bin/hermetic-test"));
-    QDir().mkpath(codexVersionDirectory);
-    QFile hermeticCodex(QDir(codexVersionDirectory).filePath(QStringLiteral("codex.cmd")));
-    const bool fixtureReady = hermeticCodex.open(QIODevice::WriteOnly | QIODevice::Text);
-    if (fixtureReady) {
-        hermeticCodex.write("@echo codex-cli hermetic-test\r\n");
-        hermeticCodex.close();
-    }
-    qputenv("LOCALAPPDATA", codexFixture.path().toLocal8Bit());
     const auto localCandidates = CodexExecutableResolver::localCandidates();
     qputenv("PATH", QByteArray());
     const auto localDiscoveredCodex = CodexExecutableResolver::resolve();
@@ -754,13 +759,31 @@ int main(int argc, char** argv)
     knowledge.ensureFile(noChangeProject.path(), &adoptionError);
     const auto noChangePlan = UpdateService().analyze(noChangeProject.path(), noChangeModel, {adoptionId});
     const bool noChangePrepared = noChangePlan.success && UpdateService().apply(noChangeProject.path(), noChangeModel, &adoptionError);
+    QProcess noChangeGit;
+    noChangeGit.setWorkingDirectory(noChangeProject.path());
+    noChangeGit.start(QStringLiteral("git"), {QStringLiteral("init"), QStringLiteral("-q")});
+    const bool noChangeGitReady = noChangeGit.waitForFinished(3000) && noChangeGit.exitCode() == 0;
+    noChangeGit.start(QStringLiteral("git"), {QStringLiteral("config"), QStringLiteral("user.email"), QStringLiteral("aramf-test@example.invalid")});
+    const bool noChangeGitIdentity = noChangeGitReady && noChangeGit.waitForFinished(3000) && noChangeGit.exitCode() == 0;
+    noChangeGit.start(QStringLiteral("git"), {QStringLiteral("config"), QStringLiteral("user.name"), QStringLiteral("ARAMF Test")});
+    const bool noChangeGitNamed = noChangeGitIdentity && noChangeGit.waitForFinished(3000) && noChangeGit.exitCode() == 0;
+    noChangeGit.start(QStringLiteral("git"), {QStringLiteral("add"), QStringLiteral("-A")});
+    const bool noChangeGitStaged = noChangeGitNamed && noChangeGit.waitForFinished(3000) && noChangeGit.exitCode() == 0;
+    noChangeGit.start(QStringLiteral("git"), {QStringLiteral("commit"), QStringLiteral("-qm"), QStringLiteral("baseline")});
+    const bool noChangeGitCommitted = noChangeGitStaged && noChangeGit.waitForFinished(3000) && noChangeGit.exitCode() == 0;
+    QFile noChangeDirtyFile(QDir(noChangeProject.path()).filePath(QStringLiteral("pre-existing-dirty.txt")));
+    const bool noChangeDirtyReady = noChangeDirtyFile.open(QIODevice::WriteOnly | QIODevice::Text);
+    if (noChangeDirtyReady) {
+        noChangeDirtyFile.write("pre-existing user change\n");
+        noChangeDirtyFile.close();
+    }
     auto noChangeAi = noChangeModel.aiConfiguration();
     noChangeAi.permissions = {QStringLiteral("read-project-files"), QStringLiteral("modify-files")};
     noChangeModel.setAiConfiguration(noChangeAi);
     UpdateExecutionService noChangeExecution;
     const bool noChangeExecuted = noChangePrepared && noChangeExecution.execute(noChangeProject.path(), noChangeModel, &adoptionError);
     const auto noChangeEntries = knowledge.entries(noChangeProject.path(), &adoptionError);
-    campaign.check(QStringLiteral("UPDATE-170"), QStringLiteral("ALREADY_SATISFIED adoption completes without a source diff"), noChangeCmakeReady && noChangeExecuted && noChangePlan.plan.value(QStringLiteral("requiresImplementation")).toBool() == false && !noChangeEntries.isEmpty());
+    campaign.check(QStringLiteral("UPDATE-170"), QStringLiteral("ALREADY_SATISFIED adoption completes without a source diff"), noChangeCmakeReady && noChangePrepared && noChangeGitCommitted && noChangeDirtyReady && noChangeExecuted && noChangePlan.plan.value(QStringLiteral("requiresImplementation")).toBool() == false && !noChangeEntries.isEmpty());
     campaign.check(QStringLiteral("UPDATE-171"), QStringLiteral("repeated Prepare remains idempotent"), adoptedAgain);
     const auto adoptedEffective = knowledge.effectiveKnowledgeForProject(noChangeProject.path(), &adoptionError);
     campaign.check(QStringLiteral("UPDATE-172"), QStringLiteral("effective review state reports project plus global after adoption"), std::any_of(adoptedEffective.cbegin(), adoptedEffective.cend(), [&adoptionId](const auto& entry) { return entry.id == adoptionId && entry.origin == QStringLiteral("project+global"); }));
@@ -777,6 +800,7 @@ int main(int argc, char** argv)
         if (!file.open(QIODevice::ReadOnly)) return QJsonObject{};
         return QJsonDocument::fromJson(file.readAll()).object();
     }();
+    const auto noChangeActualFiles = noChangeResult.value(QStringLiteral("actualProjectFiles")).toArray();
     campaign.check(QStringLiteral("UPDATE-178"), QStringLiteral("Validate gates all-no-change completion"), noChangeValidated && noChangeExecution.executionState(noChangeProject.path()) == QStringLiteral("COMPLETED"));
     campaign.check(QStringLiteral("UPDATE-179"), QStringLiteral("no-change result records explicit validation"), noChangeResult.value(QStringLiteral("validationPerformed")).toBool(false) && noChangeResult.value(QStringLiteral("validationResult")).toString() == QStringLiteral("PASS"));
     campaign.check(QStringLiteral("UPDATE-180"), QStringLiteral("no-change result identifies the no-change completion path"), noChangeResult.value(QStringLiteral("noChangeRequired")).toBool(false) && noChangeResult.value(QStringLiteral("agentLaunched")).toBool(false) == false);
@@ -811,7 +835,9 @@ int main(int argc, char** argv)
     campaign.check(QStringLiteral("UPDATE-209"), QStringLiteral("Repeated execution does not create duplicate project identities"), knowledge.entries(noChangeProject.path()).size() == noChangeEntries.size());
     campaign.check(QStringLiteral("UPDATE-210"), QStringLiteral("Application result contains execution evidence"), !noChangeResult.value(QStringLiteral("executionId")).toString().isEmpty() && !noChangeResult.value(QStringLiteral("startedAt")).toString().isEmpty());
     campaign.check(QStringLiteral("UPDATE-211"), QStringLiteral("Application result records validation as passed"), noChangeResult.value(QStringLiteral("validationPerformed")).toBool(false) && noChangeResult.value(QStringLiteral("validationResult")).toString() == QStringLiteral("PASS"));
-    campaign.check(QStringLiteral("UPDATE-212"), QStringLiteral("The lifecycle ends only after explicit Execute and Validate"), noChangeValidated && noChangeResult.value(QStringLiteral("finalState")).toString() == QStringLiteral("COMPLETED") && noChangeResult.value(QStringLiteral("adoptedFrameworkKnowledge")).toArray().contains(adoptionId));
+    campaign.check(QStringLiteral("UPDATE-212"), QStringLiteral("The lifecycle ends only after explicit Execute and Validate"), noChangeValidated && noChangeResult.value(QStringLiteral("finalState")).toString() == QStringLiteral("COMPLETED") && noChangeResult.value(QStringLiteral("adoptedFrameworkKnowledge")).toArray().contains(adoptionId)
+                   && std::none_of(noChangeActualFiles.cbegin(), noChangeActualFiles.cend(), [](const auto& value) { return value.toString() == QStringLiteral("pre-existing-dirty.txt"); })
+                   && QFileInfo::exists(QDir(noChangeProject.path()).filePath(QStringLiteral("pre-existing-dirty.txt"))));
     QTemporaryDir backlogRoot;
     const QString backlogPath = QDir(backlogRoot.path()).filePath(QStringLiteral("ARAMF_DATA/aramf-improvement-backlog.json"));
     ImprovementBacklogService::setPathForTests(backlogPath);

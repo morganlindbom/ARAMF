@@ -23,8 +23,19 @@ CodexExecutableResolution CodexExecutableResolver::validate(const QString& path)
     const QFileInfo file(path);
     if (!file.exists() || !file.isFile()) return unavailable(QStringLiteral("invalid"), QStringLiteral("Codex executable is not a regular file: %1").arg(path));
     QProcess process;
+#ifdef Q_OS_WIN
+    if (file.suffix().compare(QStringLiteral("cmd"), Qt::CaseInsensitive) == 0
+        || file.suffix().compare(QStringLiteral("bat"), Qt::CaseInsensitive) == 0) {
+        process.setProgram(qEnvironmentVariable("COMSPEC", QStringLiteral("cmd.exe")));
+        process.setNativeArguments(QStringLiteral("/d /s /c \"\"%1\" --version\"").arg(file.absoluteFilePath()));
+    } else {
+        process.setProgram(file.absoluteFilePath());
+        process.setArguments({QStringLiteral("--version")});
+    }
+#else
     process.setProgram(file.absoluteFilePath());
     process.setArguments({QStringLiteral("--version")});
+#endif
     process.start();
     if (!process.waitForStarted(1500)) return unavailable(QStringLiteral("invalid"), QStringLiteral("Codex executable could not be started: %1").arg(process.errorString()));
     if (!process.waitForFinished(5000)) {

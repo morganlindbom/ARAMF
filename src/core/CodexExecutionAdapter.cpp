@@ -71,8 +71,24 @@ void CodexExecutionAdapter::start(const AgentExecutionRequest& request)
 
     process_ = new QProcess(this);
     process_->setWorkingDirectory(QDir::cleanPath(request.projectRoot));
-    process_->setProgram(programPath());
+    const QString executable = programPath();
+#ifdef Q_OS_WIN
+    if (QFileInfo(executable).suffix().compare(QStringLiteral("cmd"), Qt::CaseInsensitive) == 0
+        || QFileInfo(executable).suffix().compare(QStringLiteral("bat"), Qt::CaseInsensitive) == 0) {
+        process_->setProgram(qEnvironmentVariable("COMSPEC", QStringLiteral("cmd.exe")));
+        QString nativeArguments = QStringLiteral("/d /s /c \"\"%1\"").arg(executable);
+        for (const auto& argument : argumentsFor(request))
+            nativeArguments += QStringLiteral(" \"") + argument + QStringLiteral("\"");
+        nativeArguments += QStringLiteral("\"");
+        process_->setNativeArguments(nativeArguments);
+    } else {
+        process_->setProgram(executable);
+        process_->setArguments(argumentsFor(request));
+    }
+#else
+    process_->setProgram(executable);
     process_->setArguments(argumentsFor(request));
+#endif
     connect(process_, &QProcess::readyReadStandardOutput, this, [this] {
         const auto data = process_->readAllStandardOutput();
         standardOutput_ += QString::fromLocal8Bit(data);
