@@ -621,7 +621,7 @@ int main(int argc, char** argv)
     }
     qputenv("PATH", QByteArray());
     const auto localRediscoveredCodex = CodexExecutableResolver::resolve();
-    qputenv("PATH", previousPath);
+    qputenv("PATH", hermeticPath);
     campaign.check(QStringLiteral("UPDATE-111"), QStringLiteral("multiple local installations resolve deterministically"), localCandidates.size() < 2 || localRediscoveredCodex.path == newestValid);
     campaign.check(QStringLiteral("UPDATE-112"), QStringLiteral("Page 25 has resolver data for Codex availability"), !discoveredCodex.source.isEmpty() && (!discoveredCodex.available || !discoveredCodex.path.isEmpty()));
     campaign.check(QStringLiteral("UPDATE-113"), QStringLiteral("Page 25 can display the validated Codex version"), !discoveredCodex.available || !discoveredCodex.version.isEmpty());
@@ -630,6 +630,7 @@ int main(int argc, char** argv)
     campaign.check(QStringLiteral("UPDATE-116"), QStringLiteral("ARAMF_WORKER is not the implementation working directory"), !CodexExecutionAdapter::workingDirectoryAllowed(controlRequest));
     campaign.check(QStringLiteral("UPDATE-117"), QStringLiteral("Codex discovery and execution avoid shell interpolation"), !CodexExecutionAdapter::argumentsFor(executionRequest).contains(QStringLiteral("cmd.exe")) && !CodexExecutionAdapter::argumentsFor(executionRequest).contains(QStringLiteral("powershell")));
     campaign.check(QStringLiteral("UPDATE-118"), QStringLiteral("Codex hash-directory replacement can be rediscovered dynamically"), localCandidates.isEmpty() || localRediscoveredCodex.available);
+    qputenv("PATH", previousPath);
     if (previousLocalAppData.isEmpty()) qunsetenv("LOCALAPPDATA"); else qputenv("LOCALAPPDATA", previousLocalAppData);
     QTemporaryDir globalSourceProject;
     ProjectModel globalSourceModel;
