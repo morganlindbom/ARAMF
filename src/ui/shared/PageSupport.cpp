@@ -84,6 +84,16 @@ void normalizeWorkflowPage(QWidget* page)
     // pressure and let controls consume only the width the host supplies.
     page->setMinimumWidth(0);
     page->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    if (auto* rootLayout = page->layout()) {
+        int left = 0;
+        int top = 0;
+        int right = 0;
+        int bottom = 0;
+        rootLayout->getContentsMargins(&left, &top, &right, &bottom);
+        // Reserve the small native QScrollArea allowance at the page boundary
+        // so controls do not paint a few pixels beyond the visible viewport.
+        rootLayout->setContentsMargins(left, top, right + 4, bottom);
+    }
     for (auto* form : page->findChildren<QFormLayout*>()) {
         form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
         form->setRowWrapPolicy(QFormLayout::WrapLongRows);

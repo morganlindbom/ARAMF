@@ -413,6 +413,10 @@ public:
     int migratedFromSchemaVersion() const { return migratedFromSchemaVersion_; }
     QString migrationStatus() const { return migrationStatus_; }
     QJsonArray migrationNotices() const { return migrationNotices_; }
+    int targetRelease() const { return targetRelease_; }
+    bool hasTargetRelease() const { return targetRelease_ > 0; }
+    QSet<QString> completedPageIds() const { return completedPageIds_; }
+    bool isPageCompleted(const QString& pageId) const { return completedPageIds_.contains(pageId); }
 
     void setProjectName(const QString& value);
     void setProjectPath(const QString& value);
@@ -446,6 +450,9 @@ public:
     void resetForNewProject();
     void setModified(bool modified);
     void setMigrationState(int sourceVersion, const QString& status, const QJsonArray& notices);
+    void setTargetRelease(int release);
+    void setPageCompleted(const QString& pageId, bool completed);
+    void setCompletedPageIds(const QSet<QString>& pageIds);
 
     void beginUpdate();
     void endUpdate();
@@ -497,4 +504,6 @@ private:
     int migratedFromSchemaVersion_ = ProjectSchema::CurrentVersion;
     QString migrationStatus_ = ProjectSchema::MigrationOk;
     QJsonArray migrationNotices_;
+    int targetRelease_ = 0;
+    QSet<QString> completedPageIds_;
 };

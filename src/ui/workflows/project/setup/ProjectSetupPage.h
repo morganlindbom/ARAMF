@@ -6,7 +6,6 @@
 
 class QLineEdit;
 class QTextEdit;
-class TemplateSelector;
 class QPushButton;
 class QComboBox;
 class QCheckBox;
@@ -22,8 +21,13 @@ public slots:
     void refreshFromModel();
 
 public:
+    // Saves the current ProjectModel through the canonical project-file path.
+    // This is the shared normal save operation used by page-level Save Work.
+    bool saveCurrentProject(QString* error = nullptr);
+
     // Saves the current model, invoking the existing Save As dialog when needed.
-    // No generation is performed here.
+    // Kept as a compatibility wrapper for the generation workflow; no
+    // generation is performed here.
     bool saveForGeneration(QString* error = nullptr);
 
 private slots:
@@ -41,15 +45,15 @@ private:
     ProjectModel* model_;
     TemplateManager* manager_;
     ProjectPersistence* persistence_;
-    TemplateSelector* templateSelector_;
     QLineEdit* name_;
     QLineEdit* path_;
     QLineEdit* id_;
+    QLineEdit* projectFilePath_;
     QLineEdit* type_;
     QTextEdit* description_;
     QLineEdit* workerNameSuffix_ = nullptr;
     QLabel* workerNamePreview_ = nullptr;
-    QLabel* projectFilePreview_ = nullptr;
+    QLineEdit* workerPath_ = nullptr;
     QLabel* migrationStatus_ = nullptr;
     QLabel* migrationDetails_ = nullptr;
     QString workerNameRawInput_;

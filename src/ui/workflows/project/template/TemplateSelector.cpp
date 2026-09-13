@@ -60,12 +60,12 @@ TemplateSelector::TemplateSelector(ProjectModel* model, TemplateManager* manager
     layout->addWidget(templateFrame_);
     auto* details = new QLabel(tr("Select one or more modules. Settings are merged; unchecking a module removes only its contribution."), this);
     details->setWordWrap(true); details->setObjectName(QStringLiteral("templateDetails")); layout->addWidget(details);
-    auto* actions = new QVBoxLayout;
+    auto* actions = new QHBoxLayout;
     auto* save = new QPushButton(tr("Save current configuration as template"), this);
     save->setObjectName("saveCustomTemplate"); remove_->setObjectName("removeCustomTemplate");
-    save->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    remove_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-    actions->addWidget(save); actions->addWidget(remove_); layout->addLayout(actions);
+    save->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+    remove_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
+    actions->addWidget(save); actions->addWidget(remove_); actions->addStretch(); layout->addLayout(actions);
     status_->setObjectName("templateStatus"); status_->setWordWrap(true); layout->addWidget(status_);
 
     // Kept hidden as a compatibility bridge for older callers. The checkboxes

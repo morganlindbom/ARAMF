@@ -39,9 +39,9 @@
             "status": "CURRENT"
         },
         {
-            "currentFingerprint": "f4f05dbcb2a1b85038cfebccf34499bc4fb4ba41d7335d76cc57b62846f4ad7e",
+            "currentFingerprint": "165d26f1e769024d65727c4db81012a72bfc6d26ca5b119452858fd4081e7683",
             "id": "18635c7cd22b919fd9fe",
-            "recordedFingerprint": "f4f05dbcb2a1b85038cfebccf34499bc4fb4ba41d7335d76cc57b62846f4ad7e",
+            "recordedFingerprint": "165d26f1e769024d65727c4db81012a72bfc6d26ca5b119452858fd4081e7683",
             "scope": "all",
             "section": "routing",
             "source": "ARAMF_WORKER/routing/task-routes.json",
@@ -57,9 +57,9 @@
             "status": "CURRENT"
         },
         {
-            "currentFingerprint": "abdf0a9d1f4a58d6b536f290883e5c5690e4d2dd74477058a9bd6da344c3f892",
+            "currentFingerprint": "68835585ab7fb01e15aea3b48cbf74aecd53a15373fde2fddad81362511404b9",
             "id": "1bf5b61e779e42541cf5",
-            "recordedFingerprint": "abdf0a9d1f4a58d6b536f290883e5c5690e4d2dd74477058a9bd6da344c3f892",
+            "recordedFingerprint": "68835585ab7fb01e15aea3b48cbf74aecd53a15373fde2fddad81362511404b9",
             "scope": "all",
             "section": "routing",
             "source": "ARAMF_WORKER/routing/scope-routes.json",
@@ -111,27 +111,27 @@
             "status": "CURRENT"
         },
         {
-            "currentFingerprint": "de15f4349a1d1376856b32e708c02b297cb29f3a328dac2498a0ef6b8474d988",
+            "currentFingerprint": "6a094da5080b683bc21438c7d4d317df57e5274ebc6f75ac0b5f04859d5bf453",
             "id": "3e0aac4d24e266687153",
-            "recordedFingerprint": "de15f4349a1d1376856b32e708c02b297cb29f3a328dac2498a0ef6b8474d988",
+            "recordedFingerprint": "6a094da5080b683bc21438c7d4d317df57e5274ebc6f75ac0b5f04859d5bf453",
             "scope": "software",
             "section": "resources",
             "source": "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8",
             "status": "CURRENT"
         },
         {
-            "currentFingerprint": "d0098bbb54952cce8d314d35e6f07641388a0c7e2dbce2eeeeca2b9f6fe3a411",
+            "currentFingerprint": "4940304c8adca109f4a8d8b8c301c8301cfad138d622f460e27f8569a3914110",
             "id": "4e31696dd258350fa701",
-            "recordedFingerprint": "d0098bbb54952cce8d314d35e6f07641388a0c7e2dbce2eeeeca2b9f6fe3a411",
+            "recordedFingerprint": "4940304c8adca109f4a8d8b8c301c8301cfad138d622f460e27f8569a3914110",
             "scope": "all",
             "section": "governance",
             "source": "ARAMF_WORKER/AGENTS.md",
             "status": "CURRENT"
         },
         {
-            "currentFingerprint": "56cff4d37a45f1097aa77a6f9a0875a65d1825bde09d86c041c75a77a4fb6b88",
+            "currentFingerprint": "5e3520ecc73dce7f01f2d455ed2d8f5836956ffab9a453c0e4bbaf2beede5a43",
             "id": "5279bc546fb4c7b6194d",
-            "recordedFingerprint": "56cff4d37a45f1097aa77a6f9a0875a65d1825bde09d86c041c75a77a4fb6b88",
+            "recordedFingerprint": "5e3520ecc73dce7f01f2d455ed2d8f5836956ffab9a453c0e4bbaf2beede5a43",
             "scope": "all",
             "section": "project-state",
             "source": "ARAMF_WORKER/PROJECT_STATUS.md",
@@ -174,9 +174,9 @@
             "status": "CURRENT"
         },
         {
-            "currentFingerprint": "8b405a4bbd27a37e7cd302b86603b770b2a2afe8d353bbe047618d87f6dc257a",
+            "currentFingerprint": "04c177e2b8cdaea67213cc0f62af8dc1af88164e7b421348735dafd52e26c55a",
             "id": "a9be820da65a6b88c14e",
-            "recordedFingerprint": "8b405a4bbd27a37e7cd302b86603b770b2a2afe8d353bbe047618d87f6dc257a",
+            "recordedFingerprint": "04c177e2b8cdaea67213cc0f62af8dc1af88164e7b421348735dafd52e26c55a",
             "scope": "all",
             "section": "project-state",
             "source": "ARAMF_WORKER/memory/current-state.md",
@@ -237,18 +237,18 @@
             "status": "CURRENT"
         },
         {
-            "currentFingerprint": "da7b2062dacae227d444ef8f7b73650ff62dee72a8d2e39c76cba80eb8c7d8a6",
+            "currentFingerprint": "f1bce545da85f01ae0c08acd0241336290a24abc141fa66619add83ed841279d",
             "id": "d337e707f92b78abc66f",
-            "recordedFingerprint": "da7b2062dacae227d444ef8f7b73650ff62dee72a8d2e39c76cba80eb8c7d8a6",
+            "recordedFingerprint": "f1bce545da85f01ae0c08acd0241336290a24abc141fa66619add83ed841279d",
             "scope": "all",
             "section": "topology",
             "source": "ARAMF_WORKER/worker-manifest.json",
             "status": "CURRENT"
         },
         {
-            "currentFingerprint": "de15f4349a1d1376856b32e708c02b297cb29f3a328dac2498a0ef6b8474d988",
+            "currentFingerprint": "6a094da5080b683bc21438c7d4d317df57e5274ebc6f75ac0b5f04859d5bf453",
             "id": "e8c9100501b1a532de18",
-            "recordedFingerprint": "de15f4349a1d1376856b32e708c02b297cb29f3a328dac2498a0ef6b8474d988",
+            "recordedFingerprint": "6a094da5080b683bc21438c7d4d317df57e5274ebc6f75ac0b5f04859d5bf453",
             "scope": "build-system",
             "section": "resources",
             "source": "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8",
@@ -273,7 +273,7 @@
             "status": "CURRENT"
         }
     ],
-    "indexFingerprint": "70707adda787fc3e58182cad6ae23bb13b41f81783b0f70ce50716ebdc513791",
+    "indexFingerprint": "9bfc1e76ecbaa526fea239d056fa818586eef4020b6b29f450080c9bc4d12ba8",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "schemaVersion": 1,
     "staleCount": 0

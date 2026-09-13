@@ -5,6 +5,8 @@
 #include "ui/workflows/ai/integration/AiIntegrationPage.h"
 #include "ui/workflows/memory/maintenance/MemoryMaintenancePage.h"
 #include "core/ProjectModel.h"
+#include "core/ProjectPersistence.h"
+#include "core/WorkflowPageMetadata.h"
 #include "core/ProjectMemory.h"
 #include "core/FrameworkKnowledge.h"
 #include "ui/workflows/resources/authority/ResourceAuthorityPage.h"
@@ -14,10 +16,15 @@
 #include "core/CodexExecutionAdapter.h"
 #include "core/AramfPaths.h"
 #include "core/ImprovementBacklog.h"
+#include "ui/workflows/project/overview/ProjectOverviewPage.h"
+#include "ui/shared/ParentOverview.h"
 
 #include <QApplication>
+#include <QCoreApplication>
+#include <QDir>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QColor>
 #include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QLabel>
@@ -26,6 +33,8 @@
 #include <QPlainTextEdit>
 #include <QTemporaryDir>
 #include <QStandardPaths>
+#include <QMouseEvent>
+#include <QSet>
 #include <cmath>
 #include <iostream>
 
@@ -49,7 +58,7 @@ int main(int argc, char** argv)
     ImprovementBacklogService::setPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/aramf-improvement-backlog.json")));
     QFile::remove(FrameworkKnowledgeService().legacyGlobalLibraryPath());
     WorkflowWidget workflow;
-    workflow.setStepCount(26);
+    workflow.setStepCount(28);
 
     auto* list = workflow.findChild<QListWidget*>();
     bool ok = require(list != nullptr, "workflow list must exist");
@@ -59,9 +68,12 @@ int main(int argc, char** argv)
     QObject::connect(&workflow, &WorkflowWidget::pageSelected,
                      [&selected](WorkflowPageId page) { selected << page; });
 
-    const QList<int> rows{1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 15, 16, 17, 19, 20, 22, 23, 25, 26, 27, 28, 30, 31, 32};
+    const QList<int> rows{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 21, 22, 24, 25,
+                         27, 28, 29, 30, 31, 32, 34, 35, 36, 37, 39, 40, 41};
     const QList<WorkflowPageId> expected{
         WorkflowPageId::Setup,
+        WorkflowPageId::ProjectIdentity,
+        WorkflowPageId::ProjectModulesTemplates,
         WorkflowPageId::Academic,
         WorkflowPageId::Languages,
         WorkflowPageId::Frameworks,
@@ -80,6 +92,12 @@ int main(int argc, char** argv)
         WorkflowPageId::RuleRouting,
         WorkflowPageId::MemoryCapture,
         WorkflowPageId::MemoryMaintenance,
+        WorkflowPageId::ReleaseOverview,
+        WorkflowPageId::ProductVersion,
+        WorkflowPageId::ComponentVersions,
+        WorkflowPageId::SchemaCompatibility,
+        WorkflowPageId::ReleaseReadiness,
+        WorkflowPageId::ApprovalHistory,
         WorkflowPageId::Review,
         WorkflowPageId::Generate,
         WorkflowPageId::Verify,
@@ -103,6 +121,171 @@ int main(int argc, char** argv)
                   "heading rows must not emit page selection");
     ok &= require(list->item(0)->flags() == Qt::NoItemFlags,
                   "heading rows must not be selectable");
+    ok &= require(list->item(0)->text() == QStringLiteral("PROJECT")
+                      && list->item(11)->text() == QStringLiteral("AI")
+                      && list->item(16)->text() == QStringLiteral("RESOURCES")
+                      && list->item(26)->text() == QStringLiteral("RELEASE")
+                      && list->item(33)->text() == QStringLiteral("GENERATE"),
+                  "main sections use canonical heading labels");
+    ok &= require(list->item(0)->textAlignment() == Qt::AlignCenter
+                      && list->item(0)->background().color() == QColor(199, 221, 239)
+                      && list->styleSheet().contains("background: #e5eef8")
+                      && list->styleSheet().contains("color: #375774"),
+                  "main section headings and active rows use the swapped restrained colors");
+    ok &= require(list->item(1)->text().contains(QStringLiteral("1  What is the project?"))
+                      && list->item(2)->text().contains(QStringLiteral("1.1  Project file, path & Worker"))
+                      && list->item(3)->text().contains(QStringLiteral("1.2  Project modules & templates"))
+                      && list->item(2)->text().size() > list->item(1)->text().size(),
+                  "Project hierarchy is always expanded with distinct child indentation");
+    list->setCurrentRow(2);
+    app.processEvents();
+    ok &= require(workflow.currentPage() == WorkflowPageId::ProjectIdentity
+                      && list->currentItem()->isSelected(),
+                  "child page retains distinct active selection state");
+
+    ProjectModel completionModel;
+    WorkflowWidget completionWorkflow;
+    completionWorkflow.setStepCount(28);
+    completionWorkflow.setCompletionModel(&completionModel);
+    completionWorkflow.show();
+    QApplication::processEvents();
+    auto* completionList = completionWorkflow.findChild<QListWidget*>();
+    auto* parentItem = completionList->item(1);
+    auto* firstChild = completionList->item(2);
+    auto* secondChild = completionList->item(3);
+    auto* academicItem = completionList->item(4);
+    int expectedSetupProgressPages = 0;
+    int expectedUserCheckablePages = 0;
+    for (const auto page : completionWorkflow.workflowPageIds()) {
+        const auto capabilities = workflowPageCapabilities(workflowPageKey(page));
+        if (capabilities.countsTowardSetupProgress) ++expectedSetupProgressPages;
+        if (capabilities.userCheckableCompletion) ++expectedUserCheckablePages;
+    }
+    ok &= require(completionWorkflow.completablePageCount() == expectedSetupProgressPages
+                      && completionWorkflow.completedPageCount() == 0
+                      && completionWorkflow.completionPercentage() == 0,
+                  "setup progress counts metadata-eligible workflow pages");
+    ok &= require(!completionList->item(28)->data(Qt::UserRole + 1).toBool()
+                      && !completionList->item(28)->data(Qt::UserRole + 3).toBool()
+                      && completionWorkflow.completablePageCount() == expectedSetupProgressPages,
+                  "RELEASE child pages have no manual marker and stay outside setup progress");
+    completionModel.setTargetRelease(1);
+    ok &= require(completionWorkflow.completablePageCount() == expectedSetupProgressPages
+                      && completionWorkflow.completionPercentage() == 0,
+                  "selecting a target release does not alter setup progress");
+    ok &= require(!parentItem->data(Qt::UserRole + 1).toBool()
+                      && firstChild->data(Qt::UserRole + 1).toBool()
+                      && academicItem->data(Qt::UserRole + 1).toBool(),
+                  "parent has no completion marker while child and normal pages do");
+    int setupCompletionMarkerCount = 0;
+    for (int row = 0; row < completionList->count(); ++row) {
+        if (completionList->item(row)->data(Qt::UserRole + 1).toBool()) ++setupCompletionMarkerCount;
+    }
+    ok &= require(setupCompletionMarkerCount == expectedUserCheckablePages,
+                  "all and only metadata-enabled pages expose manual completion markers");
+    ok &= require(parentItem->background().color() == QColor(255, 251, 224),
+                  "incomplete parent uses restrained light yellow aggregate state");
+
+    const auto clickCompletion = [&](QListWidgetItem* item) {
+        const QRect rect = completionList->visualItemRect(item);
+        QMouseEvent event(QEvent::MouseButtonPress,
+                          QPointF(rect.right() - 10, rect.center().y()),
+                          Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        QCoreApplication::sendEvent(completionList->viewport(), &event);
+        QApplication::processEvents();
+    };
+    const auto derivedPercentage = [&](int completedPages) {
+        return expectedSetupProgressPages <= 0
+            ? 0
+            : static_cast<int>(std::lround(100.0 * completedPages / expectedSetupProgressPages));
+    };
+    clickCompletion(firstChild);
+    ok &= require(completionModel.isPageCompleted(workflowPageKey(WorkflowPageId::ProjectIdentity))
+                      && firstChild->data(Qt::UserRole + 2).toBool()
+                      && completionWorkflow.completedPageCount() == 1
+                      && completionWorkflow.completionPercentage() == derivedPercentage(1)
+                      && parentItem->background().color() == QColor(255, 251, 224),
+                  "one completed child stays yellow and exposes a checked marker");
+    clickCompletion(secondChild);
+    ok &= require(completionModel.isPageCompleted(workflowPageKey(WorkflowPageId::ProjectModulesTemplates))
+                      && completionWorkflow.completedPageCount() == 2
+                      && completionWorkflow.completionPercentage() == derivedPercentage(2)
+                      && parentItem->background().color() == QColor(204, 238, 211),
+                  "all completed children turn the parent noticeably light green");
+    clickCompletion(firstChild);
+    ok &= require(!completionModel.isPageCompleted(workflowPageKey(WorkflowPageId::ProjectIdentity))
+                      && parentItem->background().color() == QColor(255, 251, 224),
+                  "clearing one child immediately returns the parent to yellow");
+
+    const QSet<QString> completionBeforeNonSetupClicks = completionModel.completedPageIds();
+    for (const auto page : completionWorkflow.workflowPageIds()) {
+        const auto capabilities = workflowPageCapabilities(workflowPageKey(page));
+        if (capabilities.userCheckableCompletion) continue;
+        auto* nonSetupItem = completionWorkflow.navigationItem(page);
+        if (!nonSetupItem) continue;
+        ok &= require(!nonSetupItem->data(Qt::UserRole + 1).toBool()
+                          && !nonSetupItem->data(Qt::UserRole + 3).toBool(),
+                      "non-SETUP workflow page has no manual completion capability");
+        clickCompletion(nonSetupItem);
+        ok &= require(completionModel.completedPageIds() == completionBeforeNonSetupClicks,
+                      "non-SETUP workflow page right side is not a completion click target");
+    }
+
+    ProjectModel allSetupModel;
+    for (const auto page : completionWorkflow.workflowPageIds()) {
+        if (workflowPageCapabilities(workflowPageKey(page)).countsTowardSetupProgress) {
+            allSetupModel.setPageCompleted(workflowPageKey(page), true);
+        }
+    }
+    WorkflowWidget allSetupWorkflow;
+    allSetupWorkflow.setStepCount(28);
+    allSetupWorkflow.setCompletionModel(&allSetupModel);
+    ok &= require(allSetupWorkflow.completablePageCount() == expectedSetupProgressPages
+                      && allSetupWorkflow.completedPageCount() == expectedSetupProgressPages
+                      && allSetupWorkflow.completionPercentage() == 100,
+                  "normal SETUP completion can still reach 100 percent");
+
+    ProjectModel staleUiModel;
+    staleUiModel.setPageCompleted(workflowPageKey(WorkflowPageId::ProductVersion), true);
+    staleUiModel.setPageCompleted(workflowPageKey(WorkflowPageId::Generate), true);
+    WorkflowWidget staleUiWorkflow;
+    staleUiWorkflow.setStepCount(28);
+    staleUiWorkflow.setCompletionModel(&staleUiModel);
+    ok &= require(staleUiModel.completedPageIds().isEmpty()
+                      && !staleUiWorkflow.findChild<QListWidget*>()->item(28)->data(Qt::UserRole + 2).toBool()
+                      && staleUiWorkflow.completedPageCount() == 0,
+                  "stale non-SETUP completion state cannot re-enable UI completion");
+
+    ProjectPersistence completionPersistence;
+    QTemporaryDir completionProject;
+    const QString completionFile = QDir(completionProject.path()).filePath(QStringLiteral("progress.aramf.json"));
+    completionModel.setPageCompleted(workflowPageKey(WorkflowPageId::ProjectIdentity), true);
+    ok &= require(completionPersistence.save(completionModel, completionFile),
+                  "manual completion state saves through project persistence");
+    ProjectModel reopenedCompletion;
+    ok &= require(completionPersistence.load(&reopenedCompletion, completionFile),
+                  "manual completion state reloads through project persistence");
+    ok &= require(reopenedCompletion.isPageCompleted(workflowPageKey(WorkflowPageId::ProjectIdentity))
+                      && !completionPersistence.configuration(reopenedCompletion).contains(QStringLiteral("workflowProgress")),
+                  "completion persists by stable page ID without entering technical configuration");
+
+    ProjectOverviewPage overview;
+    overview.show();
+    QApplication::processEvents();
+    const auto cards = overview.findChildren<ParentOverviewCard*>();
+    ok &= require(cards.size() == 2 && overview.findChildren<QCheckBox*>().isEmpty(),
+                  "parent overview has reusable child cards and no completion status");
+    QSet<QString> cardDestinations;
+    QObject::connect(&overview, &ParentOverviewPage::cardActivated,
+                     [&cardDestinations](const QString& id) { cardDestinations.insert(id); });
+    for (auto* card : cards) {
+        QMouseEvent event(QEvent::MouseButtonPress, QPointF(8, 8),
+                          Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        QCoreApplication::sendEvent(card, &event);
+    }
+    ok &= require(cardDestinations.contains(QStringLiteral("project.file-worker"))
+                      && cardDestinations.contains(QStringLiteral("project.modules-templates")),
+                  "parent overview cards route directly to both child IDs");
 
     ProjectModel model;
     AiAgentsPage agentsPage(&model);

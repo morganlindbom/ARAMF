@@ -5,6 +5,8 @@
 #include "ui/workflow/WorkflowWidget.h"
 
 #include "ui/workflows/project/setup/ProjectSetupPage.h"
+#include "ui/workflows/project/overview/ProjectOverviewPage.h"
+#include "ui/workflows/project/modulestemplates/ProjectModulesTemplatesPage.h"
 #include "ui/workflows/project/academic/ProjectAcademicPage.h"
 #include "ui/workflows/project/languages/ProjectLanguagesPage.h"
 #include "ui/workflows/project/frameworks/ProjectFrameworksPage.h"
@@ -32,7 +34,14 @@
 #include "ui/workflows/update/review/FrameworkKnowledgeReviewPage.h"
 #include "ui/workflows/update/apply/FrameworkKnowledgeApplyPage.h"
 #include "ui/workflows/update/backlog/ImprovementBacklogPage.h"
+#include "ui/workflows/release/overview/ReleaseOverviewPage.h"
+#include "ui/workflows/release/productversion/ProductVersionPage.h"
+#include "ui/workflows/release/componentversions/ComponentVersionsPage.h"
+#include "ui/workflows/release/schema/SchemaCompatibilityPage.h"
+#include "ui/workflows/release/readiness/ReleaseReadinessPage.h"
+#include "ui/workflows/release/history/ApprovalHistoryPage.h"
 #include "ui/shared/PageSupport.h"
+#include "ui/shared/FooterProgressDisplay.h"
 
 #include <QFrame>
 #include <QApplication>
@@ -46,12 +55,20 @@
 #include <QScrollBar>
 #include <QShortcut>
 #include <QStackedWidget>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QMessageBox>
+#include <QResizeEvent>
+#include <QShowEvent>
+#include <QTimer>
 #include <QWheelEvent>
 #include <QtMath>
 #include <QWidget>
 
 namespace
 {
+
+    constexpr int kWorkflowFooterControlHeight = 40;
 
     QScreen *screenForIndex(int index)
     {
@@ -81,6 +98,8 @@ namespace
 
         static const QList<WorkflowPageId> sequence{
             WorkflowPageId::Setup,
+            WorkflowPageId::ProjectIdentity,
+            WorkflowPageId::ProjectModulesTemplates,
             WorkflowPageId::Academic,
             WorkflowPageId::Languages,
             WorkflowPageId::Frameworks,
@@ -99,6 +118,12 @@ namespace
             WorkflowPageId::RuleRouting,
             WorkflowPageId::MemoryCapture,
             WorkflowPageId::MemoryMaintenance,
+            WorkflowPageId::ReleaseOverview,
+            WorkflowPageId::ProductVersion,
+            WorkflowPageId::ComponentVersions,
+            WorkflowPageId::SchemaCompatibility,
+            WorkflowPageId::ReleaseReadiness,
+            WorkflowPageId::ApprovalHistory,
             WorkflowPageId::Review,
             WorkflowPageId::Generate,
             WorkflowPageId::Verify,
@@ -123,7 +148,8 @@ MainWindow::MainWindow(
       preferredWindowHeight_(preferredWindowHeight),
       projectModel_(this),
       templateManager_(this),
-      generationServices_(this)
+      generationServices_(this),
+      releaseManagementService_(this)
 {
     /*Creates and configures the ARAMF main application window.
 
@@ -172,20 +198,58 @@ MainWindow::MainWindow(
 
     pageScroll_ = new QScrollArea(central);
     pageScroll_->setObjectName(QStringLiteral("workflowPageScroll"));
-    pageScroll_->setWidgetResizable(true);
+    // Keep the content widget at its natural height.  Its width is updated
+    // to the viewport width by refreshCurrentWorkflowLayout(), so the scroll host never
+    // stretches compact page controls vertically just to fill the viewport.
+    pageScroll_->setWidgetResizable(false);
     pageScroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     pageScroll_->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     pageScroll_->setFrameShape(QFrame::NoFrame);
+    pageScroll_->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    pageScroll_->setMinimumSize(0, 0);
+    pageScroll_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     stack_ = new QStackedWidget;
     // The scroll viewport owns horizontal width. Do not let the widest page
     // size hint turn into a minimum width for the entire stacked host.
-    stack_->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    stack_->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     stack_->setMinimumSize(0, 0);
     pageScroll_->setWidget(stack_);
+    connect(stack_, &QStackedWidget::currentChanged, this, [this] {
+        refreshCurrentWorkflowLayout();
+        QTimer::singleShot(0, this, &MainWindow::refreshCurrentWorkflowLayout);
+    });
 
+    auto* pageArea = new QWidget(central);
+    pageArea->setMinimumSize(0, 0);
+    pageArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    auto* pageAreaLayout = new QVBoxLayout(pageArea);
+    pageAreaLayout->setContentsMargins(0, 0, 0, 0);
+    pageAreaLayout->setSpacing(0);
+    pageAreaLayout->addWidget(pageScroll_, 1);
+    auto* footer = new QFrame(pageArea);
+    footer->setObjectName(QStringLiteral("workflowPageFooter"));
+    footer->setFrameShape(QFrame::StyledPanel);
+    footer->setFrameShadow(QFrame::Plain);
+    auto* footerLayout = new QHBoxLayout(footer);
+    footerLayout->setContentsMargins(10, 8, 10, 8);
+    saveWork_ = new QPushButton(tr("Save Work"), footer);
+    saveWork_->setObjectName(QStringLiteral("saveWork"));
+    saveWork_->setFixedHeight(kWorkflowFooterControlHeight);
+    footerLayout->addWidget(saveWork_);
+    completionProgress_ = new FooterProgressDisplay(footer);
+    completionProgress_->setObjectName(QStringLiteral("setupProgress"));
+    completionProgress_->setRange(0, 100);
+    completionProgress_->setFormat(tr("%p% of your setup is done"));
+    completionProgress_->setAlignment(Qt::AlignCenter);
+    completionProgress_->setFixedHeight(kWorkflowFooterControlHeight);
+    completionProgress_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    footerLayout->addWidget(completionProgress_, 1);
+    pageAreaLayout->addWidget(footer, 0);
     layout->addWidget(workflow_);
-    layout->addWidget(pageScroll_, 1);
+    layout->addWidget(pageArea, 1);
+
+    projectOverviewPage_ = new ProjectOverviewPage(stack_);
 
     projectPage_ =
         new ProjectSetupPage(
@@ -193,6 +257,9 @@ MainWindow::MainWindow(
             &templateManager_,
             &projectPersistence_,
             stack_);
+
+    projectModulesTemplatesPage_ = new ProjectModulesTemplatesPage(
+        &projectModel_, &templateManager_, stack_);
 
     academicPage_ = new ProjectAcademicPage(&projectModel_, stack_);
 
@@ -265,6 +332,12 @@ MainWindow::MainWindow(
     updateReviewPage_ = new FrameworkKnowledgeReviewPage(&projectModel_, stack_);
     updateApplyPage_ = new FrameworkKnowledgeApplyPage(&projectModel_, stack_);
     improvementBacklogPage_ = new ImprovementBacklogPage(&projectModel_, stack_);
+    releaseOverviewPage_ = new ReleaseOverviewPage(stack_);
+    productVersionPage_ = new ProductVersionPage(&projectModel_, &releaseManagementService_, stack_);
+    componentVersionsPage_ = new ComponentVersionsPage(&releaseManagementService_, stack_);
+    schemaCompatibilityPage_ = new SchemaCompatibilityPage(&projectModel_, &releaseManagementService_, stack_);
+    releaseReadinessPage_ = new ReleaseReadinessPage(&projectModel_, &releaseManagementService_, stack_);
+    approvalHistoryPage_ = new ApprovalHistoryPage(&releaseManagementService_, stack_);
 
     const auto registerPage =
         [this](WorkflowPageId id, QWidget *page)
@@ -274,7 +347,11 @@ MainWindow::MainWindow(
             stack_->addWidget(page));
     };
 
-    registerPage(WorkflowPageId::Setup, projectPage_);
+    // Setup remains the stable compatibility route for the former page 1;
+    // the visible page is now the small parent overview.
+    registerPage(WorkflowPageId::Setup, projectOverviewPage_);
+    registerPage(WorkflowPageId::ProjectIdentity, projectPage_);
+    registerPage(WorkflowPageId::ProjectModulesTemplates, projectModulesTemplatesPage_);
     registerPage(WorkflowPageId::Academic, academicPage_);
     registerPage(WorkflowPageId::Languages, languagesPage_);
     registerPage(WorkflowPageId::Frameworks, frameworksPage_);
@@ -300,6 +377,12 @@ MainWindow::MainWindow(
     registerPage(WorkflowPageId::UpdateReview, updateReviewPage_);
     registerPage(WorkflowPageId::UpdateApply, updateApplyPage_);
     registerPage(WorkflowPageId::ImprovementBacklog, improvementBacklogPage_);
+    registerPage(WorkflowPageId::ReleaseOverview, releaseOverviewPage_);
+    registerPage(WorkflowPageId::ProductVersion, productVersionPage_);
+    registerPage(WorkflowPageId::ComponentVersions, componentVersionsPage_);
+    registerPage(WorkflowPageId::SchemaCompatibility, schemaCompatibilityPage_);
+    registerPage(WorkflowPageId::ReleaseReadiness, releaseReadinessPage_);
+    registerPage(WorkflowPageId::ApprovalHistory, approvalHistoryPage_);
 
     // All pages share the same scroll host.  Normalize their horizontal
     // policies once at the shell boundary so every workflow page follows the
@@ -308,6 +391,14 @@ MainWindow::MainWindow(
         AramfUi::normalizeWorkflowPage(stack_->widget(index));
 
     workflow_->setStepCount(stack_->count());
+    workflow_->setCompletionModel(&projectModel_);
+    connect(&projectModel_, &ProjectModel::modelChanged, this, [this] {
+        refreshCompletionProgress();
+        // Page refreshes may rebuild content after the model signal returns.
+        // Run the same shell synchronization used at cold start after that
+        // deferred layout work has settled.
+        QTimer::singleShot(0, this, &MainWindow::refreshCurrentWorkflowLayout);
+    });
 
     connect(
         workflow_,
@@ -327,9 +418,20 @@ MainWindow::MainWindow(
         this,
         &MainWindow::goForward);
 
+    connect(saveWork_, &QPushButton::clicked, this, &MainWindow::saveWork);
+    connect(projectOverviewPage_, &ParentOverviewPage::cardActivated, this,
+            [this](const QString& id) {
+                if (id == QStringLiteral("project.file-worker"))
+                    setWorkflowPage(WorkflowPageId::ProjectIdentity);
+                else if (id == QStringLiteral("project.modules-templates"))
+                    setWorkflowPage(WorkflowPageId::ProjectModulesTemplates);
+            });
+
     workflow_->setCurrentPage(currentPage_);
+    refreshCompletionProgress();
 
     placeOnPreferredScreen();
+    refreshCurrentWorkflowLayout();
 }
 
 void MainWindow::setWorkflowPage(WorkflowPageId page)
@@ -351,10 +453,7 @@ void MainWindow::setWorkflowPage(WorkflowPageId page)
     currentPage_ = page;
 
     stack_->setCurrentIndex(pageIndex.value());
-    if (auto* current = stack_->currentWidget()) {
-        stack_->setMinimumHeight(0);
-        stack_->setMinimumHeight(qMax(current->sizeHint().height(), current->minimumSizeHint().height()));
-    }
+    refreshCurrentWorkflowLayout();
 
     if (pageScroll_->verticalScrollBar())
     {
@@ -362,6 +461,69 @@ void MainWindow::setWorkflowPage(WorkflowPageId page)
     }
 
     workflow_->setCurrentPage(page);
+}
+
+void MainWindow::refreshCurrentWorkflowLayout()
+{
+    if (!pageScroll_ || !stack_) return;
+    auto* current = stack_->currentWidget();
+    if (!current) return;
+    const int width = qMax(0, pageScroll_->viewport()->width());
+    if (width <= 0) return;
+
+    // Establish the viewport width before asking the current page for its
+    // natural height. This matters on cold start, when the page was built
+    // before the first visible viewport geometry existed.
+    stack_->setFixedWidth(width);
+    if (auto* stackLayout = stack_->layout()) {
+        stackLayout->invalidate();
+        stackLayout->activate();
+    }
+    current->updateGeometry();
+    if (auto* pageLayout = current->layout()) {
+        pageLayout->invalidate();
+        pageLayout->activate();
+    }
+    const int naturalHeight = qMax(current->sizeHint().height(), current->minimumSizeHint().height());
+    stack_->setFixedSize(width, naturalHeight);
+    if (auto* stackLayout = stack_->layout()) {
+        stackLayout->setGeometry(stack_->contentsRect());
+        stackLayout->activate();
+    }
+    current->setGeometry(stack_->contentsRect());
+    if (auto* pageLayout = current->layout()) {
+        pageLayout->invalidate();
+        pageLayout->activate();
+    }
+    stack_->updateGeometry();
+    pageScroll_->viewport()->updateGeometry();
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+    QMainWindow::resizeEvent(event);
+    refreshCurrentWorkflowLayout();
+}
+
+void MainWindow::showEvent(QShowEvent* event)
+{
+    QMainWindow::showEvent(event);
+    // The first show establishes the real viewport size. Use the canonical
+    // shell refresh once that geometry is available to the event loop.
+    QTimer::singleShot(0, this, &MainWindow::refreshCurrentWorkflowLayout);
+}
+
+void MainWindow::saveWork()
+{
+    QString error;
+    if (!projectPage_->saveCurrentProject(&error) && !error.isEmpty())
+        QMessageBox::warning(this, tr("Save Work"), error);
+}
+
+void MainWindow::refreshCompletionProgress()
+{
+    if (!completionProgress_ || !workflow_) return;
+    completionProgress_->setValue(workflow_->completionPercentage());
 }
 
 void MainWindow::placeOnPreferredScreen()
@@ -403,6 +565,10 @@ void MainWindow::placeOnPreferredScreen()
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
+    if ((watched == pageScroll_ || (pageScroll_ && watched == pageScroll_->viewport()))
+        && event->type() == QEvent::Resize) {
+        refreshCurrentWorkflowLayout();
+    }
     auto *widget = qobject_cast<QWidget *>(watched);
 
     if (widget && (widget == this || isAncestorOf(widget)) &&

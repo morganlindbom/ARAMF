@@ -5,6 +5,8 @@
         "ninja"
     ],
     "developmentTools": [
+        "debugger",
+        "memory-analysis"
     ],
     "environment": {
         "buildSystem": "cmake",

@@ -70,6 +70,13 @@ Windows builds now deploy the MinGW runtime DLLs beside ARAMF and its test
 executables in addition to the Qt runtime, so launching `build/aramf.exe` does
 not depend on the developer's MSYS2 `PATH`.
 
+Project navigation layout V1 now gives PROJECT a reusable soft blue section
+header and an always-expanded hierarchy: page 1 is a small overview parent,
+1.1 owns project file/path/Worker identity controls, and 1.2 owns the existing
+modules/templates selector. Stable page IDs keep direct navigation and
+Back/Forward independent of visible row positions; older page-1 Setup routes
+to the parent overview.
+
 ## Checkpoint Status
 
 Completed: composable project modules, the 27-module catalog audit, official
@@ -84,6 +91,10 @@ The Windows runtime deployment checkpoint is complete: the build system places
 the required MinGW DLLs beside `build/aramf.exe`, and full CTest passes 4/4.
 The previous runtime launch error is resolved; no broader manual all-page visual
 certification is claimed here.
+The Project navigation layout V1 checkpoint is implemented and verified by
+focused navigation/template tests, full CTest, and a real application review
+using the current ARAMF project file. Further visual approval remains with the
+user.
 
 `MainWindow` owns the application shell, shared workflow page host, global
 scrolling, global UI zoom, and developer-controlled startup placement. The
@@ -105,13 +116,15 @@ managed projects.
 
 ## Current Workflow
 
-The application has 23 clickable pages in six unnumbered groups. Numbers are
+The application has 28 clickable pages in seven unnumbered groups. Numbers are
 user-facing references only; internal navigation uses stable `WorkflowPageId`
 values and explicit page registration.
 
 ### PROJECT
 
 1. What is the project?
+1.1. Project file, path & Worker
+1.2. Project modules & templates
 2. Academic
 3. Which languages are used?
 4. Which frameworks / SDKs are used?
@@ -273,8 +286,11 @@ changes only the project path and does not save.
 - CTest: PASS — `aramf_core_tests` and `aramf_workflow_tests` both passed.
 - Application startup: PASS — normal Windows platform startup smoke test
   completed and the process was stopped cleanly.
-- Workflow navigation tests cover all 23 clickable IDs and non-clickable
+- Workflow navigation tests cover all 28 clickable IDs and non-clickable
   headings.
+- Project layout tests cover the always-expanded 1/1.1/1.2 hierarchy, shared
+  section-header presentation, active child selection, page ownership split,
+  current-project loading, and responsive viewport boundaries.
 - Core persistence tests cover structured resource authority, scopes, policy,
   old resource-name migration, AI state, Academic state, and capability state.
 - Stale active `ProjectResourcesPage` references: none.
@@ -417,7 +433,18 @@ descriptions, scopes, and canonical identities were preserved.
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 ## Latest Agent Task
 
-- Task: Complete ARAMF P1 context and task coordination
+- Task: Release optional progress and version zeroing correction
 - Status: PASS

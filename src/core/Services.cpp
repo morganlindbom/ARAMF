@@ -1,6 +1,7 @@
 // Services.cpp
 
 #include "Services.h"
+#include "ComponentVersion.h"
 #include "TemplateValidation.h"
 #include "DocumentTemplate.h"
 #include "DocumentInstruction.h"
@@ -157,8 +158,11 @@ QJsonObject projectConfiguration(const ProjectModel& model, const QString& finge
 
 QJsonObject workerManifest(const ProjectModel& model, const GenerationOptions& options, const QString& fingerprint)
 {
+    ReleaseManagementService releaseManagement;
     return QJsonObject{
         {QStringLiteral("workerSchemaVersion"), 1}, {QStringLiteral("workerIdentity"), AramfPaths::runtimeWorkerDirectoryName()},
+        {QStringLiteral("aramfProductVersion"), releaseManagement.productVersion().toString()},
+        {QStringLiteral("aramfComponentVersions"), ReleaseManagementService::componentVersionSnapshot(releaseManagement.components())},
         {QStringLiteral("taskContract"), QJsonObject{{"schemaVersion", 1}, {"authority", "DERIVED"}, {"policyOwner", "ProjectModel.rules.scopeMetadata"}, {"routingSource", AramfPaths::ScopeRoutes}, {"preflightRequired", true}}},
         {QStringLiteral("projectId"), model.projectId()}, {QStringLiteral("generatedFromFingerprint"), fingerprint},
         {QStringLiteral("canonicalFiles"), QJsonObject{{QStringLiteral("projectConfiguration"), AramfPaths::ProjectConfiguration}, {QStringLiteral("routing"), AramfPaths::TaskRoutes}, {QStringLiteral("currentState"), AramfPaths::CurrentState}, {QStringLiteral("validation"), AramfPaths::ColdStartValidation}, {QStringLiteral("decisions"), AramfPaths::Decisions}, {QStringLiteral("eventHistory"), AramfPaths::EventLog}}},
@@ -993,7 +997,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         const QJsonObject provenance{
             {QStringLiteral("status"), QStringLiteral("managed")}, {QStringLiteral("implementation"), QStringLiteral("C++")},
             {QStringLiteral("projectId"), model.projectId()}, {QStringLiteral("projectName"), model.projectName()},
-            {QStringLiteral("template"), model.templateId()}, {QStringLiteral("projectType"), projectTypeLabel(model)}};
+            {QStringLiteral("template"), model.templateId()}, {QStringLiteral("projectType"), projectTypeLabel(model)},
+            {QStringLiteral("aramfProductVersion"), ReleaseManagementService::productVersion().toString()}};
         const QJsonObject effects{
             {QStringLiteral("template"), model.templateId()}, {QStringLiteral("templateModules"), toJsonArray(model.templateModules())}, {QStringLiteral("languages"), toJsonArray(capabilities.languages)},
             {QStringLiteral("frameworks"), toJsonArray(capabilities.frameworks)}, {QStringLiteral("platforms"), toJsonArray(capabilities.targetPlatforms)},

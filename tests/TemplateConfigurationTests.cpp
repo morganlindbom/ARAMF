@@ -1,4 +1,5 @@
 #include "core/Services.h"
+#include "core/ComponentVersion.h"
 #include "core/TemplateValidation.h"
 #include "core/ProjectPersistence.h"
 #include "core/ProjectMemory.h"
@@ -8,6 +9,7 @@
 #include "core/DocumentInstruction.h"
 #include "core/DocumentTemplateInspector.h"
 #include "ui/workflows/project/setup/ProjectSetupPage.h"
+#include "ui/workflows/project/modulestemplates/ProjectModulesTemplatesPage.h"
 #include "ui/workflows/output/review/ReviewPage.h"
 #include "ui/workflows/output/generate/GeneratePage.h"
 #include "ui/workflows/output/verify/VerifyPage.h"
@@ -16,13 +18,24 @@
 #include "ui/workflows/project/frameworks/ProjectFrameworksPage.h"
 #include "ui/workflows/project/academic/ProjectAcademicPage.h"
 #include "ui/mainwindow/MainWindow.h"
+#include "ui/shared/FooterProgressDisplay.h"
+#include "ui/workflow/WorkflowWidget.h"
+#include "ui/workflows/release/overview/ReleaseOverviewPage.h"
+#include "ui/workflows/release/productversion/ProductVersionPage.h"
+#include "ui/workflows/release/componentversions/ComponentVersionsPage.h"
+#include "ui/workflows/release/schema/SchemaCompatibilityPage.h"
+#include "ui/workflows/release/readiness/ReleaseReadinessPage.h"
+#include "ui/workflows/release/history/ApprovalHistoryPage.h"
 #include <QApplication>
 #include <QComboBox>
 #include <QCheckBox>
 #include <QGroupBox>
+#include <QFrame>
+#include <QGridLayout>
 #include <QAbstractScrollArea>
 #include <QScrollArea>
 #include <QStackedWidget>
+#include <QTableWidget>
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>
@@ -30,12 +43,15 @@
 #include <QInputDialog>
 #include <QLabel>
 #include <QLineEdit>
+#include <QListWidget>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QTemporaryDir>
 #include <QTextStream>
 #include <QTimer>
+#include <QJsonObject>
 #include <algorithm>
+#include <cmath>
 
 namespace {
 int failures = 0;
@@ -66,6 +82,7 @@ int main(int argc, char** argv)
     fixture.setAutoRemove(false); // Evidence is additive and retained for review.
     check(fixture.isValid(), "fixture directory");
     AramfPaths::setProgramRootForTests(fixture.path());
+    ReleaseManagementService::setStatePathForTests(fixture.filePath("release-management.json"));
     TemplateManager manager(nullptr, fixture.filePath("templates.json"));
     ProjectPersistence persistence;
     GenerationServices generation;
@@ -73,6 +90,96 @@ int main(int argc, char** argv)
     FinalizationServices finalization;
     AgentEntryPointService entryPoints;
     ProjectMemory memory;
+    ProductVersion productVersion;
+    ComponentVersion componentVersion;
+    check(ProductVersion::parse(QStringLiteral("0.0.0"), &productVersion)
+              && productVersion.toString() == QStringLiteral("0.0.0")
+              && ReleaseManagementService::productVersion().toString() == QStringLiteral("0.0.0"),
+          "product version parses and formats as MAJOR.MINOR.PATCH");
+    check(ComponentVersion::parse(QStringLiteral("0.1.1.0"), &componentVersion)
+              && componentVersion.toString() == QStringLiteral("0.1.1.0"),
+          "component version parses and formats as four-part identity");
+    const auto defaultReleaseComponents = ReleaseManagementService::defaultComponents();
+    const auto identityComponent = std::find_if(defaultReleaseComponents.cbegin(), defaultReleaseComponents.cend(), [](const ReleaseComponent& component) {
+        return component.id == QStringLiteral("project.modules-templates");
+    });
+    const auto releaseIdentityComponent = std::find_if(defaultReleaseComponents.cbegin(), defaultReleaseComponents.cend(), [](const ReleaseComponent& component) {
+        return component.id == QStringLiteral("release.product-version");
+    });
+    check(defaultReleaseComponents.size() == 34
+              && identityComponent != defaultReleaseComponents.cend()
+              && identityComponent->version.toString() == QStringLiteral("0.1.2.0")
+              && releaseIdentityComponent != defaultReleaseComponents.cend()
+              && releaseIdentityComponent->version.toString() == QStringLiteral("0.6.1.0")
+              && std::all_of(defaultReleaseComponents.cbegin(), defaultReleaseComponents.cend(), [](const ReleaseComponent& component) {
+                     return component.version.approvedRelease == 0 && component.version.revision == 0;
+                 }),
+          "component versions start at zero while stable parent/item identities are preserved");
+    componentVersion.revision = 9;
+    const auto revisedComponent = componentVersion.incrementedRevision();
+    check(revisedComponent.toString() == QStringLiteral("0.1.1.10")
+              && revisedComponent.approvedRelease == 0
+              && revisedComponent.parent == 1 && revisedComponent.item == 1,
+          "component revision increments independently without carrying fields");
+    const QList<ReleaseComponent> readinessComponents{
+        {QStringLiteral("a"), QStringLiteral("A"), ComponentVersion{1, 1, 0, 3}, true, true, {}},
+        {QStringLiteral("b"), QStringLiteral("B"), ComponentVersion{1, 1, 1, 4}, true, true, {}},
+        {QStringLiteral("c"), QStringLiteral("C"), ComponentVersion{0, 1, 2, 7}, true, true, {}}};
+    const auto noTargetReadiness = ReleaseReadinessService::evaluate(readinessComponents, std::nullopt);
+    const auto targetReadiness = ReleaseReadinessService::evaluate(readinessComponents, 1);
+    check(noTargetReadiness.generationAllowed && !noTargetReadiness.targetRequested,
+          "no target release is a healthy development mode");
+    check(targetReadiness.totalRequired == 3 && targetReadiness.approved == 2
+              && targetReadiness.remaining == 1 && !targetReadiness.readyForApproval
+              && targetReadiness.generationAllowed,
+          "incomplete target reports readiness without blocking generation");
+    ReleaseManagementService releaseService;
+    QString releaseError;
+    check(releaseService.approveComponentForRelease(QStringLiteral("project.file-worker"), 1, QStringLiteral("user"), &releaseError),
+          "explicit authorized component approval succeeds");
+    check(!releaseService.approveComponentForRelease(QStringLiteral("project.file-worker"), 0, QStringLiteral("user"), &releaseError),
+          "invalid approval target is rejected");
+    check(!releaseService.approveComponentForRelease(QStringLiteral("project.file-worker"), 0, QStringLiteral("agent"), &releaseError),
+          "unrecognized approval authority is rejected");
+    check(!releaseService.approveComponentForRelease(QStringLiteral("project.file-worker"), 0, QStringLiteral("user"), &releaseError),
+          "approved release downgrade is rejected");
+    ReleaseManagementService reloadedReleaseService;
+    const auto releaseComponent = std::find_if(reloadedReleaseService.components().cbegin(), reloadedReleaseService.components().cend(), [](const ReleaseComponent& component) {
+        return component.id == QStringLiteral("project.file-worker");
+    });
+    check(releaseComponent != reloadedReleaseService.components().cend()
+              && releaseComponent->version.approvedRelease == 1
+              && !reloadedReleaseService.approvalHistory().isEmpty(),
+          "component approval and history persist in the app-owned registry");
+    ProjectModel releaseModel;
+    releaseModel.setTargetRelease(1);
+    const QString releaseProjectFile = fixture.filePath(QStringLiteral("release-target.aramf.json"));
+    check(persistence.save(releaseModel, releaseProjectFile),
+          "optional target release saves with project state");
+    ProjectModel reloadedReleaseModel;
+    check(persistence.load(&reloadedReleaseModel, releaseProjectFile)
+              && reloadedReleaseModel.targetRelease() == 1
+              && !persistence.configuration(reloadedReleaseModel).contains(QStringLiteral("releaseManagement")),
+          "optional target release reloads separately from technical configuration");
+    QJsonObject legacyReleaseProject = persistence.toJson(releaseModel);
+    legacyReleaseProject.remove(QStringLiteral("releaseManagement"));
+    ProjectModel legacyReleaseModel;
+    QString legacyReleaseError;
+    check(persistence.fromJson(&legacyReleaseModel, legacyReleaseProject, &legacyReleaseError)
+              && !legacyReleaseModel.hasTargetRelease()
+              && legacyReleaseModel.targetRelease() == 0,
+          "older projects without optional release metadata default safely to development mode");
+    ReleaseOverviewPage releaseOverview;
+    ProductVersionPage productPage(&releaseModel, &releaseService);
+    ComponentVersionsPage componentPage(&releaseService);
+    SchemaCompatibilityPage schemaPage(&releaseModel, &releaseService);
+    ReleaseReadinessPage readinessPage(&releaseModel, &releaseService);
+    ApprovalHistoryPage historyPage(&releaseService);
+    check(releaseOverview.findChildren<ParentOverviewCard*>().size() == 5
+              && componentPage.findChild<QTableWidget*>(QStringLiteral("componentVersionsTable")) != nullptr
+              && readinessPage.findChild<QLabel*>(QStringLiteral("releaseReadinessStatus")) != nullptr
+              && historyPage.findChild<QTableWidget*>(QStringLiteral("approvalHistoryTable")) != nullptr,
+          "release parent and five reusable child page surfaces exist");
     QJsonObject audit;
     const auto definitions = manager.definitions();
     check(definitions.size() == 14, "all 14 built-ins audited");
@@ -141,10 +248,10 @@ int main(int argc, char** argv)
               && mlReloaded.developmentCapabilities().hardwareTargets == mlCapabilities.hardwareTargets,
           "Machine Learning baseline persists exactly");
     ProjectModel mlGuiModel;
-    ProjectSetupPage mlGuiPage(&mlGuiModel, &manager, &persistence);
+    ProjectModulesTemplatesPage mlGuiPage(&mlGuiModel, &manager);
     auto mlTemplateBoxes = mlGuiPage.findChildren<QCheckBox*>();
     auto mlTemplateBox = std::find_if(mlTemplateBoxes.cbegin(), mlTemplateBoxes.cend(), [](QCheckBox* box) { return box->text() == QStringLiteral("Machine Learning"); });
-    check(mlTemplateBox != mlTemplateBoxes.cend(), "Machine Learning template is visible in Project Setup");
+    check(mlTemplateBox != mlTemplateBoxes.cend(), "Machine Learning template is visible in Project modules & templates");
     if (mlTemplateBox != mlTemplateBoxes.cend()) {
         (*mlTemplateBox)->click();
         QApplication::processEvents();
@@ -398,7 +505,8 @@ int main(int argc, char** argv)
               && persistence.load(&suffixReloaded, fixture.filePath("suffixed-roundtrip.aramf.json"), &suffixError)
               && suffixReloaded.workerNameSuffix() == QStringLiteral("ANDROID_PICO")
               && suffixReloaded.projectName() == QStringLiteral("ARAMF_WORKER_ANDROID_PICO")
-              && QFileInfo(suffixReloaded.projectFilePath()).fileName() == QStringLiteral("ARAMF_WORKER_ANDROID_PICO.aramf.json"), "worker suffix save/reload");
+              && QFileInfo(suffixReloaded.projectFilePath()).fileName() == QStringLiteral("suffixed-roundtrip.aramf.json"),
+          "worker suffix save/reload preserves the actual project file");
     ProjectModel mlSuffixedModel;
     check(manager.applyTemplate(&mlSuffixedModel, QStringLiteral("machine-learning")), "explicit-suffix ML template setup");
     mlSuffixedModel.setProjectPath(fixture.filePath("machine-learning-suffixed"));
@@ -498,12 +606,13 @@ int main(int argc, char** argv)
         model.setProjectFilePath(root + "/project.aramf.json");
         const QString projectId = model.projectId();
         ProjectSetupPage setup(&model, &manager, &persistence);
+        ProjectModulesTemplatesPage modulesPage(&model, &manager);
         ReviewPage review(&model);
         GeneratePage generate(&model, &setup, &generation);
         // These pages exist before the selection, just as in the production application.
         ProjectLanguagesPage languagePage(&model);
         ProjectFrameworksPage frameworkPage(&model);
-        const auto combo = setup.findChild<QComboBox*>("templateSelector");
+        const auto combo = modulesPage.findChild<QComboBox*>("templateSelector");
         check(combo != nullptr, "production template selector");
         combo->setCurrentIndex(combo->findData(d.id));
         check(model.templateId() == d.id && model.projectId() == projectId, d.id + " GUI application preserves identity");
@@ -691,6 +800,22 @@ int main(int argc, char** argv)
 
     // Exercise the actual save dialog, not just the service.
     ProjectSetupPage setup(&custom, &manager, &persistence);
+    ProjectModulesTemplatesPage modulesPage(&custom, &manager);
+    check(setup.findChild<QGroupBox*>("moduleGroup") == nullptr
+              && setup.findChild<QGroupBox*>("templateGroup") == nullptr,
+          "identity page does not duplicate modules or templates");
+    check(modulesPage.findChild<QGroupBox*>("moduleGroup") != nullptr
+              && modulesPage.findChild<QGroupBox*>("templateGroup") != nullptr,
+          "modules and templates belong to the dedicated child page");
+    check(setup.findChild<QLineEdit*>("projectFilePath") != nullptr
+              && setup.findChild<QLineEdit*>("workerPath") != nullptr,
+          "identity page exposes canonical project file and Worker path state");
+    auto* description = setup.findChild<QTextEdit*>("projectDescription");
+    check(description != nullptr
+              && description->sizePolicy().verticalPolicy() == QSizePolicy::Preferred
+              && description->minimumHeight() >= 64
+              && description->maximumHeight() <= 96,
+          "identity description remains usable but uses a compact bounded height");
     QTimer::singleShot(0, [] {
         QTimer::singleShot(100, [] {
             for (auto* widget : QApplication::topLevelWidgets()) {
@@ -702,7 +827,7 @@ int main(int argc, char** argv)
             }
         });
     });
-    setup.findChild<QPushButton*>("saveCustomTemplate")->click();
+    modulesPage.findChild<QPushButton*>("saveCustomTemplate")->click();
     bool guiSaved = false;
     for (const auto& d : manager.definitions()) guiSaved |= d.displayName == "Saved through GUI";
     check(guiSaved, "GUI Save current configuration as template");
@@ -721,7 +846,7 @@ int main(int argc, char** argv)
     // widget or an accidental nested scroll area is caught by the regression
     // test.
     ProjectModel geometryModel;
-    ProjectSetupPage geometryPage(&geometryModel, &manager, &persistence);
+    ProjectModulesTemplatesPage geometryPage(&geometryModel, &manager);
     geometryPage.show();
     for (const QSize size : {QSize(1280, 720), QSize(900, 600), QSize(1500, 900)}) {
         geometryPage.resize(size);
@@ -755,6 +880,20 @@ int main(int argc, char** argv)
         if (templateGroup) {
             const auto templateBoxes = templateGroup->findChildren<QCheckBox*>();
             check(!templateBoxes.isEmpty(), "composite template checkboxes are present");
+            for (auto* box : templateBoxes) {
+                check(box->sizePolicy().verticalPolicy() == QSizePolicy::Preferred,
+                      "template checkbox uses natural vertical size policy");
+            }
+            auto* templateGrid = templateGroup->findChild<QWidget*>("templateGrid");
+            if (templateGrid) {
+                auto* templateLayout = qobject_cast<QGridLayout*>(templateGrid->layout());
+                check(templateLayout && templateLayout->verticalSpacing() <= 12,
+                      "template grid uses compact normal row spacing");
+                auto* saveTemplate = geometryPage.findChild<QPushButton*>("saveCustomTemplate");
+                auto* removeTemplate = geometryPage.findChild<QPushButton*>("removeCustomTemplate");
+                check(saveTemplate && removeTemplate && saveTemplate->geometry().y() == removeTemplate->geometry().y(),
+                      "template controls share a compact horizontal action row");
+            }
             auto androidTemplate = std::find_if(templateBoxes.cbegin(), templateBoxes.cend(),
                                                   [](QCheckBox* box) { return box->text().contains("Android Studio"); });
             if (androidTemplate != templateBoxes.cend()) {
@@ -774,7 +913,7 @@ int main(int argc, char** argv)
     ProjectModel moduleModel;
     for (const auto& definition : manager.moduleDefinitions()) {
         moduleModel.resetForNewProject();
-        ProjectSetupPage modulePage(&moduleModel, &manager, &persistence);
+        ProjectModulesTemplatesPage modulePage(&moduleModel, &manager);
         modulePage.show();
         QApplication::processEvents();
         const QString objectName = QStringLiteral("module_") + definition.id;
@@ -792,11 +931,169 @@ int main(int argc, char** argv)
         modulePage.close();
     }
 
+    // Regression: Save Work must round-trip manual workflow completion to the
+    // real project file, while the displayed percentage remains derived state.
+    QTemporaryDir completionRoundTrip;
+    const QString completionFile = QDir(completionRoundTrip.path()).filePath(QStringLiteral("completion.aramf.json"));
+    ProjectModel completionModel;
+    completionModel.setProjectPath(completionRoundTrip.path());
+    completionModel.setProjectFilePath(completionFile);
+    const QStringList expectedCompletedPages{
+        workflowPageKey(WorkflowPageId::ProjectIdentity),
+        workflowPageKey(WorkflowPageId::ProjectModulesTemplates),
+        workflowPageKey(WorkflowPageId::Academic)};
+    for (const auto& pageId : expectedCompletedPages) completionModel.setPageCompleted(pageId, true);
+    ProjectSetupPage completionSavePage(&completionModel, &manager, &persistence);
+    QString completionError;
+    check(completionModel.isModified(), "workflow completion changes mark the project dirty");
+    check(completionSavePage.saveCurrentProject(&completionError),
+          "Save Work canonical path writes the current project model");
+    check(!completionModel.isModified(), "successful Save Work clears the existing dirty state");
+
+    QFile completionFileReader(completionFile);
+    check(completionFileReader.open(QIODevice::ReadOnly), "saved completion project file is readable");
+    const QJsonObject persistedCompletion = QJsonDocument::fromJson(completionFileReader.readAll()).object();
+    completionFileReader.close();
+    const auto persistedPages = persistedCompletion.value(QStringLiteral("workflowProgress"))
+        .toObject().value(QStringLiteral("completedPages")).toArray();
+    QSet<QString> persistedPageIds;
+    for (const auto& value : persistedPages) persistedPageIds.insert(value.toString());
+    QSet<QString> expectedCompletedPageSet;
+    for (const auto& pageId : expectedCompletedPages) expectedCompletedPageSet.insert(pageId);
+    check(persistedPageIds == expectedCompletedPageSet
+              && !persistedCompletion.contains(QStringLiteral("progressPercentage")),
+          "Save Work serializes only stable completed page IDs, not a percentage cache");
+
+    const QString oldProjectFile = QDir(completionRoundTrip.path()).filePath(QStringLiteral("old-project.aramf.json"));
+    QJsonObject oldProjectWithoutProgress = persistedCompletion;
+    oldProjectWithoutProgress.remove(QStringLiteral("workflowProgress"));
+    QFile oldProjectWriter(oldProjectFile);
+    check(oldProjectWriter.open(QIODevice::WriteOnly)
+              && oldProjectWriter.write(QJsonDocument(oldProjectWithoutProgress).toJson(QJsonDocument::Indented)) > 0,
+          "older project without optional workflow progress is writable");
+    oldProjectWriter.close();
+    ProjectModel oldProjectModel;
+    check(persistence.load(&oldProjectModel, oldProjectFile, &completionError)
+              && oldProjectModel.completedPageIds().isEmpty(),
+          "older project without workflowProgress loads with empty completion state");
+
+    ProjectModel reopenedCompletion;
+    check(persistence.load(&reopenedCompletion, completionFile, &completionError),
+          "saved completion project reloads into a fresh model");
+    WorkflowWidget reopenedWorkflow;
+    reopenedWorkflow.setStepCount(28);
+    reopenedWorkflow.setCompletionModel(&reopenedCompletion);
+    reopenedWorkflow.show();
+    QApplication::processEvents();
+    auto* reopenedList = reopenedWorkflow.findChild<QListWidget*>();
+    const int expectedCompletionPercentage = reopenedWorkflow.completablePageCount() <= 0
+        ? 0
+        : static_cast<int>(std::lround(100.0 * expectedCompletedPages.size()
+                                       / reopenedWorkflow.completablePageCount()));
+    check(reopenedCompletion.completedPageIds() == persistedPageIds
+              && reopenedList->item(2)->data(Qt::UserRole + 2).toBool()
+              && reopenedList->item(3)->data(Qt::UserRole + 2).toBool()
+              && reopenedList->item(4)->data(Qt::UserRole + 2).toBool()
+              && reopenedList->item(1)->background().color() == QColor(204, 238, 211)
+              && reopenedWorkflow.completionPercentage() == expectedCompletionPercentage,
+          "fresh reload restores checkmarks, parent aggregate, and derived progress");
+
+    reopenedCompletion.setPageCompleted(workflowPageKey(WorkflowPageId::Academic), false);
+    check(reopenedCompletion.isModified(), "clearing a completion marker marks the project dirty");
+    ProjectSetupPage secondCompletionSave(&reopenedCompletion, &manager, &persistence);
+    check(secondCompletionSave.saveCurrentProject(&completionError),
+          "second Save Work persists an unchecked page");
+    ProjectModel reopenedAfterClear;
+    check(persistence.load(&reopenedAfterClear, completionFile, &completionError),
+          "project reloads after the completion clear is saved");
+    check(reopenedAfterClear.isPageCompleted(workflowPageKey(WorkflowPageId::ProjectIdentity))
+              && reopenedAfterClear.isPageCompleted(workflowPageKey(WorkflowPageId::ProjectModulesTemplates))
+              && !reopenedAfterClear.isPageCompleted(workflowPageKey(WorkflowPageId::Academic)),
+          "an unchecked completion does not return after Save Work and reload");
+
+    // Stale completion IDs from a non-SETUP domain must be ignored both by
+    // persistence and by the workflow UI capability model.
+    ProjectModel staleCompletionModel;
+    staleCompletionModel.setPageCompleted(workflowPageKey(WorkflowPageId::ProjectIdentity), true);
+    staleCompletionModel.setPageCompleted(workflowPageKey(WorkflowPageId::ProductVersion), true);
+    staleCompletionModel.setPageCompleted(workflowPageKey(WorkflowPageId::Generate), true);
+    const QString staleCompletionFile = QDir(completionRoundTrip.path()).filePath(QStringLiteral("stale-completion.aramf.json"));
+    check(persistence.save(staleCompletionModel, staleCompletionFile),
+          "stale non-SETUP completion fixture saves through canonical persistence");
+    ProjectModel reloadedStaleCompletion;
+    check(persistence.load(&reloadedStaleCompletion, staleCompletionFile, &completionError)
+              && reloadedStaleCompletion.completedPageIds().size() == 1
+              && reloadedStaleCompletion.isPageCompleted(workflowPageKey(WorkflowPageId::ProjectIdentity))
+              && !reloadedStaleCompletion.isPageCompleted(workflowPageKey(WorkflowPageId::ProductVersion))
+              && !reloadedStaleCompletion.isPageCompleted(workflowPageKey(WorkflowPageId::Generate)),
+          "non-SETUP completion IDs are filtered during project round-trip");
+
     MainWindow responsive(0, 1280, 720);
     responsive.show();
     auto* pageScroll = responsive.findChild<QScrollArea*>("workflowPageScroll");
     auto* stack = responsive.findChild<QStackedWidget*>();
-    check(pageScroll != nullptr && stack != nullptr, "workflow page scroll host exists");
+    auto* saveWork = responsive.findChild<QPushButton*>("saveWork");
+    auto* setupProgress = responsive.findChild<FooterProgressDisplay*>("setupProgress");
+    auto* pageFooter = responsive.findChild<QFrame*>("workflowPageFooter");
+    check(pageScroll != nullptr && stack != nullptr && saveWork != nullptr
+              && setupProgress != nullptr && pageFooter != nullptr,
+          "workflow page scroll host, Save Work footer, and setup progress exist");
+    if (pageScroll && saveWork) {
+        check(!pageScroll->isAncestorOf(saveWork), "Save Work footer remains outside scrolling content");
+        check(!pageScroll->widgetResizable(), "workflow scroll host preserves natural content height");
+        check(pageScroll->verticalScrollBarPolicy() == Qt::ScrollBarAsNeeded, "workflow vertical scrolling is AsNeeded");
+    }
+    if (saveWork && setupProgress) {
+        check(saveWork->geometry().left() < setupProgress->geometry().left()
+                  && setupProgress->sizePolicy().horizontalPolicy() == QSizePolicy::Expanding,
+              "Save Work is left of the expanding setup progress bar");
+        check(saveWork->height() == setupProgress->height()
+                  && saveWork->height() >= 38 && saveWork->height() <= 42,
+              "Save Work and setup progress use the same modest footer control height");
+        check(setupProgress->alignment() == Qt::AlignCenter,
+              "setup progress text is centered inside the progress bar");
+        check(setupProgress->minimum() == 0 && setupProgress->maximum() == 100
+                  && setupProgress->format() == "%p% of your setup is done",
+              "setup progress uses the manual completion percentage format");
+    }
+    if (pageFooter && saveWork && setupProgress) {
+        check(!pageScroll->isAncestorOf(pageFooter), "shared footer remains outside scroll content");
+        const QRect footerRect(pageFooter->mapToGlobal(QPoint(0, 0)), pageFooter->size());
+        const QRect windowRect(responsive.mapToGlobal(QPoint(0, 0)), responsive.size());
+        check(windowRect.contains(footerRect.topLeft()) && windowRect.contains(footerRect.bottomRight()),
+              "shared footer remains inside the visible page shell");
+    }
+    auto* responsiveWorkflow = responsive.findChild<WorkflowWidget*>();
+    auto* responsiveNavigation = responsiveWorkflow ? responsiveWorkflow->findChild<QListWidget*>() : nullptr;
+    auto* startupModuleGroup = responsive.findChild<QGroupBox*>("moduleGroup");
+    auto* startupTemplateGroup = responsive.findChild<QGroupBox*>("templateGroup");
+    check(responsiveWorkflow && responsiveNavigation && startupModuleGroup && startupTemplateGroup,
+          "cold-start layout regression has the Project modules & templates shell");
+    QRect startupModule;
+    QRect startupTemplates;
+    QSize startupPageSize;
+    QSize startupFooterSize;
+    const QSize startupWindowSize = responsive.size();
+    if (responsiveNavigation && startupModuleGroup && startupTemplateGroup) {
+        // Row 3 is the stable 1.2 navigation item after PROJECT and page 1.
+        responsiveNavigation->setCurrentRow(3);
+        QApplication::processEvents();
+        QApplication::processEvents();
+        auto* startupPage = stack->currentWidget();
+        startupModule = startupModuleGroup->geometry();
+        startupTemplates = startupTemplateGroup->geometry();
+        startupPageSize = startupPage ? startupPage->size() : QSize();
+        startupFooterSize = pageFooter ? pageFooter->size() : QSize();
+        check(startupModuleGroup->sizePolicy().verticalPolicy() == QSizePolicy::Preferred
+                  && startupTemplateGroup->sizePolicy().verticalPolicy() == QSizePolicy::Preferred
+                  && pageScroll->verticalScrollBarPolicy() == Qt::ScrollBarAsNeeded,
+              "cold-start layout keeps natural content sizing and AsNeeded scrolling");
+        // Return through the real navigation path before the existing direct
+        // stack-index viewport sweep below; this keeps that sweep independent
+        // of the comparison page selected above.
+        responsiveNavigation->setCurrentRow(1);
+        QApplication::processEvents();
+    }
     for (const QSize size : {QSize(1280, 720), QSize(900, 600), QSize(1500, 900)}) {
         responsive.resize(size); QApplication::processEvents();
         const QRect bounds = responsive.rect();
@@ -816,10 +1113,53 @@ int main(int argc, char** argv)
                     if (!child->isVisible() || child->width() <= 0 || child->height() <= 0) continue;
                     const QRect childRect(child->mapToGlobal(QPoint(0, 0)), child->size());
                     check(childRect.left() >= viewport.left() - 2 && childRect.right() <= viewport.right() + 2,
-                          "workflow page child remains within viewport width");
+                          QStringLiteral("workflow page child remains within viewport width (page %1, %2, child %3: %4..%5, viewport %6..%7, stack=%8, pageWidth=%9)")
+                              .arg(index)
+                              .arg(page->metaObject()->className())
+                              .arg(child->objectName().isEmpty() ? child->metaObject()->className() : child->objectName())
+                              .arg(childRect.left())
+                              .arg(childRect.right())
+                              .arg(viewport.left())
+                              .arg(viewport.right())
+                              .arg(stack->width())
+                              .arg(page->width()));
                 }
             }
         }
+    }
+    if (responsiveNavigation && startupModuleGroup && startupTemplateGroup) {
+        responsive.resize(startupWindowSize);
+        QApplication::processEvents();
+        QApplication::processEvents();
+        ProjectModel* liveModel = responsive.findChild<ProjectModel*>();
+        QString startupLoadError;
+        check(liveModel && persistence.load(liveModel, completionFile, &startupLoadError),
+              "cold-start comparison loads a project into the same MainWindow");
+        QApplication::processEvents();
+        QApplication::processEvents();
+        responsiveNavigation->setCurrentRow(3);
+        QApplication::processEvents();
+        auto* loadedPage = stack->currentWidget();
+        const QRect loadedModule = startupModuleGroup->geometry();
+        const QRect loadedTemplates = startupTemplateGroup->geometry();
+        const QSize loadedPageSize = loadedPage ? loadedPage->size() : QSize();
+        const QSize loadedFooterSize = pageFooter ? pageFooter->size() : QSize();
+        const auto closeEnough = [](int first, int second) { return qAbs(first - second) <= 2; };
+        check(closeEnough(startupModule.width(), loadedModule.width())
+                  && closeEnough(startupModule.height(), loadedModule.height())
+                  && closeEnough(startupTemplates.width(), loadedTemplates.width())
+                  && closeEnough(startupTemplates.height(), loadedTemplates.height())
+                  && closeEnough(startupPageSize.width(), loadedPageSize.width())
+                  && closeEnough(startupPageSize.height(), loadedPageSize.height())
+                  && closeEnough(startupFooterSize.height(), loadedFooterSize.height()),
+              QStringLiteral("cold-start and post-load Project modules & templates geometry are equivalent (modules %1x%2/%3x%4, templates %5x%6/%7x%8, page %9x%10/%11x%12, footer %13/%14)")
+                  .arg(startupModule.width()).arg(startupModule.height())
+                  .arg(loadedModule.width()).arg(loadedModule.height())
+                  .arg(startupTemplates.width()).arg(startupTemplates.height())
+                  .arg(loadedTemplates.width()).arg(loadedTemplates.height())
+                  .arg(startupPageSize.width()).arg(startupPageSize.height())
+                  .arg(loadedPageSize.width()).arg(loadedPageSize.height())
+                  .arg(startupFooterSize.height()).arg(loadedFooterSize.height()));
     }
     responsive.close();
 

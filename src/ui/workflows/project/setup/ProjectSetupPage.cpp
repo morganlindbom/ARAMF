@@ -1,7 +1,6 @@
 #include "ProjectSetupPage.h"
 #include "../../../../core/ProjectRootRebindService.h"
 
-#include "ui/workflows/project/template/TemplateSelector.h"
 #include "core/AramfPaths.h"
 
 #include <QDir>
@@ -39,10 +38,10 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
       model_(model),
       manager_(manager),
       persistence_(persistence),
-      templateSelector_(new TemplateSelector(model, manager, this)),
       name_(new QLineEdit(this)),
       path_(new QLineEdit(this)),
       id_(new QLineEdit(this)),
+      projectFilePath_(new QLineEdit(this)),
       type_(new QLineEdit(this)),
       description_(new QTextEdit(this))
 {
@@ -50,10 +49,15 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     name_->setObjectName(QStringLiteral("canonicalProjectName"));
     // Description is the flexible field, but it must yield space to the
     // fixed-content controls above it when the page is short.
+    description_->setObjectName(QStringLiteral("projectDescription"));
+    description_->setMinimumHeight(64);
+    description_->setMaximumHeight(96);
     description_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     auto* layout = new QVBoxLayout(this);
-    layout->addWidget(new QLabel(
-        tr("<h2>What is the project?</h2>Select the template and define the project's identity."), this));
+    auto* heading = new QLabel(
+        tr("<h2>Project file, path &amp; Worker</h2>Define project identity, storage and the canonical Worker directory."), this);
+    heading->setWordWrap(true);
+    layout->addWidget(heading);
 
     auto* actions = new QHBoxLayout;
     for (const auto& action : {tr("New"), tr("Open"), tr("Save"), tr("Save As")}) {
@@ -66,16 +70,18 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     }
     actions->addStretch();
     layout->addLayout(actions);
-    layout->addWidget(templateSelector_);
-
     auto* workerNameForm = new QFormLayout;
     workerNameSuffix_ = new QLineEdit(this);
     workerNameSuffix_->setObjectName(QStringLiteral("workerNameSuffix"));
     workerNameSuffix_->setPlaceholderText(tr("Optional suffix, e.g. ANDROID_PICO"));
     workerNamePreview_ = new QLabel(this);
     workerNamePreview_->setObjectName(QStringLiteral("workerNamePreview"));
+    workerPath_ = new QLineEdit(this);
+    workerPath_->setObjectName(QStringLiteral("workerPath"));
+    workerPath_->setReadOnly(true);
     workerNameForm->addRow(tr("Worker name suffix"), workerNameSuffix_);
-    workerNameForm->addRow(tr("Preview"), workerNamePreview_);
+    workerNameForm->addRow(tr("Worker name"), workerNamePreview_);
+    workerNameForm->addRow(tr("Worker path"), workerPath_);
     layout->addLayout(workerNameForm);
 
     communicationGroup_ = new QGroupBox(tr("Cross-target communication"), this);
@@ -173,9 +179,9 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     pathLayout->addWidget(path_);
     pathLayout->addWidget(browse);
     form->addRow(tr("Project path"), pathRow);
-    projectFilePreview_ = new QLabel(this);
-    projectFilePreview_->setObjectName(QStringLiteral("projectFilePreview"));
-    projectFilePreview_->setVisible(false);
+    projectFilePath_->setObjectName(QStringLiteral("projectFilePath"));
+    projectFilePath_->setReadOnly(true);
+    form->addRow(tr("Project file"), projectFilePath_);
     form->addRow(tr("Project ID"), id_);
     type_->setObjectName("projectType");
     form->addRow(tr("Project type"), type_);
@@ -308,12 +314,8 @@ void ProjectSetupPage::openProject()
 
 void ProjectSetupPage::saveProject()
 {
-    if (model_->projectFilePath().isEmpty()) {
-        saveProjectAs();
-        return;
-    }
     QString error;
-    if (!writeProject(model_->projectFilePath(), &error)) {
+    if (!saveCurrentProject(&error)) {
         QMessageBox::warning(this, tr("Save Project"), error);
     }
 }
@@ -350,12 +352,17 @@ bool ProjectSetupPage::writeProject(const QString& filePath, QString* error)
     return true;
 }
 
-bool ProjectSetupPage::saveForGeneration(QString* error)
+bool ProjectSetupPage::saveCurrentProject(QString* error)
 {
     if (model_->projectFilePath().trimmed().isEmpty()) {
         return saveProjectAs(error);
     }
     return writeProject(model_->projectFilePath(), error);
+}
+
+bool ProjectSetupPage::saveForGeneration(QString* error)
+{
+    return saveCurrentProject(error);
 }
 
 bool ProjectSetupPage::confirmDiscardOrSave()
@@ -382,7 +389,11 @@ void ProjectSetupPage::syncCanonicalIdentity(bool deriveProjectFile)
     const QString derivedFileName = workerName + QStringLiteral(".aramf.json");
     if (deriveProjectFile && !model_->projectPath().trimmed().isEmpty() && model_->projectFilePath().trimmed().isEmpty())
         model_->setProjectFilePath(QDir(model_->projectPath()).filePath(derivedFileName));
-    if (projectFilePreview_) projectFilePreview_->setText(derivedFileName);
+    projectFilePath_->setText(model_->projectFilePath().isEmpty() ? derivedFileName : model_->projectFilePath());
+    const QString workerPath = model_->projectPath().trimmed().isEmpty()
+        ? workerName
+        : QDir(model_->projectPath()).filePath(workerName);
+    workerPath_->setText(workerPath);
 }
 
 void ProjectSetupPage::refreshFromModel()
@@ -390,6 +401,7 @@ void ProjectSetupPage::refreshFromModel()
     const QSignalBlocker nameBlocker(name_);
     const QSignalBlocker pathBlocker(path_);
     const QSignalBlocker idBlocker(id_);
+    const QSignalBlocker projectFileBlocker(projectFilePath_);
     const QSignalBlocker typeBlocker(type_);
     const QSignalBlocker descriptionBlocker(description_);
     const QSignalBlocker suffixBlocker(workerNameSuffix_);

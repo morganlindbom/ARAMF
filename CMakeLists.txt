@@ -1,7 +1,7 @@
 # CMakeLists.txt
 
 cmake_minimum_required(VERSION 3.21)
-project(aramf_gui VERSION 0.2.0 LANGUAGES CXX)
+project(aramf_gui VERSION 0.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -42,10 +42,14 @@ set(ARAMF_CORE_SOURCES
     src/core/ProjectPersistence.h
     src/core/ProjectPersistence.cpp
     src/core/ProjectSchema.h
+    src/core/ComponentVersion.h
+    src/core/ComponentVersion.cpp
     src/core/ProjectRootRebindService.h
     src/core/ProjectRootRebindService.cpp
     src/core/ProjectModel.h
     src/core/ProjectModel.cpp
+    src/core/WorkflowPageMetadata.h
+    src/core/WorkflowPageMetadata.cpp
     src/core/Services.h
     src/core/Services.cpp
     src/core/TemplateManager.cpp
@@ -81,10 +85,30 @@ set(ARAMF_UI_SOURCES
     src/ui/workflow/WorkflowPageId.h
     src/ui/shared/PageSupport.h
     src/ui/shared/PageSupport.cpp
+    src/ui/shared/FooterProgressDisplay.h
+    src/ui/shared/FooterProgressDisplay.cpp
+    src/ui/shared/ParentOverview.h
+    src/ui/shared/ParentOverview.cpp
+    src/ui/workflows/release/overview/ReleaseOverviewPage.h
+    src/ui/workflows/release/overview/ReleaseOverviewPage.cpp
+    src/ui/workflows/release/productversion/ProductVersionPage.h
+    src/ui/workflows/release/productversion/ProductVersionPage.cpp
+    src/ui/workflows/release/componentversions/ComponentVersionsPage.h
+    src/ui/workflows/release/componentversions/ComponentVersionsPage.cpp
+    src/ui/workflows/release/schema/SchemaCompatibilityPage.h
+    src/ui/workflows/release/schema/SchemaCompatibilityPage.cpp
+    src/ui/workflows/release/readiness/ReleaseReadinessPage.h
+    src/ui/workflows/release/readiness/ReleaseReadinessPage.cpp
+    src/ui/workflows/release/history/ApprovalHistoryPage.h
+    src/ui/workflows/release/history/ApprovalHistoryPage.cpp
     src/ui/shared/CapabilityCheckGroup.h
     src/ui/shared/CapabilityCheckGroup.cpp
     src/ui/workflows/project/setup/ProjectSetupPage.h
     src/ui/workflows/project/setup/ProjectSetupPage.cpp
+    src/ui/workflows/project/overview/ProjectOverviewPage.h
+    src/ui/workflows/project/overview/ProjectOverviewPage.cpp
+    src/ui/workflows/project/modulestemplates/ProjectModulesTemplatesPage.h
+    src/ui/workflows/project/modulestemplates/ProjectModulesTemplatesPage.cpp
     src/ui/workflows/project/academic/ProjectAcademicPage.h
     src/ui/workflows/project/academic/ProjectAcademicPage.cpp
     src/ui/workflows/project/template/TemplateSelector.h
@@ -197,6 +221,10 @@ if(BUILD_TESTING)
         src/core/UpdateExecutionService.cpp
         src/core/ProjectPersistence.h
         src/core/ProjectPersistence.cpp
+        src/core/WorkflowPageMetadata.h
+        src/core/WorkflowPageMetadata.cpp
+        src/core/ComponentVersion.h
+        src/core/ComponentVersion.cpp
         src/core/ProjectRootRebindService.h
         src/core/ProjectRootRebindService.cpp
         src/core/ProjectModel.h
@@ -226,6 +254,12 @@ if(BUILD_TESTING)
         src/core/FrameworkKnowledge.cpp
         src/core/ProjectModel.h
         src/core/ProjectModel.cpp
+        src/core/ProjectPersistence.h
+        src/core/ProjectPersistence.cpp
+        src/core/WorkflowPageMetadata.h
+        src/core/WorkflowPageMetadata.cpp
+        src/core/ComponentVersion.h
+        src/core/ComponentVersion.cpp
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
         src/core/ProjectMemoryCompaction.h
@@ -282,6 +316,10 @@ if(BUILD_TESTING)
         src/ui/workflow/WorkflowWidget.h
         src/ui/workflow/WorkflowWidget.cpp
         src/ui/workflow/WorkflowPageId.h
+        src/ui/shared/ParentOverview.h
+        src/ui/shared/ParentOverview.cpp
+        src/ui/workflows/project/overview/ProjectOverviewPage.h
+        src/ui/workflows/project/overview/ProjectOverviewPage.cpp
     )
     target_include_directories(aramf_workflow_tests PRIVATE src)
     target_link_libraries(aramf_workflow_tests PRIVATE Qt6::Core Qt6::Widgets)

@@ -2,15 +2,18 @@
 
 #include "ProjectModel.h"
 #include "AramfPaths.h"
+#include "WorkflowPageMetadata.h"
 
 #include <QDir>
 #include <QFile>
 #include <QSaveFile>
+#include <QSet>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QCryptographicHash>
 #include <QUuid>
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -234,6 +237,19 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     root.insert(QStringLiteral("templateId"), model.templateId());
     root.insert(QStringLiteral("templateModules"), toJsonArray(model.templateModules()));
     root.insert(QStringLiteral("templateState"), model.templateState());
+    QStringList completedPageIds;
+    for (const auto& pageId : model.completedPageIds()) {
+        if (workflowPageCapabilities(pageId).userCheckableCompletion) {
+            completedPageIds << pageId;
+        }
+    }
+    std::sort(completedPageIds.begin(), completedPageIds.end());
+    root.insert(QStringLiteral("workflowProgress"), QJsonObject{
+        {QStringLiteral("completedPages"), toJsonArray(completedPageIds)}});
+    root.insert(QStringLiteral("releaseManagement"), QJsonObject{
+        {QStringLiteral("targetRelease"), model.hasTargetRelease()
+            ? QJsonValue(model.targetRelease())
+            : QJsonValue(QJsonValue::Null)}});
     root.insert(QStringLiteral("context"), model.context());
     const auto ai = model.aiConfiguration();
     QJsonObject aiObject;
@@ -408,7 +424,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
 QJsonObject ProjectPersistence::configuration(const ProjectModel& model) const
 {
     auto root = toJson(model);
-    for (const auto& key : {"schemaVersion", "migration", "projectId", "projectName", "projectPath", "projectFilePath", "templateId", "templateModules", "templateState", "aiPlatforms"}) root.remove(key);
+    for (const auto& key : {"schemaVersion", "migration", "projectId", "projectName", "projectPath", "projectFilePath", "templateId", "templateModules", "templateState", "aiPlatforms", "workflowProgress", "releaseManagement"}) root.remove(key);
     return root;
 }
 
@@ -622,7 +638,10 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
     model->setWorkerNameSuffix(root.value("workerNameSuffix").toString());
     const QString canonicalName = AramfPaths::workerDirectoryName(model->workerNameSuffix());
     model->setProjectName(canonicalName);
-    if (!model->projectPath().trimmed().isEmpty())
+    // Preserve the file that was actually opened/persisted.  Only derive a
+    // canonical filename when older/in-memory input has no project-file path;
+    // otherwise a later Save Work could silently write to another file.
+    if (model->projectFilePath().trimmed().isEmpty() && !model->projectPath().trimmed().isEmpty())
         model->setProjectFilePath(QDir(model->projectPath()).filePath(canonicalName + QStringLiteral(".aramf.json")));
     model->setDescription(root.value(QStringLiteral("description")).toString());
     model->setTemplateId(normalizeTemplateId(root.value(QStringLiteral("templateId")).toString()));
@@ -833,6 +852,19 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
     model->setResourcePolicy(resourcePolicy);
     model->setProfileSelections(fromJsonArray(root.value(QStringLiteral("profileSelections"))));
     model->setCommunicationConfiguration(communication);
+    QSet<QString> completedPageIds;
+    const auto progress = root.value(QStringLiteral("workflowProgress")).toObject();
+    for (const auto& value : progress.value(QStringLiteral("completedPages")).toArray()) {
+        const QString pageId = value.toString().trimmed();
+        if (!pageId.isEmpty()
+            && workflowPageCapabilities(pageId).userCheckableCompletion) {
+            completedPageIds.insert(pageId);
+        }
+    }
+    model->setCompletedPageIds(completedPageIds);
+    const auto releaseManagement = root.value(QStringLiteral("releaseManagement")).toObject();
+    const auto targetRelease = releaseManagement.value(QStringLiteral("targetRelease"));
+    model->setTargetRelease(targetRelease.isDouble() ? qMax(0, targetRelease.toInt()) : 0);
     const auto optionsObject = root.value(QStringLiteral("options")).toObject();
     for (auto it = optionsObject.constBegin(); it != optionsObject.constEnd(); ++it) {
         model->setOptionValues(it.key(), fromJsonArray(it.value()));

@@ -8,14 +8,19 @@
 
 #include "core/ProjectModel.h"
 #include "core/ProjectPersistence.h"
+#include "core/ComponentVersion.h"
 #include "core/Services.h"
 #include "ui/workflow/WorkflowPageId.h"
 
 class QScrollArea;
 class QStackedWidget;
 class WorkflowWidget;
+class QPushButton;
+class FooterProgressDisplay;
 
 class ProjectSetupPage;
+class ProjectOverviewPage;
+class ProjectModulesTemplatesPage;
 class ProjectAcademicPage;
 class ProjectLanguagesPage;
 class ProjectFrameworksPage;
@@ -43,7 +48,14 @@ class FinalizePage;
 class FrameworkKnowledgeReviewPage;
 class FrameworkKnowledgeApplyPage;
 class ImprovementBacklogPage;
+class ReleaseOverviewPage;
+class ProductVersionPage;
+class ComponentVersionsPage;
+class SchemaCompatibilityPage;
+class ReleaseReadinessPage;
+class ApprovalHistoryPage;
 class QEvent;
+class QShowEvent;
 
 class MainWindow final : public QMainWindow
 {
@@ -63,11 +75,16 @@ private slots:
 
 private:
     bool eventFilter(QObject* watched, QEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
+    void showEvent(QShowEvent* event) override;
     void setUiZoom(int percent);
     void zoomIn();
     void zoomOut();
     void resetZoom();
     void placeOnPreferredScreen();
+    void refreshCurrentWorkflowLayout();
+    void saveWork();
+    void refreshCompletionProgress();
 
     QFont baseApplicationFont_;
     QString baseStyleSheet_;
@@ -84,12 +101,17 @@ private:
     VerificationServices verificationServices_;
     FinalizationServices finalizationServices_;
     AgentEntryPointService agentEntryPointService_;
+    ReleaseManagementService releaseManagementService_;
 
     WorkflowWidget* workflow_ = nullptr;
     QScrollArea* pageScroll_ = nullptr;
     QStackedWidget* stack_ = nullptr;
+    QPushButton* saveWork_ = nullptr;
+    FooterProgressDisplay* completionProgress_ = nullptr;
 
     ProjectSetupPage* projectPage_ = nullptr;
+    ProjectOverviewPage* projectOverviewPage_ = nullptr;
+    ProjectModulesTemplatesPage* projectModulesTemplatesPage_ = nullptr;
     ProjectAcademicPage* academicPage_ = nullptr;
     ProjectLanguagesPage* languagesPage_ = nullptr;
     ProjectFrameworksPage* frameworksPage_ = nullptr;
@@ -117,6 +139,12 @@ private:
     FrameworkKnowledgeReviewPage* updateReviewPage_ = nullptr;
     FrameworkKnowledgeApplyPage* updateApplyPage_ = nullptr;
     ImprovementBacklogPage* improvementBacklogPage_ = nullptr;
+    ReleaseOverviewPage* releaseOverviewPage_ = nullptr;
+    ProductVersionPage* productVersionPage_ = nullptr;
+    ComponentVersionsPage* componentVersionsPage_ = nullptr;
+    SchemaCompatibilityPage* schemaCompatibilityPage_ = nullptr;
+    ReleaseReadinessPage* releaseReadinessPage_ = nullptr;
+    ApprovalHistoryPage* approvalHistoryPage_ = nullptr;
 
     QMap<WorkflowPageId, int> pageStackIndices_;
 

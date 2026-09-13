@@ -42,8 +42,9 @@
     },
     "ai": {
         "additionalAgents": [
-            "chatgpt",
-            "github-copilot"
+            "github-copilot",
+            "gemini",
+            "openai-codex"
         ],
         "aramfIntegrations": [
             "agents-md",
@@ -106,7 +107,7 @@
             "create-branch",
             "stage-changes"
         ],
-        "primaryAgent": "openai-codex",
+        "primaryAgent": "chatgpt",
         "responsibilities": [
             "planning",
             "requirement-analysis",
@@ -148,9 +149,10 @@
         ]
     },
     "aiPlatforms": [
-        "openai-codex",
         "chatgpt",
-        "github-copilot"
+        "github-copilot",
+        "gemini",
+        "openai-codex"
     ],
     "androidConstraints": {
         "analysisDispatcher": "",
@@ -288,10 +290,15 @@
             "ninja"
         ],
         "deliveryCapabilities": [
+            "release-archive",
+            "package-installer"
         ],
         "dependencyManagers": [
+            "cmake-fetchcontent"
         ],
         "developmentTools": [
+            "debugger",
+            "memory-analysis"
         ],
         "frameworks": [
             "qt"
@@ -299,6 +306,7 @@
         "hardwareTargets": [
         ],
         "hostOperatingSystems": [
+            "windows"
         ],
         "ides": [
             "visual-studio-code"
@@ -309,6 +317,10 @@
         "processorFamilies": [
         ],
         "qualityCapabilities": [
+            "static-analysis",
+            "formatting",
+            "coverage",
+            "dependency-scanning"
         ],
         "targetArchitectures": [
             "x86_64"
@@ -319,7 +331,8 @@
         ],
         "testingCapabilities": [
             "unit-testing",
-            "integration-testing"
+            "integration-testing",
+            "e2e-testing"
         ],
         "toolchains": [
             "msys2-ucrt64-gcc"
@@ -389,7 +402,26 @@
             "corrective-actions",
             "validation-results",
             "checkpoints",
-            "certification-knowledge"
+            "certification-knowledge",
+            "current-workflow-state",
+            "selected-template",
+            "current-build-state",
+            "current-test-state",
+            "current-verification-state",
+            "architecture-decisions",
+            "tooling-decisions",
+            "dependency-decisions",
+            "resource-decisions",
+            "ai-configuration-decisions",
+            "user-approved-exceptions",
+            "failed-attempts",
+            "build-attempts",
+            "test-attempts",
+            "reusable-project-knowledge",
+            "source-references",
+            "learned-constraints",
+            "known-limitations",
+            "known-workarounds"
         ],
         "historyOptions": [
             "event-history",
@@ -424,6 +456,13 @@
             "project-status-consistency"
         ],
         "writerMode": "agent-direct"
+    },
+    "migration": {
+        "currentSchemaVersion": 1,
+        "notices": [
+        ],
+        "sourceSchemaVersion": 0,
+        "status": "MIGRATION_OK"
     },
     "options": {
     },
@@ -700,7 +739,8 @@
             "prefer-project-specific",
             "summaries-first",
             "avoid-inactive",
-            "avoid-unrelated"
+            "avoid-unrelated",
+            "reuse-context"
         ],
         "enforcementLevel": "standard",
         "loadingStrategy": "relevant",
@@ -734,10 +774,21 @@
             "project-status"
         ]
     },
+    "schemaVersion": 1,
     "templateId": "",
     "templateModules": [
     ],
     "templateState": {
+        "activeTemplateNames": [
+        ],
+        "activeTemplates": [
+        ],
+        "manualModules": [
+        ]
     },
-    "workerNameSuffix": ""
+    "workerNameSuffix": "",
+    "workflowProgress": {
+        "completedPages": [
+        ]
+    }
 }

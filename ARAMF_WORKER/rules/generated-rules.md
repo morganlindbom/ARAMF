@@ -105,6 +105,7 @@ relevant
 - Load summaries before full rules
 - Avoid inactive rules
 - Avoid unrelated language/framework rules
+- Reuse valid loaded context
 
 ## Conflict Policy
 

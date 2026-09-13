@@ -18,7 +18,7 @@
         "desktop",
         "windows-desktop"
     ],
-    "primaryAiAgent": "openai-codex",
+    "primaryAiAgent": "chatgpt",
     "reportDocumentation": {
         "enabled": false,
         "templateMode": "aramf-default",

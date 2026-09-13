@@ -9,10 +9,11 @@
     },
     "ai": {
         "additionalAgents": [
-            "chatgpt",
-            "github-copilot"
+            "github-copilot",
+            "gemini",
+            "openai-codex"
         ],
-        "primaryAgent": "openai-codex"
+        "primaryAgent": "chatgpt"
     },
     "architectures": [
         "x86_64"
@@ -29,7 +30,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "105928b8b00ce15b636bc86c185acb752ab2b964ac65f7392e99f9c9b1549a64",
+    "configurationFingerprint": "51a1f6889e5961117895a5ac0055be4425cba9a35d7f6e9f9b1f837210a49101",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",
@@ -62,6 +63,8 @@
     "templateModules": [
     ],
     "tools": [
+        "debugger",
+        "memory-analysis"
     ],
     "workerIdentity": "ARAMF_WORKER",
     "workerSchemaVersion": 1

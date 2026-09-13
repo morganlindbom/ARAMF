@@ -910,6 +910,8 @@ void ProjectModel::resetForNewProject()
     migratedFromSchemaVersion_ = ProjectSchema::CurrentVersion;
     migrationStatus_ = ProjectSchema::MigrationOk;
     migrationNotices_ = {};
+    targetRelease_ = 0;
+    completedPageIds_.clear();
     notifyChanged();
     endUpdate();
     setModified(false);
@@ -928,4 +930,33 @@ void ProjectModel::setMigrationState(int sourceVersion, const QString& status, c
     migratedFromSchemaVersion_ = sourceVersion;
     migrationStatus_ = status;
     migrationNotices_ = notices;
+}
+
+void ProjectModel::setTargetRelease(int release)
+{
+    const int normalized = qMax(0, release);
+    if (targetRelease_ == normalized) return;
+    targetRelease_ = normalized;
+    notifyChanged();
+}
+
+void ProjectModel::setPageCompleted(const QString& pageId, bool completed)
+{
+    const QString key = pageId.trimmed();
+    if (key.isEmpty()) return;
+    const bool alreadyCompleted = completedPageIds_.contains(key);
+    if (alreadyCompleted == completed) return;
+    if (completed) completedPageIds_.insert(key);
+    else completedPageIds_.remove(key);
+    notifyChanged();
+}
+
+void ProjectModel::setCompletedPageIds(const QSet<QString>& pageIds)
+{
+    QSet<QString> normalized;
+    for (const auto& pageId : pageIds) {
+        const QString key = pageId.trimmed();
+        if (!key.isEmpty()) normalized.insert(key);
+    }
+    completedPageIds_ = normalized;
 }
