@@ -30,7 +30,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "51a1f6889e5961117895a5ac0055be4425cba9a35d7f6e9f9b1f837210a49101",
+    "configurationFingerprint": "6e5ecdd841e01575af22fd620e8a295c31376dd29fe6ffab8dd160648278e3c0",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",
@@ -52,6 +52,29 @@
     "languages": [
         "cpp"
     ],
+    "processVersion": {
+        "active": null,
+        "completedHistory": [
+            {
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "process": 0
+            },
+            {
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "process": 1
+            }
+        ],
+        "next": {
+            "done": 0,
+            "iteration": 0,
+            "loop": 1,
+            "process": 2
+        }
+    },
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "projectName": "ARAMF_WORKER",
     "schemaVersion": 1,
