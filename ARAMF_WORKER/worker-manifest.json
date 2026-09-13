@@ -36,7 +36,7 @@
         "update.improvement-backlog": "0.8.3.0",
         "update.review": "0.8.1.0"
     },
-    "aramfProductVersion": "0.2.0",
+    "aramfProductVersion": "0.0.0",
     "canonicalFiles": {
         "currentState": "ARAMF_WORKER/memory/current-state.md",
         "decisions": "ARAMF_WORKER/memory/decisions.md",

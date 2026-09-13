@@ -472,6 +472,9 @@
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "projectName": "ARAMF_WORKER",
     "projectPath": "D:\\ON DESCTOP\\HKR KURSER\\C++\\ARAMF2\\ARAMF",
+    "releaseManagement": {
+        "targetRelease": null
+    },
     "resourcePolicy": {
         "loadingStrategy": "relevant",
         "options": [
