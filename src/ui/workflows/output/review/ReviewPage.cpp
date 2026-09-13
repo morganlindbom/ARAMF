@@ -9,6 +9,7 @@
 #include "core/DocumentTemplate.h"
 #include "core/DocumentInstruction.h"
 #include "core/DocumentTemplateInspector.h"
+#include "core/ProcessVersion.h"
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QFile>
@@ -117,6 +118,7 @@ void ReviewPage::refreshFromModel()
     const auto memory = model_->memoryConfiguration();
     const auto options = model_->generationOptions();
     const auto resources = model_->resources();
+    const auto processVersion = model_->processVersionState();
     int enabled = 0;
     int authoritative = 0;
     int primarySources = 0;
@@ -132,6 +134,16 @@ void ReviewPage::refreshFromModel()
     }
 
     QString text;
+    text += tr("Process Version\n  Completed:\n");
+    const auto completedProcesses = processVersion.completedIdentifiers();
+    if (completedProcesses.isEmpty()) {
+        text += tr("    None\n");
+    } else {
+        for (const auto& identifier : completedProcesses) text += QStringLiteral("    ") + identifier + QLatin1Char('\n');
+    }
+    text += tr("  Active: %1\n  Next: %2\n\n")
+        .arg(processVersion.activeIdentifier().isEmpty() ? tr("None") : processVersion.activeIdentifier(),
+             processVersion.nextIdentifier().isEmpty() ? tr("None") : processVersion.nextIdentifier());
     QStringList activeModules;
     for (const auto& id : model_->templateModules()) activeModules << id;
     QStringList activeTemplates;

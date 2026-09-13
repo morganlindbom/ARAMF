@@ -3,6 +3,7 @@
 #include "ProjectModel.h"
 #include "AramfPaths.h"
 #include "WorkflowPageMetadata.h"
+#include "ProcessVersion.h"
 
 #include <QDir>
 #include <QFile>
@@ -246,6 +247,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     std::sort(completedPageIds.begin(), completedPageIds.end());
     root.insert(QStringLiteral("workflowProgress"), QJsonObject{
         {QStringLiteral("completedPages"), toJsonArray(completedPageIds)}});
+    root.insert(QStringLiteral("processVersion"), processVersionStateToJson(model.processVersionState()));
     root.insert(QStringLiteral("releaseManagement"), QJsonObject{
         {QStringLiteral("targetRelease"), model.hasTargetRelease()
             ? QJsonValue(model.targetRelease())
@@ -424,7 +426,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
 QJsonObject ProjectPersistence::configuration(const ProjectModel& model) const
 {
     auto root = toJson(model);
-    for (const auto& key : {"schemaVersion", "migration", "projectId", "projectName", "projectPath", "projectFilePath", "templateId", "templateModules", "templateState", "aiPlatforms", "workflowProgress", "releaseManagement"}) root.remove(key);
+    for (const auto& key : {"schemaVersion", "migration", "projectId", "projectName", "projectPath", "projectFilePath", "templateId", "templateModules", "templateState", "aiPlatforms", "workflowProgress", "processVersion", "releaseManagement"}) root.remove(key);
     return root;
 }
 
@@ -504,6 +506,11 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
     if (sourceVersion == ProjectSchema::CurrentVersion) {
         if (migrationNotices.isEmpty() && persistedMigration.value(QStringLiteral("notices")).isArray())
             migrationNotices = persistedMigration.value(QStringLiteral("notices")).toArray();
+    }
+    ProcessVersionState processVersionState = ProcessVersionState::empty();
+    if (root.contains(QStringLiteral("processVersion"))
+        && !processVersionStateFromJson(root.value(QStringLiteral("processVersion")), &processVersionState, error)) {
+        return false;
     }
     const auto taskMetadata = root.value("rules").toObject().value("scopeMetadata");
     if (!taskMetadata.isUndefined() && !taskMetadata.isObject()) {
@@ -862,6 +869,10 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
         }
     }
     model->setCompletedPageIds(completedPageIds);
+    if (!model->restoreProcessVersionState(processVersionState, error)) {
+        model->endUpdate();
+        return false;
+    }
     const auto releaseManagement = root.value(QStringLiteral("releaseManagement")).toObject();
     const auto targetRelease = releaseManagement.value(QStringLiteral("targetRelease"));
     model->setTargetRelease(targetRelease.isDouble() ? qMax(0, targetRelease.toInt()) : 0);

@@ -468,6 +468,29 @@
     },
     "profileSelections": [
     ],
+    "processVersion": {
+        "active": null,
+        "completedHistory": [
+            {
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "process": 0
+            },
+            {
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "process": 1
+            }
+        ],
+        "next": {
+            "done": 0,
+            "iteration": 0,
+            "loop": 1,
+            "process": 2
+        }
+    },
     "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER.aramf.json",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "projectName": "ARAMF_WORKER",

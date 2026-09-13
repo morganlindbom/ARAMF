@@ -912,6 +912,7 @@ void ProjectModel::resetForNewProject()
     migrationNotices_ = {};
     targetRelease_ = 0;
     completedPageIds_.clear();
+    processVersionState_ = ProcessVersionState::empty();
     notifyChanged();
     endUpdate();
     setModified(false);
@@ -959,4 +960,32 @@ void ProjectModel::setCompletedPageIds(const QSet<QString>& pageIds)
         if (!key.isEmpty()) normalized.insert(key);
     }
     completedPageIds_ = normalized;
+}
+
+bool ProjectModel::startNextProcess(QString* error)
+{
+    if (!ProcessVersionLifecycle::startNextProcess(&processVersionState_, error)) return false;
+    notifyChanged();
+    return true;
+}
+
+bool ProjectModel::advanceProcessIteration(QString* error)
+{
+    if (!ProcessVersionLifecycle::advanceIteration(&processVersionState_, error)) return false;
+    notifyChanged();
+    return true;
+}
+
+bool ProjectModel::completeActiveProcess(QString* error)
+{
+    if (!ProcessVersionLifecycle::completeActiveProcess(&processVersionState_, error)) return false;
+    notifyChanged();
+    return true;
+}
+
+bool ProjectModel::restoreProcessVersionState(const ProcessVersionState& state, QString* error)
+{
+    if (!state.isValid(error)) return false;
+    processVersionState_ = state;
+    return true;
 }

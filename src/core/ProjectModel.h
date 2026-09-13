@@ -10,6 +10,9 @@
 #include <QJsonArray>
 
 #include "ProjectSchema.h"
+#include "ProcessVersion.h"
+
+class ProjectPersistence;
 
 struct DevelopmentEnvironment {
     QString language;
@@ -415,6 +418,7 @@ public:
     QJsonArray migrationNotices() const { return migrationNotices_; }
     int targetRelease() const { return targetRelease_; }
     bool hasTargetRelease() const { return targetRelease_ > 0; }
+    ProcessVersionState processVersionState() const { return processVersionState_; }
     QSet<QString> completedPageIds() const { return completedPageIds_; }
     bool isPageCompleted(const QString& pageId) const { return completedPageIds_.contains(pageId); }
 
@@ -453,6 +457,9 @@ public:
     void setTargetRelease(int release);
     void setPageCompleted(const QString& pageId, bool completed);
     void setCompletedPageIds(const QSet<QString>& pageIds);
+    bool startNextProcess(QString* error = nullptr);
+    bool advanceProcessIteration(QString* error = nullptr);
+    bool completeActiveProcess(QString* error = nullptr);
 
     void beginUpdate();
     void endUpdate();
@@ -468,6 +475,8 @@ signals:
     void modifiedChanged(bool modified);
 
 private:
+    friend class ProjectPersistence;
+    bool restoreProcessVersionState(const ProcessVersionState& state, QString* error = nullptr);
     void notifyChanged();
     QString projectId_;
     QString projectName_ = QStringLiteral("New AR&MF Project");
@@ -506,4 +515,5 @@ private:
     QJsonArray migrationNotices_;
     int targetRelease_ = 0;
     QSet<QString> completedPageIds_;
+    ProcessVersionState processVersionState_;
 };

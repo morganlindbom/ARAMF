@@ -42,6 +42,8 @@ set(ARAMF_CORE_SOURCES
     src/core/ProjectPersistence.h
     src/core/ProjectPersistence.cpp
     src/core/ProjectSchema.h
+    src/core/ProcessVersion.h
+    src/core/ProcessVersion.cpp
     src/core/ComponentVersion.h
     src/core/ComponentVersion.cpp
     src/core/ProjectRootRebindService.h
@@ -178,6 +180,7 @@ if(BUILD_TESTING)
         tests/ProjectMemoryTests.cpp
         tests/WorkerTaskTests.cpp
         tests/ContextCoordinationTests.cpp
+        tests/ProcessVersionTests.cpp
         src/core/GitIgnoreService.h
         src/core/GitIgnoreService.cpp
         src/core/ProjectMemory.h
@@ -221,6 +224,8 @@ if(BUILD_TESTING)
         src/core/UpdateExecutionService.cpp
         src/core/ProjectPersistence.h
         src/core/ProjectPersistence.cpp
+        src/core/ProcessVersion.h
+        src/core/ProcessVersion.cpp
         src/core/WorkflowPageMetadata.h
         src/core/WorkflowPageMetadata.cpp
         src/core/ComponentVersion.h
@@ -256,6 +261,8 @@ if(BUILD_TESTING)
         src/core/ProjectModel.cpp
         src/core/ProjectPersistence.h
         src/core/ProjectPersistence.cpp
+        src/core/ProcessVersion.h
+        src/core/ProcessVersion.cpp
         src/core/WorkflowPageMetadata.h
         src/core/WorkflowPageMetadata.cpp
         src/core/ComponentVersion.h

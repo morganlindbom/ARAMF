@@ -2,6 +2,7 @@
 
 #include "Services.h"
 #include "ComponentVersion.h"
+#include "ProcessVersion.h"
 #include "TemplateValidation.h"
 #include "DocumentTemplate.h"
 #include "DocumentInstruction.h"
@@ -152,6 +153,7 @@ QJsonObject projectConfiguration(const ProjectModel& model, const QString& finge
         {QStringLiteral("academic"), QJsonObject{{QStringLiteral("enabled"), academic.enabled}, {QStringLiteral("projectTypes"), toJsonArray(academic.projectTypes)}, {QStringLiteral("thesis"), academic.thesisDocumentation.enabled}, {QStringLiteral("report"), academic.reportDocumentation.enabled}}},
         {QStringLiteral("ai"), QJsonObject{{QStringLiteral("primaryAgent"), ai.primaryAgent}, {QStringLiteral("additionalAgents"), toJsonArray(ai.additionalAgents)}}},
         {QStringLiteral("communication"), QJsonObject{{QStringLiteral("enabled"), communication.enabled}, {QStringLiteral("transport"), communication.transport}, {QStringLiteral("protocol"), communication.protocol}}},
+        {QStringLiteral("processVersion"), processVersionStateToJson(model.processVersionState())},
         {QStringLiteral("canonicalPaths"), QJsonObject{{QStringLiteral("worker"), AramfPaths::runtimeWorkerDirectoryName()}, {QStringLiteral("status"), AramfPaths::ProjectStatus}, {QStringLiteral("currentState"), AramfPaths::CurrentState}, {QStringLiteral("routing"), AramfPaths::TaskRoutes}, {QStringLiteral("validation"), AramfPaths::ColdStartValidation}}}
     };
 }
@@ -358,6 +360,7 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
         {QStringLiteral("provenance"), options.generateProvenance}};
     const auto communication = model.communicationConfiguration();
     value.insert(QStringLiteral("communication"), QJsonObject{{QStringLiteral("enabled"), communication.enabled}, {QStringLiteral("sourceTarget"), communication.sourceTarget}, {QStringLiteral("destinationTarget"), communication.destinationTarget}, {QStringLiteral("transport"), communication.transport}, {QStringLiteral("protocol"), communication.protocol}, {QStringLiteral("protocolVersion"), communication.protocolVersion}});
+    value.insert(QStringLiteral("processVersion"), processVersionStateToJson(model.processVersionState()));
     value.insert(QStringLiteral("workerNameSuffix"), model.workerNameSuffix());
     return QString::fromLatin1(QCryptographicHash::hash(
         QJsonDocument(value).toJson(QJsonDocument::Compact), QCryptographicHash::Sha256).toHex());
