@@ -11,7 +11,7 @@
             "scope": "all",
             "section": "knowledge",
             "source": "ARAMF_WORKER/memory/framework-knowledge.json",
-            "sourceFingerprint": "824c707ffe5d9b15eab482a5abdc4cc0c2ed395df9c419dbda103486261b093a",
+            "sourceFingerprint": "b758f56e3d8c46ae3f6e6e5cfe8dba08670cbca8e1a56b5bcc3c095e6215337c",
             "status": "CURRENT",
             "summary": "knowledge context from ARAMF_WORKER/memory/framework-knowledge.json"
         },
@@ -167,7 +167,7 @@
             "scope": "software",
             "section": "resources",
             "source": "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8",
-            "sourceFingerprint": "9c0844cf7b6249ba1bae34f703b92ba8e0e0fc7c1593145f3826fac5cb67e56a",
+            "sourceFingerprint": "de15f4349a1d1376856b32e708c02b297cb29f3a328dac2498a0ef6b8474d988",
             "status": "CURRENT",
             "summary": "resources context from external:769b24cd-ace8-482f-8f96-05c09a1a4cb8"
         },
@@ -180,7 +180,7 @@
             "scope": "all",
             "section": "governance",
             "source": "ARAMF_WORKER/AGENTS.md",
-            "sourceFingerprint": "7081159f2acca8948f7fd2cc38be9f9a809dfe56099f71d843b2f0de26a96a6b",
+            "sourceFingerprint": "d0098bbb54952cce8d314d35e6f07641388a0c7e2dbce2eeeeca2b9f6fe3a411",
             "status": "CURRENT",
             "summary": "governance context from ARAMF_WORKER/AGENTS.md"
         },
@@ -362,7 +362,7 @@
             "scope": "build-system",
             "section": "resources",
             "source": "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8",
-            "sourceFingerprint": "9c0844cf7b6249ba1bae34f703b92ba8e0e0fc7c1593145f3826fac5cb67e56a",
+            "sourceFingerprint": "de15f4349a1d1376856b32e708c02b297cb29f3a328dac2498a0ef6b8474d988",
             "status": "CURRENT",
             "summary": "resources context from external:769b24cd-ace8-482f-8f96-05c09a1a4cb8"
         },
@@ -393,7 +393,7 @@
             "summary": "resources context from external:c693014c-27ef-4ce1-9291-6fb37ff0c375"
         }
     ],
-    "indexFingerprint": "99e9b8432c8189fd85707c531fb746bf2dd485c4f854a95f1adde48fba3c4caa",
+    "indexFingerprint": "70707adda787fc3e58182cad6ae23bb13b41f81783b0f70ce50716ebdc513791",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "schemaVersion": 1,
     "sourceIndex": "context-index.json"

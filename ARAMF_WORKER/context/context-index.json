@@ -7,7 +7,7 @@
             "dependencies": [
                 "ARAMF_WORKER/memory/framework-knowledge.json"
             ],
-            "fingerprint": "824c707ffe5d9b15eab482a5abdc4cc0c2ed395df9c419dbda103486261b093a",
+            "fingerprint": "b758f56e3d8c46ae3f6e6e5cfe8dba08670cbca8e1a56b5bcc3c095e6215337c",
             "id": "097b5bdd4418619619c2",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/memory/framework-knowledge.json",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -211,7 +211,7 @@
             "dependencies": [
                 "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8"
             ],
-            "fingerprint": "9c0844cf7b6249ba1bae34f703b92ba8e0e0fc7c1593145f3826fac5cb67e56a",
+            "fingerprint": "de15f4349a1d1376856b32e708c02b297cb29f3a328dac2498a0ef6b8474d988",
             "id": "3e0aac4d24e266687153",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/CMakeLists.txt",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -228,7 +228,7 @@
             "dependencies": [
                 "ARAMF_WORKER/AGENTS.md"
             ],
-            "fingerprint": "7081159f2acca8948f7fd2cc38be9f9a809dfe56099f71d843b2f0de26a96a6b",
+            "fingerprint": "d0098bbb54952cce8d314d35e6f07641388a0c7e2dbce2eeeeca2b9f6fe3a411",
             "id": "4e31696dd258350fa701",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/AGENTS.md",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -466,7 +466,7 @@
             "dependencies": [
                 "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8"
             ],
-            "fingerprint": "9c0844cf7b6249ba1bae34f703b92ba8e0e0fc7c1593145f3826fac5cb67e56a",
+            "fingerprint": "de15f4349a1d1376856b32e708c02b297cb29f3a328dac2498a0ef6b8474d988",
             "id": "e8c9100501b1a532de18",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/CMakeLists.txt",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -514,7 +514,7 @@
             "version": 1
         }
     ],
-    "fingerprint": "99e9b8432c8189fd85707c531fb746bf2dd485c4f854a95f1adde48fba3c4caa",
+    "fingerprint": "70707adda787fc3e58182cad6ae23bb13b41f81783b0f70ce50716ebdc513791",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "schemaVersion": 1,
     "workerIdentity": "ARAMF_WORKER"

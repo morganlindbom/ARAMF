@@ -92,8 +92,20 @@ bool upsertManagedSection(const QString& path,
     const int begin = content.indexOf(beginMarker);
     if (begin >= 0) {
         const int end = content.indexOf(endMarker, begin);
-        if (end >= 0) content.replace(begin, end + endMarker.size() - begin, section);
-        else content = content.left(begin) + section;
+        if (end >= 0) {
+            QString suffix = content.mid(end + endMarker.size());
+            for (;;) {
+                const int duplicateBegin = suffix.indexOf(beginMarker);
+                if (duplicateBegin < 0) break;
+                const int duplicateEnd = suffix.indexOf(endMarker, duplicateBegin);
+                if (duplicateEnd < 0) {
+                    suffix = suffix.left(duplicateBegin);
+                    break;
+                }
+                suffix.remove(duplicateBegin, duplicateEnd + endMarker.size() - duplicateBegin);
+            }
+            content = content.left(begin) + section + suffix;
+        } else content = content.left(begin) + section;
     } else {
         while (content.endsWith(QStringLiteral("\n\n"))) content.chop(1);
         if (!content.isEmpty() && !content.endsWith(QLatin1Char('\n'))) content += QLatin1Char('\n');
@@ -448,7 +460,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "Project isolation is mandatory: preserve pre-existing dirty and unrelated files, exclude them from current-task attribution, and fail on new out-of-scope edits. Never broaden a task to the whole project or full ARAMF_WORKER because precise scope resolution is inconvenient. Use declared ChangeImpact and dependency scope to determine affected validation and evidence. Evidence is fresh only for the dependencies it covers; later relevant changes stale that evidence.\n"
             "Follow the authoritative route in `routing/validation-policy.json`. VERIFIED requires all applicable valid software evidence and fresh fingerprints. CERTIFIED is a separate claim requiring its applicable certification evidence; software verification must not imply physical certification. HARDWARE_CERTIFIED or other physical claims require valid physical/on-target evidence and must never be fabricated.\n"
             "Persist governed state through the canonical ARAMF services, save/reload it, and verify readback and cross-file consistency. Governance events use the append-only recorder and its current-state, manifest, metrics, PROJECT_STATUS, memory-consistency, and cold-start mechanisms; do not invent recorder files or rewrite history. Keep the generated Worker topology coherent and treat `%1/` as orchestration while the managed project root remains the implementation target.\n"
-            "<!-- ARAMF-TASK-GOVERNANCE-END -->\n");
+            "<!-- ARAMF-TASK-GOVERNANCE-END -->\n").arg(workerName);
         if (options.generateMemory) {
             canonicalAgent += QStringLiteral(
                 "Read `memory/framework-knowledge.json` and apply only entries whose status is `approved`.\n"

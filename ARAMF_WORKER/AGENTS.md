@@ -107,6 +107,92 @@ Read `memory/memory-contract.json` before recording development results. In `age
 The active agent owns governed writes in `agent-direct` mode. `PROJECT_STATUS.md` and current-state files describe current truth; `memory/event-log.jsonl` preserves historical truth. Corrections and durable decision changes are represented as new evidence with explicit supersession.
 
 <!-- ARAMF-MEMORY-END -->
+<!-- ARAMF-P1-CONTEXT-BEGIN -->
+
+## Governed Context and Task Coordination
+
+Read `ARAMF_WORKER/context/context-index.json` first for relevant governed context. `ARAMF_WORKER/context/compressed-context.json` is derived and must retain provenance; check `ARAMF_WORKER/context/freshness.json` before relying on it. Use `ARAMF_WORKER/context/task-dag.json` for dependency gating and preserve the originating TaskContract in handoffs. Agent adapters change presentation only and cannot change ARAMF scope, ownership, permissions, routing or validation.
+<!-- ARAMF-P1-CONTEXT-END -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -126,10 +212,3 @@ Project isolation is mandatory: preserve pre-existing dirty and unrelated files,
 Follow the authoritative route in `routing/validation-policy.json`. VERIFIED requires all applicable valid software evidence and fresh fingerprints. CERTIFIED is a separate claim requiring its applicable certification evidence; software verification must not imply physical certification. HARDWARE_CERTIFIED or other physical claims require valid physical/on-target evidence and must never be fabricated.
 Persist governed state through the canonical ARAMF services, save/reload it, and verify readback and cross-file consistency. Governance events use the append-only recorder and its current-state, manifest, metrics, PROJECT_STATUS, memory-consistency, and cold-start mechanisms; do not invent recorder files or rewrite history. Keep the generated Worker topology coherent and treat `ARAMF_WORKER/` as orchestration while the managed project root remains the implementation target.
 <!-- ARAMF-TASK-GOVERNANCE-END -->
-
-<!-- ARAMF-P1-CONTEXT-BEGIN -->
-
-## Governed Context and Task Coordination
-
-Read `ARAMF_WORKER/context/context-index.json` first for relevant governed context. `ARAMF_WORKER/context/compressed-context.json` is derived and must retain provenance; check `ARAMF_WORKER/context/freshness.json` before relying on it. Use `ARAMF_WORKER/context/task-dag.json` for dependency gating and preserve the originating TaskContract in handoffs. Agent adapters change presentation only and cannot change ARAMF scope, ownership, permissions, routing or validation.
-<!-- ARAMF-P1-CONTEXT-END -->
