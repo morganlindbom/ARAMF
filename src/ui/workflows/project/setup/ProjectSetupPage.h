@@ -50,6 +50,8 @@ private:
     QLineEdit* workerNameSuffix_ = nullptr;
     QLabel* workerNamePreview_ = nullptr;
     QLabel* projectFilePreview_ = nullptr;
+    QLabel* migrationStatus_ = nullptr;
+    QLabel* migrationDetails_ = nullptr;
     QString workerNameRawInput_;
     bool workerNameEditing_ = false;
     QGroupBox* communicationGroup_ = nullptr;

@@ -7,6 +7,9 @@
 #include <QJsonObject>
 #include <QJsonValue>
 #include <QByteArray>
+#include <QJsonArray>
+
+#include "ProjectSchema.h"
 
 struct DevelopmentEnvironment {
     QString language;
@@ -406,6 +409,10 @@ public:
     QStringList optionValues(const QString& key) const { return options_.value(key); }
     QHash<QString, QStringList> options() const { return options_; }
     bool isModified() const { return modified_; }
+    int projectSchemaVersion() const { return projectSchemaVersion_; }
+    int migratedFromSchemaVersion() const { return migratedFromSchemaVersion_; }
+    QString migrationStatus() const { return migrationStatus_; }
+    QJsonArray migrationNotices() const { return migrationNotices_; }
 
     void setProjectName(const QString& value);
     void setProjectPath(const QString& value);
@@ -438,6 +445,7 @@ public:
     void setOptionValues(const QString& key, const QStringList& value);
     void resetForNewProject();
     void setModified(bool modified);
+    void setMigrationState(int sourceVersion, const QString& status, const QJsonArray& notices);
 
     void beginUpdate();
     void endUpdate();
@@ -485,4 +493,8 @@ private:
     int updateDepth_ = 0;
     bool pendingNotification_ = false;
     bool modified_ = false;
+    int projectSchemaVersion_ = ProjectSchema::CurrentVersion;
+    int migratedFromSchemaVersion_ = ProjectSchema::CurrentVersion;
+    QString migrationStatus_ = ProjectSchema::MigrationOk;
+    QJsonArray migrationNotices_;
 };

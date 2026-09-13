@@ -9,7 +9,10 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QCryptographicHash>
 #include <QUuid>
+#include <cmath>
+#include <limits>
 
 namespace {
 QJsonArray toJsonArray(const QStringList& values)
@@ -24,6 +27,29 @@ QStringList fromJsonArray(const QJsonValue& value)
     QStringList values;
     for (const auto& entry : value.toArray()) values << entry.toString();
     return values;
+}
+
+QStringList fromJsonArrayOr(const QJsonObject& object, const QString& key, const QStringList& fallback)
+{
+    return object.contains(key) ? fromJsonArray(object.value(key)) : fallback;
+}
+
+int readSchemaVersion(const QJsonObject& root, bool* valid)
+{
+    if (valid) *valid = true;
+    const auto value = root.value(QStringLiteral("schemaVersion"));
+    if (value.isUndefined()) return 0;
+    if (!value.isDouble()) {
+        if (valid) *valid = false;
+        return -1;
+    }
+    const double version = value.toDouble();
+    if (!std::isfinite(version) || version < 0.0 || std::floor(version) != version
+        || version > static_cast<double>(std::numeric_limits<int>::max())) {
+        if (valid) *valid = false;
+        return -1;
+    }
+    return static_cast<int>(version);
 }
 
 QString normalizeAgentId(const QString& value)
@@ -76,6 +102,78 @@ QStringList migrateMemoryOptions(const QStringList& values)
     for (const auto& value : values) result << ids.value(value, value);
     return result;
 }
+
+QJsonObject migrationNotice(const QString& path, const QString& category,
+                            const QString& reason, const QString& resultingState,
+                            const QString& severity = QStringLiteral("warning"),
+                            const QString& generationImpact = QStringLiteral("non-critical"))
+{
+    const QByteArray identity = (path + QStringLiteral("|") + category + QStringLiteral("|") + reason).toUtf8();
+    return {{QStringLiteral("id"), QStringLiteral("migration-")
+                + QString::fromLatin1(QCryptographicHash::hash(identity, QCryptographicHash::Sha256).toHex().left(16))},
+            {QStringLiteral("legacyPath"), path}, {QStringLiteral("category"), category},
+            {QStringLiteral("reason"), reason}, {QStringLiteral("resultingState"), resultingState},
+            {QStringLiteral("severity"), severity}, {QStringLiteral("manualReviewRequired"), true},
+            {QStringLiteral("generationImpact"), generationImpact}, {QStringLiteral("resolved"), false},
+            {QStringLiteral("acknowledged"), false}};
+}
+
+void migrateLegacyFields(QJsonObject& root, int sourceVersion, QJsonArray& notices)
+{
+    if (sourceVersion >= ProjectSchema::CurrentVersion) return;
+
+    // These mappings are intentionally explicit. Unknown or changed legacy
+    // semantics are left at the current default and become review notices.
+    if (!root.contains(QStringLiteral("context")) && root.contains(QStringLiteral("projectType"))) {
+        const QString legacyType = root.value(QStringLiteral("projectType")).toString();
+        const QHash<QString, QString> mappings{
+            {QStringLiteral("desktop"), QStringLiteral("desktop-application")},
+            {QStringLiteral("desktop-application"), QStringLiteral("desktop-application")},
+            {QStringLiteral("android"), QStringLiteral("android-application")},
+            {QStringLiteral("machine-learning"), QStringLiteral("machine-learning")},
+            {QStringLiteral("thesis"), QStringLiteral("thesis-project")},
+            {QStringLiteral("report"), QStringLiteral("report-project")}};
+        if (mappings.contains(legacyType)) root.insert(QStringLiteral("context"), mappings.value(legacyType));
+        else notices.append(migrationNotice(QStringLiteral("projectType"), QStringLiteral("ambiguous-setting"),
+                                             QStringLiteral("Legacy project type has no deterministic current mapping."),
+                                             QStringLiteral("Current project type remains unconfigured.")));
+    }
+
+    if (!root.contains(QStringLiteral("ai")) && root.contains(QStringLiteral("agent"))) {
+        const QString legacyAgent = normalizeAgentId(root.value(QStringLiteral("agent")).toString());
+        if (legacyAgent == QStringLiteral("openai-codex") || legacyAgent == QStringLiteral("chatgpt")
+            || legacyAgent == QStringLiteral("github-copilot")) {
+            root.insert(QStringLiteral("ai"), QJsonObject{{QStringLiteral("primaryAgent"), legacyAgent}});
+        } else notices.append(migrationNotice(QStringLiteral("agent"), QStringLiteral("invalid-legacy-value"),
+                                               QStringLiteral("Legacy agent is not a supported current agent."),
+                                               QStringLiteral("Current agent remains none.")));
+    }
+
+    const auto legacyDocumentation = root.value(QStringLiteral("documentation"));
+    if (legacyDocumentation.isObject() && !root.value(QStringLiteral("academic")).isObject()) {
+        const auto documentation = legacyDocumentation.toObject();
+        QJsonObject academic;
+        for (const auto& key : {QStringLiteral("thesis"), QStringLiteral("report")}) {
+            const auto value = documentation.value(key);
+            if (!value.isObject()) continue;
+            const QString currentKey = key == QStringLiteral("thesis") ? QStringLiteral("thesisDocumentation") : QStringLiteral("reportDocumentation");
+            academic.insert(currentKey, value.toObject());
+        }
+        if (!academic.isEmpty()) root.insert(QStringLiteral("academic"), academic);
+    }
+
+    if (root.contains(QStringLiteral("legacyHardwareTiming"))) {
+        notices.append(migrationNotice(QStringLiteral("legacyHardwareTiming"), QStringLiteral("removed-feature"),
+                                       QStringLiteral("The legacy hardware timing setting has no current deterministic equivalent."),
+                                       QStringLiteral("Current hardware timing remains unconfigured."),
+                                       QStringLiteral("warning"), QStringLiteral("critical")));
+    }
+    if (root.contains(QStringLiteral("legacyCommunicationMode"))) {
+        notices.append(migrationNotice(QStringLiteral("legacyCommunicationMode"), QStringLiteral("changed-semantics"),
+                                       QStringLiteral("The legacy communication mode cannot be mapped without choosing a current transport and protocol."),
+                                       QStringLiteral("Current communication remains disabled/unconfigured.")));
+    }
+}
 }
 
 QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
@@ -121,11 +219,17 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     }
 
     QJsonObject root;
+    root.insert(QStringLiteral("schemaVersion"), ProjectSchema::CurrentVersion);
     root.insert(QStringLiteral("projectId"), model.projectId());
     root.insert(QStringLiteral("projectName"), model.projectName());
     root.insert(QStringLiteral("projectPath"), model.projectPath());
     root.insert(QStringLiteral("projectFilePath"), model.projectFilePath());
     root.insert(QStringLiteral("workerNameSuffix"), model.workerNameSuffix());
+    root.insert(QStringLiteral("migration"), QJsonObject{
+        {QStringLiteral("status"), model.migrationStatus()},
+        {QStringLiteral("sourceSchemaVersion"), model.migratedFromSchemaVersion()},
+        {QStringLiteral("currentSchemaVersion"), ProjectSchema::CurrentVersion},
+        {QStringLiteral("notices"), model.migrationNotices()}});
     root.insert(QStringLiteral("description"), model.description());
     root.insert(QStringLiteral("templateId"), model.templateId());
     root.insert(QStringLiteral("templateModules"), toJsonArray(model.templateModules()));
@@ -304,7 +408,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
 QJsonObject ProjectPersistence::configuration(const ProjectModel& model) const
 {
     auto root = toJson(model);
-    for (const auto& key : {"projectId", "projectName", "projectPath", "projectFilePath", "templateId", "templateModules", "templateState", "aiPlatforms"}) root.remove(key);
+    for (const auto& key : {"schemaVersion", "migration", "projectId", "projectName", "projectPath", "projectFilePath", "templateId", "templateModules", "templateState", "aiPlatforms"}) root.remove(key);
     return root;
 }
 
@@ -334,30 +438,68 @@ bool ProjectPersistence::load(ProjectModel* model, const QString& filePath, QStr
         return false;
     }
     QJsonParseError parseError;
-    const auto document = QJsonDocument::fromJson(file.readAll(), &parseError);
+    const QByteArray persistedBytes = file.readAll();
+    file.close();
+    const auto document = QJsonDocument::fromJson(persistedBytes, &parseError);
     if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
         if (error) *error = parseError.errorString();
         return false;
     }
 
     auto root = document.object();
+    bool validSchemaVersion = false;
+    const int sourceVersion = readSchemaVersion(root, &validSchemaVersion);
+    if (!validSchemaVersion || sourceVersion < 0) {
+        if (error) *error = QStringLiteral("MIGRATION_BLOCKED: schemaVersion must be a non-negative integer.");
+        return false;
+    }
+    if (sourceVersion > ProjectSchema::CurrentVersion) {
+        if (error) *error = QStringLiteral("UNSUPPORTED_FUTURE_SCHEMA: project schema %1 is newer than ARAMF schema %2.")
+            .arg(sourceVersion).arg(ProjectSchema::CurrentVersion);
+        return false;
+    }
     root.insert("projectFilePath", filePath);
-    return fromJson(model, root, error);
+    if (!fromJson(model, root, error)) return false;
+    if (sourceVersion < ProjectSchema::CurrentVersion && !save(*model, filePath, error)) {
+        if (error && error->isEmpty()) *error = QStringLiteral("MIGRATION_BLOCKED: migrated project could not be saved safely.");
+        return false;
+    }
+    return true;
 }
 
-bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, QString* error) const
+bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputRoot, QString* error) const
 {
     if (!model) { if (error) *error = "Project model is not available."; return false; }
+    QJsonObject root = inputRoot;
+    bool validSchemaVersion = false;
+    const int sourceVersion = readSchemaVersion(root, &validSchemaVersion);
+    if (!validSchemaVersion || sourceVersion < 0) {
+        if (error) *error = QStringLiteral("MIGRATION_BLOCKED: schemaVersion must be a non-negative integer.");
+        return false;
+    }
+    if (sourceVersion > ProjectSchema::CurrentVersion) {
+        if (error) *error = QStringLiteral("UNSUPPORTED_FUTURE_SCHEMA: project schema %1 is newer than ARAMF schema %2.")
+            .arg(sourceVersion).arg(ProjectSchema::CurrentVersion);
+        return false;
+    }
+    QJsonArray migrationNotices;
+    migrateLegacyFields(root, sourceVersion, migrationNotices);
+    const auto persistedMigration = root.value(QStringLiteral("migration")).toObject();
+    if (sourceVersion == ProjectSchema::CurrentVersion) {
+        if (migrationNotices.isEmpty() && persistedMigration.value(QStringLiteral("notices")).isArray())
+            migrationNotices = persistedMigration.value(QStringLiteral("notices")).toArray();
+    }
     const auto taskMetadata = root.value("rules").toObject().value("scopeMetadata");
     if (!taskMetadata.isUndefined() && !taskMetadata.isObject()) {
         if (error) *error = "rules.scopeMetadata must be an object when present.";
         return false;
     }
-    AcademicConfiguration academic;
+    ProjectModel defaults;
+    AcademicConfiguration academic = defaults.academicConfiguration();
     const auto academicObject = root.value(QStringLiteral("academic")).toObject();
     if (!academicObject.isEmpty()) {
-        academic.enabled = academicObject.value(QStringLiteral("enabled")).toBool(false);
-        academic.academicMode = academicObject.value(QStringLiteral("academicMode")).toString(QStringLiteral("disabled"));
+        academic.enabled = academicObject.value(QStringLiteral("enabled")).toBool(academic.enabled);
+        academic.academicMode = academicObject.value(QStringLiteral("academicMode")).toString(academic.academicMode);
         const bool hasProjectTypes = academicObject.contains(QStringLiteral("projectTypes"));
         academic.projectTypes = fromJsonArray(academicObject.value(QStringLiteral("projectTypes")));
         academic.thesisLevel = academicObject.value(QStringLiteral("thesisLevel")).toString();
@@ -371,17 +513,18 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
         academic.academicLanguage = academicObject.value(QStringLiteral("academicLanguage")).toString();
         academic.academicRequirements = fromJsonArray(academicObject.value(QStringLiteral("academicRequirements")));
         academic.academicDeliverables = fromJsonArray(academicObject.value(QStringLiteral("academicDeliverables")));
-        const auto readDocument = [&academicObject](const QString& key) {
-            AcademicConfiguration::DocumentationConfiguration document;
+        const auto readDocument = [&academicObject, &academic](const QString& key) {
+            AcademicConfiguration::DocumentationConfiguration document = key == QStringLiteral("thesisDocumentation")
+                ? academic.thesisDocumentation : academic.reportDocumentation;
             const auto object = academicObject.value(key).toObject();
-            document.enabled = object.value(QStringLiteral("enabled")).toBool(false);
-            document.templateMode = object.value(QStringLiteral("templateMode")).toString(QStringLiteral("aramf-default"));
-            document.templateSourceId = object.value(QStringLiteral("templateSourceId")).toString();
-            document.templateId = object.value(QStringLiteral("templateId")).toString();
-            document.templateVersion = object.value(QStringLiteral("templateVersion")).toInt(0);
-            document.language = object.value(QStringLiteral("language")).toString();
-            document.instructionId = object.value(QStringLiteral("instructionId")).toString();
-            document.instructionVersion = object.value(QStringLiteral("instructionVersion")).toInt(0);
+            if (object.contains(QStringLiteral("enabled"))) document.enabled = object.value(QStringLiteral("enabled")).toBool();
+            if (object.contains(QStringLiteral("templateMode"))) document.templateMode = object.value(QStringLiteral("templateMode")).toString();
+            if (object.contains(QStringLiteral("templateSourceId"))) document.templateSourceId = object.value(QStringLiteral("templateSourceId")).toString();
+            if (object.contains(QStringLiteral("templateId"))) document.templateId = object.value(QStringLiteral("templateId")).toString();
+            if (object.contains(QStringLiteral("templateVersion"))) document.templateVersion = object.value(QStringLiteral("templateVersion")).toInt();
+            if (object.contains(QStringLiteral("language"))) document.language = object.value(QStringLiteral("language")).toString();
+            if (object.contains(QStringLiteral("instructionId"))) document.instructionId = object.value(QStringLiteral("instructionId")).toString();
+            if (object.contains(QStringLiteral("instructionVersion"))) document.instructionVersion = object.value(QStringLiteral("instructionVersion")).toInt();
             return document;
         };
         academic.thesisDocumentation = readDocument(QStringLiteral("thesisDocumentation"));
@@ -417,45 +560,45 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
         ai.aramfIntegrations = {QStringLiteral("agents-md"), QStringLiteral("project-memory"), QStringLiteral("rules"), QStringLiteral("routing")};
     }
     const auto environmentObject = root.value(QStringLiteral("environment")).toObject();
-    DevelopmentEnvironment environment;
-    environment.language = environmentObject.value(QStringLiteral("language")).toString();
-    environment.framework = environmentObject.value(QStringLiteral("framework")).toString();
-    environment.ide = environmentObject.value(QStringLiteral("ide")).toString();
+    DevelopmentEnvironment environment = defaults.developmentEnvironment();
+    environment.language = environmentObject.value(QStringLiteral("language")).toString(environment.language);
+    environment.framework = environmentObject.value(QStringLiteral("framework")).toString(environment.framework);
+    environment.ide = environmentObject.value(QStringLiteral("ide")).toString(environment.ide);
     if (environment.ide == QStringLiteral("vscode")) {
         environment.ide = QStringLiteral("visual-studio-code");
     }
-    environment.compiler = environmentObject.value(QStringLiteral("compiler")).toString();
-    environment.operatingSystem = environmentObject.value(QStringLiteral("operatingSystem")).toString();
-    environment.targetPlatform = environmentObject.value(QStringLiteral("targetPlatform")).toString();
-    environment.targetArchitecture = environmentObject.value(QStringLiteral("targetArchitecture")).toString();
+    environment.compiler = environmentObject.value(QStringLiteral("compiler")).toString(environment.compiler);
+    environment.operatingSystem = environmentObject.value(QStringLiteral("operatingSystem")).toString(environment.operatingSystem);
+    environment.targetPlatform = environmentObject.value(QStringLiteral("targetPlatform")).toString(environment.targetPlatform);
+    environment.targetArchitecture = environmentObject.value(QStringLiteral("targetArchitecture")).toString(environment.targetArchitecture);
     if (environment.targetArchitecture.isEmpty()) {
         environment.targetArchitecture = QStringLiteral("auto");
     }
-    environment.buildSystem = environmentObject.value(QStringLiteral("buildSystem")).toString();
-    environment.packageManager = environmentObject.value(QStringLiteral("packageManager")).toString();
-    environment.versionControl = environmentObject.value(QStringLiteral("versionControl")).toString();
+    environment.buildSystem = environmentObject.value(QStringLiteral("buildSystem")).toString(environment.buildSystem);
+    environment.packageManager = environmentObject.value(QStringLiteral("packageManager")).toString(environment.packageManager);
+    environment.versionControl = environmentObject.value(QStringLiteral("versionControl")).toString(environment.versionControl);
 
     const auto capabilityObject = root.value(QStringLiteral("capabilities")).toObject();
-    DevelopmentCapabilities capabilities;
+    DevelopmentCapabilities capabilities = defaults.developmentCapabilities();
     if (!capabilityObject.isEmpty()) {
-        capabilities.languages = fromJsonArray(capabilityObject.value(QStringLiteral("languages")));
-        capabilities.frameworks = fromJsonArray(capabilityObject.value(QStringLiteral("frameworks")));
-        capabilities.ides = fromJsonArray(capabilityObject.value(QStringLiteral("ides")));
-        capabilities.versionControlSystems = fromJsonArray(capabilityObject.value(QStringLiteral("versionControlSystems")));
-        capabilities.developmentTools = fromJsonArray(capabilityObject.value(QStringLiteral("developmentTools")));
-        capabilities.hostOperatingSystems = fromJsonArray(capabilityObject.value(QStringLiteral("hostOperatingSystems")));
-        capabilities.targetPlatforms = fromJsonArray(capabilityObject.value(QStringLiteral("targetPlatforms")));
-        capabilities.targetArchitectures = fromJsonArray(capabilityObject.value(QStringLiteral("targetArchitectures")));
-        capabilities.processorFamilies = fromJsonArray(capabilityObject.value(QStringLiteral("processorFamilies")));
-        capabilities.hardwareTargets = fromJsonArray(capabilityObject.value(QStringLiteral("hardwareTargets")));
-        capabilities.toolchains = fromJsonArray(capabilityObject.value(QStringLiteral("toolchains")));
-        capabilities.buildSystems = fromJsonArray(capabilityObject.value(QStringLiteral("buildSystems")));
-        capabilities.dependencyManagers = fromJsonArray(capabilityObject.value(QStringLiteral("dependencyManagers")));
-        capabilities.buildConfigurations = fromJsonArray(capabilityObject.value(QStringLiteral("buildConfigurations")));
-        capabilities.testingCapabilities = fromJsonArray(capabilityObject.value(QStringLiteral("testingCapabilities")));
-        capabilities.qualityCapabilities = fromJsonArray(capabilityObject.value(QStringLiteral("qualityCapabilities")));
-        capabilities.automationCapabilities = fromJsonArray(capabilityObject.value(QStringLiteral("automationCapabilities")));
-        capabilities.deliveryCapabilities = fromJsonArray(capabilityObject.value(QStringLiteral("deliveryCapabilities")));
+        capabilities.languages = fromJsonArrayOr(capabilityObject, QStringLiteral("languages"), capabilities.languages);
+        capabilities.frameworks = fromJsonArrayOr(capabilityObject, QStringLiteral("frameworks"), capabilities.frameworks);
+        capabilities.ides = fromJsonArrayOr(capabilityObject, QStringLiteral("ides"), capabilities.ides);
+        capabilities.versionControlSystems = fromJsonArrayOr(capabilityObject, QStringLiteral("versionControlSystems"), capabilities.versionControlSystems);
+        capabilities.developmentTools = fromJsonArrayOr(capabilityObject, QStringLiteral("developmentTools"), capabilities.developmentTools);
+        capabilities.hostOperatingSystems = fromJsonArrayOr(capabilityObject, QStringLiteral("hostOperatingSystems"), capabilities.hostOperatingSystems);
+        capabilities.targetPlatforms = fromJsonArrayOr(capabilityObject, QStringLiteral("targetPlatforms"), capabilities.targetPlatforms);
+        capabilities.targetArchitectures = fromJsonArrayOr(capabilityObject, QStringLiteral("targetArchitectures"), capabilities.targetArchitectures);
+        capabilities.processorFamilies = fromJsonArrayOr(capabilityObject, QStringLiteral("processorFamilies"), capabilities.processorFamilies);
+        capabilities.hardwareTargets = fromJsonArrayOr(capabilityObject, QStringLiteral("hardwareTargets"), capabilities.hardwareTargets);
+        capabilities.toolchains = fromJsonArrayOr(capabilityObject, QStringLiteral("toolchains"), capabilities.toolchains);
+        capabilities.buildSystems = fromJsonArrayOr(capabilityObject, QStringLiteral("buildSystems"), capabilities.buildSystems);
+        capabilities.dependencyManagers = fromJsonArrayOr(capabilityObject, QStringLiteral("dependencyManagers"), capabilities.dependencyManagers);
+        capabilities.buildConfigurations = fromJsonArrayOr(capabilityObject, QStringLiteral("buildConfigurations"), capabilities.buildConfigurations);
+        capabilities.testingCapabilities = fromJsonArrayOr(capabilityObject, QStringLiteral("testingCapabilities"), capabilities.testingCapabilities);
+        capabilities.qualityCapabilities = fromJsonArrayOr(capabilityObject, QStringLiteral("qualityCapabilities"), capabilities.qualityCapabilities);
+        capabilities.automationCapabilities = fromJsonArrayOr(capabilityObject, QStringLiteral("automationCapabilities"), capabilities.automationCapabilities);
+        capabilities.deliveryCapabilities = fromJsonArrayOr(capabilityObject, QStringLiteral("deliveryCapabilities"), capabilities.deliveryCapabilities);
     } else {
         if (!environment.language.isEmpty()) capabilities.languages = {environment.language};
         if (!environment.framework.isEmpty() && environment.framework != QStringLiteral("none")) capabilities.frameworks = {environment.framework};
@@ -498,7 +641,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
     // Structured AI configuration is authoritative when present. The legacy
     // aiPlatforms mirror must not overwrite a persisted agent handoff.
     if (aiObject.isEmpty()) model->setAiPlatforms(fromJsonArray(root.value(QStringLiteral("aiPlatforms"))));
-    RuleConfiguration rules;
+    RuleConfiguration rules = defaults.ruleConfiguration();
     const auto rulesObject = root.value(QStringLiteral("rules")).toObject();
     rules.activeCategories = fromJsonArray(rulesObject.value(QStringLiteral("activeCategories")));
     rules.enforcementLevel = rulesObject.value(QStringLiteral("enforcementLevel")).toString(QStringLiteral("standard"));
@@ -510,7 +653,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
     rules.conflictPolicy = rulesObject.value(QStringLiteral("conflictPolicy")).toString(QStringLiteral("prefer-user-instruction"));
     if (rules.activeCategories.isEmpty()) rules.activeCategories = migrateRuleCategories(fromJsonArray(root.value(QStringLiteral("options")).toObject().value(QStringLiteral("rules-routing"))));
     model->setRuleConfiguration(rules);
-    MemoryConfiguration memory;
+    MemoryConfiguration memory = defaults.memoryConfiguration();
     const auto memoryObject = root.value(QStringLiteral("memory")).toObject();
     memory.writerMode = memoryObject.value(QStringLiteral("writerMode")).toString(QStringLiteral("agent-direct"));
     if (memory.writerMode != QStringLiteral("agent-direct")
@@ -528,7 +671,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
     if (memory.maximumSizeBytes <= 0) memory.maximumSizeBytes = 10LL * 1024LL * 1024LL * 1024LL;
     if (memory.captureCategories.isEmpty()) memory.captureCategories = migrateMemoryOptions(fromJsonArray(root.value(QStringLiteral("options")).toObject().value(QStringLiteral("memory-policy"))));
     model->setMemoryConfiguration(memory);
-    CertificationConfiguration certification;
+    CertificationConfiguration certification = defaults.certificationConfiguration();
     const auto certificationObject = root.value(QStringLiteral("certification")).toObject();
     certification.enabled = certificationObject.value(QStringLiteral("enabled")).toBool(false);
     certification.defaultVerificationLevel = certificationObject.value(QStringLiteral("defaultVerificationLevel"))
@@ -546,7 +689,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
         generation.generateProvenance = generationObject.value(QStringLiteral("provenance")).toBool(true);
         model->setGenerationOptions(generation);
     }
-    CommunicationConfiguration communication;
+    CommunicationConfiguration communication = defaults.communicationConfiguration();
     const auto communicationObject = root.value(QStringLiteral("communication")).toObject();
     if (!communicationObject.isEmpty()) {
         communication.enabled = communicationObject.value(QStringLiteral("enabled")).toBool();
@@ -695,6 +838,22 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& root, 
         model->setOptionValues(it.key(), fromJsonArray(it.value()));
     }
     model->clearEnvironmentOverrides();
+    int migrationSourceVersion = sourceVersion;
+    if (sourceVersion == ProjectSchema::CurrentVersion
+        && persistedMigration.value(QStringLiteral("sourceSchemaVersion")).isDouble()) {
+        migrationSourceVersion = persistedMigration.value(QStringLiteral("sourceSchemaVersion")).toInt(sourceVersion);
+    }
+    bool unresolvedNotice = false;
+    for (const auto& value : migrationNotices) {
+        if (!value.toObject().value(QStringLiteral("resolved")).toBool(false)) {
+            unresolvedNotice = true;
+            break;
+        }
+    }
+    const QString migrationStatus = unresolvedNotice
+        ? ProjectSchema::MigrationReviewRequired
+        : ProjectSchema::MigrationOk;
+    model->setMigrationState(migrationSourceVersion, migrationStatus, migrationNotices);
     model->endUpdate();
     model->setModified(false);
     return true;

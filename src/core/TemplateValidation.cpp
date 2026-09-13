@@ -381,8 +381,16 @@ QStringList TemplateValidation::validateDefinition(const TemplateDefinition& def
 QStringList TemplateValidation::readiness(const ProjectModel& model)
 {
     QStringList errors;
+    for (const auto& value : model.migrationNotices()) {
+        const auto notice = value.toObject();
+        if (!notice.value(QStringLiteral("resolved")).toBool(false)
+            && notice.value(QStringLiteral("generationImpact")).toString() == QStringLiteral("critical")) {
+            errors << QStringLiteral("Migration review required before generation: ")
+                   + notice.value(QStringLiteral("legacyPath")).toString();
+        }
+    }
     // Older/manual projects retain their existing selective-generation contract.
-    if (!model.templateState().isEmpty()) errors = validateConfiguration(ProjectPersistence().configuration(model));
+    if (!model.templateState().isEmpty()) errors += validateConfiguration(ProjectPersistence().configuration(model));
     const auto communication = model.communicationConfiguration();
     if (communication.enabled) {
         const auto protocolNeedsAddress = QStringList{"http-rest", "websocket", "tcp", "udp"}.contains(communication.protocol);

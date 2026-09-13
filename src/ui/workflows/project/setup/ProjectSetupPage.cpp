@@ -184,6 +184,14 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
     form->setRowWrapPolicy(QFormLayout::WrapLongRows);
     layout->addLayout(form);
+    migrationStatus_ = new QLabel(this);
+    migrationStatus_->setObjectName(QStringLiteral("projectMigrationStatus"));
+    migrationStatus_->setWordWrap(true);
+    migrationDetails_ = new QLabel(this);
+    migrationDetails_->setObjectName(QStringLiteral("projectMigrationDetails"));
+    migrationDetails_->setWordWrap(true);
+    layout->addWidget(migrationStatus_);
+    layout->addWidget(migrationDetails_);
     layout->addStretch();
 
     id_->setReadOnly(true);
@@ -416,4 +424,19 @@ void ProjectSetupPage::refreshFromModel()
         workerNameSuffix_->setText(workerNameRawInput_);
     }
     syncCanonicalIdentity(false);
+    const auto notices = model_->migrationNotices();
+    migrationStatus_->setText(notices.isEmpty()
+        ? tr("Project compatibility: current schema %1 (no migration review required).").arg(model_->projectSchemaVersion())
+        : tr("Project compatibility: schema %1 -> %2 | %3")
+              .arg(model_->migratedFromSchemaVersion()).arg(model_->projectSchemaVersion()).arg(model_->migrationStatus()));
+    QStringList details;
+    for (const auto& value : notices) {
+        const auto notice = value.toObject();
+        details << QStringLiteral("- %1: %2 Current state: %3")
+                       .arg(notice.value(QStringLiteral("legacyPath")).toString(),
+                            notice.value(QStringLiteral("reason")).toString(),
+                            notice.value(QStringLiteral("resultingState")).toString());
+    }
+    migrationDetails_->setText(details.join(QLatin1Char('\n')));
+    migrationDetails_->setVisible(!details.isEmpty());
 }

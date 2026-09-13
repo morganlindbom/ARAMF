@@ -15,6 +15,7 @@
 #include "core/ValidationRouting.h"
 #include "core/WorkerContextResolver.h"
 #include "core/ContextCoordinationService.h"
+#include "core/TemplateValidation.h"
 
 #include <QCoreApplication>
 #include <QBuffer>
@@ -793,7 +794,9 @@ int main(int argc, char** argv)
         legacyFile.close();
     }
     ProjectModel legacyLoaded;
-    ok &= require(persistence.load(&legacyLoaded, legacyProjectFile, &error), "legacy project open must succeed");
+    const bool legacyLoadedOk = persistence.load(&legacyLoaded, legacyProjectFile, &error);
+    if (!legacyLoadedOk) std::cerr << "legacy project open error: " << error.toStdString() << '\n';
+    ok &= require(legacyLoadedOk, "legacy project open must succeed");
     ok &= require(legacyLoaded.resources().size() == 1, "legacy resource names must migrate to structured resources");
     ok &= require(legacyLoaded.resources().first().name == QStringLiteral("Legacy Datasheet"), "legacy resource name must be retained");
     ok &= require(loaded.optionValues(QStringLiteral("rules-routing")) == model.optionValues(QStringLiteral("rules-routing")), "rules must survive persistence");
@@ -1673,6 +1676,149 @@ int main(int argc, char** argv)
     const auto historyRepair = generationServices.repairDerivedArtifacts(repairModel, GenerationOptions{});
     ok &= require(!historyRepair.success && !QFileInfo::exists(repairEventPath), "repair must not fabricate missing event history");
     Q_UNUSED(eventBeforeBoundary);
+
+    // PROJECT-SCHEMA-001..018: forward migration, safe defaults, and
+    // persistence idempotence.  These tests operate on the project input
+    // schema only; they deliberately do not regenerate a Worker.
+    ProjectPersistence projectPersistence;
+    ProjectModel schemaSeed;
+    const auto currentProjectJson = projectPersistence.toJson(schemaSeed);
+    ok &= require(currentProjectJson.value(QStringLiteral("schemaVersion")).toInt() == ProjectPersistence::currentSchemaVersion(),
+                  "project persistence must emit the canonical schema version");
+    ok &= require(currentProjectJson.value(QStringLiteral("migration")).toObject().value(QStringLiteral("status")).toString()
+                      == ProjectSchema::MigrationOk,
+                  "new project persistence must have an OK migration state");
+
+    QTemporaryDir schemaRoot;
+    const QString schemaLegacyProjectFile = QDir(schemaRoot.path()).filePath(QStringLiteral("ARAMF_WORKER.aramf.json"));
+    QJsonObject legacyProject = currentProjectJson;
+    legacyProject.remove(QStringLiteral("schemaVersion"));
+    legacyProject.remove(QStringLiteral("migration"));
+    legacyProject.remove(QStringLiteral("context"));
+    legacyProject.insert(QStringLiteral("projectType"), QStringLiteral("desktop"));
+    legacyProject.remove(QStringLiteral("environment"));
+    legacyProject.insert(QStringLiteral("capabilities"), QJsonObject{{QStringLiteral("languages"), QJsonArray{QStringLiteral("rust")}}});
+    legacyProject.remove(QStringLiteral("generationOptions"));
+    legacyProject.remove(QStringLiteral("academic"));
+    legacyProject.insert(QStringLiteral("academic"), QJsonObject{{QStringLiteral("enabled"), false}});
+    legacyProject.insert(QStringLiteral("legacyCommunicationMode"), QStringLiteral("legacy-bus"));
+    legacyProject.insert(QStringLiteral("projectPath"), schemaRoot.path());
+    QFile schemaLegacyFile(schemaLegacyProjectFile);
+    ok &= require(schemaLegacyFile.open(QIODevice::WriteOnly | QIODevice::Truncate), "legacy project fixture must be writable");
+    const QByteArray legacyBytes = QJsonDocument(legacyProject).toJson(QJsonDocument::Indented);
+    ok &= require(schemaLegacyFile.write(legacyBytes) == legacyBytes.size(), "legacy project fixture must be complete");
+    schemaLegacyFile.close();
+
+    ProjectModel migratedProject;
+    QString migrationError;
+    ok &= require(projectPersistence.load(&migratedProject, schemaLegacyProjectFile, &migrationError),
+                  qPrintable(QStringLiteral("legacy project must load and migrate: ") + migrationError));
+    ok &= require(migratedProject.projectSchemaVersion() == ProjectSchema::CurrentVersion
+                      && migratedProject.migratedFromSchemaVersion() == 0,
+                  "legacy project must normalize to current schema while retaining source version");
+    ok &= require(migratedProject.migrationStatus() == ProjectSchema::MigrationReviewRequired
+                      && migratedProject.migrationNotices().size() == 1,
+                  "changed legacy semantics must produce one deterministic review notice");
+    ok &= require(migratedProject.context() == QStringLiteral("desktop-application"),
+                  "legacy project type must use the explicit desktop mapping");
+    ok &= require(migratedProject.developmentEnvironment().language == QStringLiteral("cpp")
+                      && migratedProject.developmentEnvironment().targetArchitecture == QStringLiteral("x86_64"),
+                  "missing environment fields must receive current defaults");
+    ok &= require(migratedProject.developmentCapabilities().languages == QStringList{QStringLiteral("rust")}
+                      && migratedProject.developmentCapabilities().targetArchitectures == QStringList{QStringLiteral("x86_64")},
+                  "missing capability fields must receive current defaults without replacing explicit values");
+    ok &= require(!migratedProject.academicConfiguration().enabled,
+                  "explicit false must remain false during migration");
+    const auto migratedGeneration = migratedProject.generationOptions();
+    ok &= require(migratedGeneration.generateAgentRules && migratedGeneration.generateRouting
+                      && migratedGeneration.generateMemory && migratedGeneration.generateProvenance,
+                  "absent generation options must receive safe current defaults");
+    const QStringList migrationReadiness = TemplateValidation::readiness(migratedProject);
+    ok &= require(migrationReadiness.isEmpty(), "non-critical migration review must not block generation readiness");
+
+    QFile normalizedFile(schemaLegacyProjectFile);
+    ok &= require(normalizedFile.open(QIODevice::ReadOnly), "normalized project must remain readable");
+    const QByteArray normalizedBytes = normalizedFile.readAll();
+    const auto normalizedJson = QJsonDocument::fromJson(normalizedBytes).object();
+    normalizedFile.close();
+    ok &= require(normalizedJson.value(QStringLiteral("schemaVersion")).toInt() == ProjectSchema::CurrentVersion
+                      && normalizedJson.value(QStringLiteral("migration")).toObject().value(QStringLiteral("sourceSchemaVersion")).toInt() == 0,
+                  "legacy load must persist normalized schema metadata atomically");
+    ProjectModel migratedSecond;
+    migrationError.clear();
+    ok &= require(projectPersistence.load(&migratedSecond, schemaLegacyProjectFile, &migrationError),
+                  "normalized project must load on the second pass");
+    QFile normalizedFileAgain(schemaLegacyProjectFile);
+    ok &= require(normalizedFileAgain.open(QIODevice::ReadOnly), "second normalized project must remain readable");
+    const QByteArray normalizedBytesAgain = normalizedFileAgain.readAll();
+    normalizedFileAgain.close();
+    ok &= require(normalizedBytes == normalizedBytesAgain
+                      && projectPersistence.toJson(migratedSecond) == projectPersistence.toJson(migratedProject),
+                  "project migration must be idempotent and byte-stable on repeat load");
+
+    ProjectModel normalizedFromJson;
+    migrationError.clear();
+    ok &= require(projectPersistence.fromJson(&normalizedFromJson, normalizedJson, &migrationError),
+                  "normalized project JSON must be directly reloadable");
+    ok &= require(projectPersistence.toJson(normalizedFromJson) == normalizedJson,
+                  "normalized project migration must not introduce semantic drift");
+
+    QJsonObject explicitGeneration = normalizedJson;
+    explicitGeneration.insert(QStringLiteral("generationOptions"), QJsonObject{
+        {QStringLiteral("agentRules"), false}, {QStringLiteral("routing"), false},
+        {QStringLiteral("platforms"), false}, {QStringLiteral("resources"), false},
+        {QStringLiteral("memory"), false}, {QStringLiteral("provenance"), false}});
+    ProjectModel explicitGenerationModel;
+    ok &= require(projectPersistence.fromJson(&explicitGenerationModel, explicitGeneration, &migrationError),
+                  "explicit generation options must be loadable");
+    const auto explicitOptions = explicitGenerationModel.generationOptions();
+    ok &= require(!explicitOptions.generateAgentRules && !explicitOptions.generateRouting
+                      && !explicitOptions.generateMemory && !explicitOptions.generateProvenance,
+                  "explicit false generation options must not be replaced by defaults");
+
+    ProjectModel futureModel;
+    const auto futureBefore = projectPersistence.toJson(futureModel);
+    QJsonObject futureProject = futureBefore;
+    futureProject.insert(QStringLiteral("schemaVersion"), ProjectPersistence::currentSchemaVersion() + 1);
+    futureProject.insert(QStringLiteral("projectName"), QStringLiteral("must-remain-unchanged"));
+    migrationError.clear();
+    ok &= require(!projectPersistence.fromJson(&futureModel, futureProject, &migrationError)
+                      && migrationError.contains(QStringLiteral("UNSUPPORTED_FUTURE_SCHEMA"))
+                      && projectPersistence.toJson(futureModel) == futureBefore,
+                  "future schema must fail safely without mutating the in-memory model");
+    QTemporaryDir futureRoot;
+    const QString futureProjectFile = QDir(futureRoot.path()).filePath(QStringLiteral("future.aramf.json"));
+    QFile futureFile(futureProjectFile);
+    ok &= require(futureFile.open(QIODevice::WriteOnly | QIODevice::Truncate), "future schema fixture must be writable");
+    const QByteArray futureBytes = QJsonDocument(futureProject).toJson(QJsonDocument::Indented);
+    futureFile.write(futureBytes);
+    futureFile.close();
+    ProjectModel futureLoaded;
+    migrationError.clear();
+    ok &= require(!projectPersistence.load(&futureLoaded, futureProjectFile, &migrationError)
+                      && migrationError.contains(QStringLiteral("UNSUPPORTED_FUTURE_SCHEMA")),
+                  "future schema file must be rejected before migration");
+    QFile futureReadback(futureProjectFile);
+    ok &= require(futureReadback.open(QIODevice::ReadOnly) && futureReadback.readAll() == futureBytes,
+                  "future schema rejection must preserve the original file bytes");
+    futureReadback.close();
+    QJsonObject fractionalSchema = futureBefore;
+    fractionalSchema.insert(QStringLiteral("schemaVersion"), 1.5);
+    migrationError.clear();
+    ok &= require(!projectPersistence.fromJson(&futureModel, fractionalSchema, &migrationError)
+                      && migrationError.contains(QStringLiteral("MIGRATION_BLOCKED")),
+                  "non-integral schema versions must fail deterministically");
+
+    QJsonObject criticalLegacy = currentProjectJson;
+    criticalLegacy.remove(QStringLiteral("schemaVersion"));
+    criticalLegacy.remove(QStringLiteral("migration"));
+    criticalLegacy.insert(QStringLiteral("legacyHardwareTiming"), true);
+    ProjectModel criticalModel;
+    ok &= require(projectPersistence.fromJson(&criticalModel, criticalLegacy, &migrationError),
+                  "unmappable legacy hardware setting must load with review state");
+    ok &= require(criticalModel.migrationStatus() == ProjectSchema::MigrationReviewRequired
+                      && !TemplateValidation::readiness(criticalModel).isEmpty(),
+                  "critical migration review must block generation readiness");
 
     // CERT-GEN-001..012: first-class generic test certification.
     QTemporaryDir certificationProject;

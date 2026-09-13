@@ -9,6 +9,17 @@ cold-start read set.
 stable configuration snapshot. It does not contain event history, instruction
 bodies, resources, or mutable agent notes.
 
+The saved project input (`*.aramf.json`) uses the canonical project schema
+version exposed by `ProjectPersistence`. A missing version is treated as the
+legacy version `0` and is migrated forward through explicit deterministic
+mappings before UI binding or Worker generation. The normalized project is
+persisted atomically with a `migration` record containing the source version,
+status, and stable notices. Unmappable settings remain inactive and produce
+`MIGRATION_REVIEW_REQUIRED`; critical notices gate generation. A schema newer
+than the running application produces `UNSUPPORTED_FUTURE_SCHEMA` and leaves
+the original file untouched. Migration metadata is project persistence state,
+not template configuration, and repeated load/save is idempotent.
+
 The startup contract is deliberately ordered: project identity, topology and
 ownership, current state, validation, then task-scope routing. The event log is
 historical and excluded from ordinary startup. Scope routes carry deterministic

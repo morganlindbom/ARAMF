@@ -906,6 +906,10 @@ void ProjectModel::resetForNewProject()
     ai_ = {};
     options_.clear();
     environmentOverrides_.clear();
+    projectSchemaVersion_ = ProjectSchema::CurrentVersion;
+    migratedFromSchemaVersion_ = ProjectSchema::CurrentVersion;
+    migrationStatus_ = ProjectSchema::MigrationOk;
+    migrationNotices_ = {};
     notifyChanged();
     endUpdate();
     setModified(false);
@@ -916,4 +920,12 @@ void ProjectModel::setModified(bool modified)
     if (modified_ == modified) return;
     modified_ = modified;
     emit modifiedChanged(modified_);
+}
+
+void ProjectModel::setMigrationState(int sourceVersion, const QString& status, const QJsonArray& notices)
+{
+    projectSchemaVersion_ = ProjectSchema::CurrentVersion;
+    migratedFromSchemaVersion_ = sourceVersion;
+    migrationStatus_ = status;
+    migrationNotices_ = notices;
 }

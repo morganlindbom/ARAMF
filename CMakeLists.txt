@@ -41,6 +41,7 @@ set(ARAMF_CORE_SOURCES
     src/core/MemoryCatalog.cpp
     src/core/ProjectPersistence.h
     src/core/ProjectPersistence.cpp
+    src/core/ProjectSchema.h
     src/core/ProjectRootRebindService.h
     src/core/ProjectRootRebindService.cpp
     src/core/ProjectModel.h
