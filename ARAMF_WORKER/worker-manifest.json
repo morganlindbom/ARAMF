@@ -21,17 +21,26 @@
         "historyExcluded": true
     },
     "derivedFiles": {
+        "agentAdapters": "ARAMF_WORKER/context/agent-adapters.json",
         "coldStartValidation": "ARAMF_WORKER/memory/cold-start-validation.json",
+        "compressedContext": "ARAMF_WORKER/context/compressed-context.json",
+        "contextFreshness": "ARAMF_WORKER/context/freshness.json",
+        "contextIndex": "ARAMF_WORKER/context/context-index.json",
         "latestValidation": "ARAMF_WORKER/verification/latest-validation.json",
         "status": "ARAMF_WORKER/PROJECT_STATUS.md"
     },
     "fileRoles": {
+        "agentAdapters": "DERIVED",
+        "compressedContext": "DERIVED",
+        "contextFreshness": "DERIVED",
+        "contextIndex": "DERIVED",
         "currentState": "CANONICAL",
         "decisions": "CANONICAL",
         "eventHistory": "HISTORICAL",
         "latestValidation": "DERIVED",
         "projectConfiguration": "DERIVED",
         "routing": "DERIVED",
+        "taskDag": "DERIVED_COORDINATION",
         "validationEvidence": "VALIDATION_EVIDENCE",
         "workerManifest": "DERIVED"
     },
@@ -40,6 +49,15 @@
         "agentRules": true,
         "memory": true,
         "routing": true
+    },
+    "p1Context": {
+        "adapters": "ARAMF_WORKER/context/agent-adapters.json",
+        "compressed": "ARAMF_WORKER/context/compressed-context.json",
+        "freshness": "ARAMF_WORKER/context/freshness.json",
+        "handoffs": "ARAMF_WORKER/context/handoffs/",
+        "index": "ARAMF_WORKER/context/context-index.json",
+        "latestValidationAuthority": "DERIVED_CANONICAL_ENTRY_POINT",
+        "taskDag": "ARAMF_WORKER/context/task-dag.json"
     },
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "taskContract": {

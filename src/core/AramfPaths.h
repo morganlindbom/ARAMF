@@ -58,6 +58,12 @@ inline const QString UpdateDirectory = QStringLiteral("ARAMF_WORKER/update");
 inline const QString UpdatePlan = QStringLiteral("ARAMF_WORKER/update/update-plan.json");
 inline const QString UpdateContract = QStringLiteral("ARAMF_WORKER/update/update-contract.json");
 inline const QString UpdateHistoryDirectory = QStringLiteral("ARAMF_WORKER/update/history");
+inline const QString ContextDirectory = QStringLiteral("ARAMF_WORKER/context");
+inline const QString ContextIndex = QStringLiteral("ARAMF_WORKER/context/context-index.json");
+inline const QString CompressedContext = QStringLiteral("ARAMF_WORKER/context/compressed-context.json");
+inline const QString ContextFreshness = QStringLiteral("ARAMF_WORKER/context/freshness.json");
+inline const QString TaskDag = QStringLiteral("ARAMF_WORKER/context/task-dag.json");
+inline const QString AgentAdapters = QStringLiteral("ARAMF_WORKER/context/agent-adapters.json");
 
 namespace detail {
 inline QString& workerSuffixOverride() { static QString value; return value; }

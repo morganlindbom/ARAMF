@@ -26,6 +26,18 @@
             "status": "PASS"
         },
         {
+            "details": "Derived context index is readable and project-bound.",
+            "id": "p1-context-index",
+            "name": "P1 context index",
+            "status": "PASS"
+        },
+        {
+            "details": "Indexed sources are current.",
+            "id": "p1-context-freshness",
+            "name": "P1 context freshness",
+            "status": "PASS"
+        },
+        {
             "details": "Worker schema version 1 and canonical ownership are valid.",
             "id": "worker-topology",
             "name": "Worker topology schema",
@@ -255,6 +267,8 @@
         }
     ],
     "coldStartValid": true,
+    "contextStaleCount": 0,
+    "contextValid": true,
     "documentationRoutingValid": true,
     "fingerprint": "105928b8b00ce15b636bc86c185acb752ab2b964ac65f7392e99f9c9b1549a64",
     "instructionsReachable": true,

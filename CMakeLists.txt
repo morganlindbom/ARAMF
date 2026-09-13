@@ -59,6 +59,8 @@ set(ARAMF_CORE_SOURCES
     src/core/ValidationRouting.cpp
     src/core/WorkerContextResolver.h
     src/core/WorkerContextResolver.cpp
+    src/core/ContextCoordinationService.h
+    src/core/ContextCoordinationService.cpp
     src/core/UpdateService.h
     src/core/UpdateService.cpp
     src/core/AgentExecutionAdapter.h
@@ -150,6 +152,7 @@ if(BUILD_TESTING)
     add_executable(aramf_core_tests
         tests/ProjectMemoryTests.cpp
         tests/WorkerTaskTests.cpp
+        tests/ContextCoordinationTests.cpp
         src/core/GitIgnoreService.h
         src/core/GitIgnoreService.cpp
         src/core/ProjectMemory.h
@@ -180,6 +183,8 @@ if(BUILD_TESTING)
         src/core/ValidationRouting.cpp
         src/core/WorkerContextResolver.h
         src/core/WorkerContextResolver.cpp
+        src/core/ContextCoordinationService.h
+        src/core/ContextCoordinationService.cpp
         src/core/UpdateService.h
         src/core/UpdateService.cpp
         src/core/AgentExecutionAdapter.h
@@ -242,6 +247,8 @@ if(BUILD_TESTING)
         src/core/ValidationRouting.cpp
         src/core/WorkerContextResolver.h
         src/core/WorkerContextResolver.cpp
+        src/core/ContextCoordinationService.h
+        src/core/ContextCoordinationService.cpp
         src/core/UpdateService.h
         src/core/UpdateService.cpp
         src/core/AgentExecutionAdapter.h

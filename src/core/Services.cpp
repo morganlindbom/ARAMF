@@ -14,6 +14,7 @@
 #include "RuleCatalog.h"
 #include "ValidationRouting.h"
 #include "WorkerContextResolver.h"
+#include "ContextCoordinationService.h"
 #include "GitIgnoreService.h"
 
 #include <QDir>
@@ -98,6 +99,8 @@ bool upsertManagedSection(const QString& path,
         if (!content.isEmpty() && !content.endsWith(QLatin1Char('\n'))) content += QLatin1Char('\n');
         content += QLatin1Char('\n') + section;
     }
+    while (content.endsWith(QStringLiteral("\r\n\r\n"))) content.chop(2);
+    while (content.endsWith(QStringLiteral("\n\n"))) content.chop(1);
     return writeTextFile(path, content.toUtf8(), error);
 }
 
@@ -147,8 +150,9 @@ QJsonObject workerManifest(const ProjectModel& model, const GenerationOptions& o
         {QStringLiteral("taskContract"), QJsonObject{{"schemaVersion", 1}, {"authority", "DERIVED"}, {"policyOwner", "ProjectModel.rules.scopeMetadata"}, {"routingSource", AramfPaths::ScopeRoutes}, {"preflightRequired", true}}},
         {QStringLiteral("projectId"), model.projectId()}, {QStringLiteral("generatedFromFingerprint"), fingerprint},
         {QStringLiteral("canonicalFiles"), QJsonObject{{QStringLiteral("projectConfiguration"), AramfPaths::ProjectConfiguration}, {QStringLiteral("routing"), AramfPaths::TaskRoutes}, {QStringLiteral("currentState"), AramfPaths::CurrentState}, {QStringLiteral("validation"), AramfPaths::ColdStartValidation}, {QStringLiteral("decisions"), AramfPaths::Decisions}, {QStringLiteral("eventHistory"), AramfPaths::EventLog}}},
-        {QStringLiteral("fileRoles"), QJsonObject{{QStringLiteral("projectConfiguration"), QStringLiteral("DERIVED")}, {QStringLiteral("workerManifest"), QStringLiteral("DERIVED")}, {QStringLiteral("routing"), QStringLiteral("DERIVED")}, {QStringLiteral("currentState"), QStringLiteral("CANONICAL")}, {QStringLiteral("decisions"), QStringLiteral("CANONICAL")}, {QStringLiteral("eventHistory"), QStringLiteral("HISTORICAL")}, {QStringLiteral("latestValidation"), QStringLiteral("DERIVED")}, {QStringLiteral("validationEvidence"), QStringLiteral("VALIDATION_EVIDENCE")}}},
-        {QStringLiteral("derivedFiles"), QJsonObject{{QStringLiteral("status"), AramfPaths::ProjectStatus}, {QStringLiteral("coldStartValidation"), AramfPaths::ColdStartValidation}, {QStringLiteral("latestValidation"), AramfPaths::LatestValidation}}},
+        {QStringLiteral("fileRoles"), QJsonObject{{QStringLiteral("projectConfiguration"), QStringLiteral("DERIVED")}, {QStringLiteral("workerManifest"), QStringLiteral("DERIVED")}, {QStringLiteral("routing"), QStringLiteral("DERIVED")}, {QStringLiteral("currentState"), QStringLiteral("CANONICAL")}, {QStringLiteral("decisions"), QStringLiteral("CANONICAL")}, {QStringLiteral("eventHistory"), QStringLiteral("HISTORICAL")}, {QStringLiteral("latestValidation"), QStringLiteral("DERIVED")}, {QStringLiteral("validationEvidence"), QStringLiteral("VALIDATION_EVIDENCE")}, {QStringLiteral("contextIndex"), QStringLiteral("DERIVED")}, {QStringLiteral("compressedContext"), QStringLiteral("DERIVED")}, {QStringLiteral("contextFreshness"), QStringLiteral("DERIVED")}, {QStringLiteral("taskDag"), QStringLiteral("DERIVED_COORDINATION")}, {QStringLiteral("agentAdapters"), QStringLiteral("DERIVED")}}},
+        {QStringLiteral("derivedFiles"), QJsonObject{{QStringLiteral("status"), AramfPaths::ProjectStatus}, {QStringLiteral("coldStartValidation"), AramfPaths::ColdStartValidation}, {QStringLiteral("latestValidation"), AramfPaths::LatestValidation}, {QStringLiteral("contextIndex"), AramfPaths::ContextIndex}, {QStringLiteral("compressedContext"), AramfPaths::CompressedContext}, {QStringLiteral("contextFreshness"), AramfPaths::ContextFreshness}, {QStringLiteral("agentAdapters"), AramfPaths::AgentAdapters}}},
+        {QStringLiteral("p1Context"), QJsonObject{{QStringLiteral("index"), AramfPaths::ContextIndex}, {QStringLiteral("compressed"), AramfPaths::CompressedContext}, {QStringLiteral("freshness"), AramfPaths::ContextFreshness}, {QStringLiteral("taskDag"), AramfPaths::TaskDag}, {QStringLiteral("handoffs"), QStringLiteral("ARAMF_WORKER/context/handoffs/")}, {QStringLiteral("adapters"), AramfPaths::AgentAdapters}, {QStringLiteral("latestValidationAuthority"), QStringLiteral("DERIVED_CANONICAL_ENTRY_POINT")}}},
         {QStringLiteral("coldStart"), QJsonObject{{QStringLiteral("files"), QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::WorkerManifest, AramfPaths::AgentInstructions, AramfPaths::CurrentState, AramfPaths::ColdStartValidation, AramfPaths::LatestValidation, AramfPaths::ValidationPolicy}}, {QStringLiteral("historyExcluded"), true}}},
         {QStringLiteral("generationOptions"), QJsonObject{{QStringLiteral("agentRules"), options.generateAgentRules}, {QStringLiteral("routing"), options.generateRouting}, {QStringLiteral("memory"), options.generateMemory}}}
     };
@@ -267,6 +271,16 @@ bool writeManagedFile(const QString& path, const QString& block,
     }
     if (state) *state = original.isEmpty() ? QStringLiteral("created") : QStringLiteral("updated");
     return true;
+}
+
+QString p1ContextSection()
+{
+    const QString worker = AramfPaths::runtimeWorkerDirectoryName();
+    return QStringLiteral(
+        "<!-- ARAMF-P1-CONTEXT-BEGIN -->\n\n"
+        "## Governed Context and Task Coordination\n\n"
+        "Read `%1/context/context-index.json` first for relevant governed context. `%1/context/compressed-context.json` is derived and must retain provenance; check `%1/context/freshness.json` before relying on it. Use `%1/context/task-dag.json` for dependency gating and preserve the originating TaskContract in handoffs. Agent adapters change presentation only and cannot change ARAMF scope, ownership, permissions, routing or validation.\n"
+        "<!-- ARAMF-P1-CONTEXT-END -->\n").arg(worker);
 }
 
 QString selectedAgentDisplayName(const QString& id)
@@ -420,6 +434,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "3. Read `memory/current-state.md` and the latest validation summary.\n"
             "4. Determine the task scope, then follow `routing/task-routes.json` and `routing/scope-routes.json`.\n"
             "5. Read only the selected scope's instructions/resources; defer `memory/event-log.jsonl` unless history is explicitly required.\n\n"
+            "6. For contextual retrieval, read `context/context-index.json` first; `compressed-context.json` is a derived, provenance-preserving shortcut. Check `context/freshness.json` before using compressed context or decisions. Task dependencies use `context/task-dag.json`; handoffs preserve the originating TaskContract and cannot expand scope. Agent adapters change presentation only and never governance.\n\n"
             "Before scoped AI edits, derive a task contract with `aramf task prepare --config <saved-project> --request <task.json>`. "
             "Continue only from READY or READY_WITH_WARNINGS; unmapped source files require canonical scopeMetadata. "
             "After edits, use `aramf task postflight --config <saved-project> --contract <prepared.json> --evidence <evidence.json>` "
@@ -432,7 +447,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             "Modify only files and resources explicitly permitted by the TaskContract. Unmapped files, path traversal, protected files, user-owned Sources of Truth, and ownership conflicts are blocked. Permission to write generated output never overrides its canonical producer or resource ownership. Generated/service-owned files must be produced or repaired by their authoritative ARAMF service, not recreated manually.\n"
             "Project isolation is mandatory: preserve pre-existing dirty and unrelated files, exclude them from current-task attribution, and fail on new out-of-scope edits. Never broaden a task to the whole project or full ARAMF_WORKER because precise scope resolution is inconvenient. Use declared ChangeImpact and dependency scope to determine affected validation and evidence. Evidence is fresh only for the dependencies it covers; later relevant changes stale that evidence.\n"
             "Follow the authoritative route in `routing/validation-policy.json`. VERIFIED requires all applicable valid software evidence and fresh fingerprints. CERTIFIED is a separate claim requiring its applicable certification evidence; software verification must not imply physical certification. HARDWARE_CERTIFIED or other physical claims require valid physical/on-target evidence and must never be fabricated.\n"
-            "Persist governed state through the canonical ARAMF services, save/reload it, and verify readback and cross-file consistency. Governance events use the append-only recorder and its current-state, manifest, metrics, PROJECT_STATUS, memory-consistency, and cold-start mechanisms; do not invent recorder files or rewrite history. Keep the generated Worker topology coherent and treat `ARAMF_WORKER/` as orchestration while the managed project root remains the implementation target.\n"
+            "Persist governed state through the canonical ARAMF services, save/reload it, and verify readback and cross-file consistency. Governance events use the append-only recorder and its current-state, manifest, metrics, PROJECT_STATUS, memory-consistency, and cold-start mechanisms; do not invent recorder files or rewrite history. Keep the generated Worker topology coherent and treat `%1/` as orchestration while the managed project root remains the implementation target.\n"
             "<!-- ARAMF-TASK-GOVERNANCE-END -->\n");
         if (options.generateMemory) {
             canonicalAgent += QStringLiteral(
@@ -608,6 +623,8 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                 "Issue PASS only when every applicable required build, test, validation, runtime, on-target, physical, or other evidence requirement is present and verified. Never fabricate evidence or issue `HARDWARE_CERTIFIED` without physical/on-target evidence.\n"
                 "Use `certification/current-certification-state.json` to rediscover current subject state; it is derived current state, not a replacement for certificate history. Project Memory records certification lifecycle events separately, and Framework Knowledge remains separate approved reusable knowledge.\n");
         }
+        const QString p1Context = p1ContextSection();
+        canonicalAgent += p1Context;
         if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("AGENTS.md")), rootAgent.toUtf8(), &error, true)) {
             return fail(QStringLiteral("Agent rules"), error);
         }
@@ -635,6 +652,12 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
                                           memorySection, &error)) {
                     return fail(QStringLiteral("Agent rules"), error);
                 }
+            }
+            if (!upsertManagedSection(agentInstructionsPath,
+                                      QStringLiteral("<!-- ARAMF-P1-CONTEXT-BEGIN -->"),
+                                      QStringLiteral("<!-- ARAMF-P1-CONTEXT-END -->"),
+                                      p1Context, &error)) {
+                return fail(QStringLiteral("Agent rules"), error);
             }
         } else if (!writeTextFile(agentInstructionsPath, canonicalAgent.toUtf8(), &error, true)) {
             return fail(QStringLiteral("Agent rules"), error);
@@ -1077,6 +1100,11 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             return fail(QStringLiteral("Project Memory derived state"), memoryError);
         addGeneratedFiles(result, {AramfPaths::CurrentState, AramfPaths::ColdStartValidation});
     }
+    const auto context = ContextCoordinationService::generate(model);
+    if (!context.value(QStringLiteral("success")).toBool())
+        return fail(QStringLiteral("P1 context coordination"), context.value(QStringLiteral("error")).toString());
+    addGeneratedFiles(result, context.value(QStringLiteral("generatedFiles")).toVariant().toStringList());
+    addGeneratedFiles(result, {AramfPaths::TaskDag});
     // The worker identity JSON uses the same resolved basename as its
     // containing directory. Keep any legacy profile handling independent,
     // while publishing the canonical identity filename.
@@ -1114,6 +1142,13 @@ QJsonObject GenerationServices::derivedTaskArtifacts(const ProjectModel& model, 
         outputs.insert(AramfPaths::resolveWorkerRelativePath(AramfPaths::TaskRoutes), WorkerContextResolver::taskRoutes(model.ruleConfiguration(), fingerprint));
         outputs.insert(AramfPaths::resolveWorkerRelativePath(AramfPaths::ScopeRoutes), WorkerContextResolver::scopeRoutes(model.ruleConfiguration(), fingerprint));
     }
+    auto contextIndex = ContextCoordinationService::buildIndex(model); contextIndex.remove(QStringLiteral("_file"));
+    auto compressedContext = ContextCoordinationService::compress(model); compressedContext.remove(QStringLiteral("_file"));
+    auto contextFreshness = ContextCoordinationService::freshness(model); contextFreshness.remove(QStringLiteral("_file"));
+    outputs.insert(AramfPaths::resolveWorkerRelativePath(AramfPaths::ContextIndex), contextIndex);
+    outputs.insert(AramfPaths::resolveWorkerRelativePath(AramfPaths::CompressedContext), compressedContext);
+    outputs.insert(AramfPaths::resolveWorkerRelativePath(AramfPaths::ContextFreshness), contextFreshness);
+    outputs.insert(AramfPaths::resolveWorkerRelativePath(AramfPaths::AgentAdapters), ContextCoordinationService::adapterDescriptors());
     return outputs;
 }
 
@@ -1160,6 +1195,16 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     };
     checkFile(QStringLiteral("project-configuration"), QStringLiteral("Canonical project configuration"), AramfPaths::ProjectConfiguration, true);
     checkFile(QStringLiteral("worker-manifest"), QStringLiteral("Worker topology manifest"), AramfPaths::WorkerManifest, true);
+    const QString contextIndexPath = QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ContextIndex));
+    if (QFileInfo::exists(contextIndexPath)) {
+        const auto contextValidation = ContextCoordinationService::validate(model);
+        addCheck(result, QStringLiteral("p1-context-index"), QStringLiteral("P1 context index"),
+                 contextValidation.value(QStringLiteral("indexValid")).toBool() ? VerificationStatus::Pass : VerificationStatus::Fail,
+                 contextValidation.value(QStringLiteral("indexValid")).toBool() ? QStringLiteral("Derived context index is readable and project-bound.") : QStringLiteral("P1 context index is missing or invalid."));
+        addCheck(result, QStringLiteral("p1-context-freshness"), QStringLiteral("P1 context freshness"),
+                 contextValidation.value(QStringLiteral("valid")).toBool() ? VerificationStatus::Pass : VerificationStatus::Warning,
+                 contextValidation.value(QStringLiteral("valid")).toBool() ? QStringLiteral("Indexed sources are current.") : QStringLiteral("Indexed context is stale; regenerate derived P1 context."));
+    }
     QJsonObject topologyManifest;
     QString topologyError;
     const bool topologyReadable = readJson(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::WorkerManifest)), &topologyManifest, &topologyError);
@@ -1391,7 +1436,9 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
         {QStringLiteral("coldStartValid"), checkPassed(QStringLiteral("cold-start"))}, {QStringLiteral("memoryConsistent"), checkPassed(QStringLiteral("memory-consistency"))},
         {QStringLiteral("instructionsReachable"), checkPassed(QStringLiteral("aramf-worker-agents"))}, {QStringLiteral("resourcesReachable"), checkPassed(QStringLiteral("resources"))},
         {QStringLiteral("documentationRoutingValid"), !model.academicConfiguration().enabled || checkPassed(QStringLiteral("project-status"))}, {QStringLiteral("staleArtifactCount"), staleCount},
-        {QStringLiteral("routingConflictCount"), 0}, {QStringLiteral("checks"), checks}};
+        {QStringLiteral("routingConflictCount"), 0}, {QStringLiteral("contextValid"), !QFileInfo::exists(contextIndexPath) || checkPassed(QStringLiteral("p1-context-index")) && checkPassed(QStringLiteral("p1-context-freshness"))},
+        {QStringLiteral("contextStaleCount"), QFileInfo::exists(contextIndexPath) ? ContextCoordinationService::freshness(model).value(QStringLiteral("staleCount")) : QJsonValue(0)},
+        {QStringLiteral("checks"), checks}};
     result.summary = summary;
     if (persistEvidence) writeJsonFile(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::LatestValidation)), summary, nullptr);
     return result;
@@ -1435,6 +1482,22 @@ GenerationResult GenerationServices::repairDerivedArtifacts(const ProjectModel& 
         return result;
     }
     addGeneratedFiles(result, {AramfPaths::WorkerManifest});
+    if (options.generateAgentRules) {
+        const QString agentPath = QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::AgentInstructions));
+        if (!upsertManagedSection(agentPath, QStringLiteral("<!-- ARAMF-P1-CONTEXT-BEGIN -->"),
+                                  QStringLiteral("<!-- ARAMF-P1-CONTEXT-END -->"), p1ContextSection().trimmed(), &error)) {
+            result.error = QStringLiteral("Repair failed in P1 agent context rules: %1").arg(error);
+            return result;
+        }
+        addGeneratedFiles(result, {AramfPaths::AgentInstructions});
+    }
+    if (options.generateMemory) {
+        ProjectMemory memory;
+        if (!memory.refreshDerivedState(projectRoot, &error)) {
+            result.error = QStringLiteral("Repair failed in memory-derived state: %1").arg(error);
+            return result;
+        }
+    }
     const auto verification = VerificationServices().verify(model, options);
     bool nonSummaryFailure = false;
     for (const auto& check : verification.checks) {
@@ -1444,6 +1507,12 @@ GenerationResult GenerationServices::repairDerivedArtifacts(const ProjectModel& 
         result.error = QStringLiteral("Repair completed derived files, but validation remains failed.");
         return result;
     }
+    const auto context = ContextCoordinationService::generate(model);
+    if (!context.value(QStringLiteral("success")).toBool()) {
+        result.error = QStringLiteral("Repair failed in P1 context coordination: %1").arg(context.value(QStringLiteral("error")).toString());
+        return result;
+    }
+    addGeneratedFiles(result, context.value(QStringLiteral("generatedFiles")).toVariant().toStringList());
     addGeneratedFiles(result, {AramfPaths::LatestValidation});
     result.success = true;
     return result;

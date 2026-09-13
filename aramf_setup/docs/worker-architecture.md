@@ -218,3 +218,32 @@ matrix independently. Certificate fixtures test the software gate with synthetic
 evidence and do not claim that physical hardware was tested. Context indexing,
 compression, task DAGs, handoffs, adapters and agent-effectiveness evaluation
 remain outside P0.
+
+## P1 context and task coordination
+
+P1 is implemented by `ContextCoordinationService` as one agent-independent
+layer above the P0 contract and `WorkerContextResolver`. It does not create a
+second memory, routing, authority, or validation system.
+
+The derived `ARAMF_WORKER/context/` files are `context-index.json` (a stable,
+scope-aware, fingerprinted index with provenance), `compressed-context.json`
+(a discardable summary retaining its canonical source and fingerprint), and
+`freshness.json` (dependency-scoped CURRENT/STALE/INVALID state). The same
+service persists `task-dag.json` with deterministic ordering, dependency
+gating and cycle detection, plus `agent-adapters.json` describing generic,
+Codex, Gemini and Copilot presentations. Optional `handoffs/` records retain
+the originating TaskContract, provenance, evidence obligations and scope;
+they cannot expand authority.
+
+Canonical project facts, decisions, resources, templates and event history
+remain authoritative outside these derived files. P1 context is safely
+regenerable and older P0 projects receive it on their next canonical Worker
+generation without destructive migration. The latest validation summary is a
+derived canonical entry point for current validation status, while detailed
+validators remain authoritative for their own evidence.
+
+Agents read the context index before compressed context and check freshness
+before using derived summaries. History remains excluded from ordinary cold
+start and is requested explicitly for provenance or audit work. Adapters may
+change presentation or command hints only; ARAMF continues to own scope,
+permissions, routing, dependencies, handoff limits and validation.

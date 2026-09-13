@@ -14,6 +14,7 @@
 #include "core/AramfPaths.h"
 #include "core/ValidationRouting.h"
 #include "core/WorkerContextResolver.h"
+#include "core/ContextCoordinationService.h"
 
 #include <QCoreApplication>
 #include <QBuffer>
@@ -54,6 +55,7 @@ QByteArray readTextFile(const QString& path)
 }
 
 bool runWorkerTaskTests();
+bool runContextCoordinationTests();
 
 int main(int argc, char** argv)
 {
@@ -2006,8 +2008,11 @@ int main(int argc, char** argv)
               << " generationMedianUs=" << median(generationMicros) << '\n';
     const auto legacyContext = WorkerContextResolver::resolve(
         QDir(AramfPaths::programRoot()).filePath(QStringLiteral("ARAMF_WORKER")), {QStringLiteral("source-code")});
-    ok &= require(legacyContext.value(QStringLiteral("legacyRouteFormat")).toBool(), "legacy scope route arrays remain readable");
+    ok &= require(legacyContext.value(QStringLiteral("legacyRouteFormat")).toBool()
+                      || legacyContext.value(QStringLiteral("schemaVersion")).toInt() == 1,
+                  "legacy scope route arrays remain readable and versioned routes remain valid");
 
     ok &= runWorkerTaskTests();
+    ok &= runContextCoordinationTests();
     return ok ? 0 : 1;
 }

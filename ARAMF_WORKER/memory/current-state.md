@@ -4,12 +4,12 @@
 
 ## Latest Durable Sequence
 
-251
+253
 
 ## Latest Production Development Event
 
-event-494e01c8-1cf1-4fc1-907b-7cc120d8155e
+event-a67c25d0-d450-4ef9-9577-1e4e6e294806
 
 ## Latest Production Sequence
 
-251
+253

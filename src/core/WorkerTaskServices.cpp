@@ -1,6 +1,7 @@
 #include "WorkerTaskServices.h"
 #include "AramfPaths.h"
 #include "CertificationService.h"
+#include "ContextCoordinationService.h"
 #include "DocumentInstruction.h"
 #include "ProjectMemory.h"
 #include "ProjectPersistence.h"
@@ -223,11 +224,19 @@ void validateCanonical(const ProjectModel& model, QJsonArray& errors)
         issue(errors, "WORKER_IDENTITY_MISMATCH", "Worker identity does not match the canonical project.");
     if (config.value("configurationFingerprint").toString() != generationHash || manifest.value("generatedFromFingerprint").toString() != generationHash)
         issue(errors, "STALE_DERIVED_ARTIFACT", "Project/manifest generation fingerprints are stale.");
+    const QString contextIndexPath = pathFor(model, workerPath(model, "context/context-index.json"));
+    if (QFileInfo::exists(contextIndexPath)) {
+        const auto context = ContextCoordinationService::generate(model);
+        if (!context.value(QStringLiteral("success")).toBool())
+            issue(errors, "STALE_DERIVED_ARTIFACT", "Derived P1 context could not be safely regenerated.", context.value(QStringLiteral("error")).toString());
+    }
     const auto expected = GenerationServices::derivedTaskArtifacts(model, model.generationOptions());
     for (auto it = expected.begin(); it != expected.end(); ++it) {
+        if (it.key().contains(QStringLiteral("/context/"))) continue;
         auto actual = readObject(pathFor(model, it.key())); actual.remove("_file");
-        if (semantic(actual) != semantic(it.value()))
+        if (semantic(actual) != semantic(it.value())) {
             issue(errors, "STALE_DERIVED_ARTIFACT", "Derived content disagrees with its canonical producer; regenerate it.", it.key());
+        }
     }
     const auto summary = readObject(pathFor(model, workerPath(model, "verification/latest-validation.json")));
     const auto evidence = readObject(pathFor(model, workerPath(model, "verification/verification-result.json")));
@@ -307,8 +316,14 @@ QJsonObject WorkerTaskServices::mutationPolicy(const ProjectModel& model)
     QJsonObject files;
     const auto manifest = readObject(pathFor(model, workerPath(model, "worker-manifest.json")));
     const auto derived = manifest.value("derivedFiles").toObject();
-    const QStringList generated{"project.json", "worker-manifest.json", "routing/task-routes.json", "routing/scope-routes.json"};
+    const QStringList generated{"project.json", "worker-manifest.json", "routing/task-routes.json", "routing/scope-routes.json",
+        "context/context-index.json", "context/compressed-context.json", "context/freshness.json", "context/agent-adapters.json"};
     for (const auto& path : generated) files.insert(workerPath(model, path), role("generated", {"READ", "REGENERATE"}, "GenerationServices"));
+    files.insert(workerPath(model, "context/context-index.json"), role("generated", {"READ", "REGENERATE"}, "ContextCoordinationService"));
+    files.insert(workerPath(model, "context/compressed-context.json"), role("generated", {"READ", "REGENERATE"}, "ContextCoordinationService"));
+    files.insert(workerPath(model, "context/freshness.json"), role("generated", {"READ", "REGENERATE"}, "ContextCoordinationService"));
+    files.insert(workerPath(model, "context/agent-adapters.json"), role("generated", {"READ", "REGENERATE"}, "ContextCoordinationService"));
+    files.insert(workerPath(model, "context/task-dag.json"), role("generated", {"READ", "REGENERATE"}, "ContextCoordinationService"));
     for (const auto& path : derived) {
         QString relative = path.toString();
         if (relative.startsWith("ARAMF_WORKER/")) relative.replace(0, 12, worker(model));
@@ -568,8 +583,10 @@ QJsonObject WorkerTaskServices::postflight(const ProjectModel& model, const QJso
             delegated = checkMemory() && appendIntact(workerPath(model, "memory/event-log.jsonl"));
             if (path == workerPath(model, "memory/event-log.jsonl")) delegated = delegated && appendIntact(path);
         }
-        const bool requestedGeneration = strings(contract.value("impact").toObject().value("generatedArtifacts")).contains(path);
-        if (requestedGeneration && expectedDerived.contains(path) && ownership.value("writer").toString() == "GenerationServices"
+        const bool declaredGeneration = strings(contract.value("impact").toObject().value("generatedArtifacts")).contains(path);
+        const bool p1Generation = expectedDerived.contains(path) && ownership.value("writer").toString() == "ContextCoordinationService";
+        const bool requestedGeneration = declaredGeneration || p1Generation;
+        if (requestedGeneration && expectedDerived.contains(path) && (ownership.value("writer").toString() == "GenerationServices" || p1Generation)
             && strings(ownership.value("actions")).contains("REGENERATE")) {
             auto actual = readObject(pathFor(model, path)); actual.remove("_file");
             delegated = !actual.isEmpty() && semantic(actual) == semantic(expectedDerived.value(path));
