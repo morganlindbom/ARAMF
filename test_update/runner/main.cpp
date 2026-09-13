@@ -326,7 +326,7 @@ int main(int argc, char** argv)
     const auto migratedEntries = knowledge.globalEntries(&migrationError);
     const auto migratedEntry = std::find_if(migratedEntries.cbegin(), migratedEntries.cend(), [](const auto& entry) { return entry.id == QStringLiteral("fk-7a246faa4bc6ad74"); });
     campaign.check(QStringLiteral("UPDATE-043"), QStringLiteral("legacy AppData library migrates to program-local storage"),
-                   migrated && migratedEntry != migratedEntries.cend() && migratedEntry->status == QStringLiteral("approved"), migrationError + QStringLiteral(" legacy=") + knowledge.legacyGlobalLibraryPath() + QStringLiteral(" canonical=") + knowledge.globalLibraryPath());
+                   migrated && migratedEntry != migratedEntries.cend() && migratedEntry->status == QStringLiteral("approved"), migrationError + QStringLiteral(" legacy=AppData/Roaming/qttest/aramf_update_campaign_runner/framework-knowledge-library.json canonical=ARAMF_DATA/framework-knowledge-library.json"));
     campaign.check(QStringLiteral("UPDATE-044"), QStringLiteral("legacy migration is non-destructive"), QFileInfo::exists(knowledge.legacyGlobalLibraryPath()));
 
     QTemporaryDir migratedProject;
@@ -1274,8 +1274,7 @@ int main(int argc, char** argv)
     ImprovementBacklogService::clearPathForTests();
 
     QJsonObject summary{{QStringLiteral("campaign"), QStringLiteral("UPDATE")}, {QStringLiteral("completed"), campaign.pass + campaign.fail},
-                        {QStringLiteral("pass"), campaign.pass}, {QStringLiteral("fail"), campaign.fail},
-                        {QStringLiteral("updatedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}};
+                        {QStringLiteral("pass"), campaign.pass}, {QStringLiteral("fail"), campaign.fail}};
     QFile campaignFile(QDir(campaign.root).filePath(QStringLiteral("campaign.json")));
     if (campaignFile.open(QIODevice::WriteOnly | QIODevice::Text)) campaignFile.write(QJsonDocument(summary).toJson(QJsonDocument::Indented));
     std::cout << "UPDATE campaign: " << campaign.pass << " / " << (campaign.pass + campaign.fail) << " PASS\n";
