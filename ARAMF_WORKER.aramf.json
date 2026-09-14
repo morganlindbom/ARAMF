@@ -466,8 +466,6 @@
     },
     "options": {
     },
-    "profileSelections": [
-    ],
     "processVersion": {
         "active": null,
         "completedHistory": [
@@ -484,6 +482,13 @@
                 "iteration": 1,
                 "loop": 1,
                 "process": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "process": 0
             }
         ],
         "legacyHistory": [
@@ -504,7 +509,9 @@
             "process": 2
         }
     },
-    "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER.aramf.json",
+    "profileSelections": [
+    ],
+    "projectFilePath": "D:\\ON DESCTOP\\HKR KURSER\\C++\\ARAMF2\\ARAMF-p0-ownership-repair\\ARAMF_WORKER.aramf.json",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "projectName": "ARAMF_WORKER",
     "projectPath": "D:\\ON DESCTOP\\HKR KURSER\\C++\\ARAMF2\\ARAMF",
@@ -812,6 +819,11 @@
             "project-memory",
             "project-status"
         ]
+    },
+    "runtimeOwnership": {
+        "claims": [
+        ],
+        "schemaVersion": 1
     },
     "schemaVersion": 1,
     "templateId": "",

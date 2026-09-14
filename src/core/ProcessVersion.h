@@ -56,6 +56,8 @@ class ProcessVersionLifecycle final
 {
 public:
     static bool startNextProcess(ProcessVersionState* state, QString* error = nullptr);
+    static bool reworkCompletedProcess(ProcessVersionState* state, int process,
+                                       QString* error = nullptr);
     static bool advanceIteration(ProcessVersionState* state, QString* error = nullptr);
     static bool certifyCurrentIteration(ProcessVersionState* state, QString* error = nullptr);
     static bool completeActiveProcess(ProcessVersionState* state, QString* error = nullptr);

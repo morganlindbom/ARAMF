@@ -44,6 +44,8 @@ set(ARAMF_CORE_SOURCES
     src/core/ProjectSchema.h
     src/core/ProcessVersion.h
     src/core/ProcessVersion.cpp
+    src/core/RuntimeOwnershipService.h
+    src/core/RuntimeOwnershipService.cpp
     src/core/ComponentVersion.h
     src/core/ComponentVersion.cpp
     src/core/ProjectRootRebindService.h
@@ -181,6 +183,8 @@ if(BUILD_TESTING)
         tests/WorkerTaskTests.cpp
         tests/ContextCoordinationTests.cpp
         tests/ProcessVersionTests.cpp
+        src/core/RuntimeOwnershipService.h
+        src/core/RuntimeOwnershipService.cpp
         src/core/GitIgnoreService.h
         src/core/GitIgnoreService.cpp
         src/core/ProjectMemory.h
