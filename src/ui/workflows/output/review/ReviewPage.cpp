@@ -10,6 +10,7 @@
 #include "core/DocumentInstruction.h"
 #include "core/DocumentTemplateInspector.h"
 #include "core/ProcessVersion.h"
+#include "core/ExecutionOrchestrator.h"
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QFile>
@@ -144,6 +145,26 @@ void ReviewPage::refreshFromModel()
     text += tr("  Active: %1\n  Next: %2\n\n")
         .arg(processVersion.activeIdentifier().isEmpty() ? tr("None") : processVersion.activeIdentifier(),
              processVersion.nextIdentifier().isEmpty() ? tr("None") : processVersion.nextIdentifier());
+    ExecutionSnapshot orchestration;
+    QString orchestrationError;
+    const bool hasOrchestration = !model_->orchestrationState().isEmpty()
+        && ExecutionSnapshot::fromJson(model_->orchestrationState(), &orchestration, &orchestrationError);
+    if (!hasOrchestration) {
+        text += tr("P2 Orchestration\n  Status: Not started\n  Runnable: 0\n  Blocked: 0\n  Active: 0\n  Succeeded: 0\n  Failed: 0\n  Checkpoint: None\n\n");
+    } else {
+        int ready = 0, blocked = 0, active = 0, succeeded = 0, failed = 0;
+        for (const auto& task : orchestration.tasks) {
+            if (task.state == TaskExecutionState::Ready) ++ready;
+            if (task.state == TaskExecutionState::Blocked || task.state == TaskExecutionState::GovernanceBlocked) ++blocked;
+            if (task.state == TaskExecutionState::Claimed || task.state == TaskExecutionState::Running || task.state == TaskExecutionState::Waiting) ++active;
+            if (task.state == TaskExecutionState::Succeeded) ++succeeded;
+            if (task.state == TaskExecutionState::Failed) ++failed;
+        }
+        text += tr("P2 Orchestration\n  Status: %1\n  Runnable: %2\n  Blocked: %3\n  Active: %4\n  Succeeded: %5\n  Failed: %6\n  Checkpoint: %7\n\n")
+            .arg(orchestration.tasks.isEmpty() ? tr("Not started") : (ready > 0 ? tr("Runnable") : active > 0 ? tr("Active") : succeeded == orchestration.tasks.size() ? tr("Complete") : tr("Blocked")))
+            .arg(ready).arg(blocked).arg(active).arg(succeeded).arg(failed)
+            .arg(orchestration.checkpointId.isEmpty() ? tr("None") : orchestration.checkpointId);
+    }
     QStringList activeModules;
     for (const auto& id : model_->templateModules()) activeModules << id;
     QStringList activeTemplates;

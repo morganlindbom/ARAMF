@@ -30,7 +30,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "6e5ecdd841e01575af22fd620e8a295c31376dd29fe6ffab8dd160648278e3c0",
+    "configurationFingerprint": "45e26f68c2b1de530ec6f7e61e881259a05ef48c05af960b2e82cfa3799cbe3e",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",
@@ -52,6 +52,8 @@
     "languages": [
         "cpp"
     ],
+    "orchestration": {
+    },
     "processVersion": {
         "active": null,
         "completedHistory": [
@@ -68,6 +70,20 @@
                 "iteration": 1,
                 "loop": 1,
                 "process": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "process": 0
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "process": 2
             }
         ],
         "legacyHistory": [
@@ -85,7 +101,7 @@
             "done": 0,
             "iteration": 0,
             "loop": 1,
-            "process": 2
+            "process": 3
         }
     },
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",

@@ -272,6 +272,23 @@ int runProjectRootRebindCommand(const QStringList& arguments, QTextStream& outpu
         return 0;
     }
     if (arguments.size() >= 4 && arguments.at(0) == QStringLiteral("project")
+        && arguments.at(1) == QStringLiteral("process-advance")) {
+        QString filePath;
+        for (int i = 2; i + 1 < arguments.size(); ++i)
+            if (arguments.at(i) == QStringLiteral("--file")) filePath = arguments.at(++i);
+        ProjectModel model;
+        ProjectPersistence persistence;
+        QString operationError;
+        if (filePath.isEmpty() || !persistence.load(&model, filePath, &operationError)
+            || !model.advanceProcessIteration(&operationError)
+            || !persistence.save(model, filePath, &operationError)) {
+            error << "error=" << (operationError.isEmpty() ? QStringLiteral("A project file is required.") : operationError) << "\n";
+            return 2;
+        }
+        output << "active=" << model.processVersionState().activeIdentifier() << "\n";
+        return 0;
+    }
+    if (arguments.size() >= 4 && arguments.at(0) == QStringLiteral("project")
         && arguments.at(1) == QStringLiteral("process-complete")) {
         QString filePath;
         for (int i = 2; i + 1 < arguments.size(); ++i)
@@ -290,7 +307,7 @@ int runProjectRootRebindCommand(const QStringList& arguments, QTextStream& outpu
         return 0;
     }
     if (arguments.size() < 5 || arguments.at(0) != QStringLiteral("project") || arguments.at(1) != QStringLiteral("rebind")) {
-        error << "Usage: aramf project rebind --file <project-file> --root <project-root> | project process-reset|process-start|process-rework|process-certify|process-complete --file <project-file> [--process <number>] | project save --file <project-file>\n";
+        error << "Usage: aramf project rebind --file <project-file> --root <project-root> | project process-reset|process-start|process-advance|process-rework|process-certify|process-complete --file <project-file> [--process <number>] | project save --file <project-file>\n";
         return 2;
     }
     QString filePath, root;

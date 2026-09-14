@@ -154,6 +154,7 @@ QJsonObject projectConfiguration(const ProjectModel& model, const QString& finge
         {QStringLiteral("ai"), QJsonObject{{QStringLiteral("primaryAgent"), ai.primaryAgent}, {QStringLiteral("additionalAgents"), toJsonArray(ai.additionalAgents)}}},
         {QStringLiteral("communication"), QJsonObject{{QStringLiteral("enabled"), communication.enabled}, {QStringLiteral("transport"), communication.transport}, {QStringLiteral("protocol"), communication.protocol}}},
         {QStringLiteral("processVersion"), processVersionStateToJson(model.processVersionState())},
+        {QStringLiteral("orchestration"), model.orchestrationState()},
         {QStringLiteral("canonicalPaths"), QJsonObject{{QStringLiteral("worker"), AramfPaths::runtimeWorkerDirectoryName()}, {QStringLiteral("status"), AramfPaths::ProjectStatus}, {QStringLiteral("currentState"), AramfPaths::CurrentState}, {QStringLiteral("routing"), AramfPaths::TaskRoutes}, {QStringLiteral("validation"), AramfPaths::ColdStartValidation}}}
     };
 }

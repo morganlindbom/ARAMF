@@ -914,6 +914,7 @@ void ProjectModel::resetForNewProject()
     completedPageIds_.clear();
     processVersionState_ = ProcessVersionState::empty();
     runtimeOwnershipState_ = QJsonObject{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("claims"), QJsonArray{}}};
+    orchestrationState_ = {};
     notifyChanged();
     endUpdate();
     setModified(false);
@@ -981,6 +982,13 @@ void ProjectModel::setRuntimeOwnershipState(const QJsonObject& state)
 {
     if (runtimeOwnershipState_ == state) return;
     runtimeOwnershipState_ = state;
+    notifyChanged();
+}
+
+void ProjectModel::setOrchestrationState(const QJsonObject& state)
+{
+    if (orchestrationState_ == state) return;
+    orchestrationState_ = state;
     notifyChanged();
 }
 

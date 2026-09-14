@@ -248,6 +248,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     root.insert(QStringLiteral("workflowProgress"), QJsonObject{
         {QStringLiteral("completedPages"), toJsonArray(completedPageIds)}});
     root.insert(QStringLiteral("processVersion"), processVersionStateToJson(model.processVersionState()));
+    if (!model.orchestrationState().isEmpty()) root.insert(QStringLiteral("orchestration"), model.orchestrationState());
     root.insert(QStringLiteral("runtimeOwnership"), model.runtimeOwnershipState());
     root.insert(QStringLiteral("releaseManagement"), QJsonObject{
         {QStringLiteral("targetRelease"), model.hasTargetRelease()
@@ -427,7 +428,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
 QJsonObject ProjectPersistence::configuration(const ProjectModel& model) const
 {
     auto root = toJson(model);
-    for (const auto& key : {"schemaVersion", "migration", "projectId", "projectName", "projectPath", "projectFilePath", "templateId", "templateModules", "templateState", "aiPlatforms", "workflowProgress", "processVersion", "runtimeOwnership", "releaseManagement"}) root.remove(key);
+    for (const auto& key : {"schemaVersion", "migration", "projectId", "projectName", "projectPath", "projectFilePath", "templateId", "templateModules", "templateState", "aiPlatforms", "workflowProgress", "processVersion", "runtimeOwnership", "orchestration", "releaseManagement"}) root.remove(key);
     return root;
 }
 
@@ -878,6 +879,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
     model->setRuntimeOwnershipState(ownership.isEmpty()
         ? QJsonObject{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("claims"), QJsonArray{}}}
         : ownership);
+    model->setOrchestrationState(root.value(QStringLiteral("orchestration")).toObject());
     const auto releaseManagement = root.value(QStringLiteral("releaseManagement")).toObject();
     const auto targetRelease = releaseManagement.value(QStringLiteral("targetRelease"));
     model->setTargetRelease(targetRelease.isDouble() ? qMax(0, targetRelease.toInt()) : 0);
