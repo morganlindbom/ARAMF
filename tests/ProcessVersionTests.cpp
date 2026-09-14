@@ -2,10 +2,8 @@
 #include "core/ProjectModel.h"
 #include "core/ProjectPersistence.h"
 
-#include <QCoreApplication>
 #include <QDir>
 #include <QJsonArray>
-#include <QJsonDocument>
 #include <QTemporaryDir>
 
 #include <iostream>
@@ -20,6 +18,7 @@ bool check(bool condition, const char* message)
 bool sameState(const ProcessVersionState& left, const ProcessVersionState& right)
 {
     return left.completedHistory == right.completedHistory
+        && left.legacyHistory == right.legacyHistory
         && left.hasActiveProcess == right.hasActiveProcess
         && left.activeProcess == right.activeProcess
         && left.hasNextProcess == right.hasNextProcess
@@ -30,49 +29,39 @@ bool sameState(const ProcessVersionState& left, const ProcessVersionState& right
 bool runProcessVersionTests()
 {
     bool ok = true;
-
-    ProcessVersion parsed;
     QString error;
-    ok &= check(ProcessVersion::parse(QStringLiteral("P12.1.3.0"), &parsed, &error), "process version parses");
-    ok &= check(parsed.identifier() == QStringLiteral("P12.1.3.0"), "process version formats canonically");
+    ProcessVersion parsed;
+    ok &= check(ProcessVersion::parse(QStringLiteral("P12.4.9.0.0"), &parsed, &error), "five-stage process version parses");
+    ok &= check(parsed.identifier() == QStringLiteral("P12.4.9.0.0"), "five-stage process version formats canonically");
     ProcessVersion roundTrip;
-    ok &= check(ProcessVersion::parse(parsed.identifier(), &roundTrip) && roundTrip == parsed,
-                 "process version format/parse round trip");
-    ok &= check(!ProcessVersion::parse(QStringLiteral("P12.0.1.0"), &roundTrip, &error),
-                 "zero loop is rejected");
-    ok &= check(!ProcessVersion::parse(QStringLiteral("P12.1.3.2"), &roundTrip, &error),
-                 "non-binary done flag is rejected");
+    ok &= check(ProcessVersion::parse(parsed.identifier(), &roundTrip) && roundTrip == parsed, "five-stage round trip");
+    ok &= check(!ProcessVersion::parse(QStringLiteral("P12.4.9.0"), &roundTrip, &error), "legacy four-stage string is not canonical");
+    ok &= check(!ProcessVersion::parse(QStringLiteral("P12.0.1.0.0"), &roundTrip, &error), "zero loop is rejected");
+    ok &= check(!ProcessVersion::parse(QStringLiteral("P12.1.3.2.0"), &roundTrip, &error), "non-binary certification is rejected");
+    ok &= check(!ProcessVersion::parse(QStringLiteral("P12.1.3.0.1"), &roundTrip, &error), "done without certification is rejected");
 
-    ProcessVersionState authoritative;
-    authoritative.completedHistory = {{0, 1, 1, 1}, {1, 1, 1, 1}};
-    authoritative.hasNextProcess = true;
-    authoritative.nextProcess = {2, 1, 0, 0};
-    ok &= check(authoritative.isValid(&error), "authoritative process state is valid");
-    ok &= check(authoritative.completedIdentifiers() == QStringList{QStringLiteral("P0.1.1.1"), QStringLiteral("P1.1.1.1")}
-                    && authoritative.nextIdentifier() == QStringLiteral("P2.1.0.0"),
-                "authoritative P0/P1 history and P2 next state");
-    ProcessVersionState restored;
-    ok &= check(processVersionStateFromJson(processVersionStateToJson(authoritative), &restored, &error)
-                    && sameState(authoritative, restored),
-                "structured process state round trips");
+    ProcessVersionState initial;
+    initial.hasNextProcess = true;
+    initial.nextProcess = {0, 1, 0, 0, 0};
+    ok &= check(initial.isValid(&error), "five-stage initial state is valid");
+    ok &= check(ProcessVersionLifecycle::startNextProcess(&initial, &error)
+                    && initial.activeIdentifier() == QStringLiteral("P0.1.1.0.0"), "explicit process start");
+    ok &= check(ProcessVersionLifecycle::advanceIteration(&initial, &error)
+                    && initial.activeIdentifier() == QStringLiteral("P0.1.2.0.0"), "material iteration resets certification");
+    ok &= check(ProcessVersionLifecycle::certifyCurrentIteration(&initial, &error)
+                    && initial.activeIdentifier() == QStringLiteral("P0.1.2.1.0"), "explicit certification is separate from completion");
+    ok &= check(ProcessVersionLifecycle::advanceIteration(&initial, &error)
+                    && initial.activeIdentifier() == QStringLiteral("P0.1.3.0.0"), "material correction invalidates certification");
+    ok &= check(ProcessVersionLifecycle::certifyCurrentIteration(&initial, &error)
+                    && ProcessVersionLifecycle::completeActiveProcess(&initial, &error)
+                    && initial.completedIdentifiers().last() == QStringLiteral("P0.1.3.1.1"), "explicit certified completion");
+    ok &= check(!ProcessVersionLifecycle::completeActiveProcess(&initial, &error), "closed process cannot be completed again");
 
-    ProcessVersionState lifecycle;
-    lifecycle.hasNextProcess = true;
-    lifecycle.nextProcess = {12, 1, 0, 0};
-    ok &= check(ProcessVersionLifecycle::startNextProcess(&lifecycle, &error)
-                    && lifecycle.activeIdentifier() == QStringLiteral("P12.1.1.0")
-                    && lifecycle.nextIdentifier() == QStringLiteral("P13.1.0.0"),
-                "explicit process start creates first iteration");
-    ok &= check(ProcessVersionLifecycle::advanceIteration(&lifecycle, &error)
-                    && lifecycle.activeIdentifier() == QStringLiteral("P12.1.2.0"),
-                "explicit iteration advance is legal while open");
-    ok &= check(ProcessVersionLifecycle::completeActiveProcess(&lifecycle, &error)
-                    && lifecycle.completedIdentifiers().last() == QStringLiteral("P12.1.2.1"),
-                "explicit completion closes the active process loop");
-    ok &= check(!ProcessVersionLifecycle::advanceIteration(&lifecycle, &error),
-                "closed process loop cannot be advanced");
-    ok &= check(!ProcessVersionLifecycle::completeActiveProcess(&lifecycle, &error),
-                "closed process loop cannot be completed again");
+    ProcessVersionState dependency;
+    dependency.completedHistory = {{0, 1, 1, 1, 1}};
+    dependency.hasNextProcess = true;
+    dependency.nextProcess = {1, 1, 0, 0, 0};
+    ok &= check(dependency.isValid(&error), "dependent process state is valid");
 
     QTemporaryDir temporary;
     ok &= check(temporary.isValid(), "temporary persistence directory is available");
@@ -80,35 +69,33 @@ bool runProcessVersionTests()
         ProjectPersistence persistence;
         ProjectModel source;
         auto projectJson = persistence.toJson(source);
-        projectJson.insert(QStringLiteral("processVersion"), processVersionStateToJson(authoritative));
+        projectJson.insert(QStringLiteral("processVersion"), processVersionStateToJson(dependency));
         ProjectModel loaded;
-        ok &= check(persistence.fromJson(&loaded, projectJson, &error)
-                        && sameState(loaded.processVersionState(), authoritative),
-                    "authoritative process state loads into ProjectModel");
+        ok &= check(persistence.fromJson(&loaded, projectJson, &error) && sameState(loaded.processVersionState(), dependency), "five-stage state loads");
         const QString path = QDir(temporary.path()).filePath(QStringLiteral("process.aramf.json"));
-        ok &= check(persistence.save(loaded, path, &error), "process state saves through ProjectPersistence");
+        ok &= check(persistence.save(loaded, path, &error), "five-stage state saves");
         ProjectModel reloaded;
-        ok &= check(persistence.load(&reloaded, path, &error)
-                        && sameState(reloaded.processVersionState(), authoritative),
-                    "process state survives disk save/reload");
+        ok &= check(persistence.load(&reloaded, path, &error) && sameState(reloaded.processVersionState(), dependency), "five-stage state survives reload");
 
-        auto oldProject = persistence.toJson(source);
-        oldProject.remove(QStringLiteral("processVersion"));
-        ProjectModel oldLoaded;
-        ok &= check(persistence.fromJson(&oldLoaded, oldProject, &error)
-                        && oldLoaded.processVersionState().completedHistory.isEmpty()
-                        && !oldLoaded.processVersionState().hasNextProcess,
-                    "projects without process-version data load without fabricated history");
+        auto legacy = persistence.toJson(source);
+        legacy.insert(QStringLiteral("processVersion"), QJsonObject{
+            {QStringLiteral("completedHistory"), QJsonArray{QJsonObject{{"process", 0}, {"loop", 1}, {"iteration", 1}, {"done", 1}}}},
+            {QStringLiteral("active"), QJsonValue(QJsonValue::Null)},
+            {QStringLiteral("next"), QJsonObject{{"process", 1}, {"loop", 1}, {"iteration", 0}, {"done", 0}}}});
+        ProjectModel legacyLoaded;
+        ok &= check(persistence.fromJson(&legacyLoaded, legacy, &error)
+                        && legacyLoaded.processVersionState().completedHistory.isEmpty()
+                        && legacyLoaded.processVersionState().legacyHistory == QStringList{"P0.1.1.1", "P1.1.0.0"}, "legacy four-stage history is preserved separately");
+        ok &= check(legacyLoaded.resetForFiveStageProcessCampaign(&error)
+                        && legacyLoaded.processVersionState().nextIdentifier() == QStringLiteral("P0.1.0.0.0"), "explicit five-stage reset creates P0 next state");
 
         auto malformed = persistence.toJson(source);
         malformed.insert(QStringLiteral("processVersion"), QJsonObject{
             {QStringLiteral("completedHistory"), QJsonArray{}},
             {QStringLiteral("active"), QJsonValue(QJsonValue::Null)},
-            {QStringLiteral("next"), QJsonObject{{QStringLiteral("process"), 2}, {QStringLiteral("loop"), 1},
-                                                  {QStringLiteral("iteration"), 0}, {QStringLiteral("done"), 2}}}});
+            {QStringLiteral("next"), QJsonObject{{"process", 2}, {"loop", 1}, {"iteration", 0}, {"certification", 0}, {"done", 1}}}});
         ProjectModel malformedLoaded;
-        ok &= check(!persistence.fromJson(&malformedLoaded, malformed, &error),
-                    "malformed process-version data is rejected");
+        ok &= check(!persistence.fromJson(&malformedLoaded, malformed, &error), "illegal done-before-certification is rejected");
     }
     return ok;
 }

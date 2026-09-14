@@ -189,8 +189,88 @@ ProjectRootRebindResult ProjectRootRebindService::rebind(ProjectModel* model,
 
 int runProjectRootRebindCommand(const QStringList& arguments, QTextStream& output, QTextStream& error)
 {
+    if (arguments.size() >= 4 && arguments.at(0) == QStringLiteral("project")
+        && (arguments.at(1) == QStringLiteral("process-reset")
+            || arguments.at(1) == QStringLiteral("process-certify"))) {
+        QString filePath;
+        for (int i = 2; i + 1 < arguments.size(); ++i)
+            if (arguments.at(i) == QStringLiteral("--file")) filePath = arguments.at(++i);
+        ProjectModel model;
+        ProjectPersistence persistence;
+        QString operationError;
+        if (filePath.isEmpty() || !persistence.load(&model, filePath, &operationError)) {
+            error << "error=" << (operationError.isEmpty() ? QStringLiteral("A project file is required.") : operationError) << "\n";
+            return 2;
+        }
+        const bool changed = arguments.at(1) == QStringLiteral("process-reset")
+            ? model.resetForFiveStageProcessCampaign(&operationError)
+            : model.certifyCurrentProcessIteration(&operationError);
+        if (!changed || !persistence.save(model, filePath, &operationError)) {
+            error << "error=" << operationError << "\n";
+            return 2;
+        }
+        output << "process=" << (model.processVersionState().activeIdentifier().isEmpty()
+                                      ? model.processVersionState().nextIdentifier()
+                                      : model.processVersionState().activeIdentifier()) << "\n";
+        return 0;
+    }
+    if (arguments.size() >= 4 && arguments.at(0) == QStringLiteral("project")
+        && arguments.at(1) == QStringLiteral("save")) {
+        QString filePath;
+        for (int i = 2; i + 1 < arguments.size(); ++i)
+            if (arguments.at(i) == QStringLiteral("--file")) filePath = arguments.at(++i);
+        const QString canonicalFilePath = QFileInfo(filePath).absoluteFilePath();
+        ProjectModel model;
+        ProjectPersistence persistence;
+        QString operationError;
+        if (filePath.isEmpty() || !persistence.load(&model, canonicalFilePath, &operationError)
+            || !persistence.save(model, canonicalFilePath, &operationError)) {
+            error << "error=" << (operationError.isEmpty() ? QStringLiteral("A project file is required.") : operationError) << "\n";
+            return 2;
+        }
+        output << "saved=" << canonicalFilePath << "\n";
+        return 0;
+    }
+    if (arguments.size() >= 4 && arguments.at(0) == QStringLiteral("project")
+        && arguments.at(1) == QStringLiteral("process-start")) {
+        QString filePath;
+        for (int i = 2; i + 1 < arguments.size(); ++i)
+            if (arguments.at(i) == QStringLiteral("--file")) filePath = arguments.at(++i);
+        ProjectModel model;
+        ProjectPersistence persistence;
+        QString operationError;
+        if (filePath.isEmpty() || !persistence.load(&model, filePath, &operationError)) {
+            error << "error=" << (operationError.isEmpty() ? QStringLiteral("A project file is required.") : operationError) << "\n";
+            return 2;
+        }
+        model.setProjectFilePath(filePath);
+        if (!model.startNextProcess(&operationError) || !persistence.save(model, filePath, &operationError)) {
+            error << "error=" << operationError << "\n";
+            return 2;
+        }
+        output << "active=" << model.processVersionState().activeIdentifier() << " next=" << model.processVersionState().nextIdentifier() << "\n";
+        return 0;
+    }
+    if (arguments.size() >= 4 && arguments.at(0) == QStringLiteral("project")
+        && arguments.at(1) == QStringLiteral("process-complete")) {
+        QString filePath;
+        for (int i = 2; i + 1 < arguments.size(); ++i)
+            if (arguments.at(i) == QStringLiteral("--file")) filePath = arguments.at(++i);
+        ProjectModel model;
+        ProjectPersistence persistence;
+        QString operationError;
+        if (filePath.isEmpty() || !persistence.load(&model, filePath, &operationError)
+            || !model.completeActiveProcess(&operationError)
+            || !persistence.save(model, filePath, &operationError)) {
+            error << "error=" << (operationError.isEmpty() ? QStringLiteral("A project file is required.") : operationError) << "\n";
+            return 2;
+        }
+        output << "completed=" << model.processVersionState().completedIdentifiers().last()
+               << " next=" << model.processVersionState().nextIdentifier() << "\n";
+        return 0;
+    }
     if (arguments.size() < 5 || arguments.at(0) != QStringLiteral("project") || arguments.at(1) != QStringLiteral("rebind")) {
-        error << "Usage: aramf project rebind --file <project-file> --root <project-root>\n";
+        error << "Usage: aramf project rebind --file <project-file> --root <project-root> | project process-reset|process-start|process-certify|process-complete --file <project-file> | project save --file <project-file>\n";
         return 2;
     }
     QString filePath, root;

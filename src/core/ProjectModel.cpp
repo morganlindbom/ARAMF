@@ -983,6 +983,20 @@ bool ProjectModel::completeActiveProcess(QString* error)
     return true;
 }
 
+bool ProjectModel::certifyCurrentProcessIteration(QString* error)
+{
+    if (!ProcessVersionLifecycle::certifyCurrentIteration(&processVersionState_, error)) return false;
+    notifyChanged();
+    return true;
+}
+
+bool ProjectModel::resetForFiveStageProcessCampaign(QString* error)
+{
+    if (!ProcessVersionLifecycle::resetForFiveStageCampaign(&processVersionState_, error)) return false;
+    notifyChanged();
+    return true;
+}
+
 bool ProjectModel::restoreProcessVersionState(const ProcessVersionState& state, QString* error)
 {
     if (!state.isValid(error)) return false;

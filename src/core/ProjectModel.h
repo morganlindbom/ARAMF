@@ -459,7 +459,9 @@ public:
     void setCompletedPageIds(const QSet<QString>& pageIds);
     bool startNextProcess(QString* error = nullptr);
     bool advanceProcessIteration(QString* error = nullptr);
+    bool certifyCurrentProcessIteration(QString* error = nullptr);
     bool completeActiveProcess(QString* error = nullptr);
+    bool resetForFiveStageProcessCampaign(QString* error = nullptr);
 
     void beginUpdate();
     void endUpdate();

@@ -14,6 +14,7 @@ struct ProcessVersion final
     int process = 0;
     int loop = 1;
     int iteration = 0;
+    int certification = 0;
     int done = 0;
 
     QString identifier() const;
@@ -30,6 +31,7 @@ struct ProcessVersionState final
     // active and next fields preserve state without collapsing history into a
     // single mutable string.
     QList<ProcessVersion> completedHistory;
+    QStringList legacyHistory;
     bool hasActiveProcess = false;
     ProcessVersion activeProcess;
     bool hasNextProcess = false;
@@ -55,5 +57,7 @@ class ProcessVersionLifecycle final
 public:
     static bool startNextProcess(ProcessVersionState* state, QString* error = nullptr);
     static bool advanceIteration(ProcessVersionState* state, QString* error = nullptr);
+    static bool certifyCurrentIteration(ProcessVersionState* state, QString* error = nullptr);
     static bool completeActiveProcess(ProcessVersionState* state, QString* error = nullptr);
+    static bool resetForFiveStageCampaign(ProcessVersionState* state, QString* error = nullptr);
 };
