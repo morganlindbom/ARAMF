@@ -479,6 +479,7 @@
                 "process": 0
             },
             {
+                "certification": 1,
                 "done": 1,
                 "iteration": 1,
                 "loop": 1,
@@ -492,14 +493,15 @@
             "P3.1.0.0",
             "P0.1.1.1.1",
             "P1.1.1.1.1",
-            "P2.1.1.1.1"
+            "P2.1.1.1.1",
+            "P1.1.1.1"
         ],
         "next": {
             "certification": 0,
             "done": 0,
             "iteration": 0,
             "loop": 1,
-            "process": 1
+            "process": 2
         }
     },
     "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER.aramf.json",
