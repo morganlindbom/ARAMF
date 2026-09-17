@@ -20,7 +20,6 @@ enum class TaskExecutionState {
     Cancelled,
     GovernanceBlocked
 };
-
 enum class ExecutionFailureCategory {
     None,
     Tool,
@@ -138,6 +137,7 @@ public:
 private:
     bool refreshReadyLocked(QString* error = nullptr);
     bool validateTaskContractLocked(const ExecutionTask& task, QString* error) const;
+    bool validateCanonicalDependenciesLocked(QString* error) const;
     bool transitionLocked(ExecutionTask* task, TaskExecutionState next,
                           QString* error);
     bool releaseWorkerLocked(ExecutionTask& task, QString* error = nullptr);

@@ -913,6 +913,7 @@ void ProjectModel::resetForNewProject()
     targetRelease_ = 0;
     completedPageIds_.clear();
     processVersionState_ = ProcessVersionState::empty();
+    runtimeOwnershipState_ = QJsonObject{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("claims"), QJsonArray{}}};
     orchestrationState_ = {};
     notifyChanged();
     endUpdate();
@@ -975,6 +976,20 @@ bool ProjectModel::startNextProcess(QString* error)
     if (!ProcessVersionLifecycle::startNextProcess(&processVersionState_, error)) return false;
     notifyChanged();
     return true;
+}
+
+bool ProjectModel::reworkCompletedProcess(int process, QString* error)
+{
+    if (!ProcessVersionLifecycle::reworkCompletedProcess(&processVersionState_, process, error)) return false;
+    emit modelChanged();
+    return true;
+}
+
+void ProjectModel::setRuntimeOwnershipState(const QJsonObject& state)
+{
+    if (runtimeOwnershipState_ == state) return;
+    runtimeOwnershipState_ = state;
+    notifyChanged();
 }
 
 bool ProjectModel::advanceProcessIteration(QString* error)

@@ -9,7 +9,7 @@
 #include <QCoreApplication>
 #include <QTextStream>
 
-int main(int argc, char *argv[]),+
+int main(int argc, char *argv[])
 {
     if (argc > 1)
     {
@@ -50,8 +50,7 @@ int main(int argc, char *argv[]),+
         windowWidth,
         windowHeight);
 
-    win
-    ow.show();
+    window.show();
 
     return app.exec();
 }

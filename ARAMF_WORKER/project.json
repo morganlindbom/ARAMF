@@ -30,7 +30,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "55d55f4a340e41ddb19cbcf12b010c99f06a61b7ad3d39c8ec99b2930b63adb6",
+    "configurationFingerprint": "45e26f68c2b1de530ec6f7e61e881259a05ef48c05af960b2e82cfa3799cbe3e",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",
@@ -63,6 +63,27 @@
                 "iteration": 1,
                 "loop": 1,
                 "process": 0
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "process": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "process": 0
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "process": 2
             }
         ],
         "legacyHistory": [
@@ -72,14 +93,15 @@
             "P3.1.0.0",
             "P0.1.1.1.1",
             "P1.1.1.1.1",
-            "P2.1.1.1.1"
+            "P2.1.1.1.1",
+            "P1.1.1.1"
         ],
         "next": {
             "certification": 0,
             "done": 0,
             "iteration": 0,
             "loop": 1,
-            "process": 1
+            "process": 3
         }
     },
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",

@@ -419,6 +419,7 @@ public:
     int targetRelease() const { return targetRelease_; }
     bool hasTargetRelease() const { return targetRelease_ > 0; }
     ProcessVersionState processVersionState() const { return processVersionState_; }
+    QJsonObject runtimeOwnershipState() const { return runtimeOwnershipState_; }
     QJsonObject orchestrationState() const { return orchestrationState_; }
     QSet<QString> completedPageIds() const { return completedPageIds_; }
     bool isPageCompleted(const QString& pageId) const { return completedPageIds_.contains(pageId); }
@@ -458,8 +459,10 @@ public:
     void setTargetRelease(int release);
     void setPageCompleted(const QString& pageId, bool completed);
     void setCompletedPageIds(const QSet<QString>& pageIds);
+    void setRuntimeOwnershipState(const QJsonObject& state);
     void setOrchestrationState(const QJsonObject& state);
     bool startNextProcess(QString* error = nullptr);
+    bool reworkCompletedProcess(int process, QString* error = nullptr);
     bool advanceProcessIteration(QString* error = nullptr);
     bool certifyCurrentProcessIteration(QString* error = nullptr);
     bool completeActiveProcess(QString* error = nullptr);
@@ -520,5 +523,6 @@ private:
     int targetRelease_ = 0;
     QSet<QString> completedPageIds_;
     ProcessVersionState processVersionState_;
+    QJsonObject runtimeOwnershipState_;
     QJsonObject orchestrationState_;
 };

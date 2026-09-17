@@ -63,6 +63,14 @@ bool runProcessVersionTests()
     dependency.nextProcess = {1, 1, 0, 0, 0};
     ok &= check(dependency.isValid(&error), "dependent process state is valid");
 
+    ProcessVersionState p0Rework;
+    p0Rework.completedHistory = {{0, 1, 1, 1, 1}, {1, 1, 1, 1, 1}};
+    p0Rework.hasNextProcess = true;
+    p0Rework.nextProcess = {2, 1, 0, 0, 0};
+    ok &= check(ProcessVersionLifecycle::reworkCompletedProcess(&p0Rework, 0, &error)
+                    && p0Rework.activeIdentifier() == QStringLiteral("P0.1.2.0.0")
+                    && p0Rework.nextIdentifier() == QStringLiteral("P2.1.0.0.0"), "same-loop certified P0 rework preserves P1 and next process");
+
     QTemporaryDir temporary;
     ok &= check(temporary.isValid(), "temporary persistence directory is available");
     if (temporary.isValid()) {

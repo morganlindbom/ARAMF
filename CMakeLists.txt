@@ -46,6 +46,8 @@ set(ARAMF_CORE_SOURCES
     src/core/ProcessVersion.cpp
     src/core/ConfigurationUpdateService.h
     src/core/ConfigurationUpdateService.cpp
+    src/core/RuntimeOwnershipService.h
+    src/core/RuntimeOwnershipService.cpp
     src/core/ExecutionOrchestrator.h
     src/core/ExecutionOrchestrator.cpp
     src/core/ComponentVersion.h
@@ -187,6 +189,10 @@ if(BUILD_TESTING)
         tests/WorkerTaskTests.cpp
         tests/ContextCoordinationTests.cpp
         tests/ProcessVersionTests.cpp
+        src/core/RuntimeOwnershipService.h
+        src/core/RuntimeOwnershipService.cpp
+        src/core/ExecutionOrchestrator.h
+        src/core/ExecutionOrchestrator.cpp
         tests/P2ExecutionTests.cpp
         src/core/GitIgnoreService.h
         src/core/GitIgnoreService.cpp
@@ -233,8 +239,6 @@ if(BUILD_TESTING)
         src/core/ProjectPersistence.cpp
         src/core/ProcessVersion.h
         src/core/ProcessVersion.cpp
-        src/core/ExecutionOrchestrator.h
-        src/core/ExecutionOrchestrator.cpp
         src/core/WorkflowPageMetadata.h
         src/core/WorkflowPageMetadata.cpp
         src/core/ComponentVersion.h
@@ -272,8 +276,6 @@ if(BUILD_TESTING)
         src/core/ProjectPersistence.cpp
         src/core/ProcessVersion.h
         src/core/ProcessVersion.cpp
-        src/core/ExecutionOrchestrator.h
-        src/core/ExecutionOrchestrator.cpp
         src/core/WorkflowPageMetadata.h
         src/core/WorkflowPageMetadata.cpp
         src/core/ComponentVersion.h

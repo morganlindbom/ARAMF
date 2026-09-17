@@ -3,8 +3,10 @@
 #include <QJsonArray>
 #include <QRegularExpression>
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numeric>
 
 namespace {
 void setError(QString* error, const QString& message)
@@ -116,14 +118,16 @@ bool ProcessVersionState::isValid(QString* error) const
 {
     ProcessVersion previous;
     bool hasPrevious = false;
-    for (const auto& version : completedHistory) {
+    for (qsizetype index = 0; index < completedHistory.size(); ++index) {
+        const auto& version = completedHistory.at(index);
         if (!version.isValid(error)) return false;
         if (version.done != 1) {
             setError(error, QStringLiteral("Completed process history must contain only done=1 entries."));
             return false;
         }
-        if (hasPrevious && !comesAfter(version, previous)) {
-            setError(error, QStringLiteral("Completed process history must be ordered by process and loop without duplicates."));
+        if (index > 0 && std::any_of(completedHistory.cbegin(), completedHistory.cbegin() + index,
+                                       [&version](const auto& prior) { return prior == version; })) {
+            setError(error, QStringLiteral("Completed process history must not contain duplicate versions."));
             return false;
         }
         previous = version;
@@ -136,7 +140,14 @@ bool ProcessVersionState::isValid(QString* error) const
             setError(error, QStringLiteral("The active process must have done=0."));
             return false;
         }
-        if (hasPrevious && !comesAfter(activeProcess, previous)) {
+        const auto active = activeProcess;
+        const bool rework = std::any_of(completedHistory.cbegin(), completedHistory.cend(),
+                                        [&active](const auto& prior) {
+                                            return prior.process == active.process
+                                                && prior.loop == active.loop
+                                                && prior.iteration < active.iteration;
+                                        });
+        if (hasPrevious && !comesAfter(activeProcess, previous) && !rework) {
             setError(error, QStringLiteral("The active process cannot reopen a completed process/loop."));
             return false;
         }
@@ -148,19 +159,28 @@ bool ProcessVersionState::isValid(QString* error) const
             setError(error, QStringLiteral("The next process must start as P<process>.<loop>.0.0.0."));
             return false;
         }
-        if (hasPrevious && nextProcess.process <= previous.process) {
+        const int highestProcess = std::accumulate(completedHistory.cbegin(), completedHistory.cend(), 0,
+                                                   [](int highest, const auto& version) { return qMax(highest, version.process); });
+        if (hasPrevious && nextProcess.process <= highestProcess) {
             setError(error, QStringLiteral("The next process must follow completed history."));
             return false;
         }
-        if (!hasActiveProcess && hasPrevious && nextProcess.process != previous.process + 1) {
+        if (!hasActiveProcess && hasPrevious && nextProcess.process != highestProcess + 1) {
             setError(error, QStringLiteral("The next process must directly follow the latest completed process."));
             return false;
         }
-        if (hasActiveProcess && nextProcess.process <= activeProcess.process) {
+        const auto active = activeProcess;
+        const bool activeRework = hasActiveProcess && std::any_of(completedHistory.cbegin(), completedHistory.cend(),
+                                                                    [&active](const auto& prior) {
+                                                                        return prior.process == active.process
+                                                                            && prior.loop == active.loop
+                                                                            && prior.iteration < active.iteration;
+                                                                    });
+        if (hasActiveProcess && !activeRework && nextProcess.process <= activeProcess.process) {
             setError(error, QStringLiteral("The next process must follow the active process."));
             return false;
         }
-        if (hasActiveProcess && nextProcess.process != activeProcess.process + 1) {
+        if (hasActiveProcess && !activeRework && nextProcess.process != activeProcess.process + 1) {
             setError(error, QStringLiteral("The next process must directly follow the active process."));
             return false;
         }
@@ -269,6 +289,29 @@ bool ProcessVersionLifecycle::startNextProcess(ProcessVersionState* state, QStri
     state->hasActiveProcess = true;
     state->nextProcess = {state->activeProcess.process + 1, 1, 0, 0, 0};
     state->hasNextProcess = true;
+    return state->isValid(error);
+}
+
+bool ProcessVersionLifecycle::reworkCompletedProcess(ProcessVersionState* state, int process, QString* error)
+{
+    if (!state) { setError(error, QStringLiteral("Process version state is not available.")); return false; }
+    if (!state->isValid(error) || state->hasActiveProcess) {
+        setError(error, QStringLiteral("A process rework requires no active process."));
+        return false;
+    }
+    auto match = std::find_if(state->completedHistory.crbegin(), state->completedHistory.crend(),
+                              [process](const auto& version) { return version.process == process; });
+    if (match == state->completedHistory.crend()) {
+        setError(error, QStringLiteral("The requested process has no completed history."));
+        return false;
+    }
+    if (match->done != 1 || match->certification != 1 || match->iteration == std::numeric_limits<int>::max()) {
+        setError(error, QStringLiteral("Only a completed certified process can be reopened for rework."));
+        return false;
+    }
+    ProcessVersion next{process, match->loop, match->iteration + 1, 0, 0};
+    state->activeProcess = next;
+    state->hasActiveProcess = true;
     return state->isValid(error);
 }
 

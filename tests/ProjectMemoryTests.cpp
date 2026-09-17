@@ -70,6 +70,7 @@ int main(int argc, char** argv)
     QTemporaryDir globalData;
     FrameworkKnowledgeService::setGlobalLibraryPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")));
     if (app.arguments().contains(QStringLiteral("--worker-tasks"))) return runWorkerTaskTests() ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--p2-execution"))) return runP2ExecutionTests() ? 0 : 1;
     QTemporaryDir temporaryProject;
     if (!require(temporaryProject.isValid(), "temporary project directory must be valid")) {
         return 1;

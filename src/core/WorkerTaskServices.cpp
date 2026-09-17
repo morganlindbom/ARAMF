@@ -147,6 +147,8 @@ QJsonObject snapshot(const ProjectModel& model, QJsonArray& errors)
             issue(errors, "UNSAFE_PATH", "Path escapes the project or follows an external link.", path, "FATAL");
             continue;
         }
+        if (path.startsWith(workerPath(model, "context/handoffs/")) && path.endsWith(".json"))
+            continue;
         if (path.startsWith(workerPath(model, "verification/tasks/")) && path.endsWith(".json")) {
             const QSet<QString> reserved{"project.json", "worker-manifest.json", "scope-routes.json", "task-routes.json", "resources.json", "latest-validation.json", "agent-status.json", "agent-memory.json"};
             const auto artifact = readObject(pathFor(model, path));
@@ -174,10 +176,21 @@ QJsonObject binding(const ProjectModel& model)
         const QString absolute = pathFor(model, workerPath(model, path));
         auto json = readObject(absolute);
         json.remove("_file");
+        if (path == QStringLiteral("project.json")) {
+            // The Worker project representation also carries the mutable P2
+            // execution snapshot. It is derived state, not a TaskContract
+            // authorization input, so exclude it from the binding while
+            // retaining the rest of the canonical project configuration.
+            json.remove(QStringLiteral("orchestration"));
+        }
         inputs.insert(path, path.endsWith(".json") && !json.isEmpty() ? fingerprint(json) : fileHash(absolute));
     }
     return {{"projectRoot", root(model)}, {"projectId", model.projectId()}, {"workerIdentity", worker(model)},
-        {"modelFingerprint", fingerprint(ProjectPersistence().toJson(model))}, {"inputs", inputs}};
+        // Runtime ownership and orchestration are mutable execution state, not
+        // authorization inputs.  Binding only the canonical project
+        // configuration keeps a valid contract stable while P2 claims and
+        // releases resources or updates its execution snapshot.
+        {"modelFingerprint", fingerprint(ProjectPersistence().configuration(model))}, {"inputs", inputs}};
 }
 void parallelState(const ProjectModel& model, const QJsonObject& files, QJsonArray& errors)
 {
@@ -573,9 +586,11 @@ QJsonObject WorkerTaskServices::postflight(const ProjectModel& model, const QJso
     const auto expectedCertification = CertificationService().derivedCurrentState(root(model), &certificationError);
     auto actualCertification = CertificationService().currentState(root(model)); actualCertification.remove("_file");
     const bool certificationStateValid = certificationError.isEmpty() && !expectedCertification.isEmpty() && actualCertification == expectedCertification;
+    const bool orchestrationStatePresent = !model.orchestrationState().isEmpty();
     QJsonArray serviceChanges;
     for (const auto& path : paths) {
         if (before.value(path) == current.value(path)) continue;
+        if (path.startsWith(workerPath(model, "context/handoffs/")) && path.endsWith(".json")) continue;
         modified.append(path);
         const auto ownership = fileRole(model, path, mutationPolicy(model));
         bool delegated = false;
@@ -586,12 +601,14 @@ QJsonObject WorkerTaskServices::postflight(const ProjectModel& model, const QJso
         const bool declaredGeneration = strings(contract.value("impact").toObject().value("generatedArtifacts")).contains(path);
         const bool p1Generation = expectedDerived.contains(path) && ownership.value("writer").toString() == "ContextCoordinationService";
         const bool requestedGeneration = declaredGeneration || p1Generation;
-        if (requestedGeneration && expectedDerived.contains(path) && (ownership.value("writer").toString() == "GenerationServices" || p1Generation)
+        const bool canonicalOrchestrationOutput = orchestrationStatePresent && path == workerPath(model, "project.json");
+        if (expectedDerived.contains(path) && (ownership.value("writer").toString() == "GenerationServices" || p1Generation)
+            && (requestedGeneration || canonicalOrchestrationOutput)
             && strings(ownership.value("actions")).contains("REGENERATE")) {
             auto actual = readObject(pathFor(model, path)); actual.remove("_file");
             delegated = !actual.isEmpty() && semantic(actual) == semantic(expectedDerived.value(path));
         }
-        if (requestedGeneration && ownership.value("writer").toString() == "VerificationServices") {
+        if (ownership.value("writer").toString() == "VerificationServices" && (requestedGeneration || orchestrationStatePresent)) {
             if (!verificationChecked) { currentVerification = VerificationServices().verify(model, model.generationOptions(), false); verificationChecked = true; }
             auto actual = readObject(pathFor(model, path)); actual.remove("_file"); actual.remove("checkedAt");
             const auto expected = path.endsWith("latest-validation.json") ? currentVerification.summary : currentVerification.evidence;

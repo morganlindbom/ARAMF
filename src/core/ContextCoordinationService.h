@@ -32,7 +32,8 @@ public:
                                      const QString& sourceAgent,
                                      const QString& targetAgent,
                                      QStringList destinationScopes,
-                                     bool persist = true);
+                                     bool persist = true,
+                                     const QJsonObject& executionMetadata = {});
 
     static QJsonObject adapterDescriptors();
     static QJsonObject adaptContract(const QJsonObject& contract,

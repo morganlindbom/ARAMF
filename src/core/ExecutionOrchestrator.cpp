@@ -1,8 +1,13 @@
 #include "ExecutionOrchestrator.h"
 
 #include "WorkerTaskServices.h"
+#include "ContextCoordinationService.h"
+#include "RuntimeOwnershipService.h"
+#include "Services.h"
 
 #include <QJsonArray>
+#include <QDir>
+#include <QFileInfo>
 #include <QSet>
 #include <algorithm>
 
@@ -244,8 +249,17 @@ ExecutionOrchestrator::ExecutionOrchestrator(ProjectModel* model) : model_(model
 
 bool ExecutionOrchestrator::persistLocked(QString* error)
 {
-    if (model_) model_->setOrchestrationState(state_.toJson());
-    Q_UNUSED(error);
+    if (!model_) {
+        Q_UNUSED(error);
+        return true;
+    }
+
+    model_->setOrchestrationState(state_.toJson());
+    const auto repair = GenerationServices().repairDerivedArtifacts(*model_, model_->generationOptions());
+    if (!repair.success) {
+        setError(error, QStringLiteral("P2_DERIVED_STATE_SYNC_FAILED: ") + repair.error);
+        return false;
+    }
     return true;
 }
 
@@ -257,6 +271,7 @@ bool ExecutionOrchestrator::configure(const QString& runId, QList<ExecutionTask>
     std::sort(candidate.workers.begin(), candidate.workers.end(), [](const auto& left, const auto& right) { return left.id < right.id; });
     if (!candidate.isValid(error)) return false;
     state_ = candidate;
+    if (!validateCanonicalDependenciesLocked(error)) { state_ = {}; return false; }
     return persistLocked(error) && refreshReadyLocked(error);
 }
 
@@ -303,16 +318,69 @@ bool ExecutionOrchestrator::start(QString* error)
 
 bool ExecutionOrchestrator::validateTaskContractLocked(const ExecutionTask& task, QString* error) const
 {
+    if (!model_) { setError(error, QStringLiteral("P0_GOVERNANCE_UNAVAILABLE")); return false; }
     if (task.contractId.trimmed().isEmpty() || task.contract.value("contractId").toString() != task.contractId) { setError(error, QStringLiteral("TASK_CONTRACT_INVALID")); return false; }
     const QString status = task.contract.value("preflight").toObject().value("status").toString();
     if (status != QStringLiteral("READY") && status != QStringLiteral("READY_WITH_WARNINGS")) { setError(error, QStringLiteral("GOVERNANCE_BLOCKED")); return false; }
     const auto binding = task.contract.value("binding").toObject();
-    if (model_ && !binding.isEmpty() && binding.value("projectId").toString() != model_->projectId()) {
+    if (binding.value("projectId").toString() != model_->projectId()) {
         setError(error, QStringLiteral("STALE_TASK_CONTRACT"));
         return false;
     }
     const QStringList permitted = stringArray(task.contract.value("permittedFiles"));
     for (const auto& resource : task.resources) if (!permitted.contains(resource)) { setError(error, QStringLiteral("TASK_SCOPE_VIOLATION")); return false; }
+    if (task.contract.contains(QStringLiteral("request"))) {
+        const auto authoritative = WorkerTaskServices::prepare(*model_, WorkerTaskRequest::fromJson(task.contract.value(QStringLiteral("request")).toObject()));
+        const auto status = authoritative.value(QStringLiteral("preflight")).toObject().value(QStringLiteral("status")).toString();
+        if (status != QStringLiteral("READY") && status != QStringLiteral("READY_WITH_WARNINGS")) {
+            setError(error, QStringLiteral("GOVERNANCE_BLOCKED"));
+            return false;
+        }
+        for (const auto& field : {QStringLiteral("permittedFiles"), QStringLiteral("requiredEvidence"), QStringLiteral("risk"), QStringLiteral("impact"), QStringLiteral("evidenceDependencies"), QStringLiteral("taskDependencies")}) {
+            if (task.contract.value(field) != authoritative.value(field)) {
+                setError(error, QStringLiteral("TASK_CONTRACT_INVALID"));
+                return false;
+            }
+        }
+    }
+    const auto impact = task.contract.value(QStringLiteral("impact")).toObject();
+    const QStringList scopes = stringArray(impact.value(QStringLiteral("affectedScopes")));
+    if (scopes.isEmpty()) { setError(error, QStringLiteral("P1_CONTEXT_INVALID")); return false; }
+    const auto routed = ContextCoordinationService::route(*model_, scopes);
+    if (!routed.value(QStringLiteral("valid")).toBool()) { setError(error, QStringLiteral("P1_CONTEXT_INVALID")); return false; }
+    if (ContextCoordinationService::freshness(*model_).value(QStringLiteral("staleCount")).toInt() != 0) {
+        setError(error, QStringLiteral("STALE_CONTEXT"));
+        return false;
+    }
+    if (task.contextFingerprint.isEmpty()
+        || task.contextFingerprint != routed.value(QStringLiteral("indexFingerprint")).toString()) {
+        setError(error, QStringLiteral("STALE_CONTEXT"));
+        return false;
+    }
+    return true;
+}
+
+bool ExecutionOrchestrator::validateCanonicalDependenciesLocked(QString* error) const
+{
+    if (!model_) { setError(error, QStringLiteral("P1_DAG_UNAVAILABLE")); return false; }
+    const QString dagPath = QDir(model_->projectPath()).filePath(QStringLiteral("ARAMF_WORKER/context/task-dag.json"));
+    if (!QFileInfo::exists(dagPath)) { setError(error, QStringLiteral("P1_DAG_UNAVAILABLE")); return false; }
+    const auto dag = ContextCoordinationService::taskDag(*model_);
+    if (!dag.value(QStringLiteral("valid")).toBool()) { setError(error, QStringLiteral("P1_DAG_UNAVAILABLE")); return false; }
+    QHash<QString, QStringList> canonical;
+    for (const auto& value : dag.value(QStringLiteral("nodes")).toArray()) {
+        const auto node = value.toObject();
+        QStringList dependencies;
+        for (const auto& dependency : node.value(QStringLiteral("dependencies")).toArray()) dependencies << dependency.toString();
+        dependencies.removeDuplicates(); dependencies.sort();
+        canonical.insert(node.value(QStringLiteral("id")).toString(), dependencies);
+    }
+    if (canonical.size() != state_.tasks.size()) { setError(error, QStringLiteral("P1_DAG_MISMATCH")); return false; }
+    for (const auto& task : state_.tasks) {
+        auto dependencies = task.dependencies;
+        dependencies.removeDuplicates(); dependencies.sort();
+        if (!canonical.contains(task.id) || canonical.value(task.id) != dependencies) { setError(error, QStringLiteral("P1_DAG_MISMATCH")); return false; }
+    }
     return true;
 }
 
@@ -348,9 +416,21 @@ bool ExecutionOrchestrator::dependenciesFailedLocked(const ExecutionTask& task) 
 
 bool ExecutionOrchestrator::resourceAvailableLocked(const ExecutionTask& task, const QString& workerId) const
 {
-    for (const auto& candidate : state_.tasks) if (candidate.id != task.id && (candidate.state == TaskExecutionState::Claimed || candidate.state == TaskExecutionState::Running) && overlaps(task.resources, candidate.resources)) return false;
-    const auto worker = std::find_if(state_.workers.cbegin(), state_.workers.cend(), [&workerId](const auto& candidate) { return candidate.id == workerId; });
-    return worker != state_.workers.cend();
+    Q_UNUSED(workerId);
+    if (!model_) return false;
+    const auto ownership = RuntimeOwnershipService::inspect(*model_);
+    for (const auto& value : ownership.value(QStringLiteral("claims")).toArray()) {
+        const auto claim = value.toObject();
+        if (claim.value(QStringLiteral("state")).toString() != QStringLiteral("ACTIVE")) continue;
+        for (const auto& requested : task.resources) {
+            bool valid = false;
+            const QString canonical = RuntimeOwnershipService::canonicalResource(*model_, requested, &valid);
+            if (!valid) return false;
+            for (const auto& owned : claim.value(QStringLiteral("resources")).toArray())
+                if (owned.toString() == canonical) return false;
+        }
+    }
+    return true;
 }
 
 bool ExecutionOrchestrator::transitionLocked(ExecutionTask* task, TaskExecutionState next, QString* error)
@@ -377,8 +457,24 @@ bool ExecutionOrchestrator::claimTask(const QString& workerId, const QString& ta
     if (!worker || !worker->available || !worker->taskId.isEmpty()) { setError(error, QStringLiteral("WORKER_UNAVAILABLE")); return false; }
     if (!task || task->state != TaskExecutionState::Ready) { setError(error, QStringLiteral("TASK_NOT_READY")); return false; }
     if (!validateTaskContractLocked(*task, error)) { task->state = TaskExecutionState::GovernanceBlocked; persistLocked(nullptr); return false; }
-    if (!resourceAvailableLocked(*task, workerId)) { setError(error, QStringLiteral("OWNERSHIP_CONFLICT")); return false; }
-    if (!transitionLocked(task, TaskExecutionState::Claimed, error)) return false;
+    const auto ownership = RuntimeOwnershipService::claim(model_, task->contract, task->id, workerId, task->resources);
+    if (!ownership.value(QStringLiteral("granted")).toBool()) {
+        const QString code = ownership.value(QStringLiteral("code")).toString(QStringLiteral("OWNERSHIP_DENIED"));
+        setError(error, code);
+        if (code == QStringLiteral("OWNERSHIP_CONFLICT")) {
+            task->failure = ExecutionFailureCategory::OwnershipConflict;
+            task->state = TaskExecutionState::Blocked;
+        } else {
+            task->failure = ExecutionFailureCategory::Governance;
+            task->state = TaskExecutionState::GovernanceBlocked;
+        }
+        persistLocked(nullptr);
+        return false;
+    }
+    if (!transitionLocked(task, TaskExecutionState::Claimed, error)) {
+        RuntimeOwnershipService::release(model_, task->id, workerId);
+        return false;
+    }
     task->workerId = workerId;
     worker->taskId = taskId;
     worker->available = false;
@@ -396,35 +492,86 @@ bool ExecutionOrchestrator::startTask(const QString& workerId, const QString& ta
 
 bool ExecutionOrchestrator::releaseWorkerLocked(ExecutionTask& task, QString* error)
 {
-    Q_UNUSED(error);
+    if (model_ && !task.workerId.isEmpty()) {
+        const auto released = RuntimeOwnershipService::release(model_, task.id, task.workerId);
+        if (!released.value(QStringLiteral("granted")).toBool()) {
+            setError(error, released.value(QStringLiteral("code")).toString(QStringLiteral("OWNERSHIP_RELEASE_FAILED")));
+            return false;
+        }
+    }
     if (auto* worker = findWorkerLocked(task.workerId)) { worker->taskId.clear(); worker->available = true; }
     task.workerId.clear();
     return true;
 }
 
-bool ExecutionOrchestrator::completeTask(const QString& workerId, const QString& taskId, const QJsonObject& executionResult, QString* error)
+bool ExecutionOrchestrator::completeTask(const QString& workerId, const QString& taskId,
+                                         const QJsonObject& executionResult, QString* error)
 {
     QMutexLocker locker(&mutex_);
     auto* task = findTaskLocked(taskId);
     if (!task || task->workerId != workerId || task->state != TaskExecutionState::Running) { setError(error, QStringLiteral("TASK_NOT_RUNNING")); return false; }
-    QJsonObject canonicalHandoff{
-        {QStringLiteral("taskId"), taskId},
+    if (!model_) { setError(error, QStringLiteral("P0_GOVERNANCE_UNAVAILABLE")); return false; }
+
+    const auto validation = WorkerTaskServices::postflight(*model_, task->contract,
+                                                            executionResult.value(QStringLiteral("evidence")).toArray());
+    const QString completion = validation.value(QStringLiteral("completionState")).toString();
+    if (validation.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")
+        || !QStringList{QStringLiteral("VERIFIED"), QStringLiteral("CERTIFIED")}.contains(completion)) {
+        task->failure = ExecutionFailureCategory::Validation;
+        QString validationCode;
+        QString warningCode;
+        for (const auto& item : validation.value(QStringLiteral("errors")).toArray()) {
+            const QString code = item.toObject().value(QStringLiteral("code")).toString();
+            if (code.isEmpty()) continue;
+            if (item.toObject().value(QStringLiteral("severity")).toString() == QStringLiteral("WARNING")) {
+                if (warningCode.isEmpty() || warningCode == QStringLiteral("REPOSITORY_WITHOUT_GIT")) warningCode = code;
+            } else {
+                validationCode = code;
+                break;
+            }
+        }
+        setError(error, validationCode.isEmpty() ? (warningCode.isEmpty() ? QStringLiteral("VALIDATION_FAILED") : warningCode) : validationCode);
+        persistLocked(nullptr);
+        return false;
+    }
+
+    QStringList downstream;
+    for (const auto& candidate : state_.tasks)
+        if (candidate.dependencies.contains(taskId)) downstream << candidate.id;
+    downstream.sort();
+    QString destinationTaskId = executionResult.value(QStringLiteral("destinationTaskId")).toString();
+    if (!destinationTaskId.isEmpty() && !downstream.contains(destinationTaskId)) {
+        setError(error, QStringLiteral("HANDOFF_TARGET_INVALID"));
+        return false;
+    }
+    if (destinationTaskId.isEmpty() && !downstream.isEmpty()) destinationTaskId = downstream.first();
+    if (destinationTaskId.isEmpty()) destinationTaskId = QStringLiteral("process-complete");
+    const QString targetAgent = destinationTaskId;
+    const QStringList destinationScopes = stringArray(task->contract.value(QStringLiteral("impact")).toObject().value(QStringLiteral("affectedScopes")));
+    QJsonObject metadata{
+        {QStringLiteral("sourceTaskId"), taskId},
+        {QStringLiteral("destinationTaskId"), destinationTaskId},
         {QStringLiteral("workerId"), workerId},
-        {QStringLiteral("completionState"), QStringLiteral("SUCCEEDED")},
+        {QStringLiteral("executionResult"), executionResult},
         {QStringLiteral("changedResources"), toArray(task->resources)},
-        {QStringLiteral("producedArtifacts"), QJsonArray{}},
-        {QStringLiteral("validationState"), QStringLiteral("PASS")},
-        {QStringLiteral("dependencyState"), QStringLiteral("SATISFIED")},
+        {QStringLiteral("producedArtifacts"), executionResult.value(QStringLiteral("producedArtifacts")).toArray()},
+        {QStringLiteral("validationResult"), validation},
+        {QStringLiteral("validationEvidence"), executionResult.value(QStringLiteral("evidence")).toArray()},
         {QStringLiteral("contextFingerprint"), task->contextFingerprint},
-        {QStringLiteral("provenance"), task->contract.value(QStringLiteral("binding"))}};
-    for (auto it = executionResult.constBegin(); it != executionResult.constEnd(); ++it) canonicalHandoff.insert(it.key(), it.value());
+        {QStringLiteral("provenance"), task->contract.value(QStringLiteral("binding"))},
+        {QStringLiteral("dependencyState"), QStringLiteral("SATISFIED")},
+        {QStringLiteral("continuationRequirements"), executionResult.value(QStringLiteral("continuationRequirements"))},
+        {QStringLiteral("completionState"), QStringLiteral("SUCCEEDED")}};
+    const auto canonicalHandoff = ContextCoordinationService::createHandoff(
+        *model_, task->contract, workerId, targetAgent, destinationScopes, true, metadata);
+    if (!canonicalHandoff.value(QStringLiteral("valid")).toBool()) {
+        setError(error, canonicalHandoff.value(QStringLiteral("errorCode")).toString(QStringLiteral("HANDOFF_FAILED")));
+        return false;
+    }
+    if (!releaseWorkerLocked(*task, error)) return false;
     task->handoff = canonicalHandoff;
     task->handoffId = canonicalHandoff.value(QStringLiteral("handoffId")).toString();
-    if (task->handoffId.isEmpty()) task->handoffId = taskId + QStringLiteral("/handoff");
-    task->handoff.insert(QStringLiteral("handoffId"), task->handoffId);
-    task->contextFingerprint = task->handoff.value(QStringLiteral("contextFingerprint")).toString();
     if (!transitionLocked(task, TaskExecutionState::Succeeded, error)) return false;
-    releaseWorkerLocked(*task);
     return refreshReadyLocked(error);
 }
 
@@ -434,8 +581,8 @@ bool ExecutionOrchestrator::failTask(const QString& workerId, const QString& tas
     auto* task = findTaskLocked(taskId);
     if (!task || task->workerId != workerId || task->state != TaskExecutionState::Running) { setError(error, QStringLiteral("TASK_NOT_RUNNING")); return false; }
     task->failure = category;
+    if (!releaseWorkerLocked(*task, error)) return false;
     if (!transitionLocked(task, TaskExecutionState::Failed, error)) return false;
-    releaseWorkerLocked(*task);
     const bool retryable = category == ExecutionFailureCategory::Tool || category == ExecutionFailureCategory::Build
         || category == ExecutionFailureCategory::Test || category == ExecutionFailureCategory::Validation
         || category == ExecutionFailureCategory::TransientInfrastructure || category == ExecutionFailureCategory::WorkerUnavailable;
@@ -460,8 +607,8 @@ bool ExecutionOrchestrator::cancelTask(const QString& taskId, QString* error)
 {
     QMutexLocker locker(&mutex_);
     auto* task = findTaskLocked(taskId);
+    if (task && !task->workerId.isEmpty() && !releaseWorkerLocked(*task, error)) return false;
     if (!transitionLocked(task, TaskExecutionState::Cancelled, error)) return false;
-    releaseWorkerLocked(*task);
     return refreshReadyLocked(error);
 }
 
@@ -470,6 +617,10 @@ bool ExecutionOrchestrator::markWorkerUnavailable(const QString& workerId, QStri
     QMutexLocker locker(&mutex_);
     auto* worker = findWorkerLocked(workerId);
     if (!worker) { setError(error, QStringLiteral("WORKER_UNKNOWN")); return false; }
+    if (model_) {
+        const auto ownership = RuntimeOwnershipService::markWorkerUnavailable(model_, workerId);
+        if (!ownership.value(QStringLiteral("granted")).toBool()) { setError(error, ownership.value(QStringLiteral("code")).toString()); return false; }
+    }
     worker->available = false;
     if (!worker->taskId.isEmpty()) {
         const QString taskId = worker->taskId;
@@ -477,7 +628,7 @@ bool ExecutionOrchestrator::markWorkerUnavailable(const QString& workerId, QStri
         if (task && (task->state == TaskExecutionState::Claimed || task->state == TaskExecutionState::Running)) {
             task->failure = ExecutionFailureCategory::WorkerUnavailable;
             task->state = TaskExecutionState::Failed;
-            releaseWorkerLocked(*task);
+            if (!releaseWorkerLocked(*task, error)) return false;
             if (task->retryCount < task->retryLimit) { ++task->retryCount; task->state = TaskExecutionState::RetryPending; }
         }
         if (auto* unavailable = findWorkerLocked(workerId)) unavailable->available = false;
@@ -488,6 +639,7 @@ bool ExecutionOrchestrator::markWorkerUnavailable(const QString& workerId, QStri
 bool ExecutionOrchestrator::recover(QString* error)
 {
     QMutexLocker locker(&mutex_);
+    QSet<QString> workersRequiringOwnershipRecovery;
     for (auto& worker : state_.workers) {
         if (worker.taskId.isEmpty()) continue;
         auto* task = findTaskLocked(worker.taskId);
@@ -496,9 +648,22 @@ bool ExecutionOrchestrator::recover(QString* error)
             || task->state == TaskExecutionState::Waiting) {
             task->failure = ExecutionFailureCategory::WorkerUnavailable;
             task->state = TaskExecutionState::Failed;
-            releaseWorkerLocked(*task);
+            if (model_) {
+                RuntimeOwnershipService::markWorkerUnavailable(model_, worker.id);
+                workersRequiringOwnershipRecovery.insert(worker.id);
+            }
+            if (!releaseWorkerLocked(*task, error)) return false;
             if (task->retryCount < task->retryLimit) { ++task->retryCount; task->state = TaskExecutionState::RetryPending; }
         }
+    }
+    if (model_) {
+        for (const auto& worker : state_.workers) {
+            if (!worker.available) workersRequiringOwnershipRecovery.insert(worker.id);
+        }
+        auto recoveryIds = workersRequiringOwnershipRecovery.values();
+        std::sort(recoveryIds.begin(), recoveryIds.end());
+        for (const auto& workerId : recoveryIds)
+            RuntimeOwnershipService::recoverWorker(model_, workerId);
     }
     state_.interrupted = false;
     return refreshReadyLocked(error);
@@ -560,10 +725,19 @@ QJsonObject ExecutionOrchestrator::summary() const
     const int ready = static_cast<int>(std::count_if(state_.tasks.cbegin(), state_.tasks.cend(), [](const auto& task) { return task.state == TaskExecutionState::Ready; }));
     const int blocked = static_cast<int>(std::count_if(state_.tasks.cbegin(), state_.tasks.cend(), [](const auto& task) { return task.state == TaskExecutionState::Blocked || task.state == TaskExecutionState::GovernanceBlocked; }));
     const int active = static_cast<int>(std::count_if(state_.tasks.cbegin(), state_.tasks.cend(), [](const auto& task) { return task.state == TaskExecutionState::Claimed || task.state == TaskExecutionState::Running || task.state == TaskExecutionState::Waiting; }));
+    QJsonArray diagnostics;
+    for (const auto& task : state_.tasks) {
+        if (task.state == TaskExecutionState::Blocked && dependenciesFailedLocked(task))
+            diagnostics.append(QJsonObject{{QStringLiteral("taskId"), task.id}, {QStringLiteral("reason"), QStringLiteral("FAILED_PREREQUISITE")}});
+        else if (task.state == TaskExecutionState::Ready && !resourceAvailableLocked(task, QString{}))
+            diagnostics.append(QJsonObject{{QStringLiteral("taskId"), task.id}, {QStringLiteral("reason"), QStringLiteral("RESOURCE_BLOCKED")}});
+    }
+    if (!complete && ready == 0 && active == 0 && !state_.tasks.isEmpty() && diagnostics.isEmpty())
+        diagnostics.append(QJsonObject{{QStringLiteral("reason"), QStringLiteral("NO_RUNNABLE_TASKS")} });
     const QString status = complete ? QStringLiteral("COMPLETE") : ready > 0 ? QStringLiteral("RUNNABLE") : active > 0 ? QStringLiteral("ACTIVE") : QStringLiteral("BLOCKED");
     return {{"runId", state_.runId}, {"status", status}, {"taskCount", state_.tasks.size()}, {"workerCount", state_.workers.size()},
             {"readyCount", ready}, {"blockedCount", blocked}, {"activeCount", active},
-            {"checkpointId", state_.checkpointId}, {"interrupted", state_.interrupted}, {"counts", counts}};
+            {"checkpointId", state_.checkpointId}, {"interrupted", state_.interrupted}, {"counts", counts}, {"deadlockDiagnostics", diagnostics}};
 }
 
 ExecutionSnapshot ExecutionOrchestrator::snapshot() const

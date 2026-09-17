@@ -5,6 +5,7 @@
 #include "core/CertificationService.h"
 #include "core/ProjectMemory.h"
 #include "core/AramfPaths.h"
+#include "core/RuntimeOwnershipService.h"
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDir>
@@ -12,7 +13,9 @@
 #include <QJsonDocument>
 #include <QProcess>
 #include <QTemporaryDir>
+#include <atomic>
 #include <iostream>
+#include <thread>
 
 namespace {
 bool write(const QString& path, const QByteArray& bytes)
@@ -366,6 +369,45 @@ bool runWorkerTaskTests()
     check(command({"task", "prepare", "--config", model.projectFilePath(), "--request", requestPath}, &cliOutput) == 2, "CLI blocked preflight returns nonzero");
     check(command({"task", "invalid", "--config", model.projectFilePath()}, &cliOutput) == 2, "CLI invalid command returns nonzero");
     check(command({"task", "prepare"}, &cliOutput) == 2, "CLI missing arguments returns nonzero");
+    const QJsonObject ownershipContract{{"contractId", "ownership-contract-a"},
+                                        {"binding", QJsonObject{{"projectId", model.projectId()}}},
+                                        {"preflight", QJsonObject{{"status", "READY"}}},
+                                        {"permittedFiles", QJsonArray{"source/ui.cpp"}}};
+    const QJsonObject independentContract{{"contractId", "ownership-contract-c"},
+                                          {"binding", QJsonObject{{"projectId", model.projectId()}}},
+                                          {"preflight", QJsonObject{{"status", "READY"}}},
+                                          {"permittedFiles", QJsonArray{"source/generic.cpp"}}};
+    const auto claimA = RuntimeOwnershipService::claim(&model, ownershipContract, "task-a", "worker-a", {"source/ui.cpp"});
+    check(claimA.value("granted").toBool() && claimA.value("code").toString() == "OWNERSHIP_GRANTED", "canonical runtime ownership grants permitted resource");
+    const auto equivalentConflict = RuntimeOwnershipService::claim(&model, ownershipContract, "task-b", "worker-b", {"source/../source/ui.cpp"});
+    check(!equivalentConflict.value("granted").toBool() && equivalentConflict.value("code").toString() == "OWNERSHIP_CONFLICT", "canonical ownership normalizes equivalent paths");
+    const auto independentClaim = RuntimeOwnershipService::claim(&model, independentContract, "task-c", "worker-c", {"source/generic.cpp"});
+    check(independentClaim.value("granted").toBool(), "independent canonical resource is claimable");
+    check(RuntimeOwnershipService::release(&model, "task-a", "worker-a").value("code").toString() == "OWNERSHIP_RELEASED", "canonical ownership releases on success");
+    check(RuntimeOwnershipService::release(&model, "task-a", "worker-a").value("code").toString() == "OWNERSHIP_ALREADY_RELEASED", "duplicate release is deterministic");
+    check(RuntimeOwnershipService::markWorkerUnavailable(&model, "worker-c").value("code").toString() == "OWNERSHIP_RECOVERABLE", "worker loss makes claim recoverable");
+    check(RuntimeOwnershipService::recoverWorker(&model, "worker-c").value("code").toString() == "OWNERSHIP_RECOVERED", "stale ownership is explicitly recovered");
+    const QJsonObject wrongProject = ownershipContract;
+    auto wrongBinding = wrongProject;
+    wrongBinding.insert("binding", QJsonObject{{"projectId", "task-test-B"}});
+    check(RuntimeOwnershipService::claim(&model, wrongBinding, "task-wrong-project", "worker-d", {"source/ui.cpp"}).value("code").toString() == "TASK_CONTRACT_INVALID", "ownership rejects a contract bound to another project");
+    check(RuntimeOwnershipService::claim(&model, ownershipContract, "task-forbidden", "worker-e", {"source/not-permitted.cpp"}).value("code").toString() == "OWNERSHIP_NOT_PERMITTED", "ownership rejects a resource outside the contract");
+    check(RuntimeOwnershipService::claim(&model, ownershipContract, "task-escape", "worker-f", {"../outside.cpp"}).value("code").toString() == "OWNERSHIP_NOT_PERMITTED", "ownership rejects a project-root escape");
+    ProjectModel concurrentModel;
+    concurrentModel.setProjectPath(project.path());
+    concurrentModel.setProjectId(model.projectId() + "-concurrent");
+    auto concurrentContract = independentContract;
+    concurrentContract.insert("binding", QJsonObject{{"projectId", concurrentModel.projectId()}});
+    std::atomic<int> grantedClaims{0};
+    std::thread claimantA([&] { if (RuntimeOwnershipService::claim(&concurrentModel, concurrentContract, "parallel-a", "worker-a", {"source/generic.cpp"}).value("granted").toBool()) ++grantedClaims; });
+    std::thread claimantB([&] { if (RuntimeOwnershipService::claim(&concurrentModel, concurrentContract, "parallel-b", "worker-b", {"source/generic.cpp"}).value("granted").toBool()) ++grantedClaims; });
+    claimantA.join(); claimantB.join();
+    check(grantedClaims == 1, "concurrent claims have one canonical winner");
+    const QString ownershipPath = QDir(project.path()).filePath("ownership.aramf.json");
+    ProjectPersistence ownershipPersistence;
+    check(ownershipPersistence.save(model, ownershipPath), "runtime ownership persists");
+    ProjectModel ownershipReload;
+    check(ownershipPersistence.load(&ownershipReload, ownershipPath) && RuntimeOwnershipService::inspect(ownershipReload).value("claims").toArray().size() == 2, "released ownership history survives reload");
     const QString manifestPath = QDir(project.path()).filePath("ARAMF_WORKER/worker-manifest.json");
     const QByteArray manifest = bytes(manifestPath);
     check(write(QDir(project.path()).filePath("ARAMF_WORKER/duplicate/worker-manifest.json"), manifest), "duplicate manifest fixture");

@@ -390,7 +390,8 @@ QJsonObject ContextCoordinationService::createHandoff(const ProjectModel& model,
                                                        const QString& sourceAgent,
                                                        const QString& targetAgent,
                                                        QStringList destinationScopes,
-                                                       bool persist)
+                                                       bool persist,
+                                                       const QJsonObject& executionMetadata)
 {
     WorkerScope scope(model.workerNameSuffix());
     const auto impact = contract.value(QStringLiteral("impact")).toObject();
@@ -413,6 +414,18 @@ QJsonObject ContextCoordinationService::createHandoff(const ProjectModel& model,
                        {QStringLiteral("contextIndex"), QStringLiteral("context-index.json")},
                        {QStringLiteral("provenance"), QJsonArray{QStringLiteral("context/context-index.json"), QStringLiteral("context/freshness.json")}},
                        {QStringLiteral("negativeConstraints"), contract.value(QStringLiteral("negativeConstraints"))}};
+    if (!executionMetadata.isEmpty()) {
+        // P1 owns the handoff envelope. Execution-specific facts are carried
+        // as a scoped payload and cannot replace P1's contract/scope fields.
+        result.insert(QStringLiteral("execution"), executionMetadata);
+        for (const auto& key : {QStringLiteral("sourceTaskId"), QStringLiteral("destinationTaskId"),
+                                QStringLiteral("workerId"), QStringLiteral("executionResult"),
+                                QStringLiteral("changedResources"), QStringLiteral("producedArtifacts"),
+                                QStringLiteral("validationResult"), QStringLiteral("validationEvidence"),
+                                QStringLiteral("contextFingerprint"), QStringLiteral("dependencyState"),
+                                QStringLiteral("continuationRequirements")})
+            if (executionMetadata.contains(key)) result.insert(key, executionMetadata.value(key));
+    }
     result.insert(QStringLiteral("fingerprint"), hashBytes(QJsonDocument(result).toJson(QJsonDocument::Compact)));
     if (persist) {
         QString error;
