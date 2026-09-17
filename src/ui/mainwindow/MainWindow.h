@@ -48,6 +48,7 @@ class FinalizePage;
 class FrameworkKnowledgeReviewPage;
 class FrameworkKnowledgeApplyPage;
 class ImprovementBacklogPage;
+class UpdateConfigurationPage;
 class ReleaseOverviewPage;
 class ProductVersionPage;
 class ComponentVersionsPage;
@@ -139,6 +140,7 @@ private:
     FrameworkKnowledgeReviewPage* updateReviewPage_ = nullptr;
     FrameworkKnowledgeApplyPage* updateApplyPage_ = nullptr;
     ImprovementBacklogPage* improvementBacklogPage_ = nullptr;
+    UpdateConfigurationPage* updateConfigurationPage_ = nullptr;
     ReleaseOverviewPage* releaseOverviewPage_ = nullptr;
     ProductVersionPage* productVersionPage_ = nullptr;
     ComponentVersionsPage* componentVersionsPage_ = nullptr;

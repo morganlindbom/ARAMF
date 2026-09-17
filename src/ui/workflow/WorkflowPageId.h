@@ -36,6 +36,7 @@ enum class WorkflowPageId {
     Finalize,
     UpdateReview,
     UpdateApply,
+    UpdateConfiguration,
     ImprovementBacklog
 };
 
@@ -75,6 +76,7 @@ inline QString workflowPageKey(WorkflowPageId page)
     case WorkflowPageId::Finalize: return QStringLiteral("generate.finalize");
     case WorkflowPageId::UpdateReview: return QStringLiteral("update.review");
     case WorkflowPageId::UpdateApply: return QStringLiteral("update.apply");
+    case WorkflowPageId::UpdateConfiguration: return QStringLiteral("update.configuration");
     case WorkflowPageId::ImprovementBacklog: return QStringLiteral("update.improvement-backlog");
     }
     return {};

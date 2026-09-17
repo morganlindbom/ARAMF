@@ -266,7 +266,8 @@ QList<EnvironmentOption> frameworks()
         {QStringLiteral("TensorFlow Lite"), QStringLiteral("tensorflow-lite")},
         {QStringLiteral("CUDA"), QStringLiteral("cuda")},
         {QStringLiteral("cuDNN"), QStringLiteral("cudnn")},
-        {QStringLiteral("Custom Framework / SDK"), QStringLiteral("custom")}
+        {QStringLiteral("Custom Framework / SDK"), QStringLiteral("custom")},
+        {QStringLiteral("Retrofit"), QStringLiteral("custom:Retrofit")}
     });
 }
 
@@ -294,7 +295,7 @@ QList<EnvironmentOption> versionControlSystems()
 
 QList<EnvironmentOption> developmentSupport()
 {
-    return options({{"Debugger", "debugger"}, {"Remote Debugging", "remote-debugging"}, {"Hardware Debug Probe", "hardware-debug-probe"}, {"Profiling", "profiling"}, {"Memory Analysis", "memory-analysis"}, {"Android SDK", "android-sdk"}, {"Arduino IDE", "arduino-ide"}, {"Jupyter Notebook", "jupyter-notebook"}, {"JupyterLab", "jupyterlab"}});
+    return options({{"Debugger", "debugger"}, {"Remote Debugging", "remote-debugging"}, {"Hardware Debug Probe", "hardware-debug-probe"}, {"Profiling", "profiling"}, {"Memory Analysis", "memory-analysis"}, {"Android SDK", "android-sdk"}, {"Gradle", "gradle"}, {"Android Studio", "android-studio"}, {"Java JDK", "java-jdk"}, {"Arduino IDE", "arduino-ide"}, {"Jupyter Notebook", "jupyter-notebook"}, {"JupyterLab", "jupyterlab"}});
 }
 
 QList<EnvironmentOption> processorFamilies()

@@ -58,6 +58,7 @@ QByteArray readTextFile(const QString& path)
 bool runWorkerTaskTests();
 bool runContextCoordinationTests();
 bool runProcessVersionTests();
+bool runP2ExecutionTests();
 
 int main(int argc, char** argv)
 {
@@ -2162,5 +2163,6 @@ int main(int argc, char** argv)
     ok &= runWorkerTaskTests();
     ok &= runContextCoordinationTests();
     ok &= runProcessVersionTests();
+    ok &= runP2ExecutionTests();
     return ok ? 0 : 1;
 }

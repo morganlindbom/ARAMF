@@ -104,6 +104,7 @@ int main(int argc, char** argv)
         WorkflowPageId::Finalize,
         WorkflowPageId::UpdateReview,
         WorkflowPageId::UpdateApply,
+        WorkflowPageId::UpdateConfiguration,
         WorkflowPageId::ImprovementBacklog
     };
 

@@ -913,6 +913,7 @@ void ProjectModel::resetForNewProject()
     targetRelease_ = 0;
     completedPageIds_.clear();
     processVersionState_ = ProcessVersionState::empty();
+    orchestrationState_ = {};
     notifyChanged();
     endUpdate();
     setModified(false);
@@ -960,6 +961,13 @@ void ProjectModel::setCompletedPageIds(const QSet<QString>& pageIds)
         if (!key.isEmpty()) normalized.insert(key);
     }
     completedPageIds_ = normalized;
+}
+
+void ProjectModel::setOrchestrationState(const QJsonObject& state)
+{
+    if (orchestrationState_ == state) return;
+    orchestrationState_ = state;
+    notifyChanged();
 }
 
 bool ProjectModel::startNextProcess(QString* error)

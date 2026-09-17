@@ -44,6 +44,10 @@ set(ARAMF_CORE_SOURCES
     src/core/ProjectSchema.h
     src/core/ProcessVersion.h
     src/core/ProcessVersion.cpp
+    src/core/ConfigurationUpdateService.h
+    src/core/ConfigurationUpdateService.cpp
+    src/core/ExecutionOrchestrator.h
+    src/core/ExecutionOrchestrator.cpp
     src/core/ComponentVersion.h
     src/core/ComponentVersion.cpp
     src/core/ProjectRootRebindService.h
@@ -163,6 +167,8 @@ set(ARAMF_UI_SOURCES
     src/ui/workflows/update/apply/FrameworkKnowledgeApplyPage.cpp
     src/ui/workflows/update/backlog/ImprovementBacklogPage.h
     src/ui/workflows/update/backlog/ImprovementBacklogPage.cpp
+    src/ui/workflows/update/configuration/UpdateConfigurationPage.h
+    src/ui/workflows/update/configuration/UpdateConfigurationPage.cpp
 )
 
 add_executable(aramf
@@ -181,6 +187,7 @@ if(BUILD_TESTING)
         tests/WorkerTaskTests.cpp
         tests/ContextCoordinationTests.cpp
         tests/ProcessVersionTests.cpp
+        tests/P2ExecutionTests.cpp
         src/core/GitIgnoreService.h
         src/core/GitIgnoreService.cpp
         src/core/ProjectMemory.h
@@ -226,6 +233,8 @@ if(BUILD_TESTING)
         src/core/ProjectPersistence.cpp
         src/core/ProcessVersion.h
         src/core/ProcessVersion.cpp
+        src/core/ExecutionOrchestrator.h
+        src/core/ExecutionOrchestrator.cpp
         src/core/WorkflowPageMetadata.h
         src/core/WorkflowPageMetadata.cpp
         src/core/ComponentVersion.h
@@ -263,6 +272,8 @@ if(BUILD_TESTING)
         src/core/ProjectPersistence.cpp
         src/core/ProcessVersion.h
         src/core/ProcessVersion.cpp
+        src/core/ExecutionOrchestrator.h
+        src/core/ExecutionOrchestrator.cpp
         src/core/WorkflowPageMetadata.h
         src/core/WorkflowPageMetadata.cpp
         src/core/ComponentVersion.h
@@ -352,10 +363,17 @@ if(BUILD_TESTING)
     target_include_directories(aramf_update_campaign_runner PRIVATE src)
     target_link_libraries(aramf_update_campaign_runner PRIVATE Qt6::Core Qt6::Widgets)
     add_test(NAME aramf_update_campaign COMMAND aramf_update_campaign_runner)
+
+    add_executable(aramf_configuration_update_tests
+        tests/ConfigurationUpdateTests.cpp
+        ${ARAMF_CORE_SOURCES})
+    target_include_directories(aramf_configuration_update_tests PRIVATE src)
+    target_link_libraries(aramf_configuration_update_tests PRIVATE Qt6::Core)
+    add_test(NAME aramf_configuration_update COMMAND aramf_configuration_update_tests)
 endif()
 
 # Task policy is shared by every consumer of the existing core services.
-foreach(ARAMF_TASK_TARGET aramf aramf_core_tests aramf_template_tests aramf_update_campaign_runner)
+foreach(ARAMF_TASK_TARGET aramf aramf_core_tests aramf_template_tests aramf_update_campaign_runner aramf_configuration_update_tests)
     if(TARGET ${ARAMF_TASK_TARGET})
         target_sources(${ARAMF_TASK_TARGET} PRIVATE src/core/WorkerTaskServices.h src/core/WorkerTaskServices.cpp)
     endif()

@@ -1,6 +1,7 @@
 // Services.cpp
 
 #include "Services.h"
+#include "ProjectPersistence.h"
 #include "ComponentVersion.h"
 #include "ProcessVersion.h"
 #include "TemplateValidation.h"
@@ -154,6 +155,7 @@ QJsonObject projectConfiguration(const ProjectModel& model, const QString& finge
         {QStringLiteral("ai"), QJsonObject{{QStringLiteral("primaryAgent"), ai.primaryAgent}, {QStringLiteral("additionalAgents"), toJsonArray(ai.additionalAgents)}}},
         {QStringLiteral("communication"), QJsonObject{{QStringLiteral("enabled"), communication.enabled}, {QStringLiteral("transport"), communication.transport}, {QStringLiteral("protocol"), communication.protocol}}},
         {QStringLiteral("processVersion"), processVersionStateToJson(model.processVersionState())},
+        {QStringLiteral("orchestration"), model.orchestrationState()},
         {QStringLiteral("canonicalPaths"), QJsonObject{{QStringLiteral("worker"), AramfPaths::runtimeWorkerDirectoryName()}, {QStringLiteral("status"), AramfPaths::ProjectStatus}, {QStringLiteral("currentState"), AramfPaths::CurrentState}, {QStringLiteral("routing"), AramfPaths::TaskRoutes}, {QStringLiteral("validation"), AramfPaths::ColdStartValidation}}}
     };
 }
@@ -1089,23 +1091,6 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         addGeneratedFiles(result, {documentationPath});
     }
 
-    const QJsonObject generationState{
-        {QStringLiteral("fingerprint"), result.fingerprint},
-        {QStringLiteral("projectRoot"), projectRoot},
-        {QStringLiteral("generatedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
-        {QStringLiteral("agentRules"), options.generateAgentRules},
-        {QStringLiteral("routing"), options.generateRouting},
-        {QStringLiteral("platforms"), options.generatePlatforms},
-        {QStringLiteral("resources"), options.generateResources},
-        {QStringLiteral("memory"), options.generateMemory},
-        {QStringLiteral("provenance"), options.generateProvenance}};
-    const QString generationStatePath = AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/generation-state.json"));
-    if (!writeJsonFile(QDir(projectRoot).filePath(generationStatePath),
-                       generationState, &error)) {
-        return fail(QStringLiteral("Generation state"), error);
-    }
-    addGeneratedFiles(result, {generationStatePath});
-
     if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::WorkerManifest)), workerManifest(model, options, result.fingerprint), &error))
         return fail(QStringLiteral("Worker manifest"), error);
     addGeneratedFiles(result, {AramfPaths::WorkerManifest});
@@ -1142,6 +1127,17 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
     if (!writeJsonFile(identityPath, identity, &error))
         return fail(QStringLiteral("Worker identity"), error);
     result.generatedFiles.append(resolvedWorkerName + QStringLiteral("/") + resolvedWorkerName + QStringLiteral(".json"));
+    const QJsonObject generationState{
+        {QStringLiteral("fingerprint"), result.fingerprint},
+        {QStringLiteral("canonicalState"), [&] { auto state = ProjectPersistence().toJson(model); state.remove(QStringLiteral("projectPath")); state.remove(QStringLiteral("projectFilePath")); state.remove(QStringLiteral("workflowProgress")); return state; }()},
+        {QStringLiteral("projectRoot"), projectRoot},
+        {QStringLiteral("generatedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+        {QStringLiteral("agentRules"), options.generateAgentRules}, {QStringLiteral("routing"), options.generateRouting},
+        {QStringLiteral("platforms"), options.generatePlatforms}, {QStringLiteral("resources"), options.generateResources},
+        {QStringLiteral("memory"), options.generateMemory}, {QStringLiteral("provenance"), options.generateProvenance}};
+    const QString generationStatePath = AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/generation-state.json"));
+    if (!writeJsonFile(QDir(projectRoot).filePath(generationStatePath), generationState, &error)) return fail(QStringLiteral("Generation state"), error);
+    addGeneratedFiles(result, {generationStatePath});
     result.success = true;
     return result;
 }

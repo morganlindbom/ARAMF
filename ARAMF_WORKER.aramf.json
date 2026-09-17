@@ -228,7 +228,7 @@
         "pollingIntervalSource": "",
         "pollingRequired": false,
         "pollingSource": "",
-        "primaryIde": "android-studio",
+        "primaryIde": "",
         "primaryIdeSource": "",
         "privateRepositoryRequired": false,
         "privateRepositorySource": "",
@@ -466,8 +466,6 @@
     },
     "options": {
     },
-    "profileSelections": [
-    ],
     "processVersion": {
         "active": null,
         "completedHistory": [
@@ -477,12 +475,6 @@
                 "iteration": 1,
                 "loop": 1,
                 "process": 0
-            },
-            {
-                "done": 1,
-                "iteration": 1,
-                "loop": 1,
-                "process": 1
             }
         ],
         "legacyHistory": [
@@ -502,7 +494,9 @@
             "process": 1
         }
     },
-    "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER.aramf.json",
+    "profileSelections": [
+    ],
+    "projectFilePath": "D:\\ON DESCTOP\\HKR KURSER\\C++\\ARAMF2\\ARAMF\\ARAMF_WORKER.aramf.json",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "projectName": "ARAMF_WORKER",
     "projectPath": "D:\\ON DESCTOP\\HKR KURSER\\C++\\ARAMF2\\ARAMF",

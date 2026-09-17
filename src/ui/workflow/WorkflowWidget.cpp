@@ -229,7 +229,8 @@ void WorkflowWidget::setStepCount(int)
         {tr("UPDATE"), {
             {QStringLiteral("30"), tr("Review Framework Knowledge"), WorkflowPageId::UpdateReview, 1},
             {QStringLiteral("31"), tr("Apply Framework Knowledge"), WorkflowPageId::UpdateApply, 1},
-            {QStringLiteral("32"), tr("ARAMF Improvement Backlog"), WorkflowPageId::ImprovementBacklog, 1}}}
+            {QStringLiteral("32"), tr("Update complete ARAMF"), WorkflowPageId::UpdateConfiguration, 1},
+            {QStringLiteral("33"), tr("ARAMF Improvement Backlog"), WorkflowPageId::ImprovementBacklog, 1}}}
     };
     for (const auto& group : groups) {
         auto* heading = new QListWidgetItem(group.first, steps_);

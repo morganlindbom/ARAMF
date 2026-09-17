@@ -9,7 +9,7 @@
 #include <QCoreApplication>
 #include <QTextStream>
 
-int main(int argc, char *argv[])
+int main(int argc, char *argv[]),+
 {
     if (argc > 1)
     {
@@ -33,7 +33,8 @@ int main(int argc, char *argv[])
             if (arguments.value(0) == QStringLiteral("task"))
                 return runWorkerTaskCommand(arguments, output, error);
 
-            return runMemoryCommand(arguments, output, error);
+         
+                return runMemoryCommand(arguments, output, error);
         }
     }
 
@@ -49,7 +50,8 @@ int main(int argc, char *argv[])
         windowWidth,
         windowHeight);
 
-    window.show();
+    win
+    ow.show();
 
     return app.exec();
 }

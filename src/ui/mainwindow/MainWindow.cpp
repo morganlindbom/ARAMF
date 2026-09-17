@@ -34,6 +34,7 @@
 #include "ui/workflows/update/review/FrameworkKnowledgeReviewPage.h"
 #include "ui/workflows/update/apply/FrameworkKnowledgeApplyPage.h"
 #include "ui/workflows/update/backlog/ImprovementBacklogPage.h"
+#include "ui/workflows/update/configuration/UpdateConfigurationPage.h"
 #include "ui/workflows/release/overview/ReleaseOverviewPage.h"
 #include "ui/workflows/release/productversion/ProductVersionPage.h"
 #include "ui/workflows/release/componentversions/ComponentVersionsPage.h"
@@ -331,6 +332,7 @@ MainWindow::MainWindow(
 
     updateReviewPage_ = new FrameworkKnowledgeReviewPage(&projectModel_, stack_);
     updateApplyPage_ = new FrameworkKnowledgeApplyPage(&projectModel_, stack_);
+    updateConfigurationPage_ = new UpdateConfigurationPage(&projectModel_, projectPage_, &generationServices_, stack_);
     improvementBacklogPage_ = new ImprovementBacklogPage(&projectModel_, stack_);
     releaseOverviewPage_ = new ReleaseOverviewPage(stack_);
     productVersionPage_ = new ProductVersionPage(&projectModel_, &releaseManagementService_, stack_);
@@ -376,6 +378,7 @@ MainWindow::MainWindow(
     registerPage(WorkflowPageId::Finalize, finalizePage_);
     registerPage(WorkflowPageId::UpdateReview, updateReviewPage_);
     registerPage(WorkflowPageId::UpdateApply, updateApplyPage_);
+    registerPage(WorkflowPageId::UpdateConfiguration, updateConfigurationPage_);
     registerPage(WorkflowPageId::ImprovementBacklog, improvementBacklogPage_);
     registerPage(WorkflowPageId::ReleaseOverview, releaseOverviewPage_);
     registerPage(WorkflowPageId::ProductVersion, productVersionPage_);
