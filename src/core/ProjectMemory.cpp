@@ -321,6 +321,8 @@ QList<QJsonObject> readDecisionObjects(const QString& path, QString* error)
             else if (key == QStringLiteral("status")) current.insert(QStringLiteral("status"), value);
             else if (key == QStringLiteral("supersededby")) current.insert(QStringLiteral("supersededBy"), value);
             else if (key == QStringLiteral("summary")) current.insert(QStringLiteral("summary"), value);
+            else if (key == QStringLiteral("scope")) current.insert(QStringLiteral("scope"), value);
+            else if (key == QStringLiteral("scopes")) current.insert(QStringLiteral("scopes"), value);
         }
     }
     if (inRecord && !closedRecord) {
@@ -550,12 +552,32 @@ bool ProjectMemory::appendEvent(const QString& projectRoot,
     const qint64 sequence = manifest.value(QStringLiteral("nextSequenceNumber")).toVariant().toLongLong() > 0
                                  ? manifest.value(QStringLiteral("nextSequenceNumber")).toVariant().toLongLong()
                                  : 1;
+    QJsonObject prov;
+    if (fields.contains(QStringLiteral("provenance")) && fields.value(QStringLiteral("provenance")).isObject()) {
+        prov = fields.value(QStringLiteral("provenance")).toObject();
+    } else {
+        prov = normalizeProvenance(fields);
+    }
+
+    if (isOperationalEventType(eventType)) {
+        QString provErr;
+        if (!validateProvenanceObject(prov, &provErr)) {
+            if (error) *error = QStringLiteral("Operational event requires valid structured provenance: %1").arg(provErr);
+            return false;
+        }
+    } else if (prov.isEmpty() && !fields.contains(QStringLiteral("provenance"))) {
+        prov = canonicalSystemProvenance();
+    }
+
     QJsonObject event = fields;
     event.insert(QStringLiteral("eventId"), QStringLiteral("event-%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces)));
     event.insert(QStringLiteral("eventType"), eventType);
     event.insert(QStringLiteral("sequenceNumber"), sequence);
     event.insert(QStringLiteral("timestamp"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
     event.insert(QStringLiteral("task"), task);
+    if (!prov.isEmpty()) {
+        event.insert(QStringLiteral("provenance"), prov);
+    }
 
     QFile eventFile(absolutePath(projectRoot, AramfPaths::EventLog));
     if (!eventFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
@@ -800,6 +822,77 @@ QStringList ProjectMemory::supportedRecordOperations()
 {
     return {QStringLiteral("task-start"), QStringLiteral("task-complete"), QStringLiteral("build-result"),
             QStringLiteral("test-result"), QStringLiteral("validation-result")};
+}
+
+bool ProjectMemory::isOperationalEventType(const QString& eventType)
+{
+    const QString upper = eventType.toUpper();
+    return upper == QStringLiteral("TASK_STARTED")
+        || upper == QStringLiteral("TASK_COMPLETED")
+        || upper == QStringLiteral("BUILD_RESULT")
+        || upper == QStringLiteral("TEST_RESULT")
+        || upper == QStringLiteral("VALIDATION_RESULT");
+}
+
+QJsonObject ProjectMemory::canonicalSystemProvenance()
+{
+    return QJsonObject{
+        {QStringLiteral("actor"), QStringLiteral("system")},
+        {QStringLiteral("agentId"), QStringLiteral("system")},
+        {QStringLiteral("tool"), QStringLiteral("aramf-core")}
+    };
+}
+
+QJsonObject ProjectMemory::normalizeProvenance(const QJsonObject& fields)
+{
+    if (fields.contains(QStringLiteral("provenance")) && fields.value(QStringLiteral("provenance")).isObject()) {
+        return fields.value(QStringLiteral("provenance")).toObject();
+    }
+    QJsonObject prov;
+    if (fields.contains(QStringLiteral("actor"))) prov.insert(QStringLiteral("actor"), fields.value(QStringLiteral("actor")));
+    if (fields.contains(QStringLiteral("agentId"))) prov.insert(QStringLiteral("agentId"), fields.value(QStringLiteral("agentId")));
+    else if (fields.contains(QStringLiteral("agent-id"))) prov.insert(QStringLiteral("agentId"), fields.value(QStringLiteral("agent-id")));
+    if (fields.contains(QStringLiteral("tool"))) prov.insert(QStringLiteral("tool"), fields.value(QStringLiteral("tool")));
+    if (fields.contains(QStringLiteral("source"))) prov.insert(QStringLiteral("source"), fields.value(QStringLiteral("source")));
+    if (fields.contains(QStringLiteral("executionId"))) prov.insert(QStringLiteral("executionId"), fields.value(QStringLiteral("executionId")));
+    if (fields.contains(QStringLiteral("sessionId"))) prov.insert(QStringLiteral("sessionId"), fields.value(QStringLiteral("sessionId")));
+    return prov;
+}
+
+bool ProjectMemory::validateProvenanceObject(const QJsonObject& prov, QString* error)
+{
+    if (prov.isEmpty()) {
+        if (error) *error = QStringLiteral("Missing required provenance.");
+        return false;
+    }
+    const QString actor = prov.value(QStringLiteral("actor")).toString().trimmed();
+    if (actor.isEmpty()) {
+        if (error) *error = QStringLiteral("Provenance is missing required actor.");
+        return false;
+    }
+    const QString lowerActor = actor.toLower();
+    const QSet<QString> validActors{
+        QStringLiteral("human"), QStringLiteral("user"),
+        QStringLiteral("agent"), QStringLiteral("autonomous-agent"),
+        QStringLiteral("tool"), QStringLiteral("runtime"),
+        QStringLiteral("system")
+    };
+    if (!validActors.contains(lowerActor)) {
+        if (error) *error = QStringLiteral("Provenance has invalid actor '%1'.").arg(actor);
+        return false;
+    }
+    const QString agentId = prov.value(QStringLiteral("agentId")).toString().trimmed();
+    if ((lowerActor == QStringLiteral("agent") || lowerActor == QStringLiteral("autonomous-agent") || lowerActor == QStringLiteral("system"))
+        && agentId.isEmpty()) {
+        if (error) *error = QStringLiteral("Provenance is missing required agentId for actor '%1'.").arg(actor);
+        return false;
+    }
+    const QString tool = prov.value(QStringLiteral("tool")).toString().trimmed();
+    if (tool.isEmpty()) {
+        if (error) *error = QStringLiteral("Provenance is missing required tool.");
+        return false;
+    }
+    return true;
 }
 
 bool ProjectMemory::recordDecision(const QString& projectRoot,
@@ -1085,6 +1178,42 @@ bool ProjectMemory::recordOperation(const QString& projectRoot,
         if (error) *error = QStringLiteral("task is required and must be at most 512 characters.");
         return false;
     }
+
+    QJsonObject prov;
+    if (fields.contains(QStringLiteral("provenance"))) {
+        if (!fields.value(QStringLiteral("provenance")).isObject()) {
+            if (error) *error = QStringLiteral("Provenance must be a JSON object.");
+            return false;
+        }
+        prov = fields.value(QStringLiteral("provenance")).toObject();
+    } else {
+        prov = normalizeProvenance(fields);
+    }
+    QString provError;
+    if (!validateProvenanceObject(prov, &provError)) {
+        if (error) *error = QStringLiteral("Operational event rejected: %1").arg(provError);
+        return false;
+    }
+
+    if (fields.contains(QStringLiteral("scope"))) {
+        const QString scopeVal = fields.value(QStringLiteral("scope")).toString().trimmed();
+        const QString scopeRoutesFile = absolutePath(projectRoot, AramfPaths::ScopeRoutes);
+        QSet<QString> canonicalScopes{QStringLiteral("all"), QStringLiteral("history"), QStringLiteral("project"), QStringLiteral("global"), QStringLiteral("project+global")};
+        QFile routeIn(scopeRoutesFile);
+        if (routeIn.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            const auto doc = QJsonDocument::fromJson(routeIn.readAll());
+            routeIn.close();
+            for (const auto& item : doc.object().value(QStringLiteral("scopes")).toArray()) {
+                if (item.isObject()) canonicalScopes.insert(item.toObject().value(QStringLiteral("id")).toString().trimmed());
+                else if (item.isString()) canonicalScopes.insert(item.toString().trimmed());
+            }
+        }
+        if (!canonicalScopes.contains(scopeVal)) {
+            if (error) *error = QStringLiteral("Operational event rejected: unknown scope '%1'.").arg(scopeVal);
+            return false;
+        }
+    }
+
     const QStringList protectedFiles {
         AramfPaths::EventLog, AramfPaths::Manifest, AramfPaths::CurrentState,
         AramfPaths::Metrics, AramfPaths::ConsistencyValidation, AramfPaths::ColdStartValidation,
@@ -1093,6 +1222,7 @@ bool ProjectMemory::recordOperation(const QString& projectRoot,
     const auto snapshots = snapshotFiles(projectRoot, protectedFiles);
     QJsonObject eventFields = fields;
     eventFields.insert(QStringLiteral("task"), task);
+    eventFields.insert(QStringLiteral("provenance"), prov);
     eventFields.remove(QStringLiteral("operation"));
     const QString eventType = eventTypeFor(operation);
     if (!appendEvent(projectRoot, eventType, task, eventFields, error)) {
@@ -1332,6 +1462,149 @@ QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error, 
     addCheck(QStringLiteral("checkpoint-references-valid"), checkpointReferencesOk,
              QStringLiteral("Checkpoint references must point to current production state and existing events."));
 
+    qint64 legacyCutoff = manifest.value(QStringLiteral("legacyProvenanceCutoffSequence")).toVariant().toLongLong();
+    if (legacyCutoff <= 0) {
+        QString cfgErr;
+        const QJsonObject cfg = readJsonObject(absolutePath(projectRoot, AramfPaths::MemoryConfiguration), &cfgErr);
+        legacyCutoff = cfg.value(QStringLiteral("legacyProvenanceCutoffSequence")).toVariant().toLongLong();
+    }
+
+    bool provenanceOk = true;
+    QStringList provenanceErrorDetails;
+
+    for (const QJsonObject& event : events) {
+        const QString id = event.value(QStringLiteral("eventId")).toString();
+        const qint64 sequence = event.value(QStringLiteral("sequenceNumber")).toVariant().toLongLong();
+        const bool isLegacy = (legacyCutoff > 0 && sequence <= legacyCutoff);
+
+        if (!event.contains(QStringLiteral("provenance"))) {
+            if (!isLegacy) {
+                provenanceOk = false;
+                provenanceErrorDetails.append(QStringLiteral("Event %1 (sequence %2) is missing required provenance.")
+                                                  .arg(id, QString::number(sequence)));
+            }
+        } else {
+            const QJsonValue provVal = event.value(QStringLiteral("provenance"));
+            if (!provVal.isObject()) {
+                provenanceOk = false;
+                provenanceErrorDetails.append(QStringLiteral("Event %1 (sequence %2) has malformed provenance (not a JSON object).")
+                                                  .arg(id, QString::number(sequence)));
+            } else {
+                const QJsonObject prov = provVal.toObject();
+                QString provErr;
+                if (!validateProvenanceObject(prov, &provErr)) {
+                    provenanceOk = false;
+                    provenanceErrorDetails.append(QStringLiteral("Event %1 (sequence %2): %3")
+                                                      .arg(id, QString::number(sequence), provErr));
+                }
+            }
+        }
+    }
+
+    addCheck(QStringLiteral("event-provenance-valid"), provenanceOk,
+             provenanceOk ? QStringLiteral("All applicable events carry valid structured provenance.")
+                          : (provenanceErrorDetails.isEmpty() ? QStringLiteral("Event provenance validation failed.") : provenanceErrorDetails.first()));
+
+    QSet<QString> canonicalScopes{QStringLiteral("all"), QStringLiteral("history"), QStringLiteral("project"), QStringLiteral("global"), QStringLiteral("project+global")};
+    const QString scopeRoutesFile = absolutePath(projectRoot, AramfPaths::ScopeRoutes);
+    QFile scopeRoutesInput(scopeRoutesFile);
+    if (scopeRoutesInput.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const auto routeDoc = QJsonDocument::fromJson(scopeRoutesInput.readAll());
+        scopeRoutesInput.close();
+        for (const auto& item : routeDoc.object().value(QStringLiteral("scopes")).toArray()) {
+            if (item.isObject()) {
+                const QString sId = item.toObject().value(QStringLiteral("id")).toString().trimmed();
+                if (!sId.isEmpty()) canonicalScopes.insert(sId);
+            } else if (item.isString()) {
+                const QString sId = item.toString().trimmed();
+                if (!sId.isEmpty()) canonicalScopes.insert(sId);
+            }
+        }
+    }
+
+    auto isValidScopeSlug = [](const QString& s) -> bool {
+        if (s.isEmpty() || s.size() > 64) return false;
+        for (const QChar& ch : s) {
+            if (!ch.isLetterOrNumber() && ch != QLatin1Char('-') && ch != QLatin1Char('_') && ch != QLatin1Char('+')) {
+                return false;
+            }
+            if (ch.isLetter() && ch.isUpper()) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    bool scopesOk = true;
+    QStringList scopeErrorDetails;
+
+    auto checkScopeString = [&](const QString& contextDesc, const QString& scopeVal) {
+        if (!isValidScopeSlug(scopeVal)) {
+            scopesOk = false;
+            scopeErrorDetails.append(QStringLiteral("%1 has malformed scope '%2'.").arg(contextDesc, scopeVal));
+        } else if (!canonicalScopes.contains(scopeVal)) {
+            scopesOk = false;
+            scopeErrorDetails.append(QStringLiteral("%1 references unknown scope '%2'.").arg(contextDesc, scopeVal));
+        }
+    };
+
+    auto checkScopeValue = [&](const QString& contextDesc, const QJsonValue& val) {
+        if (val.isString()) {
+            checkScopeString(contextDesc, val.toString().trimmed());
+        } else if (val.isArray()) {
+            for (const auto& entry : val.toArray()) {
+                if (!entry.isString()) {
+                    scopesOk = false;
+                    scopeErrorDetails.append(QStringLiteral("%1 has malformed scope entry (not a string).").arg(contextDesc));
+                } else {
+                    checkScopeString(contextDesc, entry.toString().trimmed());
+                }
+            }
+        } else {
+            scopesOk = false;
+            scopeErrorDetails.append(QStringLiteral("%1 has malformed scope value (must be string or array).").arg(contextDesc));
+        }
+    };
+
+    for (const QJsonObject& event : events) {
+        const QString id = event.value(QStringLiteral("eventId")).toString();
+        const QString type = event.value(QStringLiteral("eventType")).toString().trimmed().toUpper();
+        if (type.startsWith(QStringLiteral("ADMIN_OVERRIDE"))) {
+            // ADMIN_OVERRIDE events carry an administrative rule scope description, not a routing partition
+            continue;
+        }
+        if (event.contains(QStringLiteral("scope"))) {
+            checkScopeValue(QStringLiteral("Event %1 'scope'").arg(id), event.value(QStringLiteral("scope")));
+        }
+        if (event.contains(QStringLiteral("scopes"))) {
+            checkScopeValue(QStringLiteral("Event %1 'scopes'").arg(id), event.value(QStringLiteral("scopes")));
+        }
+        if (event.contains(QStringLiteral("affectedScopes"))) {
+            checkScopeValue(QStringLiteral("Event %1 'affectedScopes'").arg(id), event.value(QStringLiteral("affectedScopes")));
+        }
+        if (event.contains(QStringLiteral("targetScopes"))) {
+            checkScopeValue(QStringLiteral("Event %1 'targetScopes'").arg(id), event.value(QStringLiteral("targetScopes")));
+        }
+    }
+
+    for (const auto& decision : readDecisionObjects(absolutePath(projectRoot, AramfPaths::Decisions), nullptr)) {
+        if (decision.contains(QStringLiteral("scope"))) {
+            checkScopeValue(QStringLiteral("Decision %1 'scope'").arg(decision.value(QStringLiteral("decisionId")).toString()),
+                            decision.value(QStringLiteral("scope")));
+        }
+    }
+
+    for (const auto& cp : readCheckpointObjects(absolutePath(projectRoot, AramfPaths::Checkpoints), nullptr)) {
+        if (cp.contains(QStringLiteral("scope"))) {
+            checkScopeValue(QStringLiteral("Checkpoint %1 'scope'").arg(cp.value(QStringLiteral("id")).toString()),
+                            cp.value(QStringLiteral("scope")));
+        }
+    }
+
+    addCheck(QStringLiteral("persisted-scope-validity"), scopesOk,
+             scopesOk ? QStringLiteral("All persisted scope identifiers and references match canonical scope routes.")
+                      : (scopeErrorDetails.isEmpty() ? QStringLiteral("Persisted scope validation failed.") : scopeErrorDetails.first()));
+
     QString configError;
     const QJsonObject config = readJsonObject(absolutePath(projectRoot, AramfPaths::MemoryConfiguration), &configError);
     const QJsonArray validationOptions = config.value(QStringLiteral("validationOptions")).toArray();
@@ -1427,7 +1700,9 @@ QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error, 
             QStringLiteral("memory-consistency"), QStringLiteral("cold-start-validation"),
             QStringLiteral("sequence-continuity"), QStringLiteral("conflicting-decisions"),
             QStringLiteral("stale-current-state"), QStringLiteral("referenced-resources"),
-            QStringLiteral("project-status-consistency")};
+            QStringLiteral("project-status-consistency"),
+            QStringLiteral("event-provenance-valid"),
+            QStringLiteral("persisted-scope-validity")};
         for (const auto& option : validationOptions) {
             if (!supported.contains(option.toString())) unsupportedOptions.append(option);
         }
@@ -1471,6 +1746,14 @@ QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error, 
     if (validationOptions.contains(QStringLiteral("sequence-continuity"))) {
         mirrorConfiguredCheck(QStringLiteral("sequence-continuity"), QStringLiteral("sequence-order"),
                               QStringLiteral("Sequence continuity check executed."));
+    }
+    if (validationOptions.contains(QStringLiteral("event-provenance-valid"))) {
+        mirrorConfiguredCheck(QStringLiteral("event-provenance-valid"), QStringLiteral("event-provenance-valid"),
+                              QStringLiteral("Event provenance validation executed."));
+    }
+    if (validationOptions.contains(QStringLiteral("persisted-scope-validity"))) {
+        mirrorConfiguredCheck(QStringLiteral("persisted-scope-validity"), QStringLiteral("persisted-scope-validity"),
+                              QStringLiteral("Persisted scope validity check executed."));
     }
 
     QJsonObject report;
@@ -1743,9 +2026,17 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
     }
 
     if (!writeMemoryFiles(projectRoot, model, error)) return false;
+    QJsonArray defaultScopes;
+    for (const QString& sId : {QStringLiteral("build-system"), QStringLiteral("ci-cd"),
+                               QStringLiteral("configuration"), QStringLiteral("documentation"),
+                               QStringLiteral("entire-project"), QStringLiteral("generated-files"),
+                               QStringLiteral("resources"), QStringLiteral("source-code"),
+                               QStringLiteral("tests"), QStringLiteral("ui-ux")}) {
+        defaultScopes.append(QJsonObject{{QStringLiteral("id"), sId}});
+    }
     const QList<QPair<QString, QJsonObject>> defaults {
         {AramfPaths::TaskRoutes, QJsonObject {{QStringLiteral("routes"), QJsonArray {}}}},
-        {AramfPaths::ScopeRoutes, QJsonObject {{QStringLiteral("routes"), QJsonArray {}}}},
+        {AramfPaths::ScopeRoutes, QJsonObject {{QStringLiteral("scopes"), defaultScopes}}},
         {AramfPaths::ValidationPolicy, ValidationRouting::policy()},
         {AramfPaths::ResourceManifest, QJsonObject {{QStringLiteral("resources"), QJsonArray {}}}},
         {AramfPaths::CustomTemplates, QJsonObject {{QStringLiteral("templates"), QJsonArray {}}}},

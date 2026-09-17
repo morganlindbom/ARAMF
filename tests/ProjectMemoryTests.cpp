@@ -59,6 +59,7 @@ bool runWorkerTaskTests();
 bool runContextCoordinationTests();
 bool runProcessVersionTests();
 bool runP2ExecutionTests();
+bool runProvenanceAndScopeTests();
 
 int main(int argc, char** argv)
 {
@@ -71,6 +72,7 @@ int main(int argc, char** argv)
     FrameworkKnowledgeService::setGlobalLibraryPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")));
     if (app.arguments().contains(QStringLiteral("--worker-tasks"))) return runWorkerTaskTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--p2-execution"))) return runP2ExecutionTests() ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--provenance-and-scope"))) return runProvenanceAndScopeTests() ? 0 : 1;
     QTemporaryDir temporaryProject;
     if (!require(temporaryProject.isValid(), "temporary project directory must be valid")) {
         return 1;
@@ -358,29 +360,39 @@ int main(int argc, char** argv)
                        {}, {}, false, {}, nullptr, &error),
                   "Admin Override must not bypass TOP PRIORITY destructive filesystem safety");
 
+    const QJsonObject testProvenance{
+        {QStringLiteral("actor"), QStringLiteral("agent")},
+        {QStringLiteral("agentId"), QStringLiteral("codex")},
+        {QStringLiteral("tool"), QStringLiteral("ProjectMemoryTests")}
+    };
+
     QJsonObject recordingResult;
     ok &= require(memory.recordOperation(temporaryProject.path(), QStringLiteral("task-start"),
                                          QJsonObject{{QStringLiteral("task"), QStringLiteral("Feedback bridge test")},
-                                                     {QStringLiteral("category"), QStringLiteral("testing")}},
+                                                     {QStringLiteral("category"), QStringLiteral("testing")},
+                                                     {QStringLiteral("provenance"), testProvenance}},
                                          &recordingResult, &error),
                   "task start must be recordable through ProjectMemory");
     ok &= require(memory.recordOperation(temporaryProject.path(), QStringLiteral("build-result"),
                                          QJsonObject{{QStringLiteral("task"), QStringLiteral("Feedback bridge test")},
                                                      {QStringLiteral("status"), QStringLiteral("PASS")},
-                                                     {QStringLiteral("configuration"), QStringLiteral("Debug")}},
+                                                     {QStringLiteral("configuration"), QStringLiteral("Debug")},
+                                                     {QStringLiteral("provenance"), testProvenance}},
                                          nullptr, &error),
                   "build result must be recordable through ProjectMemory");
     ok &= require(memory.recordOperation(temporaryProject.path(), QStringLiteral("test-result"),
                                          QJsonObject{{QStringLiteral("task"), QStringLiteral("Feedback bridge test")},
                                                      {QStringLiteral("status"), QStringLiteral("PASS")},
                                                      {QStringLiteral("suite"), QStringLiteral("CTest")},
-                                                     {QStringLiteral("passed"), 2}, {QStringLiteral("total"), 2}},
+                                                     {QStringLiteral("passed"), 2}, {QStringLiteral("total"), 2},
+                                                     {QStringLiteral("provenance"), testProvenance}},
                                          nullptr, &error),
                   "test result must be recordable through ProjectMemory");
     ok &= require(memory.recordOperation(temporaryProject.path(), QStringLiteral("task-complete"),
                                          QJsonObject{{QStringLiteral("task"), QStringLiteral("Feedback bridge test")},
                                                      {QStringLiteral("status"), QStringLiteral("PASS")},
-                                                     {QStringLiteral("summary"), QStringLiteral("Completed successfully.")}},
+                                                     {QStringLiteral("summary"), QStringLiteral("Completed successfully.")},
+                                                     {QStringLiteral("provenance"), testProvenance}},
                                          nullptr, &error),
                   "task completion must be recordable through ProjectMemory");
     QFile metricsFile(root.filePath(QStringLiteral("ARAMF_WORKER/memory/metrics.json")));
@@ -419,7 +431,10 @@ int main(int argc, char** argv)
                                                  QStringLiteral("--project"), temporaryProject.path(),
                                                  QStringLiteral("--operation"), QStringLiteral("validation-result"),
                                                  QStringLiteral("--task"), QStringLiteral("Feedback bridge CLI test"),
-                                                 QStringLiteral("--status"), QStringLiteral("PASS")}, commandOut, commandErr);
+                                                 QStringLiteral("--status"), QStringLiteral("PASS"),
+                                                 QStringLiteral("--actor"), QStringLiteral("agent"),
+                                                 QStringLiteral("--agent-id"), QStringLiteral("codex"),
+                                                 QStringLiteral("--tool"), QStringLiteral("ProjectMemoryTests")}, commandOut, commandErr);
     commandOut.flush();
     commandErr.flush();
     if (commandStatus != 0 || !commandOutput.data().contains("recorded operation=validation-result")) {
@@ -431,7 +446,8 @@ int main(int argc, char** argv)
     ok &= require(memory.recordOperation(temporaryProject.path(), QStringLiteral("build-result"),
                                          QJsonObject{{QStringLiteral("task"), QStringLiteral("Feedback bridge failure test")},
                                                      {QStringLiteral("status"), QStringLiteral("FAIL")},
-                                                     {QStringLiteral("detail"), QStringLiteral("controlled failure fixture")}},
+                                                     {QStringLiteral("detail"), QStringLiteral("controlled failure fixture")},
+                                                     {QStringLiteral("provenance"), testProvenance}},
                                          nullptr, &error),
                   "failed build result must still be recordable");
     QFile failedMetricsFile(root.filePath(QStringLiteral("ARAMF_WORKER/memory/metrics.json")));
@@ -521,7 +537,8 @@ int main(int argc, char** argv)
     stateBeforeFile.close();
     ok &= require(stateDisabledMemory.recordOperation(stateDisabledProject.path(), QStringLiteral("task-complete"),
                                                       QJsonObject{{QStringLiteral("task"), QStringLiteral("No snapshot update")},
-                                                                  {QStringLiteral("status"), QStringLiteral("PASS")} },
+                                                                  {QStringLiteral("status"), QStringLiteral("PASS")},
+                                                                  {QStringLiteral("provenance"), testProvenance}},
                                                       nullptr, &error),
                   "task recording must work when current-state updates are disabled");
     QFile stateAfterFile(QDir(stateDisabledProject.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/current-state.md")));
@@ -976,7 +993,8 @@ int main(int argc, char** argv)
     ok &= require(rediscoveryMemory.recordOperation(rediscoveryProject.path(), QStringLiteral("task-complete"),
                                                      QJsonObject{{QStringLiteral("task"), rediscoveryTask},
                                                                  {QStringLiteral("status"), QStringLiteral("PASS")},
-                                                                 {QStringLiteral("summary"), QStringLiteral("rediscovery task marker")}},
+                                                                 {QStringLiteral("summary"), QStringLiteral("rediscovery task marker")},
+                                                                 {QStringLiteral("provenance"), testProvenance}},
                                                      &rediscoveryOperation, &error),
                   "MEMORY-REDISCOVERY-001 task write must succeed");
     const QString rediscoveryEventId = rediscoveryOperation.value(QStringLiteral("eventId")).toString();
@@ -1301,30 +1319,35 @@ int main(int argc, char** argv)
     ProjectMemory generatedProjectMemory;
     QJsonObject generatedEvent;
     ok &= require(generatedProjectMemory.recordOperation(feedbackGenerationProject.path(), QStringLiteral("task-start"),
-                                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("MEMORY-GEN-LIFECYCLE")}},
+                                                         QJsonObject{{QStringLiteral("task"), QStringLiteral("MEMORY-GEN-LIFECYCLE")},
+                                                                     {QStringLiteral("provenance"), testProvenance}},
                                                          &generatedEvent, &error),
                   "generated-project lifecycle must append TASK_STARTED directly through governed memory");
     const QString generatedEventId = generatedEvent.value(QStringLiteral("eventId")).toString();
     ok &= require(generatedProjectMemory.recordOperation(feedbackGenerationProject.path(), QStringLiteral("build-result"),
                                                          QJsonObject{{QStringLiteral("task"), QStringLiteral("MEMORY-GEN-LIFECYCLE")},
                                                                      {QStringLiteral("status"), QStringLiteral("FAIL")},
-                                                                     {QStringLiteral("summary"), QStringLiteral("real controlled failure evidence")}},
+                                                                     {QStringLiteral("summary"), QStringLiteral("real controlled failure evidence")},
+                                                                     {QStringLiteral("provenance"), testProvenance}},
                                                          nullptr, &error),
                   "generated-project lifecycle must preserve a real failed build attempt");
     ok &= require(generatedProjectMemory.recordOperation(feedbackGenerationProject.path(), QStringLiteral("build-result"),
                                                          QJsonObject{{QStringLiteral("task"), QStringLiteral("MEMORY-GEN-LIFECYCLE")},
                                                                      {QStringLiteral("status"), QStringLiteral("PASS")},
-                                                                     {QStringLiteral("summary"), QStringLiteral("real controlled correction evidence")}},
+                                                                     {QStringLiteral("summary"), QStringLiteral("real controlled correction evidence")},
+                                                                     {QStringLiteral("provenance"), testProvenance}},
                                                          nullptr, &error),
                   "generated-project lifecycle must preserve the correcting build pass");
     ok &= require(generatedProjectMemory.recordOperation(feedbackGenerationProject.path(), QStringLiteral("validation-result"),
                                                          QJsonObject{{QStringLiteral("task"), QStringLiteral("MEMORY-GEN-LIFECYCLE")},
-                                                                     {QStringLiteral("status"), QStringLiteral("PASS")}},
+                                                                     {QStringLiteral("status"), QStringLiteral("PASS")},
+                                                                     {QStringLiteral("provenance"), testProvenance}},
                                                          nullptr, &error),
                   "generated-project lifecycle must append validation evidence");
     ok &= require(generatedProjectMemory.recordOperation(feedbackGenerationProject.path(), QStringLiteral("task-complete"),
                                                          QJsonObject{{QStringLiteral("task"), QStringLiteral("MEMORY-GEN-LIFECYCLE")},
-                                                                     {QStringLiteral("status"), QStringLiteral("PASS")}},
+                                                                     {QStringLiteral("status"), QStringLiteral("PASS")},
+                                                                     {QStringLiteral("provenance"), testProvenance}},
                                                          nullptr, &error),
                   "generated-project lifecycle must append task completion");
     error.clear();
@@ -1942,7 +1965,8 @@ int main(int argc, char** argv)
     ProjectMemory movedMemory;
     ok &= require(movedMemory.initialize(newRoot.path(), &movedModel, &rebindError)
                   && movedMemory.appendEvent(newRoot.path(), QStringLiteral("BUILD_RESULT"), QStringLiteral("initial failure"),
-                                              QJsonObject{{QStringLiteral("status"), QStringLiteral("FAIL")}}, &rebindError),
+                                              QJsonObject{{QStringLiteral("status"), QStringLiteral("FAIL")},
+                                                          {QStringLiteral("provenance"), testProvenance}}, &rebindError),
                   "ROOT-REBIND fixture history must be valid");
     QFile stalePlan(QDir(newRoot.path()).filePath(QStringLiteral("ARAMF_WORKER/update/update-plan.json")));
     const bool stalePlanOpened = stalePlan.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -2012,7 +2036,7 @@ int main(int argc, char** argv)
     ok &= require(ProjectMemoryCompaction::reviewThreshold(compactProject.path()) == 3, "MEM-COMPACT-001 configurable threshold detection");
     QTemporaryDir belowProject; ProjectModel belowModel; belowModel.setProjectPath(belowProject.path()); ProjectMemory().initialize(belowProject.path(), &belowModel, &compactError);
     ok &= require(!ProjectMemoryCompaction::reviewDue(belowProject.path()), "MEM-COMPACT-002 below threshold no compaction");
-    for (int i = 0; i < 4; ++i) ok &= require(compactMemory.appendEvent(compactProject.path(), QStringLiteral("TEST_RESULT"), QStringLiteral("repeatable recovery"), QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}, {QStringLiteral("summary"), QStringLiteral("same validated recovery")}}, &compactError), "MEM-COMPACT repeated event recorded");
+    for (int i = 0; i < 4; ++i) ok &= require(compactMemory.appendEvent(compactProject.path(), QStringLiteral("TEST_RESULT"), QStringLiteral("repeatable recovery"), QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}, {QStringLiteral("summary"), QStringLiteral("same validated recovery")}, {QStringLiteral("provenance"), testProvenance}}, &compactError), "MEM-COMPACT repeated event recorded");
     ok &= require(compactMemory.appendEvent(compactProject.path(), QStringLiteral("UNIQUE_ARCHITECTURE_CHANGE"), QStringLiteral("unique design"), QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}}, &compactError), "MEM-COMPACT unique event recorded");
     const auto preview = ProjectMemoryCompaction().dryRun(compactProject.path(), &compactError);
     ok &= require(preview.value(QStringLiteral("patterns")).toArray().size() >= 1, "MEM-COMPACT-003 repeated semantic pattern detected");
@@ -2043,7 +2067,7 @@ int main(int argc, char** argv)
     QJsonObject compactResult; const bool compactedOk = ProjectMemoryCompaction().compact(compactProject.path(), true, &compactResult, &compactError); if (!compactedOk) std::cerr << "MEM-COMPACT error: " << compactError.toStdString() << '\n'; ok &= require(compactedOk, "MEM-COMPACT-011 sequence numbers are not renumbered");
     const auto afterEvents = compactMemory.events(compactProject.path(), &compactError); bool gapsRemain = false; for (int i = 1; i < afterEvents.size(); ++i) gapsRemain |= afterEvents.at(i).value(QStringLiteral("sequenceNumber")).toVariant().toLongLong() > afterEvents.at(i - 1).value(QStringLiteral("sequenceNumber")).toVariant().toLongLong() + 1;
     ok &= require(gapsRemain || afterEvents.size() == beforeEvents.size(), "MEM-COMPACT-012 event IDs and sequence identity preserved");
-    ok &= require(compactMemory.appendEvent(compactProject.path(), QStringLiteral("TEST_RESULT"), QStringLiteral("new event"), QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}}, &compactError), "MEM-COMPACT-013 next sequence remains monotonic");
+    ok &= require(compactMemory.appendEvent(compactProject.path(), QStringLiteral("TEST_RESULT"), QStringLiteral("new event"), QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}, {QStringLiteral("provenance"), testProvenance}}, &compactError), "MEM-COMPACT-013 next sequence remains monotonic");
     ok &= require(compactMemory.events(compactProject.path(), &compactError).last().value(QStringLiteral("sequenceNumber")).toVariant().toLongLong() > oldMax, "MEM-COMPACT-014 monotonic next sequence");
     ok &= require(QFileInfo::exists(QDir(compactProject.path()).filePath("ARAMF_WORKER/memory/compaction-manifest.json")), "MEM-COMPACT-015 manifest persisted");
     ok &= require(QFileInfo::exists(QDir(compactProject.path()).filePath("ARAMF_WORKER/memory/compaction-history.jsonl")), "MEM-COMPACT-016 append-only compaction history persisted");
@@ -2165,5 +2189,384 @@ int main(int argc, char** argv)
     ok &= runContextCoordinationTests();
     ok &= runProcessVersionTests();
     ok &= runP2ExecutionTests();
+    ok &= runProvenanceAndScopeTests();
     return ok ? 0 : 1;
+}
+
+bool runProvenanceAndScopeTests()
+{
+    bool ok = true;
+    ProjectMemory memory;
+
+    auto isCheckPassed = [](const QJsonObject& report, const QString& checkName) -> bool {
+        for (const auto& val : report.value(QStringLiteral("checks")).toArray()) {
+            const auto obj = val.toObject();
+            if (obj.value(QStringLiteral("name")).toString() == checkName) {
+                return obj.value(QStringLiteral("status")).toString() == QStringLiteral("PASS");
+            }
+        }
+        return false;
+    };
+
+    MemoryConfiguration testMemoryConfig;
+    testMemoryConfig.maintenanceOptions = {
+        QStringLiteral("update-current-state"),
+        QStringLiteral("record-task-completion"),
+        QStringLiteral("record-build-results"),
+        QStringLiteral("record-test-results"),
+        QStringLiteral("record-validation")
+    };
+    testMemoryConfig.validationOptions = {
+        QStringLiteral("memory-consistency"),
+        QStringLiteral("event-provenance-valid"),
+        QStringLiteral("persisted-scope-validity")
+    };
+
+    // Provenance Test 1: Operational event with full valid provenance succeeds.
+    QTemporaryDir provProj1;
+    ProjectModel provModel1;
+    provModel1.setProjectPath(provProj1.path());
+    provModel1.setMemoryConfiguration(testMemoryConfig);
+    ok &= require(memory.initialize(provProj1.path(), &provModel1, nullptr), "PROV-INIT: fixture must initialize");
+    const QJsonObject validProv{
+        {QStringLiteral("actor"), QStringLiteral("agent")},
+        {QStringLiteral("agentId"), QStringLiteral("codex")},
+        {QStringLiteral("tool"), QStringLiteral("test-runner")}
+    };
+    QJsonObject res1;
+    QString err1;
+    bool p1 = memory.recordOperation(provProj1.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Provenance Task 1")}, {QStringLiteral("provenance"), validProv}}, &res1, &err1);
+    ok &= require(p1, "PROV-001: Operational event with full valid provenance succeeds");
+
+    // Provenance Test 2: Operational event missing actor is rejected.
+    QJsonObject noActorProv{
+        {QStringLiteral("agentId"), QStringLiteral("codex")},
+        {QStringLiteral("tool"), QStringLiteral("test-runner")}
+    };
+    QString err2;
+    bool p2 = memory.recordOperation(provProj1.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Provenance Task 2")}, {QStringLiteral("provenance"), noActorProv}}, nullptr, &err2);
+    ok &= require(!p2 && err2.contains(QStringLiteral("actor")), "PROV-002: Operational event missing actor is rejected");
+
+    // Provenance Test 3: Operational event missing agentId (when actor is agent/system) is rejected.
+    QJsonObject noAgentIdProv{
+        {QStringLiteral("actor"), QStringLiteral("agent")},
+        {QStringLiteral("tool"), QStringLiteral("test-runner")}
+    };
+    QString err3;
+    bool p3 = memory.recordOperation(provProj1.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Provenance Task 3")}, {QStringLiteral("provenance"), noAgentIdProv}}, nullptr, &err3);
+    ok &= require(!p3 && err3.contains(QStringLiteral("agentId")), "PROV-003: Operational event missing agentId (when actor is agent/system) is rejected");
+
+    // Provenance Test 4: Operational event missing tool is rejected.
+    QJsonObject noToolProv{
+        {QStringLiteral("actor"), QStringLiteral("agent")},
+        {QStringLiteral("agentId"), QStringLiteral("codex")}
+    };
+    QString err4;
+    bool p4 = memory.recordOperation(provProj1.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Provenance Task 4")}, {QStringLiteral("provenance"), noToolProv}}, nullptr, &err4);
+    ok &= require(!p4 && err4.contains(QStringLiteral("tool")), "PROV-004: Operational event missing tool is rejected");
+
+    // Provenance Test 5: Operational event with invalid actor enum is rejected.
+    QJsonObject invalidActorProv{
+        {QStringLiteral("actor"), QStringLiteral("invalid-alien-entity")},
+        {QStringLiteral("agentId"), QStringLiteral("codex")},
+        {QStringLiteral("tool"), QStringLiteral("test-runner")}
+    };
+    QString err5;
+    bool p5 = memory.recordOperation(provProj1.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Provenance Task 5")}, {QStringLiteral("provenance"), invalidActorProv}}, nullptr, &err5);
+    ok &= require(!p5 && err5.contains(QStringLiteral("actor")), "PROV-005: Operational event with invalid actor enum is rejected");
+
+    // Provenance Test 6: Non-operational event without provenance succeeds (or inherits canonical system provenance).
+    QString err6;
+    bool p6 = memory.appendEvent(provProj1.path(), QStringLiteral("CUSTOM_NON_OPERATIONAL_EVENT"),
+        QStringLiteral("Non-operational task"), QJsonObject{{QStringLiteral("detail"), QStringLiteral("no prov supplied")}}, &err6);
+    ok &= require(p6, "PROV-006: Non-operational event without provenance succeeds");
+    const auto allEvents6 = memory.events(provProj1.path(), nullptr);
+    const auto nonOpEv = allEvents6.last();
+    ok &= require(nonOpEv.value(QStringLiteral("provenance")).toObject().value(QStringLiteral("actor")).toString() == QStringLiteral("system"),
+        "PROV-006: Non-operational event inherits canonical system provenance");
+
+    // Provenance Test 7: Provenance is preserved byte-for-byte through compaction/replay.
+    QJsonObject uniqueProv{
+        {QStringLiteral("actor"), QStringLiteral("human")},
+        {QStringLiteral("agentId"), QStringLiteral("operator")},
+        {QStringLiteral("tool"), QStringLiteral("ide-extension")},
+        {QStringLiteral("source"), QStringLiteral("ui-action")}
+    };
+    QString err7;
+    bool p7 = memory.appendEvent(provProj1.path(), QStringLiteral("TEST_RESULT"),
+        QStringLiteral("Compact prov task"),
+        QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}, {QStringLiteral("provenance"), uniqueProv}}, &err7);
+    ok &= require(p7, "PROV-007: Append event with full provenance succeeds");
+    const auto evBefore = memory.events(provProj1.path(), nullptr).last();
+    ok &= require(evBefore.value(QStringLiteral("provenance")).toObject() == uniqueProv,
+        "PROV-007: Provenance matches before compaction");
+    QJsonObject reloadedEvent;
+    ok &= require(memory.eventById(provProj1.path(), evBefore.value(QStringLiteral("eventId")).toString(), &reloadedEvent, &err7),
+        "PROV-007: Read event by ID succeeds");
+    ok &= require(reloadedEvent.value(QStringLiteral("provenance")).toObject() == uniqueProv,
+        "PROV-007: Provenance is preserved exactly on disk replay");
+
+    // Provenance Test 8: Validation passes on events with valid provenance.
+    memory.recordOperation(provProj1.path(), QStringLiteral("task-complete"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Provenance Task 1")}, {QStringLiteral("status"), QStringLiteral("PASS")}, {QStringLiteral("provenance"), validProv}}, nullptr, nullptr);
+    const auto valReport8 = memory.validate(provProj1.path(), nullptr);
+    bool prov8Check = isCheckPassed(valReport8, QStringLiteral("event-provenance-valid"));
+    ok &= require(prov8Check, "PROV-008: Validation passes on events with valid provenance");
+
+    // Provenance Test 9: Validation fails on events with malformed provenance.
+    QTemporaryDir malformedProj;
+    ProjectModel malformedModel;
+    malformedModel.setProjectPath(malformedProj.path());
+    malformedModel.setMemoryConfiguration(testMemoryConfig);
+    memory.initialize(malformedProj.path(), &malformedModel, nullptr);
+    const QString eventLogPath9 = QDir(malformedProj.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
+    QFile evFile9(eventLogPath9);
+    if (evFile9.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+        QJsonObject badEvent{
+            {QStringLiteral("eventId"), QStringLiteral("event-malformed-prov-1")},
+            {QStringLiteral("eventType"), QStringLiteral("TEST_RESULT")},
+            {QStringLiteral("sequenceNumber"), 100},
+            {QStringLiteral("timestamp"), QStringLiteral("2026-09-17T00:00:00Z")},
+            {QStringLiteral("task"), QStringLiteral("Malformed prov task")},
+            {QStringLiteral("provenance"), QStringLiteral("not-an-object")}
+        };
+        evFile9.write(QJsonDocument(badEvent).toJson(QJsonDocument::Compact) + "\n");
+        evFile9.close();
+    }
+    const auto valReport9 = memory.validate(malformedProj.path(), nullptr);
+    bool prov9Passed = isCheckPassed(valReport9, QStringLiteral("event-provenance-valid"));
+    ok &= require(!prov9Passed, "PROV-009: Validation fails on events with malformed provenance");
+
+    // Provenance Test 10: Historical events preceding legacy boundary pass validation without provenance.
+    QTemporaryDir legacyProj;
+    ProjectModel legacyModel;
+    legacyModel.setProjectPath(legacyProj.path());
+    legacyModel.setMemoryConfiguration(testMemoryConfig);
+    memory.initialize(legacyProj.path(), &legacyModel, nullptr);
+    const QString legManifestPath = QDir(legacyProj.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/memory-manifest.json"));
+    QFile mfFile(legManifestPath);
+    if (mfFile.open(QIODevice::ReadOnly)) {
+        auto doc = QJsonDocument::fromJson(mfFile.readAll()).object();
+        mfFile.close();
+        doc.insert(QStringLiteral("legacyProvenanceCutoffSequence"), 50);
+        if (mfFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            mfFile.write(QJsonDocument(doc).toJson());
+            mfFile.close();
+        }
+    }
+    const QString legEventLogPath = QDir(legacyProj.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
+    QFile legEvFile(legEventLogPath);
+    if (legEvFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+        QJsonObject legEvent{
+            {QStringLiteral("eventId"), QStringLiteral("event-legacy-pre-cutoff-1")},
+            {QStringLiteral("eventType"), QStringLiteral("TEST_RESULT")},
+            {QStringLiteral("sequenceNumber"), 25},
+            {QStringLiteral("timestamp"), QStringLiteral("2026-09-17T00:00:00Z")},
+            {QStringLiteral("task"), QStringLiteral("Legacy pre-cutoff task")}
+        };
+        legEvFile.write(QJsonDocument(legEvent).toJson(QJsonDocument::Compact) + "\n");
+        legEvFile.close();
+    }
+    const auto valReport10 = memory.validate(legacyProj.path(), nullptr);
+    bool legProvOk = isCheckPassed(valReport10, QStringLiteral("event-provenance-valid"));
+    ok &= require(legProvOk, "PROV-010: Historical events preceding legacy boundary pass validation without provenance");
+
+    // Provenance Test 11: CLI memory record passes with provenance flags and fails without them.
+    QTemporaryDir cliProj;
+    ProjectModel cliModel;
+    cliModel.setProjectPath(cliProj.path());
+    cliModel.setMemoryConfiguration(testMemoryConfig);
+    memory.initialize(cliProj.path(), &cliModel, nullptr);
+    QBuffer bufOutNoProv; QBuffer bufErrNoProv;
+    bufOutNoProv.open(QIODevice::ReadWrite); bufErrNoProv.open(QIODevice::ReadWrite);
+    QTextStream outNoProv(&bufOutNoProv); QTextStream errNoProv(&bufErrNoProv);
+    int cliFail = runMemoryCommand({
+        QStringLiteral("memory"), QStringLiteral("record"),
+        QStringLiteral("--project"), cliProj.path(),
+        QStringLiteral("--operation"), QStringLiteral("task-start"),
+        QStringLiteral("--task"), QStringLiteral("CLI prov missing test")
+    }, outNoProv, errNoProv);
+    outNoProv.flush(); errNoProv.flush();
+    ok &= require(cliFail != 0, "PROV-011: CLI memory record fails without provenance flags");
+
+    QBuffer bufOutWithProv; QBuffer bufErrWithProv;
+    bufOutWithProv.open(QIODevice::ReadWrite); bufErrWithProv.open(QIODevice::ReadWrite);
+    QTextStream outWithProv(&bufOutWithProv); QTextStream errWithProv(&bufErrWithProv);
+    int cliSuccess = runMemoryCommand({
+        QStringLiteral("memory"), QStringLiteral("record"),
+        QStringLiteral("--project"), cliProj.path(),
+        QStringLiteral("--operation"), QStringLiteral("task-start"),
+        QStringLiteral("--task"), QStringLiteral("CLI prov success test"),
+        QStringLiteral("--actor"), QStringLiteral("agent"),
+        QStringLiteral("--agent-id"), QStringLiteral("codex"),
+        QStringLiteral("--tool"), QStringLiteral("CLI")
+    }, outWithProv, errWithProv);
+    outWithProv.flush(); errWithProv.flush();
+    ok &= require(cliSuccess == 0, "PROV-011: CLI memory record passes with provenance flags");
+
+    // Scope Test 1: Event recorded with valid canonical scope passes validation.
+    QTemporaryDir scopeProj;
+    ProjectModel scopeModel;
+    scopeModel.setProjectPath(scopeProj.path());
+    scopeModel.setMemoryConfiguration(testMemoryConfig);
+    memory.initialize(scopeProj.path(), &scopeModel, nullptr);
+    QJsonObject scProv{
+        {QStringLiteral("actor"), QStringLiteral("agent")},
+        {QStringLiteral("agentId"), QStringLiteral("codex")},
+        {QStringLiteral("tool"), QStringLiteral("scope-tester")}
+    };
+    bool s1 = memory.recordOperation(scopeProj.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Scope task 1")}, {QStringLiteral("scope"), QStringLiteral("source-code")}, {QStringLiteral("provenance"), scProv}}, nullptr, nullptr);
+    ok &= require(s1, "SCOPE-001: Record operation with valid canonical scope succeeds");
+    const auto valReportS1 = memory.validate(scopeProj.path(), nullptr);
+    bool s1Passed = isCheckPassed(valReportS1, QStringLiteral("persisted-scope-validity"));
+    ok &= require(s1Passed, "SCOPE-001: Event recorded with valid canonical scope passes validation");
+
+    // Scope Test 2: Event recorded with non-canonical/invalid scope fails validation.
+    QString s2Err;
+    bool s2Rec = memory.recordOperation(scopeProj.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Scope task 2")}, {QStringLiteral("scope"), QStringLiteral("non-existent-scope-xyz")}, {QStringLiteral("provenance"), scProv}}, nullptr, &s2Err);
+    ok &= require(!s2Rec && s2Err.contains(QStringLiteral("unknown scope")), "SCOPE-002: Record operation with unknown scope is rejected");
+
+    const QString evLogPathS2 = QDir(scopeProj.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
+    QFile evS2File(evLogPathS2);
+    if (evS2File.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+        QJsonObject badScopeEv{
+            {QStringLiteral("eventId"), QStringLiteral("event-bad-scope-1")},
+            {QStringLiteral("eventType"), QStringLiteral("TASK_STARTED")},
+            {QStringLiteral("sequenceNumber"), 200},
+            {QStringLiteral("timestamp"), QStringLiteral("2026-09-17T00:00:00Z")},
+            {QStringLiteral("task"), QStringLiteral("Bad scope task")},
+            {QStringLiteral("scope"), QStringLiteral("totally-bogus-scope")},
+            {QStringLiteral("provenance"), scProv}
+        };
+        evS2File.write(QJsonDocument(badScopeEv).toJson(QJsonDocument::Compact) + "\n");
+        evS2File.close();
+    }
+    const auto valReportS2 = memory.validate(scopeProj.path(), nullptr);
+    bool s2Passed = isCheckPassed(valReportS2, QStringLiteral("persisted-scope-validity"));
+    ok &= require(!s2Passed, "SCOPE-002: Event with non-canonical scope fails validation");
+
+    // Scope Test 3: Universal scopes pass validation.
+    QTemporaryDir univProj;
+    ProjectModel univModel;
+    univModel.setProjectPath(univProj.path());
+    univModel.setMemoryConfiguration(testMemoryConfig);
+    memory.initialize(univProj.path(), &univModel, nullptr);
+    const QStringList universalScopes{QStringLiteral("all"), QStringLiteral("history"), QStringLiteral("project"), QStringLiteral("global"), QStringLiteral("project+global")};
+    const QString evLogPathUniv = QDir(univProj.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
+    QFile evUnivFile(evLogPathUniv);
+    if (evUnivFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+        int seq = 300;
+        for (const auto& uScope : universalScopes) {
+            QJsonObject uEv{
+                {QStringLiteral("eventId"), QStringLiteral("event-univ-%1").arg(uScope)},
+                {QStringLiteral("eventType"), QStringLiteral("TASK_STARTED")},
+                {QStringLiteral("sequenceNumber"), seq++},
+                {QStringLiteral("timestamp"), QStringLiteral("2026-09-17T00:00:00Z")},
+                {QStringLiteral("task"), QStringLiteral("Universal scope test")},
+                {QStringLiteral("scope"), uScope},
+                {QStringLiteral("provenance"), scProv}
+            };
+            evUnivFile.write(QJsonDocument(uEv).toJson(QJsonDocument::Compact) + "\n");
+        }
+        evUnivFile.close();
+    }
+    const auto valReportUniv = memory.validate(univProj.path(), nullptr);
+    bool univPassed = isCheckPassed(valReportUniv, QStringLiteral("persisted-scope-validity"));
+    ok &= require(univPassed, "SCOPE-003: Universal scopes pass validation");
+
+    // Scope Test 4: Decision with non-canonical scope fails validation.
+    QTemporaryDir decProj;
+    ProjectModel decModel;
+    decModel.setProjectPath(decProj.path());
+    decModel.setMemoryConfiguration(testMemoryConfig);
+    memory.initialize(decProj.path(), &decModel, nullptr);
+    const QString decPath = QDir(decProj.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/decisions.md"));
+    QFile decFile(decPath);
+    if (decFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+        const QString decBlock = QStringLiteral(
+            "\n## Decision Record: dec-invalid-scope-test\n\n"
+            "<!-- ARAMF-DECISION -->\n"
+            "- Decision-ID: dec-invalid-scope-test\n"
+            "- Topic: Invalid scope\n"
+            "- Scope: illegal-unregistered-scope-999\n"
+            "- Status: current\n"
+            "- Superseded-By: none\n"
+            "- Summary: Testing invalid scope in decision\n"
+            "<!-- /ARAMF-DECISION -->\n");
+        decFile.write(decBlock.toUtf8());
+        decFile.close();
+    }
+    const auto valReportDec = memory.validate(decProj.path(), nullptr);
+    bool decPassed = isCheckPassed(valReportDec, QStringLiteral("persisted-scope-validity"));
+    ok &= require(!decPassed, "SCOPE-004: Decision with non-canonical scope fails validation");
+
+    // Scope Test 5: Checkpoint with non-canonical scope fails validation.
+    QTemporaryDir cpProj;
+    ProjectModel cpModel;
+    cpModel.setProjectPath(cpProj.path());
+    cpModel.setMemoryConfiguration(testMemoryConfig);
+    memory.initialize(cpProj.path(), &cpModel, nullptr);
+    const QString cpPath = QDir(cpProj.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/checkpoints.json"));
+    QFile cpFile(cpPath);
+    if (cpFile.open(QIODevice::ReadOnly)) {
+        auto cpDoc = QJsonDocument::fromJson(cpFile.readAll()).object();
+        cpFile.close();
+        auto cps = cpDoc.value(QStringLiteral("checkpoints")).toArray();
+        cps.append(QJsonObject{
+            {QStringLiteral("id"), QStringLiteral("cp-invalid-scope-test")},
+            {QStringLiteral("title"), QStringLiteral("CP Invalid Scope")},
+            {QStringLiteral("summary"), QStringLiteral("Summary")},
+            {QStringLiteral("createdAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+            {QStringLiteral("productionSequence"), 1},
+            {QStringLiteral("scope"), QStringLiteral("unregistered-cp-scope")}
+        });
+        cpDoc.insert(QStringLiteral("checkpoints"), cps);
+        if (cpFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            cpFile.write(QJsonDocument(cpDoc).toJson());
+            cpFile.close();
+        }
+    }
+    const auto valReportCp = memory.validate(cpProj.path(), nullptr);
+    bool cpPassed = isCheckPassed(valReportCp, QStringLiteral("persisted-scope-validity"));
+    ok &= require(!cpPassed, "SCOPE-005: Checkpoint with non-canonical scope fails validation");
+
+    // Scope Test 6: Scope routes loaded dynamically from scope-routes.json are accepted.
+    QTemporaryDir dynProj;
+    ProjectModel dynModel;
+    dynModel.setProjectPath(dynProj.path());
+    dynModel.setMemoryConfiguration(testMemoryConfig);
+    memory.initialize(dynProj.path(), &dynModel, nullptr);
+    const QString routesPath = QDir(dynProj.path()).filePath(QStringLiteral("ARAMF_WORKER/routing/scope-routes.json"));
+    QFile rFile(routesPath);
+    if (rFile.open(QIODevice::ReadOnly)) {
+        auto rDoc = QJsonDocument::fromJson(rFile.readAll()).object();
+        rFile.close();
+        auto scArray = rDoc.value(QStringLiteral("scopes")).toArray();
+        scArray.append(QJsonObject{
+            {QStringLiteral("id"), QStringLiteral("custom-dynamically-added-scope")},
+            {QStringLiteral("description"), QStringLiteral("Dynamically added scope test")}
+        });
+        rDoc.insert(QStringLiteral("scopes"), scArray);
+        if (rFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            rFile.write(QJsonDocument(rDoc).toJson());
+            rFile.close();
+        }
+    }
+    bool dynRec = memory.recordOperation(dynProj.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Dynamic scope task")},
+                    {QStringLiteral("scope"), QStringLiteral("custom-dynamically-added-scope")},
+                    {QStringLiteral("provenance"), scProv}}, nullptr, nullptr);
+    ok &= require(dynRec, "SCOPE-006: Recording event with custom dynamic scope succeeds");
+    const auto valReportDyn = memory.validate(dynProj.path(), nullptr);
+    bool dynPassed = isCheckPassed(valReportDyn, QStringLiteral("persisted-scope-validity"));
+    ok &= require(dynPassed, "SCOPE-006: Scope routes loaded dynamically from scope-routes.json are accepted by validation");
+
+    return ok;
 }

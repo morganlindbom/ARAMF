@@ -22,12 +22,16 @@
             "--suite",
             "--passed",
             "--failed",
-            "--total"
+            "--total",
+            "--scope"
         ],
         "required": [
             "--project",
             "--operation",
-            "--task"
+            "--task",
+            "--actor",
+            "--agent-id",
+            "--tool"
         ]
     },
     "checkpointOperation": {
@@ -59,6 +63,18 @@
     ],
     "directEditing": "The active agent is the project-local writer in agent-direct mode. It must use the governed read -> narrow mutation -> reload -> parse/validate protocol; never rewrite historical evidence.",
     "externalExecutableRequired": false,
+    "frameworkKnowledgeLibrary": {
+        "globalLocation": "AramfPaths::programRoot()/ARAMF_DATA/framework-knowledge-library.json",
+        "layers": [
+            "built-in product knowledge",
+            "global user-approved portable knowledge",
+            "project-local knowledge"
+        ],
+        "legacyMigration": "Legacy AppData and executable-local ARAMF_DATA libraries are merged once into root ARAMF_DATA; legacy files are retained as non-authoritative recovery evidence and are never used as fallbacks.",
+        "promotionCommand": "aramf memory knowledge promote --project <project-root> --id <knowledge-id>",
+        "promotionPolicy": "Only explicitly approved portable entries may be promoted; direct editing of the global library and project framework-knowledge.json is forbidden.",
+        "seeding": "New managed projects seed approved global and built-in knowledge without replacing project-local entries."
+    },
     "globalCliRequired": false,
     "governance": {
         "appendOnly": "memory/event-log.jsonl is append-only historical evidence; previous events, IDs, sequences, timestamps, PASS/FAIL results, and ordering are immutable.",
@@ -76,6 +92,14 @@
             "verify uniqueness, ordering, and cross-file consistency"
         ]
     },
+    "improvementBacklog": {
+        "directEditing": "forbidden",
+        "listCommand": "aramf improvement list --project <project-root> [--stage <stage>] [--status <status>]",
+        "observationOnly": true,
+        "path": "AramfPaths::programRoot()/ARAMF_DATA/aramf-improvement-backlog.json",
+        "reportCommand": "aramf improvement report --project <project-root> --title <title> --observation <observation> [--expected <behavior>] [--area <area>] [--evidence <evidence>]",
+        "triageCommand": "aramf improvement triage --project <project-root> --id <gap-id> --action <promote|project-specific|duplicate|needs-evidence|already-resolved|reject> [--duplicate-of <gap-id>] [--priority <priority>]"
+    },
     "officialMechanism": "The canonical mechanism selected by writerMode; agent-direct means the active coding agent performs governed project-local persistence.",
     "ownedFiles": [
         "memory/event-log.jsonl",
@@ -89,9 +113,35 @@
         "memory/compaction-history.jsonl",
         "PROJECT_STATUS.md"
     ],
+    "provenance": {
+        "actorValues": [
+            "human",
+            "user",
+            "agent",
+            "autonomous-agent",
+            "tool",
+            "runtime",
+            "system"
+        ],
+        "description": "Structured provenance metadata for operational recorder events.",
+        "legacyBoundary": {
+            "legacyProvenanceCutoffSequence": 311,
+            "policy": "Historical events with sequence <= cutoff are backward-compatible without provenance; new operational events strictly require valid provenance."
+        },
+        "optionalFields": [
+            "source",
+            "executionId",
+            "sessionId"
+        ],
+        "requiredFields": [
+            "actor",
+            "agentId",
+            "tool"
+        ]
+    },
     "recordingEnabled": true,
     "separateOperations": {
-        "checkpoints": "deliberate stable recovery points; use the checkpoint operation; not created by routine feedback",
+        "checkpoints": "deliberate stable recovery points; use aramf memory checkpoint --project <project-root> --title <title> --summary <summary>; not created by routine feedback",
         "durableDecisions": "deliberate architecture/policy records through the decision workflow"
     },
     "supportedOperations": [

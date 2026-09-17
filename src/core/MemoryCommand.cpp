@@ -714,7 +714,9 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
         QStringLiteral("--status"), QStringLiteral("--summary"), QStringLiteral("--detail"),
         QStringLiteral("--category"), QStringLiteral("--issue"), QStringLiteral("--build-system"),
         QStringLiteral("--configuration"), QStringLiteral("--suite"), QStringLiteral("--passed"),
-        QStringLiteral("--failed"), QStringLiteral("--total")};
+        QStringLiteral("--failed"), QStringLiteral("--total"),
+        QStringLiteral("--actor"), QStringLiteral("--agent-id"), QStringLiteral("--tool"),
+        QStringLiteral("--scope")};
     QHash<QString, QString> options;
     for (int index = 2; index < arguments.size(); ++index) {
         const QString name = arguments.at(index);
@@ -747,7 +749,14 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
         || !boundedOption(options, QStringLiteral("--issue"), 256, fields, error)
         || !boundedOption(options, QStringLiteral("--build-system"), 128, fields, error)
         || !boundedOption(options, QStringLiteral("--configuration"), 128, fields, error)
-        || !boundedOption(options, QStringLiteral("--suite"), 256, fields, error)) return 2;
+        || !boundedOption(options, QStringLiteral("--suite"), 256, fields, error)
+        || !boundedOption(options, QStringLiteral("--actor"), 64, fields, error)
+        || !boundedOption(options, QStringLiteral("--agent-id"), 128, fields, error)
+        || !boundedOption(options, QStringLiteral("--tool"), 128, fields, error)
+        || !boundedOption(options, QStringLiteral("--scope"), 128, fields, error)) return 2;
+    if (options.contains(QStringLiteral("--agent-id"))) {
+        fields.insert(QStringLiteral("agentId"), options.value(QStringLiteral("--agent-id")));
+    }
     if (options.contains(QStringLiteral("--status"))) fields.insert(QStringLiteral("status"), options.value(QStringLiteral("--status")));
     if (!boundedIntegerOption(options, QStringLiteral("--passed"), fields, error)
         || !boundedIntegerOption(options, QStringLiteral("--failed"), fields, error)

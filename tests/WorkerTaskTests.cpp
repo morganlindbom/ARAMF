@@ -164,7 +164,7 @@ bool runWorkerTaskTests()
     // Canonical recorder mutations remain legal when append-only history and
     // its derived cross-file consistency pass the existing memory validator.
     QString recorderError;
-    check(ProjectMemory().recordOperation(project.path(), "test-result", QJsonObject{{"task", ui.goal}, {"status", "PASS"}, {"summary", "fixture evidence"}}, nullptr, &recorderError), "canonical recorder operation");
+    check(ProjectMemory().recordOperation(project.path(), "test-result", QJsonObject{{"task", ui.goal}, {"status", "PASS"}, {"summary", "fixture evidence"}, {"provenance", QJsonObject{{"actor", "system"}, {"agentId", "system"}, {"tool", "WorkerTaskTests"}}}}, nullptr, &recorderError), "canonical recorder operation");
     check(!hasCode(WorkerTaskServices::postflight(model, uiContract), "FORBIDDEN_FILE_MODIFICATION"), "legitimate recorder writes preserve their ownership boundary");
 
     // Persistence: metadata-only changes notify, legacy absence clears old state,

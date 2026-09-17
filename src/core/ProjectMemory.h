@@ -93,6 +93,10 @@ public:
                           QString* error = nullptr) const;
     bool recordingEnabled(const QString& projectRoot, QString* error = nullptr) const;
     static QStringList supportedRecordOperations();
+    static bool isOperationalEventType(const QString& eventType);
+    static QJsonObject normalizeProvenance(const QJsonObject& fields);
+    static bool validateProvenanceObject(const QJsonObject& provenance, QString* error = nullptr);
+    static QJsonObject canonicalSystemProvenance();
     QJsonObject validate(const QString& projectRoot, QString* error = nullptr, bool persistReport = true) const;
     QJsonObject validateColdStart(const QString& projectRoot, QString* error = nullptr) const;
     bool refreshDerivedState(const QString& projectRoot, QString* error = nullptr) const;

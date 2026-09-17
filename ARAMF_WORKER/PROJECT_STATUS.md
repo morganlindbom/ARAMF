@@ -451,10 +451,11 @@ descriptions, scopes, and canonical identities were preserved.
 
 ### Current implementation state
 
-Current synchronized repository baseline: `af22b35ee6734f66e875b652602802b0758fa19c` (Merge remote-tracking branch 'origin/main' into main).
-Preceding feature implementation: `2575dbe79c5b98835da1837bd04ff307cd59ad32` (Add Update Configuration workflow page and update service).
-Preceding P2 orchestration integration: `cf6c556eb940d4979a50ca8f5118dd2d367da3f8` (Integrate P2 orchestration and record recertification requirement).
-Historical earlier certified baseline: `bcb26854e13f3714ac294e4e7b6f48573860151e` (Add canonical P0 runtime ownership authority, P0.1.2.1.1).
+- Current Git HEAD commit: `12ee318ddf84da9921d0f70a1f84b15c481bf353` (Synchronize canonical project status with baseline af22b35 and refresh cold-start validation).
+- Previous synchronized merge/code baseline: `af22b35ee6734f66e875b652602802b0758fa19c` (Merge remote-tracking branch 'origin/main' into main).
+- Preceding feature implementation: `2575dbe79c5b98835da1837bd04ff307cd59ad32` (Add Update Configuration workflow page and update service).
+- Preceding P2 orchestration integration: `cf6c556eb940d4979a50ca8f5118dd2d367da3f8` (Integrate P2 orchestration and record recertification requirement).
+- Historical earlier certified baseline: `bcb26854e13f3714ac294e4e7b6f48573860151e` (Add canonical P0 runtime ownership authority, P0.1.2.1.1).
 
 The lifecycle record is preserved as historical/current persisted state:
 
@@ -536,5 +537,24 @@ When capacity is available, perform a fresh controlled campaign in this order:
 
 P3 MUST NOT START before this campaign is complete. Do not speculate about future lifecycle iteration numbers; the future audit determines them.
 
-- Task: Governed state-consistency audit and baseline synchronization
-- Status: PASS / BASELINE SYNCHRONIZED (`af22b35`)
+### Governed ARAMF Memory System Repair (Provenance and Scope Enforcement)
+
+Defects resolved:
+1. Generic recorder events lacked mandatory structured provenance (`actor`, `agentId`, `tool`).
+   - Implemented `isOperationalEventType()`, `normalizeProvenance()`, `validateProvenanceObject()`, and `canonicalSystemProvenance()`.
+   - Mandated structured provenance on all operational events (`task-start`, `task-complete`, `build-result`, `test-result`, `validation-result`).
+   - Preserved historical events with `legacyProvenanceCutoffSequence` (sequence 311).
+2. Persisted scope metadata was unvalidated against canonical routing definitions.
+   - Implemented `persisted-scope-validity` check verifying scopes against canonical definitions (`all`, `history`, `project`, `global`, `project+global`) and project routes in `scope-routes.json` across events, decisions, and checkpoints.
+   - Exempted non-routing administrative scope descriptions in `ADMIN_OVERRIDE` events.
+3. Disambiguated baseline terminology across Git `HEAD` (`12ee318`), synchronized merge baseline (`af22b35`), and historical certified baseline (`bcb2685`).
+
+Verification results:
+- Automated hermetic regression suite: 17/17 PASS (`PROV-001` through `PROV-011`, `SCOPE-001` through `SCOPE-006`).
+- Full CTest suite: 5/5 PASS (`aramf_core_tests`, `aramf_workflow_tests`, `aramf_template_tests`, `aramf_update_campaign`, `aramf_configuration_update`).
+- Memory consistency validation: PASS (all 18 checks PASS including `event-provenance-valid` and `persisted-scope-validity`).
+- Cold-start validation: PASS (`cold-start-fresh` PASS).
+- Memory audit reclassification: all 12 dimensions PASS (Persistence, Cold Start, Consistency, Provenance, Scope Isolation, Freshness, Fingerprints, Recorder Integrity, Context Reconstruction, Historical Preservation, Current-State Accuracy, Stale-State Detection), overall memory system status PASS.
+
+- Task: Governed ARAMF Memory System Repair (Provenance and Scope Enforcement)
+- Status: PASS
