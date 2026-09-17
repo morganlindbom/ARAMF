@@ -537,24 +537,24 @@ When capacity is available, perform a fresh controlled campaign in this order:
 
 P3 MUST NOT START before this campaign is complete. Do not speculate about future lifecycle iteration numbers; the future audit determines them.
 
-### Governed ARAMF Memory System Repair (Provenance and Scope Enforcement)
+### Governed ARAMF Memory System Completion (Universal Provenance & Semantic Scope Isolation)
 
 Defects resolved:
-1. Generic recorder events lacked mandatory structured provenance (`actor`, `agentId`, `tool`).
-   - Implemented `isOperationalEventType()`, `normalizeProvenance()`, `validateProvenanceObject()`, and `canonicalSystemProvenance()`.
-   - Mandated structured provenance on all operational events (`task-start`, `task-complete`, `build-result`, `test-result`, `validation-result`).
-   - Preserved historical events with `legacyProvenanceCutoffSequence` (sequence 311).
-2. Persisted scope metadata was unvalidated against canonical routing definitions.
-   - Implemented `persisted-scope-validity` check verifying scopes against canonical definitions (`all`, `history`, `project`, `global`, `project+global`) and project routes in `scope-routes.json` across events, decisions, and checkpoints.
-   - Exempted non-routing administrative scope descriptions in `ADMIN_OVERRIDE` events.
-3. Disambiguated baseline terminology across Git `HEAD` (`12ee318`), synchronized merge baseline (`af22b35`), and historical certified baseline (`bcb2685`).
+1. Universal Truthful Structured Provenance Coverage:
+   - Extended non-operational human- and agent-initiated governance/knowledge event paths (`DECISION_RECORDED`, `DECISION_SUPERSEDED`, `CHECKPOINT_CREATED`, `ADMIN_OVERRIDE`, `ADMIN_OVERRIDE_VALIDATION`, `FRAMEWORK_KNOWLEDGE_CANDIDATE`, `FRAMEWORK_KNOWLEDGE_APPROVED`) with mandatory structured provenance (`actor`, `agentId`, `tool`).
+   - Extended `ProjectMemory::recordDecision`, `ProjectMemory::supersedeDecision`, `ProjectMemory::recordCheckpoint`, `ProjectMemory::recordAdministrativeOverride`, `FrameworkKnowledgeService::propose`, `FrameworkKnowledgeService::proposeApprovedByAdministrator`, `FrameworkKnowledgeService::approve`, and `FrameworkKnowledgeService::supersede`.
+   - Wired CLI parameters (`--actor`, `--agent-id`, `--tool`, `--scope`) into `MemoryCommand.cpp` for `memory decision record`, `memory decision supersede`, `memory checkpoint`, `memory knowledge propose`, and `memory knowledge approve`.
+   - Guaranteed that human actions preserve administrator provenance while agent actions record explicit agent identity and tool, with canonical system provenance reserved exclusively for automated/system-internal events.
+2. Semantic Scope Isolation (Levels C, D, E):
+   - Level C (Type Affinity): Enforced category-specific scope validity via `ProjectMemory::isScopeValidForCategory`. Checkpoint recovery scopes must be repository recovery scopes (`project`, `entire-project`, `all`, `history`, `project+global`), rejecting partition scopes; decision scopes reject archive partition `history`; operational event scopes reject pure `global`; Knowledge entries enforce slug validity and unique topic tagging.
+   - Level D (Combination Legality): Enforced `ProjectMemory::validateScopeCombinations` rejecting contradictory combinations (`project` and `global` without `project+global`, universal `all`/`entire-project` with specific partitions, archive `history` with active partitions).
+   - Level E (Cross-Scope File Matching): Enforced `ProjectMemory::validateCrossScopeFiles` rejecting records that claim one partition scope while referencing files/resources outside that permitted scope.
+3. Verification results:
+   - Hermetic regression suite: 31/31 PASS (`PROV-001` through `PROV-016`, `SCOPE-001` through `SCOPE-014`).
+   - Full CTest suite: 5/5 PASS (`aramf_core_tests`, `aramf_workflow_tests`, `aramf_template_tests`, `aramf_update_campaign`, `aramf_configuration_update`).
+   - Memory consistency validation: PASS (`ARAMF_WORKER/memory/memory-consistency-validation.json` 20/20 checks PASS, status PASS).
+   - Cold-start validation: PASS (`ARAMF_WORKER/memory/cold-start-validation.json` status PASS).
+   - Final strict memory certification: Provenance PASS, Scope Isolation PASS, Memory System Overall Status PASS.
 
-Verification results:
-- Automated hermetic regression suite: 17/17 PASS (`PROV-001` through `PROV-011`, `SCOPE-001` through `SCOPE-006`).
-- Full CTest suite: 5/5 PASS (`aramf_core_tests`, `aramf_workflow_tests`, `aramf_template_tests`, `aramf_update_campaign`, `aramf_configuration_update`).
-- Memory consistency validation: PASS (all 18 checks PASS including `event-provenance-valid` and `persisted-scope-validity`).
-- Cold-start validation: PASS (`cold-start-fresh` PASS).
-- Memory audit reclassification: all 12 dimensions PASS (Persistence, Cold Start, Consistency, Provenance, Scope Isolation, Freshness, Fingerprints, Recorder Integrity, Context Reconstruction, Historical Preservation, Current-State Accuracy, Stale-State Detection), overall memory system status PASS.
-
-- Task: Governed ARAMF Memory System Repair (Provenance and Scope Enforcement)
+- Task: Governed ARAMF Memory System Completion (Universal Provenance & Semantic Scope Isolation)
 - Status: PASS

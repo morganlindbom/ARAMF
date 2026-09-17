@@ -329,7 +329,8 @@ QString FrameworkKnowledgeService::propose(const QString& projectRoot,
                                             const QStringList& scopes,
                                             const QStringList& evidence,
                                             bool portable,
-                                            QString* error) const
+                                            QString* error,
+                                            const QJsonObject& provenance) const
 {
     /**Create or enrich one evidence-backed knowledge candidate.
 
@@ -370,9 +371,17 @@ QString FrameworkKnowledgeService::propose(const QString& projectRoot,
     if (!writeStore(projectRoot, store, error)) return {};
 
     ProjectMemory memory;
+    QJsonObject prov = ProjectMemory::normalizeProvenance(provenance);
+    if (prov.isEmpty()) {
+        prov.insert(QStringLiteral("actor"), QStringLiteral("agent"));
+        prov.insert(QStringLiteral("agentId"), QStringLiteral("aramf-agent"));
+        prov.insert(QStringLiteral("tool"), QStringLiteral("aramf-cli"));
+    }
     memory.appendEvent(projectRoot, QStringLiteral("FRAMEWORK_KNOWLEDGE_CANDIDATE"),
                        QStringLiteral("Framework Knowledge candidate proposed"),
-                       QJsonObject{{QStringLiteral("knowledgeId"), id}, {QStringLiteral("title"), entry.title}}, nullptr);
+                       QJsonObject{{QStringLiteral("knowledgeId"), id},
+                                   {QStringLiteral("title"), entry.title},
+                                   {QStringLiteral("provenance"), prov}}, nullptr);
     return id;
 }
 
@@ -383,7 +392,8 @@ QString FrameworkKnowledgeService::proposeApprovedByAdministrator(const QString&
                                                                     const QStringList& evidence,
                                                                     const QString& administrator,
                                                                     bool portable,
-                                                                    QString* error) const
+                                                                    QString* error,
+                                                                    const QJsonObject& provenance) const
 {
     if (administrator != QStringLiteral("Admin Morgan Lindbom")) {
         if (error) *error = QStringLiteral("Administrative knowledge approval requires Admin Morgan Lindbom.");
@@ -414,7 +424,21 @@ QString FrameworkKnowledgeService::proposeApprovedByAdministrator(const QString&
         value.insert(QStringLiteral("approvalSource"), administrator);
         values.replace(i, value);
         store.insert(QStringLiteral("entries"), values);
-        return writeStore(projectRoot, store, error) ? id : QString();
+        if (!writeStore(projectRoot, store, error)) return {};
+        ProjectMemory memory;
+        QJsonObject prov = ProjectMemory::normalizeProvenance(provenance);
+        if (prov.isEmpty()) {
+            prov.insert(QStringLiteral("actor"), QStringLiteral("human"));
+            prov.insert(QStringLiteral("agentId"), QStringLiteral("none"));
+            prov.insert(QStringLiteral("tool"), QStringLiteral("aramf-admin-cli"));
+        }
+        memory.appendEvent(projectRoot, QStringLiteral("FRAMEWORK_KNOWLEDGE_APPROVED"),
+                           QStringLiteral("Framework Knowledge approved"),
+                           QJsonObject{{QStringLiteral("knowledgeId"), id},
+                                       {QStringLiteral("title"), title.trimmed()},
+                                       {QStringLiteral("approvalSource"), administrator},
+                                       {QStringLiteral("provenance"), prov}}, nullptr);
+        return id;
     }
     FrameworkKnowledgeEntry entry;
     entry.id = id;
@@ -430,13 +454,28 @@ QString FrameworkKnowledgeService::proposeApprovedByAdministrator(const QString&
     entry.approvalSource = administrator;
     values.append(toJson(entry));
     store.insert(QStringLiteral("entries"), values);
-    return writeStore(projectRoot, store, error) ? id : QString();
+    if (!writeStore(projectRoot, store, error)) return {};
+    ProjectMemory memory;
+    QJsonObject prov = ProjectMemory::normalizeProvenance(provenance);
+    if (prov.isEmpty()) {
+        prov.insert(QStringLiteral("actor"), QStringLiteral("human"));
+        prov.insert(QStringLiteral("agentId"), QStringLiteral("none"));
+        prov.insert(QStringLiteral("tool"), QStringLiteral("aramf-admin-cli"));
+    }
+    memory.appendEvent(projectRoot, QStringLiteral("FRAMEWORK_KNOWLEDGE_APPROVED"),
+                       QStringLiteral("Framework Knowledge approved"),
+                       QJsonObject{{QStringLiteral("knowledgeId"), id},
+                                   {QStringLiteral("title"), entry.title},
+                                   {QStringLiteral("approvalSource"), administrator},
+                                   {QStringLiteral("provenance"), prov}}, nullptr);
+    return id;
 }
 
 bool FrameworkKnowledgeService::approve(const QString& projectRoot,
                                          const QString& candidateId,
                                          const QString& approvalSource,
-                                         QString* error) const
+                                         QString* error,
+                                         const QJsonObject& provenance) const
 {
     /**Promote one candidate to approved live knowledge.
 
@@ -473,10 +512,20 @@ bool FrameworkKnowledgeService::approve(const QString& projectRoot,
     if (!writeStore(projectRoot, store, error)) return false;
 
     ProjectMemory memory;
+    QJsonObject prov = ProjectMemory::normalizeProvenance(provenance);
+    if (prov.isEmpty()) {
+        const bool isHuman = approvalSource.contains(QStringLiteral("Morgan"), Qt::CaseInsensitive)
+            || approvalSource.contains(QStringLiteral("Admin"), Qt::CaseInsensitive)
+            || approvalSource.contains(QStringLiteral("user"), Qt::CaseInsensitive);
+        prov.insert(QStringLiteral("actor"), isHuman ? QStringLiteral("human") : QStringLiteral("agent"));
+        prov.insert(QStringLiteral("agentId"), isHuman ? QStringLiteral("none") : QStringLiteral("aramf-agent"));
+        prov.insert(QStringLiteral("tool"), QStringLiteral("aramf-cli"));
+    }
     return memory.appendEvent(projectRoot, QStringLiteral("FRAMEWORK_KNOWLEDGE_APPROVED"),
                               QStringLiteral("Framework Knowledge approved"),
                               QJsonObject{{QStringLiteral("knowledgeId"), candidateId},
-                                          {QStringLiteral("approvalSource"), approvalSource.trimmed()}}, error);
+                                          {QStringLiteral("approvalSource"), approvalSource.trimmed()},
+                                          {QStringLiteral("provenance"), prov}}, error);
 }
 
 bool FrameworkKnowledgeService::markMoreEvidence(const QString& projectRoot,
@@ -510,7 +559,8 @@ bool FrameworkKnowledgeService::markMoreEvidence(const QString& projectRoot,
 bool FrameworkKnowledgeService::supersede(const QString& projectRoot,
                                            const QString& entryId,
                                            const QString& replacementId,
-                                           QString* error) const
+                                           QString* error,
+                                           const QJsonObject& provenance) const
 {
     /**Mark obsolete knowledge as superseded without deleting historical evidence.
 
@@ -537,10 +587,17 @@ bool FrameworkKnowledgeService::supersede(const QString& projectRoot,
     store.insert(QStringLiteral("entries"), values);
     if (!writeStore(projectRoot, store, error)) return false;
     ProjectMemory memory;
+    QJsonObject prov = ProjectMemory::normalizeProvenance(provenance);
+    if (prov.isEmpty()) {
+        prov.insert(QStringLiteral("actor"), QStringLiteral("human"));
+        prov.insert(QStringLiteral("agentId"), QStringLiteral("none"));
+        prov.insert(QStringLiteral("tool"), QStringLiteral("aramf-cli"));
+    }
     return memory.appendEvent(projectRoot, QStringLiteral("FRAMEWORK_KNOWLEDGE_SUPERSEDED"),
                               QStringLiteral("Framework Knowledge superseded"),
                               QJsonObject{{QStringLiteral("knowledgeId"), entryId},
-                                          {QStringLiteral("replacementId"), replacementId.trimmed()}}, error);
+                                          {QStringLiteral("replacementId"), replacementId.trimmed()},
+                                          {QStringLiteral("provenance"), prov}}, error);
 }
 
 QList<FrameworkKnowledgeEntry> FrameworkKnowledgeService::entries(const QString& projectRoot,

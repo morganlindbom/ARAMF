@@ -35,11 +35,14 @@ public:
                         const QString& summary,
                         const QString& status = QStringLiteral("current"),
                         const QString& supersededBy = {},
-                        QString* error = nullptr);
+                        QString* error = nullptr,
+                        const QJsonObject& provenance = {},
+                        const QString& scope = {});
     bool supersedeDecision(const QString& projectRoot,
                            const QString& decisionId,
                            const QString& replacementId,
-                           QString* error = nullptr);
+                           QString* error = nullptr,
+                           const QJsonObject& provenance = {});
     bool recordCheckpoint(const QString& projectRoot,
                           const QString& title,
                           const QString& summary,
@@ -47,7 +50,9 @@ public:
                           const QString& commit = {},
                           const QString& verificationStatus = {},
                           QJsonObject* result = nullptr,
-                          QString* error = nullptr);
+                          QString* error = nullptr,
+                          const QJsonObject& provenance = {},
+                          const QString& scope = {});
     bool isVerifiedAdministrativeOverride(const QString& instruction) const;
     bool recordAdministrativeOverride(const QString& projectRoot,
                                       const QString& instruction,
@@ -97,6 +102,19 @@ public:
     static QJsonObject normalizeProvenance(const QJsonObject& fields);
     static bool validateProvenanceObject(const QJsonObject& provenance, QString* error = nullptr);
     static QJsonObject canonicalSystemProvenance();
+
+    enum class RecordScopeCategory {
+        OperationalEvent,
+        Decision,
+        Checkpoint,
+        Knowledge
+    };
+
+    static bool isScopeValidForCategory(RecordScopeCategory category, const QString& scope, const QSet<QString>& canonicalScopes);
+    static bool validateScopeCombinations(const QStringList& scopes, QString* error = nullptr);
+    static bool validateCrossScopeFiles(const QString& scope, const QStringList& files, QString* error = nullptr);
+    static bool validateCrossScopeFiles(const QStringList& scopes, const QStringList& files, QString* error = nullptr);
+
     QJsonObject validate(const QString& projectRoot, QString* error = nullptr, bool persistReport = true) const;
     QJsonObject validateColdStart(const QString& projectRoot, QString* error = nullptr) const;
     bool refreshDerivedState(const QString& projectRoot, QString* error = nullptr) const;

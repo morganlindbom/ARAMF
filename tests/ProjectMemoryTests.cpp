@@ -2464,9 +2464,12 @@ bool runProvenanceAndScopeTests()
     if (evUnivFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
         int seq = 300;
         for (const auto& uScope : universalScopes) {
+            const QString eventType = (uScope == QStringLiteral("global"))
+                ? QStringLiteral("GLOBAL_SYNC")
+                : QStringLiteral("TASK_STARTED");
             QJsonObject uEv{
                 {QStringLiteral("eventId"), QStringLiteral("event-univ-%1").arg(uScope)},
-                {QStringLiteral("eventType"), QStringLiteral("TASK_STARTED")},
+                {QStringLiteral("eventType"), eventType},
                 {QStringLiteral("sequenceNumber"), seq++},
                 {QStringLiteral("timestamp"), QStringLiteral("2026-09-17T00:00:00Z")},
                 {QStringLiteral("task"), QStringLiteral("Universal scope test")},
@@ -2567,6 +2570,227 @@ bool runProvenanceAndScopeTests()
     const auto valReportDyn = memory.validate(dynProj.path(), nullptr);
     bool dynPassed = isCheckPassed(valReportDyn, QStringLiteral("persisted-scope-validity"));
     ok &= require(dynPassed, "SCOPE-006: Scope routes loaded dynamically from scope-routes.json are accepted by validation");
+
+    // Provenance Test 12: Record decision with caller provenance.
+    QTemporaryDir govProj;
+    ProjectModel govModel;
+    govModel.setProjectPath(govProj.path());
+    MemoryConfiguration govMemoryConfig = testMemoryConfig;
+    govMemoryConfig.maintenanceOptions.append(QStringLiteral("record-decisions"));
+    govMemoryConfig.maintenanceOptions.append(QStringLiteral("record-checkpoints"));
+    govModel.setMemoryConfiguration(govMemoryConfig);
+    memory.initialize(govProj.path(), &govModel, nullptr);
+    const QJsonObject agentProv{
+        {QStringLiteral("actor"), QStringLiteral("agent")},
+        {QStringLiteral("agentId"), QStringLiteral("codex")},
+        {QStringLiteral("tool"), QStringLiteral("aramf-cli")}
+    };
+    QString decErr;
+    bool dRec = memory.recordDecision(govProj.path(), QStringLiteral("dec-prov-test"), QStringLiteral("Architecture"),
+                                      QStringLiteral("Caller provenance test for decision"), QStringLiteral("current"),
+                                      {}, &decErr, agentProv, QStringLiteral("source-code"));
+    ok &= require(dRec, "PROV-012: Record decision with caller provenance succeeds");
+    QList<QJsonObject> decEvents = memory.events(govProj.path(), nullptr);
+    bool decRecordedHasProv = false;
+    for (const auto& ev : decEvents) {
+        if (ev.value(QStringLiteral("eventType")).toString() == QStringLiteral("DECISION_RECORDED")) {
+            const auto p = ev.value(QStringLiteral("provenance")).toObject();
+            if (p.value(QStringLiteral("actor")).toString() == QStringLiteral("agent")
+                && p.value(QStringLiteral("agentId")).toString() == QStringLiteral("codex")
+                && p.value(QStringLiteral("tool")).toString() == QStringLiteral("aramf-cli")) {
+                decRecordedHasProv = true;
+            }
+        }
+    }
+    ok &= require(decRecordedHasProv, "PROV-012: DECISION_RECORDED event carries truthful caller provenance");
+
+    // Provenance Test 13: Supersede decision with caller provenance.
+    QString supErr;
+    bool dSup = memory.supersedeDecision(govProj.path(), QStringLiteral("dec-prov-test"), QStringLiteral("dec-replacement"),
+                                         &supErr, agentProv);
+    ok &= require(dSup, "PROV-013: Supersede decision with caller provenance succeeds");
+    decEvents = memory.events(govProj.path(), nullptr);
+    bool decSupHasProv = false;
+    for (const auto& ev : decEvents) {
+        if (ev.value(QStringLiteral("eventType")).toString() == QStringLiteral("DECISION_SUPERSEDED")) {
+            const auto p = ev.value(QStringLiteral("provenance")).toObject();
+            if (p.value(QStringLiteral("actor")).toString() == QStringLiteral("agent")
+                && p.value(QStringLiteral("agentId")).toString() == QStringLiteral("codex")
+                && p.value(QStringLiteral("tool")).toString() == QStringLiteral("aramf-cli")) {
+                decSupHasProv = true;
+            }
+        }
+    }
+    ok &= require(decSupHasProv, "PROV-013: DECISION_SUPERSEDED event carries truthful caller provenance");
+
+    // Provenance Test 14: Administrative override records truthful human provenance.
+    QJsonObject overrideResult;
+    QString overrideErr;
+    bool oRec = memory.recordAdministrativeOverride(
+        govProj.path(), QStringLiteral("Admin Morgan Lindbom override rule"),
+        QStringLiteral("Testing override rule"), QStringLiteral("Verification test"),
+        QStringLiteral("project"), QStringLiteral("Test override action"),
+        {}, {}, false, {}, &overrideResult, &overrideErr);
+    ok &= require(oRec, "PROV-014: Administrative override succeeds");
+    decEvents = memory.events(govProj.path(), nullptr);
+    bool overrideHasHumanProv = false;
+    for (const auto& ev : decEvents) {
+        if (ev.value(QStringLiteral("eventType")).toString() == QStringLiteral("ADMIN_OVERRIDE")) {
+            const auto p = ev.value(QStringLiteral("provenance")).toObject();
+            if (p.value(QStringLiteral("actor")).toString() == QStringLiteral("human")
+                && p.value(QStringLiteral("agentId")).toString() == QStringLiteral("none")
+                && p.value(QStringLiteral("tool")).toString() == QStringLiteral("aramf-admin-cli")) {
+                overrideHasHumanProv = true;
+            }
+        }
+    }
+    ok &= require(overrideHasHumanProv, "PROV-014: ADMIN_OVERRIDE event carries truthful human provenance");
+
+    // Provenance Test 15: Framework Knowledge propose & approve with provenance.
+    FrameworkKnowledgeService fkService;
+    QString fkErr;
+    QString fkId = fkService.propose(govProj.path(), QStringLiteral("FK Prov Title"),
+                                     QStringLiteral("FK Prov Lesson"), {QStringLiteral("source-code")},
+                                     {QStringLiteral("Evidence 1")}, true, &fkErr, agentProv);
+    ok &= require(!fkId.isEmpty(), "PROV-015: Framework Knowledge candidate proposal succeeds");
+    decEvents = memory.events(govProj.path(), nullptr);
+    bool candHasProv = false;
+    for (const auto& ev : decEvents) {
+        if (ev.value(QStringLiteral("eventType")).toString() == QStringLiteral("FRAMEWORK_KNOWLEDGE_CANDIDATE")) {
+            const auto p = ev.value(QStringLiteral("provenance")).toObject();
+            if (p.value(QStringLiteral("actor")).toString() == QStringLiteral("agent")
+                && p.value(QStringLiteral("agentId")).toString() == QStringLiteral("codex")) {
+                candHasProv = true;
+            }
+        }
+    }
+    ok &= require(candHasProv, "PROV-015: FRAMEWORK_KNOWLEDGE_CANDIDATE carries truthful caller provenance");
+
+    bool fkApp = fkService.approve(govProj.path(), fkId, QStringLiteral("Admin Morgan Lindbom"), &fkErr, agentProv);
+    ok &= require(fkApp, "PROV-015: Framework Knowledge approval succeeds");
+    decEvents = memory.events(govProj.path(), nullptr);
+    bool appHasProv = false;
+    for (const auto& ev : decEvents) {
+        if (ev.value(QStringLiteral("eventType")).toString() == QStringLiteral("FRAMEWORK_KNOWLEDGE_APPROVED")) {
+            const auto p = ev.value(QStringLiteral("provenance")).toObject();
+            if (p.value(QStringLiteral("actor")).toString() == QStringLiteral("agent")
+                && p.value(QStringLiteral("agentId")).toString() == QStringLiteral("codex")) {
+                appHasProv = true;
+            }
+        }
+    }
+    ok &= require(appHasProv, "PROV-015: FRAMEWORK_KNOWLEDGE_APPROVED carries truthful caller provenance");
+
+    // Provenance Test 16: Checkpoint carries caller provenance.
+    QJsonObject cpRes;
+    QString cpErr;
+    bool cpRec = memory.recordCheckpoint(govProj.path(), QStringLiteral("CP Provenance Title"),
+                                         QStringLiteral("Checkpoint provenance test"),
+                                         QStringLiteral("Task-Prov"), QStringLiteral("sha-test"),
+                                         QStringLiteral("PASS"), &cpRes, &cpErr, agentProv, QStringLiteral("project"));
+    ok &= require(cpRec, "PROV-016: Checkpoint record succeeds");
+    decEvents = memory.events(govProj.path(), nullptr);
+    bool cpHasProv = false;
+    for (const auto& ev : decEvents) {
+        if (ev.value(QStringLiteral("eventType")).toString() == QStringLiteral("CHECKPOINT_CREATED")) {
+            const auto p = ev.value(QStringLiteral("provenance")).toObject();
+            if (p.value(QStringLiteral("actor")).toString() == QStringLiteral("agent")
+                && p.value(QStringLiteral("agentId")).toString() == QStringLiteral("codex")) {
+                cpHasProv = true;
+            }
+        }
+    }
+    ok &= require(cpHasProv, "PROV-016: CHECKPOINT_CREATED event carries truthful caller provenance");
+    const auto cpObj = memory.checkpoints(govProj.path(), nullptr);
+    bool cpJsonHasProv = !cpObj.isEmpty() && cpObj.last().value(QStringLiteral("provenance")).toObject().value(QStringLiteral("actor")).toString() == QStringLiteral("agent");
+    ok &= require(cpJsonHasProv, "PROV-016: checkpoints.json carries caller provenance");
+
+    // Scope Test 7 (Level C: Checkpoint recovery scope affinity):
+    QString cpScopeErr;
+    bool cpBadScope = memory.recordCheckpoint(govProj.path(), QStringLiteral("CP Bad Scope"),
+                                              QStringLiteral("Component scope not allowed for checkpoint"),
+                                              {}, {}, {}, nullptr, &cpScopeErr, agentProv, QStringLiteral("ui-ux"));
+    ok &= require(!cpBadScope && cpScopeErr.contains(QStringLiteral("is invalid for checkpoint")),
+                  "SCOPE-007: Checkpoint with component partition scope 'ui-ux' is rejected");
+    cpScopeErr.clear();
+    bool cpGoodScope = memory.recordCheckpoint(govProj.path(), QStringLiteral("CP Good Scope"),
+                                               QStringLiteral("Universal recovery scope allowed for checkpoint"),
+                                               {}, {}, {}, nullptr, &cpScopeErr, agentProv, QStringLiteral("all"));
+    ok &= require(cpGoodScope, "SCOPE-007: Checkpoint with universal recovery scope 'all' succeeds");
+
+    // Scope Test 8 (Level C: Decision cannot be history scope):
+    QString decHistErr;
+    bool decHist = memory.recordDecision(govProj.path(), QStringLiteral("dec-hist-test"), QStringLiteral("HistoryTopic"),
+                                         QStringLiteral("Testing history scope in decision"), QStringLiteral("current"),
+                                         {}, &decHistErr, agentProv, QStringLiteral("history"));
+    ok &= require(!decHist && decHistErr.contains(QStringLiteral("invalid scope")),
+                  "SCOPE-008: Decision with archive scope 'history' is rejected");
+
+    // Scope Test 9 (Level C: Operational event cannot be pure global):
+    QString opGlobErr;
+    bool opGlob = memory.recordOperation(govProj.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Global op task")},
+                    {QStringLiteral("scope"), QStringLiteral("global")},
+                    {QStringLiteral("provenance"), agentProv}}, nullptr, &opGlobErr);
+    ok &= require(!opGlob && opGlobErr.contains(QStringLiteral("cannot be pure global")),
+                  "SCOPE-009: Operational event with pure 'global' scope is rejected");
+    bool opComp = memory.recordOperation(govProj.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Compound op task")},
+                    {QStringLiteral("scope"), QStringLiteral("project+global")},
+                    {QStringLiteral("provenance"), agentProv}}, nullptr, nullptr);
+    ok &= require(opComp, "SCOPE-009: Operational event with compound 'project+global' scope succeeds");
+
+    // Scope Test 10 (Level D: Contradictory combination 'project' and 'global'):
+    QString comboProjGlobErr;
+    bool comboProjGlob = memory.recordOperation(govProj.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Contradictory combination")},
+                    {QStringLiteral("scopes"), QJsonArray{QStringLiteral("project"), QStringLiteral("global")}},
+                    {QStringLiteral("provenance"), agentProv}}, nullptr, &comboProjGlobErr);
+    ok &= require(!comboProjGlob && comboProjGlobErr.contains(QStringLiteral("Contradictory scope combination")),
+                  "SCOPE-010: Operational event with separate 'project' and 'global' scopes is rejected");
+
+    // Scope Test 11 (Level D: Universal scope combined with specific partition):
+    QString comboAllPartErr;
+    bool comboAllPart = memory.recordOperation(govProj.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Universal plus partition")},
+                    {QStringLiteral("scopes"), QJsonArray{QStringLiteral("all"), QStringLiteral("source-code")}},
+                    {QStringLiteral("provenance"), agentProv}}, nullptr, &comboAllPartErr);
+    ok &= require(!comboAllPart && comboAllPartErr.contains(QStringLiteral("Contradictory scope combination")),
+                  "SCOPE-011: Universal scope 'all' combined with partition 'source-code' is rejected");
+
+    // Scope Test 12 (Level D: History combined with active partition):
+    QString comboHistPartErr;
+    bool comboHistPart = memory.recordOperation(govProj.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("History plus partition")},
+                    {QStringLiteral("scopes"), QJsonArray{QStringLiteral("history"), QStringLiteral("tests")}},
+                    {QStringLiteral("provenance"), agentProv}}, nullptr, &comboHistPartErr);
+    ok &= require(!comboHistPart && comboHistPartErr.contains(QStringLiteral("Contradictory scope combination")),
+                  "SCOPE-012: Archive scope 'history' combined with active partition 'tests' is rejected");
+
+    // Scope Test 13 (Level E: Cross-scope file mismatch):
+    QString crossMismatchErr;
+    bool crossMismatch = memory.recordOperation(govProj.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Cross scope mismatch")},
+                    {QStringLiteral("scope"), QStringLiteral("tests")},
+                    {QStringLiteral("affectedFiles"), QJsonArray{QStringLiteral("src/core/ProjectMemory.cpp")}},
+                    {QStringLiteral("provenance"), agentProv}}, nullptr, &crossMismatchErr);
+    ok &= require(!crossMismatch && crossMismatchErr.contains(QStringLiteral("Cross-scope file violation")),
+                  "SCOPE-013: Operational event with scope 'tests' and file 'src/core/ProjectMemory.cpp' is rejected");
+
+    // Scope Test 14 (Level E: Cross-scope file match):
+    QString crossMatchErr;
+    bool crossMatch = memory.recordOperation(govProj.path(), QStringLiteral("task-start"),
+        QJsonObject{{QStringLiteral("task"), QStringLiteral("Cross scope match")},
+                    {QStringLiteral("scope"), QStringLiteral("tests")},
+                    {QStringLiteral("affectedFiles"), QJsonArray{QStringLiteral("tests/ProjectMemoryTests.cpp")}},
+                    {QStringLiteral("provenance"), agentProv}}, nullptr, &crossMatchErr);
+    ok &= require(crossMatch, "SCOPE-014: Operational event with scope 'tests' and file 'tests/ProjectMemoryTests.cpp' succeeds");
+
+    const auto finalValReport = memory.validate(govProj.path(), nullptr);
+    ok &= require(isCheckPassed(finalValReport, QStringLiteral("persisted-scope-validity")),
+                  "SCOPE-FINAL: All governance and valid scope additions pass persisted scope validity");
+    ok &= require(isCheckPassed(finalValReport, QStringLiteral("event-provenance-valid")),
+                  "PROV-FINAL: All governance and valid event additions pass event provenance validation");
 
     return ok;
 }

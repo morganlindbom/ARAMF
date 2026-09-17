@@ -367,12 +367,15 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
 
     if (arguments.size() >= 3 && arguments.at(0) == QStringLiteral("memory")
         && arguments.at(1) == QStringLiteral("decision") && arguments.at(2) == QStringLiteral("record")) {
-        const QSet<QString> valueOptions{QStringLiteral("--project"), QStringLiteral("--id"), QStringLiteral("--topic"),
-                                         QStringLiteral("--summary"), QStringLiteral("--status"), QStringLiteral("--superseded-by")};
+        const QSet<QString> valueOptions{QStringLiteral("--project"), QStringLiteral("--id"),
+                                         QStringLiteral("--topic"), QStringLiteral("--summary"),
+                                         QStringLiteral("--status"), QStringLiteral("--superseded-by"),
+                                         QStringLiteral("--actor"), QStringLiteral("--agent-id"),
+                                         QStringLiteral("--tool"), QStringLiteral("--scope")};
         QHash<QString, QString> options;
         for (int index = 3; index < arguments.size(); ++index) {
             const QString name = arguments.at(index);
-            if (!valueOptions.contains(name) || index + 1 >= arguments.size()) {
+            if (!valueOptions.contains(name) || index + 1 >= arguments.size() || arguments.at(index + 1).startsWith(QStringLiteral("--"))) {
                 error << "error=invalid-argument:" << name << "\n";
                 return 2;
             }
@@ -387,11 +390,17 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
         }
         ProjectMemory memory;
         QString decisionError;
+        QJsonObject prov;
+        if (options.contains(QStringLiteral("--actor"))) prov.insert(QStringLiteral("actor"), options.value(QStringLiteral("--actor")));
+        if (options.contains(QStringLiteral("--agent-id"))) prov.insert(QStringLiteral("agentId"), options.value(QStringLiteral("--agent-id")));
+        if (options.contains(QStringLiteral("--tool"))) prov.insert(QStringLiteral("tool"), options.value(QStringLiteral("--tool")));
+
         if (!memory.recordDecision(QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath()),
                                    options.value(QStringLiteral("--id")), options.value(QStringLiteral("--topic")),
                                    options.value(QStringLiteral("--summary")),
                                    options.value(QStringLiteral("--status"), QStringLiteral("current")),
-                                   options.value(QStringLiteral("--superseded-by")), &decisionError)) {
+                                   options.value(QStringLiteral("--superseded-by")), &decisionError,
+                                   prov, options.value(QStringLiteral("--scope")))) {
             error << "error=" << decisionError << "\n";
             return 2;
         }
@@ -401,8 +410,19 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
 
     if (arguments.size() >= 3 && arguments.at(0) == QStringLiteral("memory")
         && arguments.at(1) == QStringLiteral("decision") && arguments.at(2) == QStringLiteral("supersede")) {
+        const QSet<QString> valueOptions{QStringLiteral("--project"), QStringLiteral("--id"),
+                                         QStringLiteral("--replacement"),
+                                         QStringLiteral("--actor"), QStringLiteral("--agent-id"),
+                                         QStringLiteral("--tool")};
         QHash<QString, QString> options;
-        for (int index = 3; index + 1 < arguments.size(); index += 2) options.insert(arguments.at(index), arguments.at(index + 1));
+        for (int index = 3; index < arguments.size(); ++index) {
+            const QString name = arguments.at(index);
+            if (!valueOptions.contains(name) || index + 1 >= arguments.size() || arguments.at(index + 1).startsWith(QStringLiteral("--"))) {
+                error << "error=invalid-argument:" << name << "\n";
+                return 2;
+            }
+            options.insert(name, arguments.at(++index));
+        }
         if (!options.contains(QStringLiteral("--project")) || !options.contains(QStringLiteral("--id"))
             || !options.contains(QStringLiteral("--replacement"))) {
             error << "error=project-id-and-replacement-are-required\n";
@@ -410,8 +430,14 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
         }
         ProjectMemory memory;
         QString decisionError;
+        QJsonObject prov;
+        if (options.contains(QStringLiteral("--actor"))) prov.insert(QStringLiteral("actor"), options.value(QStringLiteral("--actor")));
+        if (options.contains(QStringLiteral("--agent-id"))) prov.insert(QStringLiteral("agentId"), options.value(QStringLiteral("--agent-id")));
+        if (options.contains(QStringLiteral("--tool"))) prov.insert(QStringLiteral("tool"), options.value(QStringLiteral("--tool")));
+
         if (!memory.supersedeDecision(QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath()),
-                                      options.value(QStringLiteral("--id")), options.value(QStringLiteral("--replacement")), &decisionError)) {
+                                      options.value(QStringLiteral("--id")), options.value(QStringLiteral("--replacement")), &decisionError,
+                                      prov)) {
             error << "error=" << decisionError << "\n";
             return 2;
         }
@@ -439,11 +465,13 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
         && arguments.at(1) == QStringLiteral("knowledge") && arguments.at(2) == QStringLiteral("propose")) {
         const QSet<QString> valueOptions{QStringLiteral("--project"), QStringLiteral("--title"),
                                          QStringLiteral("--lesson"), QStringLiteral("--scopes"),
-                                         QStringLiteral("--evidence"), QStringLiteral("--portable")};
+                                         QStringLiteral("--evidence"), QStringLiteral("--portable"),
+                                         QStringLiteral("--actor"), QStringLiteral("--agent-id"),
+                                         QStringLiteral("--tool")};
         QHash<QString, QString> options;
         for (int index = 3; index < arguments.size(); ++index) {
             const QString name = arguments.at(index);
-            if (!valueOptions.contains(name) || index + 1 >= arguments.size()) {
+            if (!valueOptions.contains(name) || index + 1 >= arguments.size() || arguments.at(index + 1).startsWith(QStringLiteral("--"))) {
                 error << "error=invalid-argument:" << name << "\n";
                 return 2;
             }
@@ -459,13 +487,19 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
         }
         FrameworkKnowledgeService service;
         QString knowledgeError;
+        QJsonObject prov;
+        if (options.contains(QStringLiteral("--actor"))) prov.insert(QStringLiteral("actor"), options.value(QStringLiteral("--actor")));
+        if (options.contains(QStringLiteral("--agent-id"))) prov.insert(QStringLiteral("agentId"), options.value(QStringLiteral("--agent-id")));
+        if (options.contains(QStringLiteral("--tool"))) prov.insert(QStringLiteral("tool"), options.value(QStringLiteral("--tool")));
+
         const QString id = service.propose(
             QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath()),
             options.value(QStringLiteral("--title")), options.value(QStringLiteral("--lesson")),
             options.value(QStringLiteral("--scopes")).split(',', Qt::SkipEmptyParts),
             QStringList{options.value(QStringLiteral("--evidence"))},
             options.value(QStringLiteral("--portable"), QStringLiteral("true")).compare(QStringLiteral("false"), Qt::CaseInsensitive) != 0,
-            &knowledgeError);
+            &knowledgeError,
+            prov);
         if (id.isEmpty()) {
             error << "error=" << knowledgeError << "\n";
             return 2;
@@ -590,11 +624,12 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
 
     if (arguments.size() >= 3 && arguments.at(0) == QStringLiteral("memory")
         && arguments.at(1) == QStringLiteral("knowledge") && arguments.at(2) == QStringLiteral("approve")) {
-        const QSet<QString> valueOptions{QStringLiteral("--project"), QStringLiteral("--id"), QStringLiteral("--source")};
+        const QSet<QString> valueOptions{QStringLiteral("--project"), QStringLiteral("--id"), QStringLiteral("--source"),
+                                         QStringLiteral("--actor"), QStringLiteral("--agent-id"), QStringLiteral("--tool")};
         QHash<QString, QString> options;
         for (int index = 3; index < arguments.size(); ++index) {
             const QString name = arguments.at(index);
-            if (!valueOptions.contains(name) || index + 1 >= arguments.size()) {
+            if (!valueOptions.contains(name) || index + 1 >= arguments.size() || arguments.at(index + 1).startsWith(QStringLiteral("--"))) {
                 error << "error=invalid-argument:" << name << "\n";
                 return 2;
             }
@@ -608,8 +643,14 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
         }
         FrameworkKnowledgeService service;
         QString knowledgeError;
+        QJsonObject prov;
+        if (options.contains(QStringLiteral("--actor"))) prov.insert(QStringLiteral("actor"), options.value(QStringLiteral("--actor")));
+        if (options.contains(QStringLiteral("--agent-id"))) prov.insert(QStringLiteral("agentId"), options.value(QStringLiteral("--agent-id")));
+        if (options.contains(QStringLiteral("--tool"))) prov.insert(QStringLiteral("tool"), options.value(QStringLiteral("--tool")));
+
         if (!service.approve(QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath()),
-                             options.value(QStringLiteral("--id")), options.value(QStringLiteral("--source")), &knowledgeError)) {
+                             options.value(QStringLiteral("--id")), options.value(QStringLiteral("--source")), &knowledgeError,
+                             prov)) {
             error << "error=" << knowledgeError << "\n";
             return 2;
         }
@@ -671,7 +712,9 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
         && arguments.at(1) == QStringLiteral("checkpoint")) {
         const QSet<QString> valueOptions{QStringLiteral("--project"), QStringLiteral("--title"),
                                          QStringLiteral("--summary"), QStringLiteral("--task"),
-                                         QStringLiteral("--commit"), QStringLiteral("--verification-status")};
+                                         QStringLiteral("--commit"), QStringLiteral("--verification-status"),
+                                         QStringLiteral("--actor"), QStringLiteral("--agent-id"), QStringLiteral("--tool"),
+                                         QStringLiteral("--scope")};
         QHash<QString, QString> options;
         for (int index = 2; index < arguments.size(); ++index) {
             const QString name = arguments.at(index);
@@ -690,10 +733,16 @@ int runMemoryCommand(const QStringList& arguments, QTextStream& output, QTextStr
         ProjectMemory memory;
         QJsonObject result;
         QString checkpointError;
+        QJsonObject prov;
+        if (options.contains(QStringLiteral("--actor"))) prov.insert(QStringLiteral("actor"), options.value(QStringLiteral("--actor")));
+        if (options.contains(QStringLiteral("--agent-id"))) prov.insert(QStringLiteral("agentId"), options.value(QStringLiteral("--agent-id")));
+        if (options.contains(QStringLiteral("--tool"))) prov.insert(QStringLiteral("tool"), options.value(QStringLiteral("--tool")));
+
         if (!memory.recordCheckpoint(QDir::cleanPath(QFileInfo(options.value(QStringLiteral("--project"))).absoluteFilePath()),
                                      options.value(QStringLiteral("--title")), options.value(QStringLiteral("--summary")),
                                      options.value(QStringLiteral("--task")), options.value(QStringLiteral("--commit")),
-                                     options.value(QStringLiteral("--verification-status")), &result, &checkpointError)) {
+                                     options.value(QStringLiteral("--verification-status")), &result, &checkpointError,
+                                     prov, options.value(QStringLiteral("--scope")))) {
             error << "error=" << checkpointError << "\n";
             return 2;
         }

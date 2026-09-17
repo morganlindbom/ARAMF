@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <QJsonObject>
 #include <QObject>
 #include <QStringList>
 
@@ -46,7 +47,8 @@ public:
                     const QStringList& scopes,
                     const QStringList& evidence,
                     bool portable = true,
-                    QString* error = nullptr) const;
+                    QString* error = nullptr,
+                    const QJsonObject& provenance = {}) const;
     QString proposeApprovedByAdministrator(const QString& projectRoot,
                                            const QString& title,
                                            const QString& lesson,
@@ -54,18 +56,21 @@ public:
                                            const QStringList& evidence,
                                            const QString& administrator,
                                            bool portable = true,
-                                           QString* error = nullptr) const;
+                                           QString* error = nullptr,
+                                           const QJsonObject& provenance = {}) const;
     bool approve(const QString& projectRoot,
                  const QString& candidateId,
                  const QString& approvalSource,
-                 QString* error = nullptr) const;
+                 QString* error = nullptr,
+                 const QJsonObject& provenance = {}) const;
     bool markMoreEvidence(const QString& projectRoot,
                           const QString& entryId,
                           QString* error = nullptr) const;
     bool supersede(const QString& projectRoot,
                    const QString& entryId,
                    const QString& replacementId,
-                   QString* error = nullptr) const;
+                   QString* error = nullptr,
+                   const QJsonObject& provenance = {}) const;
     QString globalLibraryPath() const;
     QString legacyGlobalLibraryPath() const;
     QString legacyExecutableGlobalLibraryPath() const;
