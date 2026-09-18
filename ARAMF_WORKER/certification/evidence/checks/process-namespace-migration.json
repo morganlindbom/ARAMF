@@ -1,0 +1,10 @@
+{
+    "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --process-migration",
+    "evidenceFingerprint": "6e9026e10d89e86c7f1b61f45cc73c503bff277bf02ff24a502f3e60c5285d91",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/process-namespace-migration.log",
+    "exitCode": 0,
+    "name": "process-namespace-migration",
+    "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+    "status": "PASS",
+    "timestamp": "2026-09-18T20:48:29Z"
+}

@@ -1,0 +1,10 @@
+{
+    "command": "C:/Program Files/CMake/bin/ctest.exe --test-dir ./build --output-on-failure",
+    "evidenceFingerprint": "93c2321e87c13d34955b649881b6612b816f8ddf9b6cd7709c143d71f43f3593",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/full-ctest.log",
+    "exitCode": 0,
+    "name": "full-ctest",
+    "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+    "status": "PASS",
+    "timestamp": "2026-09-18T20:49:28Z"
+}

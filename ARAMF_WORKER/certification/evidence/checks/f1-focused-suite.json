@@ -1,0 +1,10 @@
+{
+    "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --f1-certification",
+    "evidenceFingerprint": "a4ea3f731e6feb07c20a9b0247862ffdb46b9a235c1691d36e6dd9e8c760b04d",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/f1-focused-suite.log",
+    "exitCode": 0,
+    "name": "f1-focused-suite",
+    "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+    "status": "PASS",
+    "timestamp": "2026-09-18T20:48:01Z"
+}

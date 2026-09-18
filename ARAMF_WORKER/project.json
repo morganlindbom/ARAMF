@@ -30,7 +30,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "3b1204b6bd47f2d59b2c6410a75aa19efd2fac7e0c0d092dc81cef99181ac33f",
+    "configurationFingerprint": "f206eb2db071f83a1184346bb83396ba0f186c179b10b7dfa292339141d04dc9",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",
@@ -55,13 +55,7 @@
     "orchestration": {
     },
     "processVersion": {
-        "active": {
-            "certification": 0,
-            "done": 0,
-            "foundation": 1,
-            "iteration": 2,
-            "loop": 1
-        },
+        "active": null,
         "completedHistory": [
             {
                 "certification": 1,
@@ -110,6 +104,13 @@
                 "done": 1,
                 "foundation": 1,
                 "iteration": 1,
+                "loop": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "foundation": 1,
+                "iteration": 2,
                 "loop": 1
             }
         ],

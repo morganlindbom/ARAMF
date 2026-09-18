@@ -1,0 +1,10 @@
+{
+    "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --foundation-namespace",
+    "evidenceFingerprint": "7f7c748fa728db53d7cb20319d363248f3be2f380fea46297abe335d181df557",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/foundation-namespace.log",
+    "exitCode": 0,
+    "name": "foundation-namespace",
+    "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+    "status": "PASS",
+    "timestamp": "2026-09-18T20:48:29Z"
+}

@@ -1,0 +1,10 @@
+{
+    "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --provenance-and-scope",
+    "evidenceFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/provenance-and-scope.log",
+    "exitCode": 0,
+    "name": "provenance-and-scope",
+    "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+    "status": "PASS",
+    "timestamp": "2026-09-18T20:49:25Z"
+}

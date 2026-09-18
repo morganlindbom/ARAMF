@@ -1,0 +1,10 @@
+{
+    "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --p5-routing",
+    "evidenceFingerprint": "273744a122dcb7bcab70a3cb2e1b796d7eea61539c4f89f3a8fe899f31d0e98b",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/p5-routing.log",
+    "exitCode": 0,
+    "name": "p5-routing",
+    "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+    "status": "PASS",
+    "timestamp": "2026-09-18T20:49:24Z"
+}

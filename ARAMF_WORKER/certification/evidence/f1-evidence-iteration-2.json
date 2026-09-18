@@ -1,0 +1,186 @@
+{
+    "_file": "f1-evidence.json",
+    "checks": [
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --f1-certification",
+            "evidenceFingerprint": "a4ea3f731e6feb07c20a9b0247862ffdb46b9a235c1691d36e6dd9e8c760b04d",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/f1-focused-suite.log",
+            "exitCode": 0,
+            "name": "f1-focused-suite",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:48:01Z"
+        },
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --foundation-namespace",
+            "evidenceFingerprint": "7f7c748fa728db53d7cb20319d363248f3be2f380fea46297abe335d181df557",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/foundation-namespace.log",
+            "exitCode": 0,
+            "name": "foundation-namespace",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:48:29Z"
+        },
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --process-migration",
+            "evidenceFingerprint": "6e9026e10d89e86c7f1b61f45cc73c503bff277bf02ff24a502f3e60c5285d91",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/process-namespace-migration.log",
+            "exitCode": 0,
+            "name": "process-namespace-migration",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:48:29Z"
+        },
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --p1-governance",
+            "evidenceFingerprint": "9d61375c9f5cb0072eede5ea1b022a697293c939a7df56dcb44c351dab2514f1",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/p1-governance.log",
+            "exitCode": 0,
+            "name": "p1-governance",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:48:29Z"
+        },
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --p2-context",
+            "evidenceFingerprint": "937802ce92f58f7d219eb7e5aa044e7c4c8e9d0f4e7a7e827f69a9d1e10b62ec",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/p2-context.log",
+            "exitCode": 0,
+            "name": "p2-context",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:48:51Z"
+        },
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --p3-execution",
+            "evidenceFingerprint": "b5c8183acaf91590663a2a6750e0bb8d9b0da7c2d6e6438270952d6d0606d7d2",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/p3-execution.log",
+            "exitCode": 0,
+            "name": "p3-execution",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:48:51Z"
+        },
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --p4-predictive",
+            "evidenceFingerprint": "e23ca38200151e206496f33167b253424ebcd37982a61d925363524fa36b7d05",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/p4-predictive.log",
+            "exitCode": 0,
+            "name": "p4-predictive",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:49:22Z"
+        },
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --p5-routing",
+            "evidenceFingerprint": "273744a122dcb7bcab70a3cb2e1b796d7eea61539c4f89f3a8fe899f31d0e98b",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/p5-routing.log",
+            "exitCode": 0,
+            "name": "p5-routing",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:49:24Z"
+        },
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --provenance-and-scope",
+            "evidenceFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/provenance-and-scope.log",
+            "exitCode": 0,
+            "name": "provenance-and-scope",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:49:25Z"
+        },
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf.exe foundation f1-validate --project .",
+            "evidenceFingerprint": "45a25490623997a4fbc4309514f2cb8766133079c61bb424ce1d702c95d900be",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/f1-physical-validation.log",
+            "exitCode": 0,
+            "name": "f1-physical-validation",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:49:28Z"
+        },
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf.exe memory cold-start --project .",
+            "evidenceFingerprint": "35021676a9a2a9cad08a673b6e9a4cd60ff568e43b41f54c26680d8f8f3c4e77",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/memory-cold-start.log",
+            "exitCode": 0,
+            "name": "memory-cold-start",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:49:28Z"
+        },
+        {
+            "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf.exe memory validate --project .",
+            "evidenceFingerprint": "3c001d1c2d6e3a65cc0a618426accf068841cf29c2608acdee87b113b4a872ce",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/memory-consistency.log",
+            "exitCode": 0,
+            "name": "memory-consistency",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:49:28Z"
+        },
+        {
+            "command": "C:/Program Files/CMake/bin/ctest.exe --test-dir ./build --output-on-failure",
+            "evidenceFingerprint": "93c2321e87c13d34955b649881b6612b816f8ddf9b6cd7709c143d71f43f3593",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/full-ctest.log",
+            "exitCode": 0,
+            "name": "full-ctest",
+            "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+            "status": "PASS",
+            "timestamp": "2026-09-18T20:49:28Z"
+        }
+    ],
+    "contract": {
+        "bootstrapOrder": 1,
+        "dependsOn": [
+        ],
+        "foundation": "F1",
+        "name": "Memory & Evidence Foundation",
+        "owns": [
+            "append-only-ledger",
+            "cold-start-reconstruction",
+            "certification-evidence",
+            "memory-consistency",
+            "compaction-governance",
+            "ledger-manifest-recovery"
+        ],
+        "requiredBy": [
+            "F2",
+            "F3",
+            "F4"
+        ],
+        "responsibility": "Stores and reconstructs evidence"
+    },
+    "evidenceFingerprint": "01844fa22c64ff904ccfe41a6e6fb4e36210593ae187b71b9aff1aa3a82e8a81",
+    "foundation": "F1",
+    "foundationName": "Memory & Evidence Foundation",
+    "foundationVersion": "F1.1.2",
+    "knownLimitations": [
+        "F1 covers Memory & Evidence Foundation only; F2-F4 remain uncertified and in pre-certification state.",
+        "Integrated foundation validation (foundationIntegrationValid) remains false; P6 gating remains strictly BLOCKED."
+    ],
+    "overallStatus": "PASS",
+    "rawDetails": {
+    },
+    "results": {
+        "f1FocusedSuite": "PASS",
+        "f1PhysicalValidation": "PASS",
+        "foundationNamespace": "PASS",
+        "fullCTest": "PASS",
+        "memoryColdStart": "PASS",
+        "memoryConsistency": "PASS",
+        "p1Governance": "PASS",
+        "p2Context": "PASS",
+        "p3Execution": "PASS",
+        "p4Predictive": "PASS",
+        "p5Routing": "PASS",
+        "processNamespaceMigration": "PASS",
+        "provenanceAndScope": "PASS"
+    },
+    "schemaVersion": 1,
+    "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+    "timestamp": "2026-09-18T20:48:01Z",
+    "verificationLevel": "HOST_TEST"
+}

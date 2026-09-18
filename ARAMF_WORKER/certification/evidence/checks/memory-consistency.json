@@ -1,0 +1,10 @@
+{
+    "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf.exe memory validate --project .",
+    "evidenceFingerprint": "3c001d1c2d6e3a65cc0a618426accf068841cf29c2608acdee87b113b4a872ce",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/memory-consistency.log",
+    "exitCode": 0,
+    "name": "memory-consistency",
+    "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+    "status": "PASS",
+    "timestamp": "2026-09-18T20:49:28Z"
+}

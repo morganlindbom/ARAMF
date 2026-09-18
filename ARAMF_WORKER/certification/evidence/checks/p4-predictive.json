@@ -1,0 +1,10 @@
+{
+    "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --p4-predictive",
+    "evidenceFingerprint": "e23ca38200151e206496f33167b253424ebcd37982a61d925363524fa36b7d05",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/p4-predictive.log",
+    "exitCode": 0,
+    "name": "p4-predictive",
+    "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+    "status": "PASS",
+    "timestamp": "2026-09-18T20:49:22Z"
+}
