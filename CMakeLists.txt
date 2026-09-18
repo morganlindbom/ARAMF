@@ -87,6 +87,8 @@ set(ARAMF_CORE_SOURCES
     src/core/TaskSignature.cpp
     src/core/PredictiveOptimizationService.h
     src/core/PredictiveOptimizationService.cpp
+    src/core/AdaptiveRoutingService.h
+    src/core/AdaptiveRoutingService.cpp
 )
 
 set(ARAMF_UI_SOURCES
@@ -199,6 +201,9 @@ if(BUILD_TESTING)
         src/core/ExecutionOrchestrator.cpp
         tests/P2ExecutionTests.cpp
         tests/P3PredictiveTests.cpp
+        tests/P4RoutingTests.cpp
+        src/core/AdaptiveRoutingService.h
+        src/core/AdaptiveRoutingService.cpp
         src/core/TaskSignature.h
         src/core/TaskSignature.cpp
         src/core/PredictiveOptimizationService.h

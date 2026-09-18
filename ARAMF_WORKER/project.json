@@ -55,7 +55,6 @@
     "orchestration": {
     },
     "processVersion": {
-        "active": null,
         "completedHistory": [
             {
                 "certification": 1,
@@ -84,6 +83,13 @@
                 "iteration": 4,
                 "loop": 1,
                 "process": 2
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "process": 3
             }
         ],
         "legacyHistory": [
@@ -96,12 +102,19 @@
             "P2.1.1.1.1",
             "P1.1.1.1"
         ],
+        "active": {
+            "certification": 1,
+            "done": 1,
+            "iteration": 4,
+            "loop": 1,
+            "process": 4
+        },
         "next": {
             "certification": 0,
             "done": 0,
             "iteration": 0,
             "loop": 1,
-            "process": 3
+            "process": 5
         }
     },
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",

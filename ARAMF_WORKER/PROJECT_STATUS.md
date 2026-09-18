@@ -688,7 +688,117 @@ Campaign Evidence:
   - Completion: Sequence 321 (`event-f0b6e976-43b2-467d-a929-7c32ef735dd2`), `TASK_COMPLETED`, status=PASS.
 - Final P3 Verdict: **CERTIFIED PASS** (`P3.1.4.1.1`, cert=1, done=1).
 
+### P4.1.1 Implementation & Certification — Route Representation, Canonical Route Registry & Hard Governance Eligibility Filtering
+
+- Campaign Identity: `P4-SELF-ADJUSTING-ROUTING-ITERATION-1`
+- Canonical Transition: `P4.1.1.0.0` -> `P4.1.1.1.1` (loop=1, iteration=1, cert=1, done=1)
+- Architecture Implemented:
+  - `RouteDefinition` & `RouteRegistry` (`src/core/AdaptiveRoutingService.h`, `src/core/AdaptiveRoutingService.cpp`): Explicit, versioned (1.0) route representation. 5 canonical built-in routes:
+    1. `ROUTE-STANDARD-DIRECT`: Standard single/multi-component direct execution with focused validation and standard adapter.
+    2. `ROUTE-CONSERVATIVE-ISOLATED`: High-isolation route for low-evidence or uncertain tasks; dependency context, isolated workspace, subsystem validation. Safe conservative default.
+    3. `ROUTE-FAST-LOCAL`: Optimized route for single-file, localized changes; focused context, lightweight validation, direct adapter.
+    4. `ROUTE-HIGH-RISK-CROSS-LAYER`: Maximal-safety route for cross-layer or project-wide changes; full-project context, full-regression validation, isolated worktree.
+    5. `ROUTE-FALLBACK-MINIMAL`: Minimal emergency fallback route with focused context and standard validation; guaranteed fallback eligibility.
+  - Route Lifecycle Status: `Active`, `Degraded`, `Disabled`, `Superseded`.
+  - Hard Governance & Eligibility Filtering (`evaluateEligibility`):
+    - Strict non-authoritative boundary: P4 route selection never grants execution authority (`isExecutionAuthority() == false`).
+    - Enforces P0 permissions: requires active `TaskContract`, checks file limits (`maxFilesTouched`), verifies adapter availability against contract.
+    - Preserves P1 context coordination: validates context strategy against legal P1 scopes.
+    - Non-reduction of mandatory validation: if contract requires `full-regression`, routes demanding only `lightweight` or `focused` are strictly rejected.
+    - Cross-project isolation: routes and referenced files containing foreign or absolute project paths outside current root are rejected.
+    - Rejection tracking: all ineligible routes captured in `rejectedRoutes` with explicit reason and `violationCategory`.
+- Verification Evidence:
+  - Dedicated P4 hermetic test matrix (`tests/P4RoutingTests.cpp`): checks `P4-001` through `P4-011` PASS.
+- Recorder Events:
+  - Start: Sequence 322 (`event-9a9cf5aa-bc7e-4f14-b560-c20dde90369a`), `TASK_STARTED`.
+  - Completion: Sequence 323 (`event-251cb7cd-dabe-4355-b52d-e9ac7171614d`), `TASK_COMPLETED`, status=PASS.
+
+### P4.1.2 Implementation & Certification — Deterministic Multi-Factor Scoring, Dynamic Selection, Conservative Defaulting & Governed Fallback
+
+- Campaign Identity: `P4-SELF-ADJUSTING-ROUTING-ITERATION-2`
+- Canonical Transition: `P4.1.2.0.0` -> `P4.1.2.1.1` (loop=1, iteration=2, cert=1, done=1)
+- Architecture Implemented:
+  - Deterministic Multi-Factor Scoring (`calculateRouteScore`):
+    - Formula: `RawScore = (0.30 * Suitability) + (0.20 * PredictionConfidence) + (0.25 * HistoricalSuccess) + (0.15 * ValidationAlignment) + (0.10 * StabilityBonus) + HysteresisBonus - (0.15 * RetryPenalty) - (0.15 * CollisionPenalty) - DegradationPenalty`.
+    - Clamped deterministically to `[0.0, 1.0]`.
+    - Deterministic ranking: sorted by `(deterministicScore DESC, historicalSuccessRate DESC, routeId ASC)`.
+  - Calibrated Routing Confidence (`evaluateRoutingConfidence`):
+    - Strict sample-size gating:
+      - N=0: score strictly capped at <= 0.30, rating = `INSUFFICIENT_ROUTING_EVIDENCE`.
+      - N=1: score strictly capped at <= 0.45, rating = `LOW`.
+      - N=2: score strictly capped at <= 0.70, rating = `MEDIUM` or `LOW`.
+      - N>=3: eligible for `HIGH` only if consistency >= 0.80 and zero conflicting evidence penalty.
+  - Conservative Default Selection: On `INSUFFICIENT_ROUTING_EVIDENCE` or `LOW` confidence, falls back safely to `ROUTE-CONSERVATIVE-ISOLATED` (or `ROUTE-HIGH-RISK-CROSS-LAYER` for cross-layer breadth).
+  - Governed Fallback Selection: Selects distinct fallback route from candidate pool with `fallbackEligibility == true`. Fallback route carries zero authority to expand permissions.
+  - Context & Validation Routing: Derives appropriate P1 context strategy (`FOCUSED`, `FULL_PROJECT`, `DEPENDENCY`) and escalates validation to `full-regression` for cross-layer tasks.
+- Verification Evidence:
+  - Dedicated P4 hermetic test matrix: checks `P4-012` through `P4-017` PASS.
+- Recorder Events:
+  - Start: Sequence 324 (`event-187cc52e-4532-4a88-8387-789309c471ef`), `TASK_STARTED`.
+  - Completion: Sequence 325 (`event-ec211683-7d3a-4ccd-a25d-8da0ab110cc2`), `TASK_COMPLETED`, status=PASS.
+
+### P4.1.3 Implementation & Certification — Route Outcome Feedback, Route Health Ledger & Degradation / Circuit Breaker Mechanics
+
+- Campaign Identity: `P4-SELF-ADJUSTING-ROUTING-ITERATION-3`
+- Canonical Transition: `P4.1.3.0.0` -> `P4.1.3.1.1` (loop=1, iteration=3, cert=1, done=1)
+- Architecture Implemented:
+  - Route Outcome Feedback (`RouteEvaluation`, `recordOutcome`): Records deterministic execution and validation outcomes, retry counts, recovery events, resource collisions, and fallback activations into the route health ledger.
+  - Route Health Ledger (`RouteHealth`): Tracks total runs, successful runs, failed runs, consecutive failures, retry count, collision count, fallback count, success rate, and degradation timestamp.
+  - Anti-Oscillation Hysteresis: Incumbent preferred route receives a deterministic `+0.08` stability bonus, preventing rapid switching back and forth on marginal score differences.
+  - Progressive Degradation: A route with 2 consecutive failures is marked `isDegraded = true` and transitioned to `RouteStatus::Degraded`, incurring a `-0.35` degradation penalty plus `-0.15 * consecutiveFailures`.
+  - Circuit Breaker Mechanics (`RouteCircuitBreaker`):
+    - 3 consecutive failures trips the circuit breaker to `CircuitState::Open`.
+    - Routes with `Open` circuits are rejected unconditionally by the hard eligibility filter (`CIRCUIT_BREAKER_TRIPPED`).
+    - Supports `HalfOpen` recovery probe trials requiring 2 consecutive clean successes to transition back to `Closed`.
+  - Cross-Project Isolation: Foreign paths from external projects strictly excluded from route registry and evaluations.
+- Verification Evidence:
+  - Dedicated P4 hermetic test matrix: checks `P4-018` through `P4-025` PASS.
+- Recorder Events:
+  - Start: Sequence 326 (`event-9861bfdc-aba2-47dd-aafd-11a2119cd3f6`), `TASK_STARTED`.
+  - Completion: Sequence 327 (`event-f29be369-1f08-470a-9227-4b3a238ac294`), `TASK_COMPLETED`, status=PASS.
+
+### P4.1.4 Implementation & Certification — Real Routing Dogfood Campaign, Bi-directional Adaptation Validation & Final P4 Certification
+
+- Campaign Identity: `P4-SELF-ADJUSTING-ROUTING-ITERATION-4`
+- Canonical Transition: `P4.1.4.0.0` -> `P4.1.4.1.1` (loop=1, iteration=4, cert=1, done=1)
+- Architecture Implemented:
+  - Full P4 Persistence (`saveRoutingState`, `loadRoutingState`, `saveDecision`, `loadDecision`): Persists `routes.json`, `health.json`, `circuits.json`, and timestamped decisions to `ARAMF_WORKER/routing/`. Decisions and candidate lists are immutable once written.
+  - Anti-Leakage Auditing: Complete absence of P5 (Code Bank assets, promoted snippets) and P6 (agent quality scores, reputation, ranks) constructs across all P4 data structures.
+  - 9-Scenario Dogfood Campaign against ARAMF Self-Model:
+    1. Scenario 1 (Core/Memory): Selects valid route with focused context and verified fallback.
+    2. Scenario 2 (UI/Workflow): Selects valid route with `FOCUSED` context.
+    3. Scenario 3 (Cross-Layer): Selects `RouteHighRiskCrossLayer`, escalates validation to `full-regression` and context to `FULL_PROJECT`.
+    4. Scenario 4 (Configuration/Build): Selects valid route and mandates `full-regression`.
+    5. Scenario 5 (Read-Only Analysis): Selects valid route with `FOCUSED` context.
+    6. Scenario 6 (Novel/Low-Evidence): Selects `RouteConservativeIsolated` under `CONSERVATIVE_ROUTE` status.
+    7. Scenario 7 (Route Failure Fallback): Successfully activates fallback route and updates route health.
+    8. Scenario 8 (Resource Collision/Retry): Correctly records collision and retry counts into health ledger.
+    9. Scenario 9 (High-Risk Governance): Safely escalates validation to `full-regression` and routes to `RouteHighRiskCrossLayer`.
+  - Bi-Directional Adaptation Validation:
+    - Direction 1: 4 clean successes elevate `RouteStandardDirect` to `HIGH` confidence and top rank over `RouteConservativeIsolated`.
+    - Direction 2: 3 consecutive failures trip `RouteStandardDirect` circuit breaker to `OPEN`; system cleanly adapts back to `RouteConservativeIsolated`.
+- Verification Evidence:
+  - Dedicated P4 test matrix: 35/35 hermetic checks PASS (`P4-001` through `P4-035`).
+  - Dogfood Campaign: 9/9 scenarios PASS (`DOGFOOD-S1` through `DOGFOOD-S9`).
+  - Adaptation Validation: 3/3 checks PASS (`ADAPT-01` through `ADAPT-03`).
+  - Full CTest suite: 5/5 PASS (100%, 0 failures):
+    - 1/5 `aramf_core_tests`: PASS (60.26s)
+    - 2/5 `aramf_workflow_tests`: PASS (2.40s)
+    - 3/5 `aramf_template_tests`: PASS (82.50s)
+    - 4/5 `aramf_update_campaign`: PASS (6.75s)
+    - 5/5 `aramf_configuration_update`: PASS (0.23s)
+  - P0 regression: 275/275 checks PASS (`aramf_core_tests --worker-tasks`).
+  - P1 regression: 33/33 checks PASS (`ContextCoordinationTests`).
+  - P2 regression: PASS (`aramf_core_tests --p2-execution`).
+  - P3 regression: 31/31 checks PASS (`aramf_core_tests --p3-predictive`).
+  - Memory cold-start validation: PASS (`ARAMF_WORKER/memory/cold-start-validation.json`).
+  - Memory consistency validation: PASS (`ARAMF_WORKER/memory/memory-consistency-validation.json`).
+- Recorder Events:
+  - Start: Sequence 328 (`event-9be85781-0501-4b1b-89da-160a2f04eb4a`), `TASK_STARTED`.
+  - Completion: Sequence 329 (`event-7cddef83-784e-4b61-a713-fdcbdbd534f2`), `TASK_COMPLETED`, status=PASS.
+- Final P4 Verdict: **CERTIFIED PASS** (`P4.1.4.1.1`, cert=1, done=1).
+
 ## Latest Agent Task
 
-- Task: ARAMF P3.1.4 - Strict Confidence Calibration, Rolling Drift Detection, and Multi-Scenario Dogfood Campaign
+- Task: ARAMF P4.1.4 - Real Routing Dogfood Campaign, Bi-directional Adaptation Validation, and Final P4 Certification
 - Status: PASS
