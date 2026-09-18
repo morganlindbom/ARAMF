@@ -996,6 +996,76 @@ bool F1VerificationCheck::isPass(const QString& expectedRevision) const
     return true;
 }
 
+bool F1VerificationCheck::isPassWithEvidence(const QString& projectRoot,
+                                              const QString& expectedRevision,
+                                              QString* error) const
+{
+    // All basic checks first
+    if (status != QStringLiteral("PASS")) {
+        if (error) *error = QStringLiteral("Check '%1' did not PASS: status is '%2'.").arg(name, status);
+        return false;
+    }
+    if (exitCode != 0) {
+        if (error) *error = QStringLiteral("Check '%1' did not PASS: exitCode is %2, not 0.").arg(name).arg(exitCode);
+        return false;
+    }
+    if (sourceRevision.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("Check '%1' has empty sourceRevision.").arg(name);
+        return false;
+    }
+    if (!expectedRevision.isEmpty() && sourceRevision != expectedRevision) {
+        if (error) *error = QStringLiteral("Check '%1' sourceRevision '%2' does not match expected '%3'.")
+            .arg(name, sourceRevision, expectedRevision);
+        return false;
+    }
+    if (evidenceFingerprint.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("Check '%1' has empty evidenceFingerprint.").arg(name);
+        return false;
+    }
+
+    // Evidence reference must be non-empty
+    if (evidenceReference.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("Check '%1' has empty evidenceReference.").arg(name);
+        return false;
+    }
+
+    // Path traversal protection: must be within ARAMF_WORKER/certification/evidence/
+    const QString normalizedRef = QDir::cleanPath(evidenceReference);
+    if (normalizedRef.contains(QStringLiteral(".."))
+        || !normalizedRef.startsWith(QStringLiteral("ARAMF_WORKER/certification/evidence/"))) {
+        if (error) *error = QStringLiteral("Check '%1' evidenceReference '%2' is outside permitted evidence scope.")
+            .arg(name, evidenceReference);
+        return false;
+    }
+
+    // Physical file existence and readability
+    const QString absPath = QDir(projectRoot).filePath(evidenceReference);
+    QFile logFile(absPath);
+    if (!logFile.exists()) {
+        if (error) *error = QStringLiteral("Check '%1' referenced evidence file does not exist: %2")
+            .arg(name, evidenceReference);
+        return false;
+    }
+    if (!logFile.open(QIODevice::ReadOnly)) {
+        if (error) *error = QStringLiteral("Check '%1' referenced evidence file is not readable: %2")
+            .arg(name, evidenceReference);
+        return false;
+    }
+    const QByteArray fileBytes = logFile.readAll();
+    logFile.close();
+
+    // SHA-256 fingerprint verification
+    const QString actualHash = QString::fromLatin1(
+        QCryptographicHash::hash(fileBytes, QCryptographicHash::Sha256).toHex());
+    if (actualHash != evidenceFingerprint) {
+        if (error) *error = QStringLiteral("Check '%1' evidenceFingerprint mismatch: recorded '%2', actual file '%3'.")
+            .arg(name, evidenceFingerprint, actualHash);
+        return false;
+    }
+
+    return true;
+}
+
 QJsonObject F1VerificationCheck::toJson() const
 {
     return QJsonObject{
@@ -1098,6 +1168,69 @@ bool F1CertificationEvidence::isComplete(const QString& expectedRevision, QStrin
                 .arg(c.name, c.status).arg(c.exitCode).arg(c.sourceRevision);
             return false;
         }
+    }
+
+    for (const auto& r : req) {
+        if (!presentNames.contains(r)) {
+            if (error) *error = QStringLiteral("Required verification check '%1' is missing from evidence.").arg(r);
+            return false;
+        }
+    }
+
+    if (!f1FocusedPass || !foundationNamespacePass || !processMigrationPass
+        || !p1GovernancePass || !p2ContextPass || !p3ExecutionPass
+        || !p4PredictivePass || !p5RoutingPass || !provenanceAndScopePass
+        || !f1PhysicalValidationPass || !memoryColdStartPass || !memoryConsistencyPass
+        || !fullCTestPass) {
+        if (error) *error = QStringLiteral("F1 certification evidence is incomplete: all 13 required verification suites/checks must PASS.");
+        return false;
+    }
+
+    return true;
+}
+
+bool F1CertificationEvidence::isCompleteWithEvidence(const QString& projectRoot,
+                                                      const QString& expectedRevision,
+                                                      QString* error) const
+{
+    if (sourceRevision.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("F1 certification evidence has empty sourceRevision.");
+        return false;
+    }
+    if (!expectedRevision.isEmpty() && sourceRevision != expectedRevision) {
+        if (error) *error = QStringLiteral("Evidence sourceRevision '%1' does not match expected '%2'.")
+            .arg(sourceRevision, expectedRevision);
+        return false;
+    }
+
+    const auto req = requiredCheckNames();
+    const QSet<QString> requiredNames(req.cbegin(), req.cend());
+
+    // Reject duplicate check names
+    QSet<QString> presentNames;
+    for (const auto& c : checks) {
+        if (!requiredNames.contains(c.name)) {
+            if (error) *error = QStringLiteral("Unexpected verification check name '%1' in evidence.").arg(c.name);
+            return false;
+        }
+        if (presentNames.contains(c.name)) {
+            if (error) *error = QStringLiteral("Duplicate verification check name '%1' in evidence.").arg(c.name);
+            return false;
+        }
+        presentNames.insert(c.name);
+
+        // Full evidence chain validation for each check
+        QString checkErr;
+        if (!c.isPassWithEvidence(projectRoot, sourceRevision, &checkErr)) {
+            if (error) *error = checkErr;
+            return false;
+        }
+    }
+
+    if (checks.size() != req.size()) {
+        if (error) *error = QStringLiteral("F1 certification evidence must contain exactly %1 required checks; found %2.")
+            .arg(req.size()).arg(checks.size());
+        return false;
     }
 
     for (const auto& r : req) {
@@ -1300,9 +1433,15 @@ bool FoundationCertificationService::verifyGitSourceRevision(const QString& proj
                 file = file.mid(1, file.length() - 2);
             }
             file.replace(QLatin1Char('\\'), QLatin1Char('/'));
+            // Permitted certification dirtiness: certification evidence, project
+            // config updated during lifecycle transitions, and the two canonical
+            // machine-generated validation outputs produced by the required
+            // memory-cold-start and memory-consistency verification checks.
             if (file.startsWith(QStringLiteral("ARAMF_WORKER/certification/"))
                 || file == QStringLiteral("ARAMF_WORKER.aramf.json")
-                || file == QStringLiteral("ARAMF_WORKER/project.json")) {
+                || file == QStringLiteral("ARAMF_WORKER/project.json")
+                || file == QStringLiteral("ARAMF_WORKER/memory/cold-start-validation.json")
+                || file == QStringLiteral("ARAMF_WORKER/memory/memory-consistency-validation.json")) {
                 continue;
             }
             dirtyLines.append(line);
@@ -1557,25 +1696,43 @@ F1VerificationCheck FoundationCertificationService::executeCheck(const QString& 
 
     const QString logRel = QStringLiteral("ARAMF_WORKER/certification/evidence/checks/%1.log").arg(checkName);
     const QString logPath = QDir(projectRoot).filePath(logRel);
-    QFile logFile(logPath);
-    if (logFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        logFile.write(outputBytes);
-        logFile.close();
+    QSaveFile logFile(logPath);
+    if (!logFile.open(QIODevice::WriteOnly | QIODevice::Text)
+        || logFile.write(outputBytes) != outputBytes.size()
+        || !logFile.commit()) {
+        check.status = QStringLiteral("FAIL");
+        check.exitCode = -1;
+        check.evidenceReference.clear();
+        check.evidenceFingerprint.clear();
+        if (error) *error = QStringLiteral("Could not durably persist evidence log for check '%1'.")
+            .arg(checkName);
+        return check;
     }
 
     check.exitCode = exitCode;
     check.evidenceReference = logRel;
-    check.evidenceFingerprint = QString::fromLatin1(QCryptographicHash::hash(outputBytes, QCryptographicHash::Sha256).toHex());
+    check.evidenceFingerprint = computeFileSha256(logPath);
+    if (check.evidenceFingerprint.isEmpty()) {
+        check.status = QStringLiteral("FAIL");
+        if (error) *error = QStringLiteral("Could not fingerprint persisted evidence log for check '%1'.")
+            .arg(checkName);
+        return check;
+    }
     check.status = (finished && proc.exitStatus() == QProcess::NormalExit && exitCode == 0)
         ? QStringLiteral("PASS") : QStringLiteral("FAIL");
 
     const QString jsonRel = QStringLiteral("ARAMF_WORKER/certification/evidence/checks/%1.json").arg(checkName);
     const QString jsonPath = QDir(projectRoot).filePath(jsonRel);
     QSaveFile jsonFile(jsonPath);
-    if (jsonFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        const QByteArray jData = QJsonDocument(check.toJson()).toJson(QJsonDocument::Indented);
-        jsonFile.write(jData);
-        jsonFile.commit();
+    const QByteArray jData = QJsonDocument(check.toJson()).toJson(QJsonDocument::Indented);
+    if (!jsonFile.open(QIODevice::WriteOnly | QIODevice::Text)
+        || jsonFile.write(jData) != jData.size()
+        || !jsonFile.commit()) {
+        check.status = QStringLiteral("FAIL");
+        check.exitCode = -1;
+        if (error) *error = QStringLiteral("Could not durably persist check record for '%1'.")
+            .arg(checkName);
+        return check;
     }
 
     if (check.status != QStringLiteral("PASS") && error) {
@@ -1612,7 +1769,7 @@ bool FoundationCertificationService::executeF1VerificationSuite(const QString& p
                 const auto doc = QJsonDocument::fromJson(f.readAll()).object();
                 f.close();
                 const auto existingCheck = F1VerificationCheck::fromJson(doc);
-                if (existingCheck.isPass(sourceRevision)) {
+                if (existingCheck.isPassWithEvidence(projectRoot, sourceRevision, nullptr)) {
                     evidence->checks.append(existingCheck);
                     reused = true;
                 }
@@ -1858,7 +2015,7 @@ bool FoundationCertificationService::certifyF1(const QString& projectRoot,
             .arg(ev.sourceRevision, sourceRevision);
         return false;
     }
-    if (!ev.isComplete(sourceRevision, error)) {
+    if (!ev.isCompleteWithEvidence(projectRoot, sourceRevision, error)) {
         if (error && error->isEmpty()) *error = QStringLiteral("F1 certification evidence is incomplete: all 13 required verification suites/checks must PASS.");
         return false;
     }

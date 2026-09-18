@@ -220,6 +220,12 @@ struct F1VerificationCheck {
     QString evidenceFingerprint;
 
     bool isPass(const QString& expectedRevision = QString()) const;
+    // Full evidence chain validation: also verifies evidenceReference is non-empty,
+    // referenced file exists and is readable within permitted scope,
+    // and SHA-256(file bytes) matches evidenceFingerprint.
+    bool isPassWithEvidence(const QString& projectRoot,
+                            const QString& expectedRevision = QString(),
+                            QString* error = nullptr) const;
     QJsonObject toJson() const;
     static F1VerificationCheck fromJson(const QJsonObject& json);
 };
@@ -256,6 +262,11 @@ struct F1CertificationEvidence {
 
     void updateDerivedFlags();
     bool isComplete(const QString& expectedRevision = QString(), QString* error = nullptr) const;
+    // Full evidence chain validation including physical evidence file verification,
+    // duplicate check rejection, and path traversal protection.
+    bool isCompleteWithEvidence(const QString& projectRoot,
+                                const QString& expectedRevision = QString(),
+                                QString* error = nullptr) const;
     QJsonObject toJson() const;
     static F1CertificationEvidence fromJson(const QJsonObject& json);
     static QStringList requiredCheckNames();

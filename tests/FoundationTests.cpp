@@ -898,7 +898,7 @@ bool runF1MemoryEvidenceTests(const QString& selfRepoPath = QString())
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // F1 Certification Tests: Evidence-Bound Certification & Lifecycle Completion
-// Test IDs: F1-CERT-001 through F1-CERT-012
+// Test IDs: F1-CERT-001 through F1-CERT-030
 // ═══════════════════════════════════════════════════════════════════════════════
 
 static F1CertificationEvidence makeCompleteF1Evidence(const QString& sourceRev = QStringLiteral("rev-test-12345"),
@@ -930,6 +930,15 @@ static F1CertificationEvidence makeCompleteF1Evidence(const QString& sourceRev =
     }
     ev.timestamp = QStringLiteral("2026-09-18T12:00:00Z");
 
+    // SHA-256 of empty content (matching the empty log files we create below)
+    const QString emptyHash = QStringLiteral("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+
+    // Create physical evidence log files when projectRoot is provided
+    if (!projectRoot.isEmpty()) {
+        const QString checksDir = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence/checks"));
+        QDir().mkpath(checksDir);
+    }
+
     const auto req = F1CertificationEvidence::requiredCheckNames();
     for (const auto& name : req) {
         F1VerificationCheck c;
@@ -939,8 +948,18 @@ static F1CertificationEvidence makeCompleteF1Evidence(const QString& sourceRev =
         c.exitCode = 0;
         c.timestamp = ev.timestamp;
         c.sourceRevision = sourceRev;
-        c.evidenceReference = QStringLiteral("ARAMF_WORKER/certification/evidence/checks/%1.json").arg(name);
-        c.evidenceFingerprint = QStringLiteral("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        c.evidenceReference = QStringLiteral("ARAMF_WORKER/certification/evidence/checks/%1.log").arg(name);
+        c.evidenceFingerprint = emptyHash;
+
+        // Create physical empty log file to satisfy evidence chain validation
+        if (!projectRoot.isEmpty()) {
+            const QString logPath = QDir(projectRoot).filePath(c.evidenceReference);
+            QFile logFile(logPath);
+            if (logFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                logFile.close(); // empty file — SHA-256 matches emptyHash
+            }
+        }
+
         ev.checks.append(c);
     }
     ev.updateDerivedFlags();
@@ -1647,6 +1666,239 @@ bool runF1CertificationTests()
         // Complete rework
         FoundationCertificationService::completeF1(fx.path(), defaultProjectFile);
         ok &= require(checkEquivalence(), "F1-CERT-021: Equivalence after complete rework F1.1.2.1.1");
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Evidence-Chain Integrity Tests (F1-CERT-022 through F1-CERT-030)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // F1-CERT-022: Missing evidenceReference rejects isPassWithEvidence
+    {
+        F1VerificationCheck c;
+        c.name = QStringLiteral("test-check");
+        c.status = QStringLiteral("PASS");
+        c.exitCode = 0;
+        c.sourceRevision = QStringLiteral("rev-test-12345");
+        c.evidenceFingerprint = QStringLiteral("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        c.evidenceReference = QString(); // empty
+
+        QString err;
+        ok &= require(!c.isPassWithEvidence(QStringLiteral("."), QStringLiteral("rev-test-12345"), &err),
+                       "F1-CERT-022: Empty evidenceReference rejected");
+        ok &= require(err.contains(QStringLiteral("empty evidenceReference")),
+                       "F1-CERT-022: Error explains empty reference");
+    }
+
+    // F1-CERT-023: Missing log file rejects isPassWithEvidence
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-023: Fixture initializes");
+
+        F1VerificationCheck c;
+        c.name = QStringLiteral("test-check");
+        c.status = QStringLiteral("PASS");
+        c.exitCode = 0;
+        c.sourceRevision = fx.gitSha;
+        c.evidenceReference = QStringLiteral("ARAMF_WORKER/certification/evidence/checks/nonexistent.log");
+        c.evidenceFingerprint = QStringLiteral("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+
+        QString err;
+        ok &= require(!c.isPassWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-023: Missing log file rejected");
+        ok &= require(err.contains(QStringLiteral("does not exist")),
+                       "F1-CERT-023: Error explains missing file");
+    }
+
+    // F1-CERT-024: Tampered log (wrong fingerprint) rejects isPassWithEvidence
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-024: Fixture initializes");
+
+        const QString checksDir = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence/checks"));
+        QDir().mkpath(checksDir);
+        const QString logPath = QDir(checksDir).filePath(QStringLiteral("tampered.log"));
+        QFile logFile(logPath);
+        logFile.open(QIODevice::WriteOnly);
+        logFile.write("this is real output");
+        logFile.close();
+
+        F1VerificationCheck c;
+        c.name = QStringLiteral("test-check");
+        c.status = QStringLiteral("PASS");
+        c.exitCode = 0;
+        c.sourceRevision = fx.gitSha;
+        c.evidenceReference = QStringLiteral("ARAMF_WORKER/certification/evidence/checks/tampered.log");
+        c.evidenceFingerprint = QStringLiteral("0000000000000000000000000000000000000000000000000000000000000000"); // wrong
+
+        QString err;
+        ok &= require(!c.isPassWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-024: Tampered log rejected");
+        ok &= require(err.contains(QStringLiteral("mismatch")),
+                       "F1-CERT-024: Error explains fingerprint mismatch");
+    }
+
+    // F1-CERT-025: Path traversal rejects isPassWithEvidence
+    {
+        F1VerificationCheck c;
+        c.name = QStringLiteral("test-check");
+        c.status = QStringLiteral("PASS");
+        c.exitCode = 0;
+        c.sourceRevision = QStringLiteral("rev-test-12345");
+        c.evidenceFingerprint = QStringLiteral("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        c.evidenceReference = QStringLiteral("ARAMF_WORKER/certification/evidence/../../memory/event-log.jsonl");
+
+        QString err;
+        ok &= require(!c.isPassWithEvidence(QStringLiteral("."), QStringLiteral("rev-test-12345"), &err),
+                       "F1-CERT-025: Path traversal rejected");
+        ok &= require(err.contains(QStringLiteral("outside permitted")),
+                       "F1-CERT-025: Error explains scope violation");
+
+        // Also test absolute path injection
+        c.evidenceReference = QStringLiteral("/etc/passwd");
+        ok &= require(!c.isPassWithEvidence(QStringLiteral("."), QStringLiteral("rev-test-12345"), &err),
+                       "F1-CERT-025: Absolute path injection rejected");
+    }
+
+    // F1-CERT-026: Duplicate check name rejects isCompleteWithEvidence
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-026: Fixture initializes");
+
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        // Add a duplicate of the first check
+        auto dup = ev.checks.first();
+        ev.checks.append(dup);
+
+        QString err;
+        ok &= require(!ev.isCompleteWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-026: Duplicate check name rejected");
+        ok &= require(err.contains(QStringLiteral("Duplicate")),
+                       "F1-CERT-026: Error explains duplicate check");
+    }
+
+    // F1-CERT-027: Stale/wrong source revision in individual check rejects
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-027: Fixture initializes");
+
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        ev.checks[5].sourceRevision = QStringLiteral("stale-revision-does-not-match");
+        ev.updateDerivedFlags();
+
+        QString err;
+        ok &= require(!ev.isCompleteWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-027: Stale source revision rejected");
+        ok &= require(err.contains(QStringLiteral("does not match")),
+                       "F1-CERT-027: Error explains revision mismatch");
+    }
+
+    // F1-CERT-028: Validation-generated dirty artifacts allowed by verifyGitSourceRevision
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-028: Fixture initializes");
+
+        // Create the two validation files that the verification suite generates
+        const QString memDir = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory"));
+        QDir().mkpath(memDir);
+        QFile coldStart(QDir(memDir).filePath(QStringLiteral("cold-start-validation.json")));
+        coldStart.open(QIODevice::WriteOnly);
+        coldStart.write("{\"status\":\"PASS\"}");
+        coldStart.close();
+        QFile memConsist(QDir(memDir).filePath(QStringLiteral("memory-consistency-validation.json")));
+        memConsist.open(QIODevice::WriteOnly);
+        memConsist.write("{\"status\":\"PASS\"}");
+        memConsist.close();
+
+        QString err;
+        bool gitOk = FoundationCertificationService::verifyGitSourceRevision(fx.path(), fx.gitSha, &err);
+        ok &= require(gitOk, "F1-CERT-028: Validation-generated dirty artifacts allowed");
+    }
+
+    // F1-CERT-029: Ordinary dirty source file rejected by verifyGitSourceRevision
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-029: Fixture initializes");
+
+        // Create a dirty source file that should NOT be allowed
+        QFile dirty(QDir(fx.path()).filePath(QStringLiteral("src/dirty-code.cpp")));
+        QDir().mkpath(QDir(fx.path()).filePath(QStringLiteral("src")));
+        dirty.open(QIODevice::WriteOnly);
+        dirty.write("// malicious code");
+        dirty.close();
+
+        QString err;
+        bool gitOk = FoundationCertificationService::verifyGitSourceRevision(fx.path(), fx.gitSha, &err);
+        ok &= require(!gitOk, "F1-CERT-029: Ordinary dirty source file rejected");
+        ok &= require(err.contains(QStringLiteral("working tree is dirty")),
+                       "F1-CERT-029: Error explains dirty tree");
+
+        // Also verify that ARAMF_WORKER/memory/decisions.md is rejected (not in allowlist)
+        QFile::remove(QDir(fx.path()).filePath(QStringLiteral("src/dirty-code.cpp")));
+        QFile memDirty(QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/decisions.md")));
+        QDir().mkpath(QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory")));
+        memDirty.open(QIODevice::WriteOnly);
+        memDirty.write("# dirty decision");
+        memDirty.close();
+
+        bool gitOk2 = FoundationCertificationService::verifyGitSourceRevision(fx.path(), fx.gitSha, &err);
+        ok &= require(!gitOk2, "F1-CERT-029: Modified decisions.md rejected");
+    }
+
+    // F1-CERT-030: Complete evidence chain round-trip with isCompleteWithEvidence
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-030: Fixture initializes");
+
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+
+        QString err;
+        ok &= require(ev.isCompleteWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-030: Complete evidence chain validates");
+
+        // Verify all 13 required checks present
+        ok &= require(ev.checks.size() == 13, "F1-CERT-030: Exactly 13 checks present");
+
+        // Write and read back evidence artifact
+        QString relPath, sha;
+        bool wOk = FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev, &relPath, &sha, &err);
+        ok &= require(wOk, "F1-CERT-030: Evidence artifact written");
+
+        F1CertificationEvidence readBack;
+        bool rOk = FoundationCertificationService::readEvidenceArtifact(
+            QDir(fx.path()).filePath(relPath), &readBack, &err);
+        ok &= require(rOk, "F1-CERT-030: Evidence artifact read back");
+        ok &= require(readBack.isCompleteWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-030: Read-back evidence chain validates");
+    }
+
+    // F1-CERT-031: Unexpected check names are rejected; evidence contains exactly the required checks
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-031: Fixture initializes");
+
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        F1VerificationCheck extra;
+        extra.name = QStringLiteral("unexpected-check");
+        extra.command = QStringLiteral("unexpected");
+        extra.status = QStringLiteral("PASS");
+        extra.exitCode = 0;
+        extra.sourceRevision = fx.gitSha;
+        extra.evidenceReference = QStringLiteral(
+            "ARAMF_WORKER/certification/evidence/checks/unexpected-check.log");
+        extra.evidenceFingerprint = QStringLiteral(
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        QFile extraLog(QDir(fx.path()).filePath(extra.evidenceReference));
+        ok &= require(extraLog.open(QIODevice::WriteOnly),
+                       "F1-CERT-031: Extra evidence log can be created");
+        extraLog.close();
+        ev.checks.append(extra);
+
+        QString err;
+        ok &= require(!ev.isCompleteWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-031: Unexpected check rejected");
+        ok &= require(err.contains(QStringLiteral("Unexpected")),
+                       "F1-CERT-031: Error explains unexpected check");
     }
 
     std::cerr << (ok ? "F1 Certification: ALL PASS\n" : "F1 Certification: SOME FAILURES\n");
