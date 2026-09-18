@@ -1791,7 +1791,7 @@ bool FoundationCertificationService::executeF1VerificationSuite(const QString& p
         if (error) *error = QStringLiteral("Failed verification checks: %1").arg(failedChecks.join(QStringLiteral(", ")));
         return false;
     }
-    return evidence->isComplete(sourceRevision, error);
+    return evidence->isCompleteWithEvidence(projectRoot, sourceRevision, error);
 }
 
 bool FoundationCertificationService::loadVerificationChecks(const QString& checksDirectory,
@@ -2398,7 +2398,9 @@ int runFoundationCommand(const QStringList& arguments, QTextStream& output, QTex
         output << "Artifact Path: " << relPath << "\n";
         output << "Fingerprint: " << sha << "\n";
         output << "Source Revision: " << sourceRevision << "\n";
-        output << "Overall Status: " << (ev.isComplete(sourceRevision) ? "PASS" : "FAIL") << "\n";
+        output << "Overall Status: "
+               << (ev.isCompleteWithEvidence(projectRoot, sourceRevision, nullptr) ? "PASS" : "FAIL")
+               << "\n";
         if (!suiteOk) {
             error << "Verification suite had failures: " << suiteErr << "\n";
             return 1;
