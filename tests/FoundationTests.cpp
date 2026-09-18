@@ -10,7 +10,6 @@
 #include "core/ProjectMemoryCompaction.h"
 #include "core/CertificationService.h"
 #include "core/ProcessVersion.h"
-#include "core/ValidationRouting.h"
 #include "core/MemoryCommand.h"
 #include "core/ProjectModel.h"
 #include "core/FrameworkKnowledge.h"
@@ -109,6 +108,9 @@ struct TestFixture {
             f.close();
         }
         doc.insert(QStringLiteral("processVersion"), processVersionStateToJson(pvState));
+        if (!doc.contains(QStringLiteral("projectId"))) {
+            doc.insert(QStringLiteral("projectId"), QStringLiteral("fixture-project"));
+        }
         if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
         f.write(QJsonDocument(doc).toJson());
         f.close();
@@ -287,6 +289,47 @@ bool runF1MemoryEvidenceTests()
                        "F1-010: Full report contains coldStartValidation");
     }
 
+    // F1-011: Deterministic manifest recovery from append-only ledger
+    {
+        TestFixture fx;
+        ok &= require(fx.valid, "F1-011: Fixture initializes");
+        fx.recordTask(QStringLiteral("F1-011 task 1"));
+        fx.recordTask(QStringLiteral("F1-011 task 2"));
+
+        // Tamper with manifest sequence and count
+        const QString manifestPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/memory-manifest.json"));
+        QFile mf(manifestPath);
+        if (mf.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+            mf.write("{\"nextSequenceNumber\": 1, \"eventCount\": 0}\n");
+            mf.close();
+        }
+        auto reportBefore = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(!reportBefore.manifestConsistent, "F1-011: Stale manifest is detected as inconsistent");
+
+        // Reconstruct from ledger
+        QString recErr;
+        bool recOk = MemoryEvidenceFoundation::reconstructManifestFromLedger(fx.path(), &recErr);
+        ok &= require(recOk, "F1-011: Manifest reconstruction succeeds");
+
+        auto reportAfter = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(reportAfter.manifestConsistent, "F1-011: Reconstructed manifest matches ledger");
+    }
+
+    // F1-012: Corrupt certificate JSONL causes validation failure
+    {
+        TestFixture fx;
+        ok &= require(fx.valid, "F1-012: Fixture initializes");
+        const QString certPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/certification/certificates.jsonl"));
+        QDir(fx.path()).mkpath(QStringLiteral("ARAMF_WORKER/certification"));
+        QFile cf(certPath);
+        if (cf.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+            cf.write("{corrupt unclosed json\n");
+            cf.close();
+        }
+        const auto report = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(!report.certificatesIntact, "F1-012: Corrupt certificate ledger detected");
+    }
+
     std::cerr << (ok ? "F1: ALL PASS\n" : "F1: SOME FAILURES\n");
     return ok;
 }
@@ -409,6 +452,41 @@ bool runF2IdentityTrustTests()
                        "F2-010: Recognized actors are reported");
     }
 
+    // F2-011: Canonical actor taxonomy validation
+    {
+        ok &= require(IdentityTrustFoundation::isValidActor(QStringLiteral("human")), "F2-011: human is valid actor");
+        ok &= require(IdentityTrustFoundation::isValidActor(QStringLiteral("user")), "F2-011: user is valid actor");
+        ok &= require(IdentityTrustFoundation::isValidActor(QStringLiteral("agent")), "F2-011: agent is valid actor");
+        ok &= require(IdentityTrustFoundation::isValidActor(QStringLiteral("autonomous-agent")), "F2-011: autonomous-agent is valid actor");
+        ok &= require(IdentityTrustFoundation::isValidActor(QStringLiteral("tool")), "F2-011: tool is valid actor");
+        ok &= require(IdentityTrustFoundation::isValidActor(QStringLiteral("runtime")), "F2-011: runtime is valid actor");
+        ok &= require(IdentityTrustFoundation::isValidActor(QStringLiteral("system")), "F2-011: system is valid actor");
+        ok &= require(!IdentityTrustFoundation::isValidActor(QStringLiteral("unknown-bot")), "F2-011: unknown actor rejected");
+    }
+
+    // F2-012: Admin override requires exact identity and override intent
+    {
+        ok &= require(IdentityTrustFoundation::isVerifiedAdministrativeOverride(
+            QStringLiteral("Admin Morgan Lindbom override emergency fix")),
+            "F2-012: Valid admin override passes");
+        ok &= require(!IdentityTrustFoundation::isVerifiedAdministrativeOverride(
+            QStringLiteral("Morgan Lindbom override emergency fix")),
+            "F2-012: Missing 'Admin' prefix rejected");
+        ok &= require(!IdentityTrustFoundation::isVerifiedAdministrativeOverride(
+            QStringLiteral("Admin Morgan Lindbom normal instruction")),
+            "F2-012: Missing 'override' intent rejected");
+    }
+
+    // F2-013: Prohibited destructive commands blocked even with admin identity
+    {
+        QString trustErr;
+        bool blocked = !IdentityTrustFoundation::respectsTrustBoundary(
+            QStringLiteral("Admin Morgan Lindbom override allow cleanup"),
+            QStringLiteral("cmd.exe /c rmdir /s /q build"),
+            &trustErr);
+        ok &= require(blocked, "F2-013: Destructive rmdir /s /q blocked despite admin identity");
+    }
+
     std::cerr << (ok ? "F2: ALL PASS\n" : "F2: SOME FAILURES\n");
     return ok;
 }
@@ -446,7 +524,7 @@ bool runF3ScopeIntegrityTests()
         const auto report = ScopeIntegrityFoundation::validate(fx.path(), &fx.model);
         ok &= require(report.valid, "F3-003: F3 validation passes on fresh fixture");
         ok &= require(report.scopeTaxonomyValid, "F3-003: Scope taxonomy valid");
-        ok &= require(report.validationRoutingConsistent, "F3-003: Validation routing consistent");
+        ok &= require(report.projectIsolationValid, "F3-003: Project isolation valid");
     }
 
     // F3-004: Contradictory scope combination rejected
@@ -503,12 +581,46 @@ bool runF3ScopeIntegrityTests()
         ok &= require(report.canonicalScopeCount == 15, "F3-009: 15 canonical scopes reported");
     }
 
-    // F3-010: Validation routing policy is non-empty
+    // F3-010: Project isolation passes on valid fixture
     {
-        const auto policy = ValidationRouting::policy();
-        ok &= require(!policy.isEmpty(), "F3-010: Validation routing policy is non-empty");
-        ok &= require(policy.value(QStringLiteral("levels")).toObject().contains(QStringLiteral("focused")),
-                       "F3-010: Policy contains 'focused' level");
+        TestFixture fx;
+        ok &= require(fx.valid, "F3-010: Fixture initializes");
+        QString err;
+        bool isoOk = ScopeIntegrityFoundation::validateProjectIsolation(fx.path(), &err);
+        ok &= require(isoOk, "F3-010: Project isolation passes on valid fixture");
+    }
+
+    // F3-011: Canonical and effective scope registries
+    {
+        const auto baseScopes = ScopeIntegrityFoundation::baseReservedScopes();
+        ok &= require(baseScopes.size() == 15, "F3-011: 15 base reserved scopes defined");
+        TestFixture fx;
+        ok &= require(fx.valid, "F3-011: Fixture initializes");
+        const auto effective = ScopeIntegrityFoundation::effectiveCanonicalScopeRegistry(fx.path());
+        ok &= require(effective.size() >= 15, "F3-011: Effective registry contains base scopes");
+    }
+
+    // F3-012: Project isolation rejects foreign path escape and missing projectId
+    {
+        TestFixture fx;
+        ok &= require(fx.valid, "F3-012: Fixture initializes");
+        const QString logPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
+        QFile logFile(logPath);
+        if (logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+            QJsonObject badEvent{
+                {QStringLiteral("eventId"), QStringLiteral("event-path-escape")},
+                {QStringLiteral("eventType"), QStringLiteral("TEST_RESULT")},
+                {QStringLiteral("sequenceNumber"), 900},
+                {QStringLiteral("timestamp"), QStringLiteral("2026-09-18T00:00:00Z")},
+                {QStringLiteral("task"), QStringLiteral("escape test")},
+                {QStringLiteral("affectedFiles"), QJsonArray{QStringLiteral("../../../foreign/file.cpp")}}
+            };
+            logFile.write(QJsonDocument(badEvent).toJson(QJsonDocument::Compact) + "\n");
+            logFile.close();
+        }
+        QString err;
+        bool isoOk = ScopeIntegrityFoundation::validateProjectIsolation(fx.path(), &err);
+        ok &= require(!isoOk, "F3-012: Foreign path escape rejected by project isolation");
     }
 
     std::cerr << (ok ? "F3: ALL PASS\n" : "F3: SOME FAILURES\n");
@@ -551,24 +663,32 @@ bool runF4LifecycleCertificationTests()
         ok &= require(report.processHistoryValid, "F4-002: Process history valid");
     }
 
-    // F4-003: Certification semantics - cert=1 requires done=1
+    // F4-003: Certification semantics - cert=1 done=0 is valid for active iteration; done=1 requires cert=1
     {
-        QJsonObject goodState{
-            {QStringLiteral("certification"), 1},
-            {QStringLiteral("done"), 1},
-            {QStringLiteral("iteration"), 3}
-        };
-        ok &= require(LifecycleCertificationFoundation::validateCertificationSemantics(goodState),
-                       "F4-003: cert=1 done=1 is valid");
-
-        QJsonObject badState{
+        QJsonObject activeCertifiedState{
             {QStringLiteral("certification"), 1},
             {QStringLiteral("done"), 0},
             {QStringLiteral("iteration"), 3}
         };
+        ok &= require(LifecycleCertificationFoundation::validateCertificationSemantics(activeCertifiedState),
+                       "F4-003: cert=1 done=0 is valid for active iteration awaiting completion");
+
+        QJsonObject completedCertifiedState{
+            {QStringLiteral("certification"), 1},
+            {QStringLiteral("done"), 1},
+            {QStringLiteral("iteration"), 3}
+        };
+        ok &= require(LifecycleCertificationFoundation::validateCertificationSemantics(completedCertifiedState),
+                       "F4-003: cert=1 done=1 is valid");
+
+        QJsonObject completedUncertifiedState{
+            {QStringLiteral("certification"), 0},
+            {QStringLiteral("done"), 1},
+            {QStringLiteral("iteration"), 3}
+        };
         QString err;
-        ok &= require(!LifecycleCertificationFoundation::validateCertificationSemantics(badState, &err),
-                       "F4-003: cert=1 done=0 is rejected");
+        ok &= require(!LifecycleCertificationFoundation::validateCertificationSemantics(completedUncertifiedState, &err),
+                       "F4-003: done=1 cert=0 is rejected (cannot complete uncertified)");
     }
 
     // F4-004: Certification semantics - done=1 requires iteration >= 1
@@ -670,6 +790,42 @@ bool runF4LifecycleCertificationTests()
         fx.writeProcessVersion(pvState);
         const auto report = LifecycleCertificationFoundation::validate(fx.path());
         ok &= require(report.completedProcesses == 3, "F4-010: 3 completed processes counted");
+    }
+
+    // F4-011: Rework completed foundation resets foundationIntegrationValid
+    {
+        ProcessVersionState pvState;
+        pvState.namespaceVersion = 2;
+        ProcessVersion f1(ProcessKind::Foundation, 1, 1, 1, 1, 1);
+        pvState.completedHistory.append(f1);
+        pvState.foundationIntegrationValid = true;
+
+        QString reworkErr;
+        bool rwOk = ProcessVersionLifecycle::reworkCompletedFoundation(&pvState, 1, &reworkErr);
+        ok &= require(rwOk, "F4-011: reworkCompletedFoundation succeeds on completed F1");
+        ok &= require(pvState.hasActiveProcess, "F4-011: F1 is now active process");
+        ok &= require(pvState.activeProcess.isFoundation() && pvState.activeProcess.foundationNumber() == 1,
+                       "F4-011: Active process is Foundation 1");
+        ok &= require(pvState.activeProcess.iteration == 2, "F4-011: Iteration incremented to 2");
+        ok &= require(!pvState.foundationIntegrationValid, "F4-011: foundationIntegrationValid reset to false");
+    }
+
+    // F4-012: Two-sided P6 gating validation (positive when ready, negative when blocked)
+    {
+        ProcessVersionState state;
+        state.namespaceVersion = 2;
+        // Negative test: uncertified foundations block P6
+        QString reason;
+        ok &= require(!state.isP6Eligible(&reason), "F4-012: P6 blocked when foundations incomplete");
+        ok &= require(reason.contains("Foundation F1"), "F4-012: Explicit reason names F1");
+
+        // Positive test: mock all 4 foundations completed and certified + integration valid
+        state.completedHistory.append(ProcessVersion(ProcessKind::Foundation, 1, 1, 1, 1, 1));
+        state.completedHistory.append(ProcessVersion(ProcessKind::Foundation, 2, 1, 1, 1, 1));
+        state.completedHistory.append(ProcessVersion(ProcessKind::Foundation, 3, 1, 1, 1, 1));
+        state.completedHistory.append(ProcessVersion(ProcessKind::Foundation, 4, 1, 1, 1, 1));
+        state.foundationIntegrationValid = true;
+        ok &= require(state.isP6Eligible(&reason), "F4-012: P6 eligible when all 4 foundations certified and integrated");
     }
 
     std::cerr << (ok ? "F4: ALL PASS\n" : "F4: SOME FAILURES\n");
@@ -1003,7 +1159,16 @@ bool runFoundationIntegrationTests()
         bool procAFinished = procA.waitForFinished(15000) && procA.exitStatus() == QProcess::NormalExit && procA.exitCode() == 0;
         ok &= require(procAFinished, "XPROC-002: Process A executes and exits normally with code 0");
 
-        // Process B: validates all foundations on the durable state produced by Process A
+        // Process B: executes aramf foundation validate as an independent OS process
+        QProcess procB;
+        procB.start(aramfExe, {
+            QStringLiteral("foundation"), QStringLiteral("validate"),
+            QStringLiteral("--project"), fx.path()
+        });
+        bool procBFinished = procB.waitForFinished(15000) && procB.exitStatus() == QProcess::NormalExit && procB.exitCode() == 0;
+        ok &= require(procBFinished, "XPROC-002: Process B executes 'aramf foundation validate' and exits with code 0");
+
+        // Independent in-process verification of durable state produced by Process A
         const auto f1 = MemoryEvidenceFoundation::validate(fx.path());
         ok &= require(f1.valid, "XPROC-002: Process B verifies F1 evidence integrity");
         ok &= require(f1.ledgerIntact, "XPROC-002: Process B confirms ledger intact");
@@ -1041,6 +1206,68 @@ bool runFoundationIntegrationTests()
             QStringLiteral("rmdir /s /q /some/path"),
             &trustErr);
         ok &= require(!safe, "FAIL-INJ-005: Unauthorized destructive deletion is blocked by trust boundary");
+    }
+
+    // ARCH-001: FoundationServices.h does not include Process-layer headers
+    {
+        const QString headerPath = QDir(AramfPaths::programRoot()).filePath(QStringLiteral("src/core/FoundationServices.h"));
+        QFile hf(headerPath);
+        if (hf.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            const QString content = QString::fromUtf8(hf.readAll());
+            hf.close();
+            ok &= require(!content.contains("ValidationRouting.h"), "ARCH-001: FoundationServices.h does not include ValidationRouting.h");
+            ok &= require(!content.contains("PredictiveOptimizationService.h"), "ARCH-001: FoundationServices.h does not include PredictiveOptimizationService.h");
+            ok &= require(!content.contains("AdaptiveRoutingService.h"), "ARCH-001: FoundationServices.h does not include AdaptiveRoutingService.h");
+            ok &= require(!content.contains("ExecutionOrchestrator.h"), "ARCH-001: FoundationServices.h does not include ExecutionOrchestrator.h");
+        }
+    }
+
+    // ARCH-002: FoundationServices.cpp does not include Process-layer headers
+    {
+        const QString cppPath = QDir(AramfPaths::programRoot()).filePath(QStringLiteral("src/core/FoundationServices.cpp"));
+        QFile cf(cppPath);
+        if (cf.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            const QString content = QString::fromUtf8(cf.readAll());
+            cf.close();
+            ok &= require(!content.contains("ValidationRouting.h"), "ARCH-002: FoundationServices.cpp does not include ValidationRouting.h");
+            ok &= require(!content.contains("PredictiveOptimizationService.h"), "ARCH-002: FoundationServices.cpp does not include PredictiveOptimizationService.h");
+            ok &= require(!content.contains("AdaptiveRoutingService.h"), "ARCH-002: FoundationServices.cpp does not include AdaptiveRoutingService.h");
+            ok &= require(!content.contains("ExecutionOrchestrator.h"), "ARCH-002: FoundationServices.cpp does not include ExecutionOrchestrator.h");
+        }
+    }
+
+    // DEP-MAT-001: Machine-tested P <-> F dependency matrix
+    {
+        const auto matrix = FoundationIntegrationService::dependencyMatrix();
+        ok &= require(matrix.contains("processes"), "DEP-MAT-001: Matrix contains processes");
+        ok &= require(matrix.contains("foundations"), "DEP-MAT-001: Matrix contains foundations");
+        const auto procs = matrix.value("processes").toObject();
+        ok &= require(procs.contains("P1") && procs.contains("P6"), "DEP-MAT-001: P1 and P6 present in matrix");
+        const auto p6 = procs.value("P6").toObject();
+        ok &= require(p6.value("gatedOn").toArray().size() == 4, "DEP-MAT-001: P6 is gated on all 4 foundations");
+    }
+
+    // EVID-001: Canonical foundation-integration.json evidence artifact
+    {
+        TestFixture fx;
+        ok &= require(fx.valid, "EVID-001: Fixture initializes");
+        ProcessVersionState pvState;
+        pvState.namespaceVersion = 2;
+        pvState.hasNextProcess = true;
+        pvState.nextProcess = ProcessVersion(ProcessKind::Foundation, 1, 1, 0, 0, 0);
+        fx.writeProcessVersion(pvState);
+
+        auto report = FoundationIntegrationService::validate(fx.path(), &fx.model);
+        QString wErr;
+        bool wOk = FoundationIntegrationService::writeIntegrationEvidence(fx.path(), report, &wErr);
+        ok &= require(wOk, "EVID-001: writeIntegrationEvidence succeeds");
+
+        QString rErr;
+        const auto evid = FoundationIntegrationService::readIntegrationEvidence(fx.path(), &rErr);
+        ok &= require(!evid.isEmpty(), "EVID-001: readIntegrationEvidence reads artifact");
+        ok &= require(evid.value("diagnosticOnly").toBool() == true, "EVID-001: Artifact records diagnosticOnly=true");
+        ok &= require(evid.value("authoritative").toBool() == false, "EVID-001: Artifact records authoritative=false");
+        ok &= require(evid.value("acceptanceType").toString() == "DIAGNOSTIC_RESULT", "EVID-001: Artifact acceptanceType is DIAGNOSTIC_RESULT");
     }
 
     std::cerr << (ok ? "Integration: ALL PASS\n" : "Integration: SOME FAILURES\n");

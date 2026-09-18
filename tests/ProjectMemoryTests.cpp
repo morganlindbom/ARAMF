@@ -80,11 +80,12 @@ int main(int argc, char** argv)
     QCoreApplication app(argc, argv);
     QTemporaryDir globalData;
     FrameworkKnowledgeService::setGlobalLibraryPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")));
-    if (app.arguments().contains(QStringLiteral("--worker-tasks"))) return runWorkerTaskTests() ? 0 : 1;
-    if (app.arguments().contains(QStringLiteral("--p2-execution"))) return runP2ExecutionTests() ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--worker-tasks")) || app.arguments().contains(QStringLiteral("--p1-governance"))) return runWorkerTaskTests() ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--context-coordination")) || app.arguments().contains(QStringLiteral("--p2-context"))) return runContextCoordinationTests() ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--p2-execution")) || app.arguments().contains(QStringLiteral("--p3-execution"))) return runP2ExecutionTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--provenance-and-scope"))) return runProvenanceAndScopeTests() ? 0 : 1;
-    if (app.arguments().contains(QStringLiteral("--p3-predictive"))) return runP3PredictiveTests() ? 0 : 1;
-    if (app.arguments().contains(QStringLiteral("--p4-routing"))) return runP4RoutingTests() ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--p3-predictive")) || app.arguments().contains(QStringLiteral("--p4-predictive"))) return runP3PredictiveTests() ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--p4-routing")) || app.arguments().contains(QStringLiteral("--p5-routing"))) return runP4RoutingTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--process-migration"))) return runProcessNamespaceMigrationTests(AramfPaths::programRoot()) ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--foundation-namespace"))) return runFoundationNamespaceTests(AramfPaths::programRoot()) ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--f1-memory-evidence"))) return runF1FoundationTests(AramfPaths::programRoot()) ? 0 : 1;

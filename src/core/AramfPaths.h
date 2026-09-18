@@ -37,6 +37,7 @@ inline const QString CurrentState = QStringLiteral("ARAMF_WORKER/memory/current-
 inline const QString ColdStartValidation = QStringLiteral("ARAMF_WORKER/memory/cold-start-validation.json");
 inline const QString ConsistencyValidation = QStringLiteral("ARAMF_WORKER/memory/memory-consistency-validation.json");
 inline const QString LatestValidation = QStringLiteral("ARAMF_WORKER/verification/latest-validation.json");
+inline const QString FoundationIntegration = QStringLiteral("ARAMF_WORKER/verification/foundation-integration.json");
 inline const QString MemoryConfiguration = QStringLiteral("ARAMF_WORKER/memory/memory-config.json");
 inline const QString MemoryContract = QStringLiteral("ARAMF_WORKER/memory/memory-contract.json");
 inline const QString FrameworkKnowledge = QStringLiteral("ARAMF_WORKER/memory/framework-knowledge.json");

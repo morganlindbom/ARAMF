@@ -871,6 +871,32 @@ bool ProcessVersionLifecycle::reworkCompletedProcess(ProcessVersionState* state,
     return state->isValid(error);
 }
 
+bool ProcessVersionLifecycle::reworkCompletedFoundation(ProcessVersionState* state, int foundationNumber, QString* error)
+{
+    if (!state) { setError(error, QStringLiteral("Process version state is not available.")); return false; }
+    if (!state->isValid(error) || state->hasActiveProcess) {
+        setError(error, QStringLiteral("A foundation rework requires no active process."));
+        return false;
+    }
+    auto match = std::find_if(state->completedHistory.crbegin(), state->completedHistory.crend(),
+                              [foundationNumber](const auto& version) {
+                                  return version.isFoundation() && version.foundationNumber() == foundationNumber;
+                              });
+    if (match == state->completedHistory.crend()) {
+        setError(error, QStringLiteral("The requested foundation has no completed history."));
+        return false;
+    }
+    if (match->done != 1 || match->certification != 1 || match->iteration == std::numeric_limits<int>::max()) {
+        setError(error, QStringLiteral("Only a completed certified foundation can be reopened for rework."));
+        return false;
+    }
+    ProcessVersion next{ProcessKind::Foundation, foundationNumber, match->loop, match->iteration + 1, 0, 0};
+    state->activeProcess = next;
+    state->hasActiveProcess = true;
+    state->foundationIntegrationValid = false;
+    return state->isValid(error);
+}
+
 bool ProcessVersionLifecycle::advanceIteration(ProcessVersionState* state, QString* error)
 {
     if (!state) { setError(error, QStringLiteral("Process version state is not available.")); return false; }

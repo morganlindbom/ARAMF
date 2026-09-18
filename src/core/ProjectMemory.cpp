@@ -5,6 +5,7 @@
 #include "AramfPaths.h"
 #include "ControlPlaneMigration.h"
 #include "FrameworkKnowledge.h"
+#include "FoundationServices.h"
 #include "ProjectModel.h"
 #include "ValidationRouting.h"
 
@@ -609,9 +610,7 @@ bool ProjectMemory::appendEvent(const QString& projectRoot,
 
 bool ProjectMemory::isVerifiedAdministrativeOverride(const QString& instruction) const
 {
-    const QString normalized = instruction.simplified();
-    return normalized.contains(QStringLiteral("Admin Morgan Lindbom"), Qt::CaseSensitive)
-        && normalized.contains(QStringLiteral("override"), Qt::CaseInsensitive);
+    return IdentityTrustFoundation::isVerifiedAdministrativeOverride(instruction);
 }
 
 bool ProjectMemory::recordAdministrativeOverride(const QString& projectRoot,
@@ -880,13 +879,7 @@ bool ProjectMemory::validateProvenanceObject(const QJsonObject& prov, QString* e
         return false;
     }
     const QString lowerActor = actor.toLower();
-    const QSet<QString> validActors{
-        QStringLiteral("human"), QStringLiteral("user"),
-        QStringLiteral("agent"), QStringLiteral("autonomous-agent"),
-        QStringLiteral("tool"), QStringLiteral("runtime"),
-        QStringLiteral("system")
-    };
-    if (!validActors.contains(lowerActor)) {
+    if (!IdentityTrustFoundation::isValidActor(lowerActor)) {
         if (error) *error = QStringLiteral("Provenance has invalid actor '%1'.").arg(actor);
         return false;
     }
@@ -920,28 +913,7 @@ static bool isValidScopeSlug(const QString& s)
 
 static QSet<QString> canonicalScopeSet(const QString& projectRoot)
 {
-    QSet<QString> canonicalScopes{
-        QStringLiteral("all"), QStringLiteral("history"), QStringLiteral("project"), QStringLiteral("global"), QStringLiteral("project+global"),
-        QStringLiteral("build-system"), QStringLiteral("ci-cd"), QStringLiteral("configuration"),
-        QStringLiteral("documentation"), QStringLiteral("entire-project"), QStringLiteral("generated-files"),
-        QStringLiteral("resources"), QStringLiteral("source-code"), QStringLiteral("tests"), QStringLiteral("ui-ux")
-    };
-    const QString scopeRoutesFile = absolutePath(projectRoot, AramfPaths::ScopeRoutes);
-    QFile scopeRoutesInput(scopeRoutesFile);
-    if (scopeRoutesInput.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        const auto routeDoc = QJsonDocument::fromJson(scopeRoutesInput.readAll());
-        scopeRoutesInput.close();
-        for (const auto& item : routeDoc.object().value(QStringLiteral("scopes")).toArray()) {
-            if (item.isObject()) {
-                const QString sId = item.toObject().value(QStringLiteral("id")).toString().trimmed();
-                if (!sId.isEmpty()) canonicalScopes.insert(sId);
-            } else if (item.isString()) {
-                const QString sId = item.toString().trimmed();
-                if (!sId.isEmpty()) canonicalScopes.insert(sId);
-            }
-        }
-    }
-    return canonicalScopes;
+    return ScopeIntegrityFoundation::effectiveCanonicalScopeRegistry(projectRoot);
 }
 
 bool ProjectMemory::isScopeValidForCategory(RecordScopeCategory category, const QString& scope, const QSet<QString>& canonicalScopes)

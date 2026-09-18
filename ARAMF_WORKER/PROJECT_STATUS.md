@@ -908,9 +908,83 @@ Campaign Evidence:
   5. **Recorder Event**:
      - Sequence 332 (`event-753b4553-3494-4b17-819b-996059d7d294`), `TASK_COMPLETED`, status=PASS, actor=agent, agentId=antigravity, tool=aramf-cli, scope=project.
 
+
+### Governed F1-F4 Foundation Architectural Repair Campaign
+
+- Campaign Identity: `ARAMF-F1-F4-ARCHITECTURAL-REPAIR-2026-09-18`
+- Baseline: `685a54645c823d3f835bce698bf6fbf3db7bdf3b`
+- Purpose: Systematically resolve 28 architectural gaps, upward inversions, lifecycle inconsistencies, and durability deficiencies discovered in independent review before any foundation is certified.
+- Strict Constraints Preserved:
+  - **PRE-CERTIFICATION ONLY**: Zero foundations certified. `cert=0, done=0` strictly maintained across F1, F2, F3, and F4.
+  - `foundationIntegrationValid` remains `false`.
+  - `P6.1.0.0.0` remains strictly blocked with explicit gating reason.
+  - Non-destructive execution: zero history erasure, zero destructive commands, append-only ledger integrity preserved.
+- Architectural Repairs Implemented:
+  1. **Production Core Wiring**:
+     - Added `src/core/FoundationServices.h` and `src/core/FoundationServices.cpp` to `ARAMF_CORE_SOURCES` in `CMakeLists.txt` (compiled directly into `aramf.exe`) and `aramf_workflow_tests`.
+     - Wired `aramf foundation <status|validate|integration|report>` CLI command handler `runFoundationCommand` in `src/main.cpp`.
+  2. **F4 Lifecycle & Certification Semantics**:
+     - Repaired `LifecycleCertificationFoundation::validateCertificationSemantics` to correctly recognize `cert=1, done=0` as valid for active certified iterations while strictly rejecting `done=1, cert=0` and `done=1, iteration<1`.
+     - Added `ProcessVersionLifecycle::reworkCompletedFoundation` to cleanly reopen completed certified foundations and reset `foundationIntegrationValid = false`.
+  3. **F3 Upward Inversion Removal & Scope Registry**:
+     - Completely eliminated upward dependency on `ValidationRouting.h` and `ValidationRouting::policy()` from `ScopeIntegrityFoundation`.
+     - F3 canonically owns `baseReservedScopes()` (15 base reserved scopes), `canonicalScopes()`, and `effectiveCanonicalScopeRegistry(projectRoot)` (merging dynamic scopes from `scope-routes.json`).
+     - Added `ScopeIntegrityFoundation::validateProjectIsolation(projectRoot)` for robust boundary traversal and identity binding checks.
+  4. **F2 Actor Taxonomy & Trust Boundary**:
+     - Consolidated 7-member canonical actor taxonomy (`human`, `user`, `agent`, `autonomous-agent`, `tool`, `runtime`, `system`), `isValidActor()`, `isVerifiedAdministrativeOverride()` ("Admin Morgan Lindbom" + "override"), and `containsDestructivePattern()` into `IdentityTrustFoundation`.
+     - Delegated trust boundary validation from ProjectMemory to F2.
+  5. **F1 Durability & Cert Ledger Error Detection**:
+     - Implemented `MemoryEvidenceFoundation::reconstructManifestFromLedger(projectRoot)` for deterministic recovery of `memory-manifest.json` from `event-log.jsonl` using `QSaveFile`.
+     - Updated `MemoryEvidenceFoundation::validate` to check local cert errors from `CertificationService::certificates`.
+  6. **P1–P5 Decoupling & Clean Evidence Queries**:
+     - Refactored `ProjectMemory.cpp` to delegate provenance validation, actor checks, admin override verification, and canonical scopes to F2 and F3.
+     - Refactored `PredictiveOptimizationService.cpp` to consume `ProjectMemory::events(projectRoot)` rather than raw direct file reads, and replaced hardcoded magic cutoff `s > 311` with dynamic `legacyProvenanceCutoffSequence` from `memory-manifest.json`.
+  7. **Canonical Test Naming Aliases**:
+     - Added canonical test runner dispatch options `--p1-governance`, `--p2-context`, `--p3-execution`, `--p4-predictive`, `--p5-routing` to `tests/ProjectMemoryTests.cpp`.
+  8. **Canonical Evidence Artifact**:
+     - Implemented `FoundationIntegrationService::writeIntegrationEvidence` generating canonical artifact `ARAMF_WORKER/verification/foundation-integration.json` with `diagnosticOnly = true` and `acceptanceType = "DIAGNOSTIC_RESULT"`.
+- Verification Evidence:
+  - Foundation Test Matrix (`aramf_core_tests.exe --all-foundations`):
+    - F1 (Memory & Evidence): ALL PASS
+    - F2 (Identity, Provenance & Trust): ALL PASS
+    - F3 (Scope, State & Integrity): ALL PASS
+    - F4 (Lifecycle & Certification): ALL PASS
+    - Cross-Foundation Integration: ALL PASS
+  - Canonical Process Regressions:
+    - P1: `aramf_core_tests.exe --p1-governance` (275 checks PASS, matrix=11)
+    - P2: `aramf_core_tests.exe --p2-context` (33 checks PASS)
+    - P3: `aramf_core_tests.exe --p3-execution` (PASS)
+    - P4: `aramf_core_tests.exe --p4-predictive` (ALL PASS)
+    - P5: `aramf_core_tests.exe --p5-routing` (35 hermetic checks, 9 dogfood scenarios, bi-directional adaptation ALL PASS)
+  - Namespace & Migration:
+    - `aramf_core_tests.exe --foundation-namespace` (ALL PASS)
+    - `aramf_core_tests.exe --process-migration` (20/20 PASS)
+  - Full CTest Suite: 5/5 PASS (100%, 0 failures):
+    - 1/5 `aramf_core_tests`: PASS (86.12s)
+    - 2/5 `aramf_workflow_tests`: PASS (2.22s)
+    - 3/5 `aramf_template_tests`: PASS (92.40s)
+    - 4/5 `aramf_update_campaign`: PASS (7.81s)
+    - 5/5 `aramf_configuration_update`: PASS (0.18s)
+  - Production CLI Interface:
+    - `aramf.exe foundation status --project .`: PASS
+    - `aramf.exe foundation validate --project .`: PASS
+    - `aramf.exe foundation integration --project .`: PASS
+  - Memory Verification:
+    - `aramf.exe memory cold-start --project .`: PASS
+    - `aramf.exe memory validate --project .`: PASS
+- Strict Pre-Certification Lifecycle Confirmation:
+  - F1: `cert=0, done=0`
+  - F2: `cert=0, done=0`
+  - F3: `cert=0, done=0`
+  - F4: `cert=0, done=0`
+  - `foundationIntegrationValid = false`
+  - `P6.1.0.0.0`: BLOCKED ("Foundation F1 (Memory & Evidence Foundation) is not certified complete.")
+- Recorder Event:
+  - Sequence 333 (`event-2520afa1-e348-40e5-90de-5cf18cdf470d`), `TASK_COMPLETED`, status=PASS, actor=agent, agentId=antigravity, tool=aramf-cli, scope=project.
+
 ## Latest Agent Task
 
-- Task: Foundation Architecture Implementation Takeover and Pre-Certification Verification
+- Task: ARAMF F1-F4 Pre-Certification Architectural Repair
 - Status: PASS
-- Summary: Completed F1-F4 foundation implementation takeover from Claude Opus, repaired test fixtures, added multi-process boundary test and failure injection, verified all foundation suites and full regression.
-- Next Recommended State: Independent Architectural and P<->F Dependency Review of the F1-F4 Implementation.
+- Summary: Repaired 28 architectural gaps, upward inversions, and durability findings across F1-F4 foundations, wired production core, and verified complete regression. F1-F4 remain cert=0, done=0; foundationIntegrationValid remains false; P6 remains strictly blocked.
+- Next Recommended State: Independent Final Audit and Certification of F1-F4 Foundations by Antigravity (AGY).

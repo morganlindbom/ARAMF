@@ -608,71 +608,72 @@ PredictionContract PredictiveOptimizationService::predict(const ProjectModel& mo
         {QStringLiteral("resourceOwnershipClass"), normalized.resourceOwnershipClass}
     };
 
-    // Parse historical evidence from ProjectMemory event log
+    // Query historical evidence from ProjectMemory API instead of raw file bypass
     const QString projectRoot = model.projectPath().isEmpty() ? AramfPaths::programRoot() : model.projectPath();
-    const QString eventLogPath = QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::EventLog));
+    ProjectMemory memory;
+    const auto events = memory.events(projectRoot);
 
-    QFile eventLogFile(eventLogPath);
+    // Read legacy cutoff from memory manifest
+    const QString manifestPath = QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::Manifest));
+    int legacyCutoff = 0;
+    QFile manifestFile(manifestPath);
+    if (manifestFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const auto mDoc = QJsonDocument::fromJson(manifestFile.readAll());
+        if (mDoc.isObject()) {
+            legacyCutoff = mDoc.object().value(QStringLiteral("legacyProvenanceCutoffSequence")).toInt(0);
+        }
+    }
+
     QMap<QString, HistoricalTaskCluster> taskClusters;
+    for (const auto& ev : events) {
+        const QString taskName = ev.value(QStringLiteral("task")).toString().trimmed();
+        if (taskName.isEmpty()) continue;
 
-    if (eventLogFile.exists() && eventLogFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        while (!eventLogFile.atEnd()) {
-            const QByteArray line = eventLogFile.readLine().trimmed();
-            if (line.isEmpty()) continue;
-            const auto doc = QJsonDocument::fromJson(line);
-            if (!doc.isObject()) continue;
-            const auto ev = doc.object();
+        auto& cluster = taskClusters[taskName];
+        cluster.taskName = taskName;
+        const QString eventId = ev.value(QStringLiteral("eventId")).toString();
+        if (!eventId.isEmpty() && !cluster.eventIds.contains(eventId)) {
+            cluster.eventIds.append(eventId);
+        }
+        const int seq = ev.value(QStringLiteral("sequenceNumber")).toInt();
+        if (seq > 0) cluster.sequenceNumbers.append(seq);
 
-            const QString taskName = ev.value(QStringLiteral("task")).toString().trimmed();
-            if (taskName.isEmpty()) continue;
+        if (ev.contains(QStringLiteral("category")) && cluster.category.isEmpty()) {
+            cluster.category = ev.value(QStringLiteral("category")).toString();
+        }
+        if (ev.contains(QStringLiteral("scope")) && cluster.scope.isEmpty()) {
+            cluster.scope = ev.value(QStringLiteral("scope")).toString();
+        }
 
-            auto& cluster = taskClusters[taskName];
-            cluster.taskName = taskName;
-            const QString eventId = ev.value(QStringLiteral("eventId")).toString();
-            if (!eventId.isEmpty() && !cluster.eventIds.contains(eventId)) {
-                cluster.eventIds.append(eventId);
+        const QString eventType = ev.value(QStringLiteral("eventType")).toString();
+        const QString status = ev.value(QStringLiteral("status")).toString();
+        if (eventType == QStringLiteral("TASK_COMPLETED")) {
+            cluster.completed = true;
+            if (status == QStringLiteral("FAIL")) cluster.success = false;
+        } else if (status == QStringLiteral("FAIL")) {
+            cluster.success = false;
+            cluster.failures.append(ev.value(QStringLiteral("detail")).toString());
+        }
+
+        if (eventType == QStringLiteral("TEST_RESULT")) {
+            const QString suite = ev.value(QStringLiteral("suite")).toString();
+            if (!suite.isEmpty() && !cluster.testSuites.contains(suite)) {
+                cluster.testSuites.append(suite);
             }
-            const int seq = ev.value(QStringLiteral("sequenceNumber")).toInt();
-            if (seq > 0) cluster.sequenceNumbers.append(seq);
+        }
 
-            if (ev.contains(QStringLiteral("category")) && cluster.category.isEmpty()) {
-                cluster.category = ev.value(QStringLiteral("category")).toString();
-            }
-            if (ev.contains(QStringLiteral("scope")) && cluster.scope.isEmpty()) {
-                cluster.scope = ev.value(QStringLiteral("scope")).toString();
-            }
-
-            const QString eventType = ev.value(QStringLiteral("eventType")).toString();
-            const QString status = ev.value(QStringLiteral("status")).toString();
-            if (eventType == QStringLiteral("TASK_COMPLETED")) {
-                cluster.completed = true;
-                if (status == QStringLiteral("FAIL")) cluster.success = false;
-            } else if (status == QStringLiteral("FAIL")) {
-                cluster.success = false;
-                cluster.failures.append(ev.value(QStringLiteral("detail")).toString());
-            }
-
-            if (eventType == QStringLiteral("TEST_RESULT")) {
-                const QString suite = ev.value(QStringLiteral("suite")).toString();
-                if (!suite.isEmpty() && !cluster.testSuites.contains(suite)) {
-                    cluster.testSuites.append(suite);
-                }
-            }
-
-            const QString detail = ev.value(QStringLiteral("detail")).toString();
-            const QString summary = ev.value(QStringLiteral("summary")).toString();
-            for (const auto& text : {detail, summary}) {
-                if (text.contains(QStringLiteral("src/")) || text.contains(QStringLiteral("tests/"))) {
-                    for (const auto& part : text.split(QLatin1Char(' '), Qt::SkipEmptyParts)) {
-                        if ((part.startsWith(QStringLiteral("src/")) || part.startsWith(QStringLiteral("tests/")))
-                            && !cluster.mentionedFiles.contains(part)) {
-                            cluster.mentionedFiles.append(part);
-                        }
+        const QString detail = ev.value(QStringLiteral("detail")).toString();
+        const QString summary = ev.value(QStringLiteral("summary")).toString();
+        for (const auto& text : {detail, summary}) {
+            if (text.contains(QStringLiteral("src/")) || text.contains(QStringLiteral("tests/"))) {
+                for (const auto& part : text.split(QLatin1Char(' '), Qt::SkipEmptyParts)) {
+                    if ((part.startsWith(QStringLiteral("src/")) || part.startsWith(QStringLiteral("tests/")))
+                        && !cluster.mentionedFiles.contains(part)) {
+                        cluster.mentionedFiles.append(part);
                     }
                 }
             }
         }
-        eventLogFile.close();
     }
 
     // Evaluate matching historical clusters
@@ -704,9 +705,9 @@ PredictionContract PredictiveOptimizationService::predict(const ProjectModel& mo
 
             bool hasPostCutoff = false;
             for (int s : cluster.sequenceNumbers) {
-                if (s > 311) { hasPostCutoff = true; break; }
+                if (legacyCutoff > 0 && s > legacyCutoff) { hasPostCutoff = true; break; }
             }
-            cluster.freshness = hasPostCutoff ? 1.0 : 0.70;
+            cluster.freshness = (legacyCutoff == 0 || hasPostCutoff) ? 1.0 : 0.70;
 
             matchingClusters.append(cluster);
             for (const auto& eid : cluster.eventIds) allMatchingEvidence.insert(eid);

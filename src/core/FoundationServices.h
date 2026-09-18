@@ -2,16 +2,21 @@
 // Unified Foundation query and validation services for F1-F4.
 // Each foundation is a thin coordination layer over existing ARAMF core services.
 // Bootstrap order: F1 loads → F2 validates trust → F3 validates integrity → F4 reconstructs lifecycle.
-// No circular authority chains.
+// No circular authority chains. No upward dependencies on Process layer.
 
 #pragma once
 
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QSet>
 #include <QString>
 #include <QStringList>
 
 class ProjectModel;
+class QTextStream;
+
+// ─── CLI Entry Point ─────────────────────────────────────────────────────────
+int runFoundationCommand(const QStringList& arguments, QTextStream& output, QTextStream& error);
 
 // ─── F1: Memory & Evidence Foundation ───────────────────────────────────────
 // F1 STORES AND RECONSTRUCTS EVIDENCE.
@@ -24,6 +29,7 @@ struct F1EvidenceReport {
     bool coldStartFresh = false;
     bool sequenceMonotonic = false;
     bool manifestConsistent = false;
+    bool manifestReconstructed = false;
     bool certificatesIntact = false;
     int totalEvents = 0;
     int totalCertificates = 0;
@@ -45,6 +51,9 @@ public:
     // Checks whether the ledger can be reconstructed from cold-start.
     static bool canReconstructFromColdStart(const QString& projectRoot, QString* error = nullptr);
 
+    // Deterministically recovers memory-manifest.json from append-only event-log.jsonl.
+    static bool reconstructManifestFromLedger(const QString& projectRoot, QString* error = nullptr);
+
     // Returns the foundation contract describing F1 responsibilities.
     static QJsonObject contract();
 };
@@ -58,6 +67,7 @@ struct F2TrustReport {
     bool allProvenanceValid = false;
     bool actorTaxonomyConsistent = false;
     bool trustBoundariesEnforced = false;
+    bool adminOverrideValid = false;
     int eventsWithProvenance = 0;
     int eventsWithoutProvenance = 0;
     int legacyExemptEvents = 0;
@@ -76,8 +86,17 @@ public:
     // Returns the canonical actor taxonomy.
     static QStringList actorTaxonomy();
 
+    // Checks whether an actor slug is in the canonical taxonomy.
+    static bool isValidActor(const QString& actor);
+
     // Validates a single provenance object against F2 rules.
     static bool validateProvenance(const QJsonObject& provenance, QString* error = nullptr);
+
+    // Verifies whether an instruction meets administrative override identity criteria.
+    static bool isVerifiedAdministrativeOverride(const QString& instruction);
+
+    // Checks whether text contains prohibited destructive shell command patterns.
+    static bool containsDestructivePattern(const QString& text);
 
     // Checks whether an administrative action respects trust boundaries.
     static bool respectsTrustBoundary(const QString& instruction,
@@ -91,7 +110,7 @@ public:
 // ─── F3: Scope, State & Integrity Foundation ────────────────────────────────
 // F3 ESTABLISHES WHETHER STATE/SCOPE RELATIONSHIPS ARE LEGAL AND INTEGRAL.
 // Wraps scope taxonomy, scope combination validation, cross-scope file checks,
-// and project state integrity.
+// and project boundary isolation. NO upward dependency on Process-layer routing.
 
 struct F3IntegrityReport {
     bool valid = false;
@@ -99,7 +118,7 @@ struct F3IntegrityReport {
     bool scopeCombinationsLegal = false;
     bool crossScopeFilesValid = false;
     bool projectStateIntegral = false;
-    bool validationRoutingConsistent = false;
+    bool projectIsolationValid = false;
     int canonicalScopeCount = 0;
     int dynamicScopeCount = 0;
     QStringList errors;
@@ -110,13 +129,22 @@ class ScopeIntegrityFoundation final
 {
 public:
     // Validates scope taxonomy, scope combinations, cross-scope file patterns,
-    // project state integrity, and validation routing consistency.
+    // project state integrity, and project boundary isolation.
     static F3IntegrityReport validate(const QString& projectRoot,
                                       const ProjectModel* model = nullptr,
                                       QString* error = nullptr);
 
-    // Returns the canonical scope taxonomy.
+    // Returns the canonical base reserved scope taxonomy.
     static QStringList canonicalScopes();
+
+    // Returns the base reserved scope set.
+    static QSet<QString> baseReservedScopes();
+
+    // Returns the effective canonical scope registry (base reserved scopes + dynamic scopes from scope-routes.json).
+    static QSet<QString> effectiveCanonicalScopeRegistry(const QString& projectRoot);
+
+    // Validates project boundary isolation (projectId binding, project root containment, foreign path rejection).
+    static bool validateProjectIsolation(const QString& projectRoot, QString* error = nullptr);
 
     // Validates whether a set of scopes is legal.
     static bool validateScopeSet(const QStringList& scopes, QString* error = nullptr);
@@ -160,7 +188,8 @@ public:
     // Returns the current lifecycle state summary.
     static QJsonObject lifecycleSummary(const QString& projectRoot, QString* error = nullptr);
 
-    // Validates certification semantics: cert cannot be 1 without done conditions met.
+    // Validates certification semantics: done requires cert=1, done requires iteration>=1;
+    // cert=1 with done=0 is valid for an active iteration.
     static bool validateCertificationSemantics(const QJsonObject& state, QString* error = nullptr);
 
     // Returns the foundation contract describing F4 responsibilities.
@@ -178,6 +207,9 @@ struct FoundationIntegrationReport {
     F4LifecycleReport f4;
     bool bootstrapOrderValid = false;
     bool noCircularAuthority = false;
+    QString acceptanceType; // "DIAGNOSTIC_RESULT" or "AUTHORITATIVE_ACCEPTANCE"
+    bool diagnosticOnly = true;
+    QString overallFingerprint;
     QStringList errors;
     QJsonObject fullReport;
 };
@@ -191,9 +223,21 @@ public:
                                                  const ProjectModel* model = nullptr,
                                                  QString* error = nullptr);
 
+    // Writes canonical foundation-integration.json evidence artifact.
+    static bool writeIntegrationEvidence(const QString& projectRoot,
+                                         const FoundationIntegrationReport& report,
+                                         QString* error = nullptr);
+
+    // Reads canonical foundation-integration.json evidence artifact.
+    static QJsonObject readIntegrationEvidence(const QString& projectRoot,
+                                               QString* error = nullptr);
+
     // Returns all four foundation contracts.
     static QJsonObject allContracts();
 
     // Checks whether the bootstrap order invariant holds.
     static bool verifyBootstrapOrder(QString* error = nullptr);
+
+    // Returns machine-testable P <-> F dependency matrix.
+    static QJsonObject dependencyMatrix();
 };

@@ -89,6 +89,8 @@ set(ARAMF_CORE_SOURCES
     src/core/PredictiveOptimizationService.cpp
     src/core/AdaptiveRoutingService.h
     src/core/AdaptiveRoutingService.cpp
+    src/core/FoundationServices.h
+    src/core/FoundationServices.cpp
 )
 
 set(ARAMF_UI_SOURCES
@@ -301,6 +303,8 @@ if(BUILD_TESTING)
         src/core/ComponentVersion.cpp
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
+        src/core/FoundationServices.h
+        src/core/FoundationServices.cpp
         src/core/ProjectMemoryCompaction.h
         src/core/ProjectMemoryCompaction.cpp
         src/core/CertificationService.h

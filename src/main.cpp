@@ -3,6 +3,7 @@
 #include "core/MemoryCommand.h"
 #include "core/WorkerTaskServices.h"
 #include "core/ProjectRootRebindService.h"
+#include "core/FoundationServices.h"
 #include "ui/mainwindow/MainWindow.h"
 
 #include <QApplication>
@@ -18,7 +19,8 @@ int main(int argc, char *argv[])
             firstArgument == QStringLiteral("memory") ||
             firstArgument == QStringLiteral("improvement") ||
             firstArgument == QStringLiteral("task") ||
-            firstArgument == QStringLiteral("project"))
+            firstArgument == QStringLiteral("project") ||
+            firstArgument == QStringLiteral("foundation"))
         {
             QCoreApplication app(argc, argv);
             QTextStream output(stdout);
@@ -32,9 +34,10 @@ int main(int argc, char *argv[])
                 return runProjectRootRebindCommand(arguments, output, error);
             if (arguments.value(0) == QStringLiteral("task"))
                 return runWorkerTaskCommand(arguments, output, error);
+            if (arguments.value(0) == QStringLiteral("foundation"))
+                return runFoundationCommand(arguments, output, error);
 
-         
-                return runMemoryCommand(arguments, output, error);
+            return runMemoryCommand(arguments, output, error);
         }
     }
 
