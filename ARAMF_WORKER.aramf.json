@@ -467,15 +467,8 @@
     "options": {
     },
     "processVersion": {
-        "active": null,
+        "namespaceVersion": 2,
         "completedHistory": [
-            {
-                "certification": 1,
-                "done": 1,
-                "iteration": 1,
-                "loop": 1,
-                "process": 0
-            },
             {
                 "certification": 1,
                 "done": 1,
@@ -486,16 +479,37 @@
             {
                 "certification": 1,
                 "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "process": 2
+            },
+            {
+                "certification": 1,
+                "done": 1,
                 "iteration": 2,
                 "loop": 1,
-                "process": 0
+                "process": 1
             },
             {
                 "certification": 1,
                 "done": 1,
                 "iteration": 4,
                 "loop": 1,
-                "process": 2
+                "process": 3
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "process": 4
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "process": 5
             }
         ],
         "legacyHistory": [
@@ -506,14 +520,50 @@
             "P0.1.1.1.1",
             "P1.1.1.1.1",
             "P2.1.1.1.1",
-            "P1.1.1.1"
+            "P1.1.1.1",
+            "legacy:P0.1.2.1.1",
+            "legacy:P1.1.1.1.1",
+            "legacy:P2.1.4.1.1",
+            "legacy:P3.1.4.1.1",
+            "legacy:P4.1.4.1.1"
         ],
+        "active": null,
         "next": {
+            "certification": 0,
+            "done": 0,
+            "foundation": 1,
+            "iteration": 0,
+            "loop": 1
+        },
+        "foundationQueue": [
+            {
+                "certification": 0,
+                "done": 0,
+                "foundation": 2,
+                "iteration": 0,
+                "loop": 1
+            },
+            {
+                "certification": 0,
+                "done": 0,
+                "foundation": 3,
+                "iteration": 0,
+                "loop": 1
+            },
+            {
+                "certification": 0,
+                "done": 0,
+                "foundation": 4,
+                "iteration": 0,
+                "loop": 1
+            }
+        ],
+        "futureProcess": {
             "certification": 0,
             "done": 0,
             "iteration": 0,
             "loop": 1,
-            "process": 3
+            "process": 6
         }
     },
     "profileSelections": [

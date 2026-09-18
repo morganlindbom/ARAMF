@@ -26,7 +26,7 @@ bool check(bool condition, const char* tag, const char* message)
 
 bool runFoundationNamespaceTests(const QString& selfRepoPath)
 {
-    std::cout << "Starting Foundation Namespace test matrix (FOUND-001 through FOUND-020)...\n";
+    std::cout << "Starting Foundation Namespace test matrix (FOUND-001 through FOUND-021)...\n";
     const QString repoRoot = (selfRepoPath.isEmpty() || !QDir(selfRepoPath).exists(QStringLiteral("ARAMF_WORKER")))
         ? AramfPaths::programRoot()
         : selfRepoPath;
@@ -344,6 +344,44 @@ bool runFoundationNamespaceTests(const QString& selfRepoPath)
         QJsonObject report = memory.validate(repoRoot, &error, false);
         bool ok = check(error.isEmpty() && report.value(QStringLiteral("status")).toString() == QStringLiteral("PASS"),
                         "FOUND-020", "Memory consistency validate reports PASS on canonical state");
+        allPass &= ok;
+    }
+
+    // FOUND-021: Persisted ProjectModel and generated Worker lifecycle state cannot drift
+    {
+        ProjectPersistence persistence;
+        ProjectModel persistedModel;
+        QString persistedError;
+        const QString persistedPath = QDir(repoRoot).filePath(QStringLiteral("ARAMF_WORKER.aramf.json"));
+        bool ok = check(persistence.load(&persistedModel, persistedPath, &persistedError),
+                        "FOUND-021", "Persisted ProjectModel loads through ProjectPersistence");
+        const auto canonical = ProcessVersionState::currentCanonicalState();
+        const auto canonicalJson = processVersionStateToJson(canonical);
+        ok &= check(processVersionStateToJson(persistedModel.processVersionState()) == canonicalJson,
+                    "FOUND-021", "Persisted ProjectModel resolves to current canonical lifecycle state");
+
+        const QString generatedPath = QDir(repoRoot).filePath(QStringLiteral("ARAMF_WORKER/project.json"));
+        QFile generatedFile(generatedPath);
+        QJsonObject generatedRoot;
+        QJsonParseError generatedParseError;
+        if (generatedFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            generatedRoot = QJsonDocument::fromJson(generatedFile.readAll(), &generatedParseError).object();
+            generatedFile.close();
+        }
+        ok &= check(generatedParseError.error == QJsonParseError::NoError
+                        && generatedRoot.value(QStringLiteral("processVersion")).isObject(),
+                    "FOUND-021", "Generated Worker project contains processVersion state");
+
+        ProcessVersionState generatedState;
+        QString generatedError;
+        ok &= check(processVersionStateFromJson(generatedRoot.value(QStringLiteral("processVersion")),
+                                                &generatedState, &generatedError),
+                    "FOUND-021", "Generated Worker lifecycle state parses canonically");
+        ok &= check(processVersionStateToJson(generatedState) == canonicalJson,
+                    "FOUND-021", "Generated Worker resolves to current canonical lifecycle state");
+        ok &= check(processVersionStateToJson(persistedModel.processVersionState())
+                        == processVersionStateToJson(generatedState),
+                    "FOUND-021", "Persisted and generated lifecycle states are identical");
         allPass &= ok;
     }
 
