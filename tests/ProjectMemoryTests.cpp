@@ -63,6 +63,7 @@ bool runProvenanceAndScopeTests();
 bool runP3PredictiveTests();
 bool runP4RoutingTests();
 bool runProcessNamespaceMigrationTests(const QString& selfRepoPath);
+bool runFoundationNamespaceTests(const QString& selfRepoPath);
 
 int main(int argc, char** argv)
 {
@@ -79,6 +80,7 @@ int main(int argc, char** argv)
     if (app.arguments().contains(QStringLiteral("--p3-predictive"))) return runP3PredictiveTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--p4-routing"))) return runP4RoutingTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--process-migration"))) return runProcessNamespaceMigrationTests(AramfPaths::programRoot()) ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--foundation-namespace"))) return runFoundationNamespaceTests(AramfPaths::programRoot()) ? 0 : 1;
     QTemporaryDir temporaryProject;
     if (!require(temporaryProject.isValid(), "temporary project directory must be valid")) {
         return 1;
@@ -2199,6 +2201,7 @@ int main(int argc, char** argv)
     ok &= runP3PredictiveTests();
     ok &= runP4RoutingTests();
     ok &= runProcessNamespaceMigrationTests(AramfPaths::programRoot());
+    ok &= runFoundationNamespaceTests(AramfPaths::programRoot());
     return ok ? 0 : 1;
 }
 

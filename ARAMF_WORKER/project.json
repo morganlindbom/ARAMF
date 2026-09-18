@@ -123,6 +123,29 @@
             "iteration": 0,
             "loop": 1
         },
+        "foundationQueue": [
+            {
+                "certification": 0,
+                "done": 0,
+                "foundation": 2,
+                "iteration": 0,
+                "loop": 1
+            },
+            {
+                "certification": 0,
+                "done": 0,
+                "foundation": 3,
+                "iteration": 0,
+                "loop": 1
+            },
+            {
+                "certification": 0,
+                "done": 0,
+                "foundation": 4,
+                "iteration": 0,
+                "loop": 1
+            }
+        ],
         "futureProcess": {
             "certification": 0,
             "done": 0,

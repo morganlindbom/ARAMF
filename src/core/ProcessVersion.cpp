@@ -38,11 +38,19 @@ bool sameProcessLoop(const ProcessVersion& left, const ProcessVersion& right)
 
 bool comesAfter(const ProcessVersion& left, const ProcessVersion& right)
 {
-    if (left.kind != right.kind) {
-        return false;
+    if (left.kind == right.kind) {
+        return left.number > right.number
+            || (left.number == right.number && left.loop > right.loop);
     }
-    return left.number > right.number
-        || (left.number == right.number && left.loop > right.loop);
+    // Foundations (F1..F4) come after completed processes P1..P5
+    if (left.kind == ProcessKind::Foundation && right.kind == ProcessKind::Process) {
+        return right.number <= 5;
+    }
+    // Canonical Code Bank and subsequent processes (P6+) come after Foundations (F1..F4)
+    if (left.kind == ProcessKind::Process && right.kind == ProcessKind::Foundation) {
+        return left.number >= 6;
+    }
+    return false;
 }
 }
 
@@ -70,8 +78,8 @@ QString ProcessVersion::identifier() const
 bool ProcessVersion::isValid(QString* error) const
 {
     if (number < 0) { setError(error, QStringLiteral("Process/foundation number must be non-negative.")); return false; }
-    if (kind == ProcessKind::Foundation && number < 1) {
-        setError(error, QStringLiteral("Foundation number must be at least 1."));
+    if (kind == ProcessKind::Foundation && (number < 1 || number > 4)) {
+        setError(error, QStringLiteral("Foundation number must be between 1 and 4."));
         return false;
     }
     if (loop < 1) { setError(error, QStringLiteral("Process loop must be at least 1.")); return false; }
@@ -156,13 +164,18 @@ bool ProcessVersion::isCanonicalProcess(int processNumber)
 
 bool ProcessVersion::isCanonicalFoundation(int foundationNumber)
 {
-    return foundationNumber == 1;
+    return foundationNumber >= 1 && foundationNumber <= 4;
 }
 
 QString ProcessVersion::foundationName(int foundationNumber)
 {
-    if (foundationNumber == 1) return QStringLiteral("Memory & Evidence Foundation");
-    return QStringLiteral("Unknown Foundation");
+    switch (foundationNumber) {
+    case 1: return QStringLiteral("Memory & Evidence Foundation");
+    case 2: return QStringLiteral("Identity, Provenance & Trust Foundation");
+    case 3: return QStringLiteral("Scope, State & Integrity Foundation");
+    case 4: return QStringLiteral("Lifecycle & Certification Foundation");
+    default: return {};
+    }
 }
 
 QString ProcessVersion::processName(int processNumber, ProcessNamespace ns)
@@ -277,7 +290,7 @@ QString ProcessNamespaceService::canonicalToLegacy(const QString& canonicalIdent
         return QString();
     }
     if (v.isFoundation()) {
-        if (error) *error = QStringLiteral("F1 is a foundation layer with no legacy P equivalent.");
+        if (error) *error = QStringLiteral("Foundation identities (F1-F4) have no legacy process equivalent.");
         return QString();
     }
     int legacyNum = 0;
@@ -321,6 +334,9 @@ QStringList ProcessNamespaceService::canonicalRoadmapNames()
 {
     return {
         QStringLiteral("F1 — Memory & Evidence Foundation"),
+        QStringLiteral("F2 — Identity, Provenance & Trust Foundation"),
+        QStringLiteral("F3 — Scope, State & Integrity Foundation"),
+        QStringLiteral("F4 — Lifecycle & Certification Foundation"),
         QStringLiteral("P1 — Task Execution Governance"),
         QStringLiteral("P2 — Context Coordination"),
         QStringLiteral("P3 — Execution Orchestration"),
@@ -433,6 +449,14 @@ bool ProcessVersionState::isValid(QString* error) const
             setError(error, QStringLiteral("The active process must have done=0."));
             return false;
         }
+        if (activeProcess.isProcess() && activeProcess.number >= 6) {
+            QString gatingReason;
+            if (!isP6Eligible(&gatingReason)) {
+                setError(error, QStringLiteral("Process P%1 cannot activate until all foundations F1-F4 are certified complete and foundation integration validation has passed: %2")
+                    .arg(activeProcess.number).arg(gatingReason));
+                return false;
+            }
+        }
         const auto active = activeProcess;
         const bool rework = std::any_of(completedHistory.cbegin(), completedHistory.cend(),
                                         [&active](const auto& prior) {
@@ -453,7 +477,20 @@ bool ProcessVersionState::isValid(QString* error) const
             setError(error, QStringLiteral("The next process must start as [P|F]<number>.<loop>.0.0.0."));
             return false;
         }
-        if (nextProcess.isProcess()) {
+        if (nextProcess.isFoundation()) {
+            if (isFoundationComplete(nextProcess.foundationNumber())) {
+                setError(error, QStringLiteral("Foundation F%1 is already completed and cannot be the next process.")
+                    .arg(nextProcess.foundationNumber()));
+                return false;
+            }
+        } else if (nextProcess.isProcess()) {
+            if (nextProcess.number >= 6) {
+                if (!allFoundationsComplete() && !(hasActiveProcess && activeProcess.isFoundation() && activeProcess.foundationNumber() == 4)) {
+                    setError(error, QStringLiteral("Process P%1 cannot be scheduled as next process while foundations F1-F4 remain uncompleted.")
+                        .arg(nextProcess.number));
+                    return false;
+                }
+            }
             const int highestProcess = std::accumulate(completedHistory.cbegin(), completedHistory.cend(), 0,
                                                        [](int highest, const auto& version) {
                                                            return version.isProcess() ? qMax(highest, version.number) : highest;
@@ -474,13 +511,22 @@ bool ProcessVersionState::isValid(QString* error) const
                                                                                 && prior.loop == active.loop
                                                                                 && prior.iteration < active.iteration;
                                                                         });
-            if (hasActiveProcess && !activeRework && nextProcess.number <= activeProcess.number) {
-                setError(error, QStringLiteral("The next process must follow the active process."));
-                return false;
-            }
-            if (hasActiveProcess && !activeRework && nextProcess.number != activeProcess.number + 1) {
-                setError(error, QStringLiteral("The next process must directly follow the active process."));
-                return false;
+            if (hasActiveProcess && !activeRework) {
+                if (activeProcess.isProcess()) {
+                    if (nextProcess.number <= activeProcess.number) {
+                        setError(error, QStringLiteral("The next process must follow the active process."));
+                        return false;
+                    }
+                    if (nextProcess.number != activeProcess.number + 1) {
+                        setError(error, QStringLiteral("The next process must directly follow the active process."));
+                        return false;
+                    }
+                } else if (activeProcess.isFoundation()) {
+                    if (nextProcess.number != highestProcess + 1) {
+                        setError(error, QStringLiteral("The next process must directly follow the latest completed process."));
+                        return false;
+                    }
+                }
             }
         }
     }
@@ -489,6 +535,18 @@ bool ProcessVersionState::isValid(QString* error) const
         if (!futureProcess.isValid(error)) return false;
         if (futureProcess.loop < 1 || futureProcess.iteration != 0 || futureProcess.certification != 0 || futureProcess.done != 0) {
             setError(error, QStringLiteral("The future process must start with iteration=0, certification=0, done=0."));
+            return false;
+        }
+    }
+
+    for (const auto& f : foundationQueue) {
+        if (!f.isValid(error)) return false;
+        if (!f.isFoundation()) {
+            setError(error, QStringLiteral("Foundation queue must contain only foundation versions."));
+            return false;
+        }
+        if (f.iteration != 0 || f.certification != 0 || f.done != 0) {
+            setError(error, QStringLiteral("Foundation queue entries must be unstarted (iter=0, cert=0, done=0)."));
             return false;
         }
     }
@@ -515,6 +573,71 @@ QString ProcessVersionState::nextIdentifier() const
 QString ProcessVersionState::futureIdentifier() const
 {
     return hasFutureProcess ? futureProcess.identifier() : QString();
+}
+
+QStringList ProcessVersionState::foundationQueueIdentifiers() const
+{
+    QStringList ids;
+    for (const auto& f : foundationQueue) ids.append(f.identifier());
+    return ids;
+}
+
+bool ProcessVersionState::isFoundationComplete(int foundationNumber) const
+{
+    return std::any_of(completedHistory.cbegin(), completedHistory.cend(),
+                       [foundationNumber](const ProcessVersion& v) {
+                           return v.isFoundation() && v.foundationNumber() == foundationNumber
+                               && v.certification == 1 && v.done == 1;
+                       });
+}
+
+bool ProcessVersionState::allFoundationsComplete() const
+{
+    return isFoundationComplete(1) && isFoundationComplete(2)
+        && isFoundationComplete(3) && isFoundationComplete(4);
+}
+
+bool ProcessVersionState::isP6Eligible(QString* reason) const
+{
+    for (int f = 1; f <= 4; ++f) {
+        if (!isFoundationComplete(f)) {
+            if (reason) {
+                *reason = QStringLiteral("Foundation F%1 (%2) is not certified complete.")
+                    .arg(f)
+                    .arg(ProcessVersion::foundationName(f));
+            }
+            return false;
+        }
+    }
+    if (!foundationIntegrationValid) {
+        if (reason) {
+            *reason = QStringLiteral("Integrated foundation validation has not passed.");
+        }
+        return false;
+    }
+    return true;
+}
+
+QList<ProcessVersion> ProcessVersionState::remainingFoundationQueue() const
+{
+    QList<ProcessVersion> remaining;
+    for (int f = 1; f <= 4; ++f) {
+        if (isFoundationComplete(f)) continue;
+        if (hasActiveProcess && activeProcess.isFoundation() && activeProcess.foundationNumber() == f) continue;
+        if (hasNextProcess && nextProcess.isFoundation() && nextProcess.foundationNumber() == f) continue;
+        remaining.append(ProcessVersion(ProcessKind::Foundation, f, 1, 0, 0, 0));
+    }
+    return remaining;
+}
+
+QList<ProcessVersion> ProcessVersionState::canonicalFoundationQueue()
+{
+    return {
+        ProcessVersion(ProcessKind::Foundation, 1, 1, 0, 0, 0),
+        ProcessVersion(ProcessKind::Foundation, 2, 1, 0, 0, 0),
+        ProcessVersion(ProcessKind::Foundation, 3, 1, 0, 0, 0),
+        ProcessVersion(ProcessKind::Foundation, 4, 1, 0, 0, 0)
+    };
 }
 
 ProcessVersionState ProcessVersionState::empty()
@@ -555,8 +678,14 @@ ProcessVersionState ProcessVersionState::currentCanonicalState()
     s.activeProcess = {};
     s.hasNextProcess = true;
     s.nextProcess = ProcessVersion(ProcessKind::Foundation, 1, 1, 0, 0, 0); // F1.1.0.0.0
+    s.foundationQueue = {
+        ProcessVersion(ProcessKind::Foundation, 2, 1, 0, 0, 0), // F2.1.0.0.0
+        ProcessVersion(ProcessKind::Foundation, 3, 1, 0, 0, 0), // F3.1.0.0.0
+        ProcessVersion(ProcessKind::Foundation, 4, 1, 0, 0, 0)  // F4.1.0.0.0
+    };
     s.hasFutureProcess = true;
     s.futureProcess = ProcessVersion(ProcessKind::Process, 6, 1, 0, 0, 0); // P6.1.0.0.0
+    s.foundationIntegrationValid = false;
     return s;
 }
 
@@ -571,8 +700,16 @@ QJsonObject processVersionStateToJson(const ProcessVersionState& state)
         {QStringLiteral("active"), state.hasActiveProcess ? QJsonValue(processVersionToJson(state.activeProcess)) : QJsonValue(QJsonValue::Null)},
         {QStringLiteral("next"), state.hasNextProcess ? QJsonValue(processVersionToJson(state.nextProcess)) : QJsonValue(QJsonValue::Null)}
     };
+    if (!state.foundationQueue.isEmpty()) {
+        QJsonArray fq;
+        for (const auto& f : state.foundationQueue) fq.append(processVersionToJson(f));
+        obj.insert(QStringLiteral("foundationQueue"), fq);
+    }
     if (state.hasFutureProcess) {
         obj.insert(QStringLiteral("futureProcess"), processVersionToJson(state.futureProcess));
+    }
+    if (state.foundationIntegrationValid) {
+        obj.insert(QStringLiteral("foundationIntegrationValid"), true);
     }
     return obj;
 }
@@ -633,9 +770,21 @@ bool processVersionStateFromJson(const QJsonValue& value, ProcessVersionState* s
         }
     }
 
+    if (object.contains(QStringLiteral("foundationQueue"))) {
+        for (const auto& entry : object.value(QStringLiteral("foundationQueue")).toArray()) {
+            ProcessVersion fv;
+            if (!processVersionFromJson(entry, &fv, error)) return false;
+            candidate.foundationQueue.append(fv);
+        }
+    }
+
     if (object.contains(QStringLiteral("futureProcess")) && !object.value(QStringLiteral("futureProcess")).isNull()) {
         if (!processVersionFromJson(object.value(QStringLiteral("futureProcess")), &candidate.futureProcess, error)) return false;
         candidate.hasFutureProcess = true;
+    }
+
+    if (object.contains(QStringLiteral("foundationIntegrationValid"))) {
+        candidate.foundationIntegrationValid = object.value(QStringLiteral("foundationIntegrationValid")).toBool(false);
     }
 
     if (!candidate.isValid(error)) return false;
@@ -653,20 +802,42 @@ bool ProcessVersionLifecycle::startNextProcess(ProcessVersionState* state, QStri
     if (state->hasActiveProcess) { setError(error, QStringLiteral("An active process already exists.")); return false; }
     if (!state->hasNextProcess) { setError(error, QStringLiteral("There is no next process to start.")); return false; }
 
+    if (state->nextProcess.isProcess() && state->nextProcess.number >= 6) {
+        QString gatingReason;
+        if (!state->isP6Eligible(&gatingReason)) {
+            setError(error, QStringLiteral("Process P%1 cannot start because foundations are not fully certified: %2")
+                .arg(state->nextProcess.number).arg(gatingReason));
+            return false;
+        }
+    }
+
     state->activeProcess = state->nextProcess;
     state->activeProcess.iteration = 1;
     state->activeProcess.certification = 0;
     state->activeProcess.done = 0;
     state->hasActiveProcess = true;
+
     if (state->activeProcess.isFoundation()) {
-        if (state->hasFutureProcess) {
-            state->nextProcess = state->futureProcess;
+        const int currentF = state->activeProcess.foundationNumber();
+        if (currentF < 4) {
+            state->nextProcess = ProcessVersion(ProcessKind::Foundation, currentF + 1, 1, 0, 0, 0);
             state->hasNextProcess = true;
-            state->futureProcess = {};
-            state->hasFutureProcess = false;
+            if (!state->foundationQueue.isEmpty()
+                && state->foundationQueue.first().foundationNumber() == currentF + 1) {
+                state->foundationQueue.removeFirst();
+            }
         } else {
-            state->nextProcess = {};
-            state->hasNextProcess = false;
+            // F4 is active; next process after all foundations is futureProcess (P6)
+            if (state->hasFutureProcess) {
+                state->nextProcess = state->futureProcess;
+                state->hasNextProcess = true;
+                state->futureProcess = {};
+                state->hasFutureProcess = false;
+            } else {
+                state->nextProcess = ProcessVersion(ProcessKind::Process, 6, 1, 0, 0, 0);
+                state->hasNextProcess = true;
+            }
+            state->foundationQueue.clear();
         }
     } else {
         state->nextProcess = {ProcessKind::Process, state->activeProcess.number + 1, 1, 0, 0, 0};

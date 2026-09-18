@@ -99,11 +99,22 @@ struct ProcessVersionState final
     bool hasFutureProcess = false;
     ProcessVersion futureProcess;
 
+    // Foundation progression queue and integrated validation gating
+    QList<ProcessVersion> foundationQueue;
+    bool foundationIntegrationValid = false;
+
     bool isValid(QString* error = nullptr) const;
     QStringList completedIdentifiers() const;
     QString activeIdentifier() const;
     QString nextIdentifier() const;
     QString futureIdentifier() const;
+    QStringList foundationQueueIdentifiers() const;
+
+    bool isFoundationComplete(int foundationNumber) const;
+    bool allFoundationsComplete() const;
+    bool isP6Eligible(QString* reason = nullptr) const;
+    QList<ProcessVersion> remainingFoundationQueue() const;
+    static QList<ProcessVersion> canonicalFoundationQueue();
 
     static ProcessVersionState empty();
     static ProcessVersionState currentCanonicalState();
