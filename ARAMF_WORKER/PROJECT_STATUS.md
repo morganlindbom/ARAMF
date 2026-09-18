@@ -851,48 +851,66 @@ Campaign Evidence:
   - Completed Certified Chain: `P1.1.2.1.1`, `P2.1.1.1.1`, `P3.1.4.1.1`, `P4.1.4.1.1`, `P5.1.4.1.1`
 
 
-### Foundation Namespace Architecture & Gating Completion
+### Foundation Architecture Implementation Takeover & Pre-Certification Verification
 
-- Campaign Identity: `ARAMF-FOUNDATION-NAMESPACE-COMPLETION-2026-09-18`
-- Purpose: Establish and verify the four canonical architectural foundations (F1–F4), enforce strict sequential foundation progression and integrated foundation gating on P6, and narrow F1 scope boundaries prior to F1 implementation.
-- Architectural Decisions:
-  1. **Four Architectural Foundations Established**:
-     - **F1 — Memory & Evidence Foundation**: Durable memory persistence, append-only recorder/ledger, historical memory, current state, Framework Knowledge, evidence, cold-start reconstruction.
-     - **F2 — Identity, Provenance & Trust Foundation**: Actor/agent/tool identity, structured provenance, administrative identity/overrides, trust boundaries, attribution integrity.
-     - **F3 — Scope, State & Integrity Foundation**: Canonical scope definitions, category affinity, combination legality, project & cross-project isolation, file-to-scope matching, consistency constraints.
-     - **F4 — Lifecycle & Certification Foundation**: F/P namespace identities & versions, loop/iteration/cert/done semantics, dependency freshness, stale certification detection, gating rules, renewal compatibility.
-  2. **Foundation Lifecycle Queue & Progression**:
-     - Canonical Foundation certification order: $F1 \to F2 \to F3 \to F4 \to \text{Foundation Integration Validation} \to P6$.
-     - `ProcessVersionState` exposes `foundationQueue = [F2.1.0.0.0, F3.1.0.0.0, F4.1.0.0.0]`, with `nextProcess = F1.1.0.0.0` and `futureProcess = P6.1.0.0.0`.
-  3. **Strict Canonical P6 Gating**:
-     - Process P6 (`P6.1.0.0.0`, Canonical Code Bank) and subsequent processes are strictly gated in `ProcessVersionState::isValid` and `ProcessVersionLifecycle::startNextProcess`. P6 cannot activate or be scheduled as next process until all four foundations (F1–F4) are certified complete (`cert=1, done=1`) AND integrated foundation validation is `PASS` (`foundationIntegrationValid = true`).
-  4. **Strict Scope Enforcement**:
-     - No foundation capability is implemented or certified in this campaign. All four foundations remain unstarted (`iteration=0, cert=0, done=0`).
-  5. **Verification Evidence**:
-     - Foundation Namespace Matrix (`tests/FoundationNamespaceTests.cpp`): 20/20 PASS (`FOUND-001` through `FOUND-020`).
-     - Process Namespace Migration Matrix (`tests/ProcessNamespaceMigrationTests.cpp`): 20/20 PASS (`MIG-001` through `MIG-020`).
-     - Full CTest Suite: 5/5 PASS (100%, 0 failures across all project tests):
+- Campaign Identity: `ARAMF-FOUNDATION-IMPLEMENTATION-TAKEOVER-2026-09-18`
+- Purpose: Take over in-progress, uncommitted Claude Opus 4.6 Thinking implementation of the four ARAMF foundations (F1–F4), preserve valid work, repair test fixture defects, establish genuine multi-process durability and failure injection tests, and verify complete pre-certification regression.
+- Architectural State:
+  1. **Four Foundations Implemented as Unified Services**:
+     - `src/core/FoundationServices.h` & `src/core/FoundationServices.cpp`:
+       - `MemoryEvidenceFoundation` (F1): Thin coordination layer validating append-only ledger integrity, cold-start reconstruction, manifest consistency, and certification ledger.
+       - `IdentityTrustFoundation` (F2): Validates structured event provenance, 7-member actor taxonomy (`human`, `user`, `agent`, `autonomous-agent`, `tool`, `runtime`, `system`), and trust boundaries (blocking recursive shell deletions).
+       - `ScopeIntegrityFoundation` (F3): Validates 15-member canonical scope taxonomy, scope combinations, cross-scope file relationships, project state integrity, and validation routing policies.
+       - `LifecycleCertificationFoundation` (F4): Validates process and foundation history, active/next states, canonical foundation queue, P6 gating rules, and certification semantics.
+       - `FoundationIntegrationService`: Orchestrates all four foundations in strict bootstrap order ($F1 \to F2 \to F3 \to F4$) with acyclic dependency enforcement (no circular authority).
+  2. **Dedicated & Integrated Test Infrastructure**:
+     - `tests/FoundationTests.cpp`:
+       - F1 Suite: `F1-001` through `F1-010` (contract, ledger integrity, duplicate ID detection, non-monotonic sequence detection, cold start, evidence summary).
+       - F2 Suite: `F2-001` through `F2-010` (contract, 7 actors, provenance validation, trust boundary recursive deletion prevention).
+       - F3 Suite: `F3-001` through `F3-010` (contract, 15 scopes, contradictory combination rejection, file-scope affinity, validation policy).
+       - F4 Suite: `F4-001` through `F4-010` (contract, process version state, certification semantics, P6 gating).
+       - Cross-Foundation Integration: `INT-F-001` through `INT-F-011` (bootstrap order, contract dependency DAG, failure propagation, cross-foundation consistency).
+       - True Cross-Process Durability: `XPROC-001` (P1-P5 state preservation) and `XPROC-002` (Process A via `aramf.exe` writes governed evidence, exits; Process B validates F1-F4 state).
+       - Failure Injection: `FAIL-INJ-001` through `FAIL-INJ-005` (missing project.json, empty event log, corrupt manifest, corrupt JSONL, unauthorized recursive deletion).
+  3. **Verification Evidence**:
+     - Dedicated Foundation Suites:
+       - `aramf_core_tests.exe --f1-memory-evidence`: ALL PASS
+       - `aramf_core_tests.exe --f2-identity-trust`: ALL PASS
+       - `aramf_core_tests.exe --f3-scope-integrity`: ALL PASS
+       - `aramf_core_tests.exe --f4-lifecycle-certification`: ALL PASS
+       - `aramf_core_tests.exe --foundation-integration`: ALL PASS
+       - `aramf_core_tests.exe --all-foundations`: ALL PASS
+     - Namespace & Lifecycle Regressions:
+       - `aramf_core_tests.exe --foundation-namespace`: ALL PASS (20/20)
+       - `aramf_core_tests.exe --process-migration`: ALL PASS (20/20)
+     - Canonical Process Regressions:
+       - P1: `aramf_core_tests.exe --worker-tasks`: ALL PASS (275 checks)
+       - P2: `aramf_core_tests.exe --p2-execution`: ALL PASS
+       - P3: `aramf_core_tests.exe --p3-predictive`: ALL PASS
+       - P4: `aramf_core_tests.exe --p4-routing`: ALL PASS
+       - Provenance & Scope: `aramf_core_tests.exe --provenance-and-scope`: ALL PASS
+     - Memory Validation:
+       - `aramf.exe memory cold-start --project .`: PASS
+       - `aramf.exe memory validate --project .`: PASS
+     - Full CTest Suite: 5/5 PASS (100%, 0 failures):
        - `aramf_core_tests`: PASS
        - `aramf_workflow_tests`: PASS
        - `aramf_template_tests`: PASS
        - `aramf_update_campaign`: PASS
        - `aramf_configuration_update`: PASS
-     - Memory Cold-Start Validation: PASS (`ARAMF_WORKER/memory/cold-start-validation.json`).
-     - Memory Consistency Validation: PASS (`ARAMF_WORKER/memory/memory-consistency-validation.json`).
-  6. **Recorder Event**:
-     - Sequence 331 (`event-0db0c4e9-f635-451b-b2cc-f38de9f61cc4`), `TASK_COMPLETED`, status=PASS, actor=agent, agentId=antigravity, tool=aramf-cli, scope=project.
-  7. **Current Lifecycle State**:
-     - Canonical Namespace: `namespaceVersion: 2`
-     - Active: `null`
-     - Next: `F1.1.0.0.0` (Memory & Evidence Foundation)
-     - Foundation Queue: `[F2.1.0.0.0, F3.1.0.0.0, F4.1.0.0.0]`
-     - Future Process: `P6.1.0.0.0` (Canonical Code Bank)
-     - Foundation Integration Valid: `false`
-     - Completed Certified Chain: `P1.1.2.1.1`, `P2.1.1.1.1`, `P3.1.4.1.1`, `P4.1.4.1.1`, `P5.1.4.1.1`
+  4. **Strict Pre-Certification Lifecycle Confirmation**:
+     - F1: implementation ready, `cert=0, done=0`
+     - F2: implementation ready, `cert=0, done=0`
+     - F3: implementation ready, `cert=0, done=0`
+     - F4: implementation ready, `cert=0, done=0`
+     - `foundationIntegrationValid = false`
+     - `P6.1.0.0.0` remains strictly blocked
+  5. **Recorder Event**:
+     - Sequence 332 (`event-753b4553-3494-4b17-819b-996059d7d294`), `TASK_COMPLETED`, status=PASS, actor=agent, agentId=antigravity, tool=aramf-cli, scope=project.
 
 ## Latest Agent Task
 
-- Task: Foundation Namespace Completion
+- Task: Foundation Architecture Implementation Takeover and Pre-Certification Verification
 - Status: PASS
-- Summary: Completed Foundation Namespace Architecture with F1-F4 foundations and updated P6 gating.
-- Next Recommended State: F1.1.0.0.0 (Memory & Evidence Foundation) implementation.
+- Summary: Completed F1-F4 foundation implementation takeover from Claude Opus, repaired test fixtures, added multi-process boundary test and failure injection, verified all foundation suites and full regression.
+- Next Recommended State: Independent Architectural and P<->F Dependency Review of the F1-F4 Implementation.

@@ -64,6 +64,12 @@ bool runP3PredictiveTests();
 bool runP4RoutingTests();
 bool runProcessNamespaceMigrationTests(const QString& selfRepoPath);
 bool runFoundationNamespaceTests(const QString& selfRepoPath);
+bool runF1FoundationTests(const QString& selfRepoPath);
+bool runF2FoundationTests(const QString& selfRepoPath);
+bool runF3FoundationTests(const QString& selfRepoPath);
+bool runF4FoundationTests(const QString& selfRepoPath);
+bool runFoundationIntegrationTestSuite(const QString& selfRepoPath);
+bool runAllFoundationTests(const QString& selfRepoPath);
 
 int main(int argc, char** argv)
 {
@@ -81,6 +87,12 @@ int main(int argc, char** argv)
     if (app.arguments().contains(QStringLiteral("--p4-routing"))) return runP4RoutingTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--process-migration"))) return runProcessNamespaceMigrationTests(AramfPaths::programRoot()) ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--foundation-namespace"))) return runFoundationNamespaceTests(AramfPaths::programRoot()) ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--f1-memory-evidence"))) return runF1FoundationTests(AramfPaths::programRoot()) ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--f2-identity-trust"))) return runF2FoundationTests(AramfPaths::programRoot()) ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--f3-scope-integrity"))) return runF3FoundationTests(AramfPaths::programRoot()) ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--f4-lifecycle-certification"))) return runF4FoundationTests(AramfPaths::programRoot()) ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--foundation-integration"))) return runFoundationIntegrationTestSuite(AramfPaths::programRoot()) ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--all-foundations"))) return runAllFoundationTests(AramfPaths::programRoot()) ? 0 : 1;
     QTemporaryDir temporaryProject;
     if (!require(temporaryProject.isValid(), "temporary project directory must be valid")) {
         return 1;
@@ -2202,6 +2214,7 @@ int main(int argc, char** argv)
     ok &= runP4RoutingTests();
     ok &= runProcessNamespaceMigrationTests(AramfPaths::programRoot());
     ok &= runFoundationNamespaceTests(AramfPaths::programRoot());
+    ok &= runAllFoundationTests(AramfPaths::programRoot());
     return ok ? 0 : 1;
 }
 
