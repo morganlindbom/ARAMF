@@ -129,6 +129,20 @@ bool runF1MemoryEvidenceTests(const QString& selfRepoPath = QString())
     bool ok = true;
     std::cerr << "=== F1: Memory & Evidence Foundation Tests ===\n";
 
+    const auto writeJsonFile = [](const QString& path, const QJsonObject& object) {
+        QDir().mkpath(QFileInfo(path).path());
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) return false;
+        file.write(QJsonDocument(object).toJson(QJsonDocument::Indented));
+        file.close();
+        return true;
+    };
+    const auto readFileBytes = [](const QString& path) {
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly)) return QByteArray();
+        return file.readAll();
+    };
+
     QString resolvedRepoPath = selfRepoPath;
     if (resolvedRepoPath.isEmpty() || !QFileInfo(QDir(resolvedRepoPath).filePath(QStringLiteral("CMakeLists.txt"))).isFile()) {
         resolvedRepoPath = AramfPaths::programRoot();
@@ -617,6 +631,180 @@ bool runF1MemoryEvidenceTests(const QString& selfRepoPath = QString())
         auto rep = MemoryEvidenceFoundation::validate(fx.path());
         ok &= require(!rep.schemaCompatible, "F1-020: Unsupported future memory version detected");
         ok &= require(!rep.valid, "F1-020: Overall validation fails on incompatible schema");
+    }
+
+    // F1-021: Canonical metrics activeEvents is validated and repaired without rewriting history
+    {
+        TestFixture fx;
+        fx.recordTask(QStringLiteral("F1-021 metrics task"));
+        const QString metricsPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/metrics.json"));
+        QFile metricsFile(metricsPath);
+        QJsonObject metrics;
+        if (metricsFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            metrics = QJsonDocument::fromJson(metricsFile.readAll()).object();
+            metricsFile.close();
+        }
+        const int originalCreated = metrics.value(QStringLiteral("totalEventsCreated")).toInt();
+        metrics.insert(QStringLiteral("activeEvents"), 0);
+        ok &= require(writeJsonFile(metricsPath, metrics), "F1-021: Writes stale canonical metrics fixture");
+        const auto stale = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(!stale.metricsConsistent, "F1-021: Stale activeEvents is detected");
+        ok &= require(MemoryEvidenceFoundation::recoverPhysicalState(fx.path()),
+                       "F1-021: Recovery repairs stale activeEvents");
+        const auto repaired = QJsonDocument::fromJson(readFileBytes(metricsPath)).object();
+        const auto report = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(report.metricsConsistent, "F1-021: Metrics are consistent after repair");
+        ok &= require(repaired.value(QStringLiteral("activeEvents")).toInt() == report.totalEvents,
+                       "F1-021: activeEvents equals physical ledger count");
+        ok &= require(repaired.value(QStringLiteral("totalEventsCreated")).toInt() == originalCreated,
+                       "F1-021: totalEventsCreated semantic history is preserved");
+        ok &= require(!repaired.contains(QStringLiteral("durableSequence"))
+                          && !repaired.contains(QStringLiteral("totalEvents")),
+                      "F1-021: F1 does not invent parallel metric fields");
+    }
+
+    // F1-022: Certification evidence references are physical, object-shaped, and fingerprint checked
+    {
+        const auto makeCertificate = [](const QJsonArray& evidence) {
+            return QJsonObject{
+                {QStringLiteral("certificateId"), QStringLiteral("cert-f1-evidence")},
+                {QStringLiteral("subject"), QStringLiteral("F1 evidence fixture")},
+                {QStringLiteral("evidenceReferences"), evidence}
+            };
+        };
+        const auto certificatePath = [](const QString& root) {
+            return QDir(root).filePath(QStringLiteral("ARAMF_WORKER/certification/certificates.jsonl"));
+        };
+
+        {
+            TestFixture fx;
+            const QString certPath = certificatePath(fx.path());
+            QDir().mkpath(QFileInfo(certPath).path());
+            QFile certFile(certPath);
+            certFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+            certFile.write(QJsonDocument(makeCertificate(QJsonArray{
+                QJsonObject{{QStringLiteral("reference"), QStringLiteral("ARAMF_WORKER/certification/missing-evidence.json")},
+                            {QStringLiteral("verified"), true}}
+            })).toJson(QJsonDocument::Compact) + "\n");
+            certFile.close();
+            ok &= require(!MemoryEvidenceFoundation::validate(fx.path()).certificatesIntact,
+                          "F1-022: Missing physical evidence file is detected");
+        }
+
+        {
+            TestFixture fx;
+            const QString certPath = certificatePath(fx.path());
+            QDir().mkpath(QFileInfo(certPath).path());
+            QFile certFile(certPath);
+            certFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+            certFile.write(QJsonDocument(makeCertificate(QJsonArray{QStringLiteral("not-an-object")})).toJson(QJsonDocument::Compact) + "\n");
+            certFile.close();
+            ok &= require(!MemoryEvidenceFoundation::validate(fx.path()).certificatesIntact,
+                          "F1-022: Malformed evidence reference is detected");
+        }
+
+        {
+            TestFixture fx;
+            const QString evidencePath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence.txt"));
+            QFile evidenceFile(evidencePath);
+            QDir().mkpath(QFileInfo(evidencePath).path());
+            evidenceFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+            evidenceFile.write("physical evidence\n");
+            evidenceFile.close();
+            const QString certPath = certificatePath(fx.path());
+            const QJsonObject certificate = makeCertificate(QJsonArray{
+                QJsonObject{{QStringLiteral("reference"), QStringLiteral("ARAMF_WORKER/certification/evidence.txt")},
+                            {QStringLiteral("verified"), true},
+                            {QStringLiteral("fingerprint"), QStringLiteral("00")}}
+            });
+            QFile certFile(certPath);
+            QDir().mkpath(QFileInfo(certPath).path());
+            certFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+            certFile.write(QJsonDocument(certificate).toJson(QJsonDocument::Compact) + "\n");
+            certFile.close();
+            ok &= require(!MemoryEvidenceFoundation::validate(fx.path()).certificatesIntact,
+                          "F1-022: Evidence fingerprint mismatch is detected");
+        }
+    }
+
+    // F1-023: Current certification state resolves certificates under subjects
+    {
+        TestFixture fx;
+        const QString certPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/certification/certificates.jsonl"));
+        const QString statePath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/certification/current-certification-state.json"));
+        const QJsonObject certificate{
+            {QStringLiteral("certificateId"), QStringLiteral("cert-existing")},
+            {QStringLiteral("subject"), QStringLiteral("F1 state fixture")},
+            {QStringLiteral("evidenceReferences"), QJsonArray{}}
+        };
+        QDir().mkpath(QFileInfo(certPath).path());
+        QFile certFile(certPath);
+        certFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+        certFile.write(QJsonDocument(certificate).toJson(QJsonDocument::Compact) + "\n");
+        certFile.close();
+        ok &= require(writeJsonFile(statePath, QJsonObject{
+            {QStringLiteral("version"), 1},
+            {QStringLiteral("subjects"), QJsonObject{
+                {QStringLiteral("F1 state fixture"), QJsonObject{{QStringLiteral("certificateId"), QStringLiteral("cert-missing")}}}
+            }}
+        }), "F1-023: Writes current certification state fixture");
+        ok &= require(!MemoryEvidenceFoundation::validate(fx.path()).certificatesIntact,
+                      "F1-023: Missing certificate referenced under subjects is detected");
+    }
+
+    // F1-024: Evidence query API fails closed on a malformed later ledger line
+    {
+        TestFixture fx;
+        fx.recordTask(QStringLiteral("F1-024 query task"));
+        const QString logPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
+        QFile logFile(logPath);
+        logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text);
+        logFile.write("{malformed-query-ledger-line\n");
+        logFile.close();
+        QString queryError;
+        const auto records = MemoryEvidenceFoundation::evidenceRecords(fx.path(), &queryError);
+        ok &= require(records.isEmpty() && !queryError.isEmpty(),
+                      "F1-024: Malformed ledger causes evidenceRecords to return no partial records");
+    }
+
+    // F1-025: Certification ledger interruption preserves bytes and fails recovery closed
+    {
+        TestFixture fx;
+        const QString certPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/certification/certificates.jsonl"));
+        QDir().mkpath(QFileInfo(certPath).path());
+        const QByteArray historical = QJsonDocument(QJsonObject{
+            {QStringLiteral("certificateId"), QStringLiteral("cert-history")},
+            {QStringLiteral("subject"), QStringLiteral("F1 interruption fixture")},
+            {QStringLiteral("evidenceReferences"), QJsonArray{}}
+        }).toJson(QJsonDocument::Compact) + "\n";
+        const QByteArray truncated = "{\"certificateId\":\"cert-interrupted\",\"subject\":\"F1 interruption fixture\"";
+        QFile certFile(certPath);
+        certFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+        certFile.write(historical);
+        certFile.write(truncated);
+        certFile.close();
+        const QByteArray before = readFileBytes(certPath);
+        const auto report = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(!report.certificatesIntact && !report.valid,
+                      "F1-025: Interrupted certification ledger fails validation closed");
+        QString recoveryError;
+        ok &= require(!MemoryEvidenceFoundation::recoverPhysicalState(fx.path(), &recoveryError),
+                      "F1-025: Recovery refuses ambiguous certification history");
+        ok &= require(readFileBytes(certPath) == before,
+                      "F1-025: Recovery preserves historical certification bytes");
+    }
+
+    // F1-026: Metrics persistence failure fails recovery closed
+    {
+        TestFixture fx;
+        fx.recordTask(QStringLiteral("F1-026 metrics write failure task"));
+        const QString metricsPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/metrics.json"));
+        QFile::remove(metricsPath);
+        ok &= require(QDir().mkdir(metricsPath), "F1-026: Creates blocking metrics path");
+        QString recoveryError;
+        ok &= require(!MemoryEvidenceFoundation::recoverPhysicalState(fx.path(), &recoveryError),
+                      "F1-026: Recovery fails when metrics cannot be opened");
+        ok &= require(!recoveryError.isEmpty(), "F1-026: Metrics write failure reports an error");
     }
 
     std::cerr << (ok ? "F1: ALL PASS\n" : "F1: SOME FAILURES\n");

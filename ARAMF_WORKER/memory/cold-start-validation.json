@@ -1,6 +1,6 @@
 {
     "_file": "cold-start-validation.json",
-    "checkedAt": "2026-09-18T16:54:12Z",
+    "checkedAt": "2026-09-18T17:23:16Z",
     "checks": [
         {
             "name": "ARAMF_WORKER/memory/decisions.md",

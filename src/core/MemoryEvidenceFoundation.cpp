@@ -48,6 +48,13 @@ QString computeFileSha256(const QString& path)
     return QString::fromLatin1(hash.result().toHex());
 }
 
+bool isPersistedEvidenceReference(const QString& reference)
+{
+    return QFileInfo(reference).isAbsolute()
+        || reference.startsWith(QStringLiteral("ARAMF_WORKER/"))
+        || reference.startsWith(QStringLiteral("ARAMF_WORKER\\"));
+}
+
 } // anonymous namespace
 
 // ─── Physical Evidence Validation ────────────────────────────────────────────
@@ -238,14 +245,28 @@ F1EvidenceReport MemoryEvidenceFoundation::validate(const QString& projectRoot, 
             if (metrics.contains(QStringLiteral("durableSequence"))) {
                 if (metrics.value(QStringLiteral("durableSequence")).toVariant().toLongLong() != lastSeq) metricsOk = false;
             }
+            if (!metrics.contains(QStringLiteral("activeEvents"))
+                || !metrics.value(QStringLiteral("activeEvents")).isDouble()) {
+                metricsOk = false;
+                report.errors.append(QStringLiteral("F1: metrics.json is missing canonical activeEvents"));
+            } else if (metrics.value(QStringLiteral("activeEvents")).toInt() != eventCount) {
+                metricsOk = false;
+                report.errors.append(QStringLiteral("F1: metrics.json activeEvents does not match ledger event count"));
+            }
+            if (!metrics.contains(QStringLiteral("totalEventsCreated"))
+                || !metrics.value(QStringLiteral("totalEventsCreated")).isDouble()) {
+                metricsOk = false;
+                report.errors.append(QStringLiteral("F1: metrics.json is missing canonical totalEventsCreated"));
+            }
             report.metricsConsistent = metricsOk;
             if (!metricsOk) {
                 if (report.ledgerIntact) report.recoveryRequired = true;
-                report.errors.append(QStringLiteral("F1: metrics.json sequence/count does not match ledger"));
             }
         }
     } else {
-        report.metricsConsistent = true;
+        report.metricsConsistent = false;
+        if (report.ledgerIntact) report.recoveryRequired = true;
+        report.errors.append(QStringLiteral("F1: metrics.json does not exist"));
     }
 
     // 4. Checkpoints physical integrity
@@ -339,11 +360,31 @@ F1EvidenceReport MemoryEvidenceFoundation::validate(const QString& projectRoot, 
                 // Physical evidence references check
                 const auto evRefs = certObj.value(QStringLiteral("evidenceReferences")).toArray();
                 for (const auto& evRef : evRefs) {
-                    const QString refStr = evRef.toString().trimmed();
-                    if (refStr.startsWith(QStringLiteral("ARAMF_WORKER/"))) {
-                        if (!QFile::exists(QDir(projectRoot).filePath(refStr))) {
+                    if (!evRef.isObject()) {
+                        certsValid = false;
+                        report.errors.append(QStringLiteral("F1: Certificate '%1' contains a malformed evidence reference").arg(cId));
+                        break;
+                    }
+                    const auto refObj = evRef.toObject();
+                    const QString refStr = refObj.value(QStringLiteral("reference")).toString().trimmed();
+                    if (refStr.isEmpty()) {
+                        certsValid = false;
+                        report.errors.append(QStringLiteral("F1: Certificate '%1' contains an evidence reference without a reference").arg(cId));
+                        break;
+                    }
+                    if (isPersistedEvidenceReference(refStr)) {
+                        const QString evidencePath = QFileInfo(refStr).isAbsolute()
+                            ? refStr : QDir(projectRoot).filePath(refStr);
+                        if (!QFile::exists(evidencePath)) {
                             certsValid = false;
                             report.errors.append(QStringLiteral("F1: Certificate '%1' references missing evidence file '%2'")
+                                .arg(cId, refStr));
+                            break;
+                        }
+                        const QString expectedFingerprint = refObj.value(QStringLiteral("fingerprint")).toString().trimmed();
+                        if (!expectedFingerprint.isEmpty() && computeFileSha256(evidencePath) != expectedFingerprint) {
+                            certsValid = false;
+                            report.errors.append(QStringLiteral("F1: Certificate '%1' evidence fingerprint mismatch for '%2'")
                                 .arg(cId, refStr));
                             break;
                         }
@@ -358,13 +399,18 @@ F1EvidenceReport MemoryEvidenceFoundation::validate(const QString& projectRoot, 
                 QStringLiteral("ARAMF_WORKER/certification/current-certification-state.json"));
             if (certsValid && QFile::exists(curCertPath)) {
                 const auto curCertObj = readJsonMap(curCertPath);
-                for (auto it = curCertObj.begin(); it != curCertObj.end(); ++it) {
-                    if (it.key().startsWith(QLatin1Char('_'))) continue;
-                    const QString refId = it.value().toObject().value(QStringLiteral("certificateId")).toString();
-                    if (!refId.isEmpty() && !certIds.contains(refId)) {
+                const auto subjects = curCertObj.value(QStringLiteral("subjects"));
+                if (!subjects.isObject()) {
+                    certsValid = false;
+                    report.errors.append(QStringLiteral("F1: Current certification state has malformed subjects"));
+                }
+                const auto subjectMap = subjects.toObject();
+                for (auto it = subjectMap.begin(); it != subjectMap.end() && certsValid; ++it) {
+                    const QString refId = it.value().toObject().value(QStringLiteral("certificateId")).toString().trimmed();
+                    if (refId.isEmpty() || !certIds.contains(refId)) {
                         certsValid = false;
-                        report.errors.append(QStringLiteral("F1: Derived certification state references non-existent certificate '%1'")
-                            .arg(refId));
+                        report.errors.append(QStringLiteral("F1: Derived certification state references missing certificate '%1'")
+                            .arg(refId.isEmpty() ? QStringLiteral("<empty>") : refId));
                         break;
                     }
                 }
@@ -578,9 +624,11 @@ bool MemoryEvidenceFoundation::recoverPhysicalState(const QString& projectRoot, 
     }
 
     // Step 2: Refresh metrics atomically
-    const QString eventLogPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
     const auto events = MemoryEvidenceFoundation::evidenceRecords(projectRoot);
+    if (events.isEmpty()) {
+        if (error && error->isEmpty()) *error = QStringLiteral("Cannot recover physical state: evidence ledger could not be read");
+        return false;
+    }
     qint64 maxSeq = 0;
     for (const auto& ev : events) {
         const qint64 seq = ev.value(QStringLiteral("sequenceNumber")).toVariant().toLongLong();
@@ -591,13 +639,30 @@ bool MemoryEvidenceFoundation::recoverPhysicalState(const QString& projectRoot, 
         QStringLiteral("ARAMF_WORKER/memory/metrics.json"));
     QJsonObject metrics = readJsonMap(metricsPath);
     metrics.insert(QStringLiteral("_file"), QStringLiteral("metrics.json"));
-    metrics.insert(QStringLiteral("totalEvents"), events.size());
-    metrics.insert(QStringLiteral("durableSequence"), maxSeq);
+    if (!metrics.contains(QStringLiteral("totalEventsCreated"))) {
+        metrics.insert(QStringLiteral("totalEventsCreated"), events.size());
+    }
+    metrics.insert(QStringLiteral("activeEvents"), events.size());
 
     QSaveFile metricsSave(metricsPath);
-    if (metricsSave.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        metricsSave.write(QJsonDocument(metrics).toJson(QJsonDocument::Indented));
-        metricsSave.commit();
+    if (!metricsSave.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        if (error) *error = QStringLiteral("Cannot open metrics.json for recovery: %1").arg(metricsSave.errorString());
+        return false;
+    }
+    const QByteArray metricsData = QJsonDocument(metrics).toJson(QJsonDocument::Indented);
+    if (metricsSave.write(metricsData) != metricsData.size()) {
+        if (error) *error = QStringLiteral("Cannot write metrics.json during recovery: %1").arg(metricsSave.errorString());
+        return false;
+    }
+    if (!metricsSave.commit()) {
+        if (error) *error = QStringLiteral("Cannot commit metrics.json during recovery: %1").arg(metricsSave.errorString());
+        return false;
+    }
+
+    const auto postMetricsReport = MemoryEvidenceFoundation::validate(projectRoot);
+    if (!postMetricsReport.certificatesIntact) {
+        if (error) *error = QStringLiteral("Cannot recover physical state: certification evidence is invalid");
+        return false;
     }
 
     // Step 3: Refresh derived current-state and cold-start validation
@@ -630,6 +695,7 @@ QList<QJsonObject> MemoryEvidenceFoundation::evidenceRecords(const QString& proj
         const auto doc = QJsonDocument::fromJson(raw, &parseErr);
         if (parseErr.error != QJsonParseError::NoError || !doc.isObject()) {
             if (error) *error = QStringLiteral("Malformed event at line %1: %2").arg(line).arg(parseErr.errorString());
+            records.clear();
             return records;
         }
         records.append(doc.object());
