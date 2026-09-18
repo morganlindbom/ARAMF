@@ -327,6 +327,8 @@ if(BUILD_TESTING)
         src/core/EnvironmentCatalog.cpp
         src/core/MemoryCatalog.h
         src/core/MemoryCatalog.cpp
+        src/core/RuleCatalog.h
+        src/core/RuleCatalog.cpp
         src/core/ValidationRouting.h
         src/core/ValidationRouting.cpp
         src/core/WorkerContextResolver.h
@@ -342,6 +344,16 @@ if(BUILD_TESTING)
         src/core/CodexExecutableResolver.cpp
         src/core/UpdateExecutionService.h
         src/core/UpdateExecutionService.cpp
+        src/core/Services.h
+        src/core/Services.cpp
+        src/core/DocumentTemplate.h
+        src/core/DocumentTemplate.cpp
+        src/core/DocumentInstruction.h
+        src/core/DocumentInstruction.cpp
+        src/core/DocumentTemplateInspector.h
+        src/core/DocumentTemplateInspector.cpp
+        src/core/TemplateManager.cpp
+        src/core/TemplateValidation.cpp
         src/ui/shared/CapabilityCheckGroup.h
         src/ui/shared/CapabilityCheckGroup.cpp
         src/ui/workflows/resources/authority/ResourceAuthorityPage.h

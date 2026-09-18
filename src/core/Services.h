@@ -67,6 +67,8 @@ struct AgentEntryPointResult {
 QString projectConfigurationFingerprint(const ProjectModel& model,
                                         const GenerationOptions& options);
 
+bool updateProjectConfiguration(const QString& projectRoot, const ProjectModel& model, QString* error = nullptr);
+
 struct TemplateDefinition {
     enum class Kind { Module, CompositeTemplate };
     Kind kind = Kind::CompositeTemplate;

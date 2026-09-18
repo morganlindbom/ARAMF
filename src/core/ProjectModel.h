@@ -463,6 +463,7 @@ public:
     void setOrchestrationState(const QJsonObject& state);
     bool startNextProcess(QString* error = nullptr);
     bool reworkCompletedProcess(int process, QString* error = nullptr);
+    bool reworkCompletedFoundation(int foundationNumber, QString* error = nullptr);
     bool advanceProcessIteration(QString* error = nullptr);
     bool certifyCurrentProcessIteration(QString* error = nullptr);
     bool completeActiveProcess(QString* error = nullptr);

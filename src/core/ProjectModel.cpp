@@ -985,6 +985,13 @@ bool ProjectModel::reworkCompletedProcess(int process, QString* error)
     return true;
 }
 
+bool ProjectModel::reworkCompletedFoundation(int foundationNumber, QString* error)
+{
+    if (!ProcessVersionLifecycle::reworkCompletedFoundation(&processVersionState_, foundationNumber, error)) return false;
+    emit modelChanged();
+    return true;
+}
+
 void ProjectModel::setRuntimeOwnershipState(const QJsonObject& state)
 {
     if (runtimeOwnershipState_ == state) return;

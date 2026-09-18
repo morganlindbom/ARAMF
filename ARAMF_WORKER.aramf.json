@@ -467,7 +467,13 @@
     "options": {
     },
     "processVersion": {
-        "active": null,
+        "active": {
+            "certification": 0,
+            "done": 0,
+            "foundation": 1,
+            "iteration": 2,
+            "loop": 1
+        },
         "completedHistory": [
             {
                 "certification": 1,

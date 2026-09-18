@@ -368,6 +368,13 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
         QJsonDocument(value).toJson(QJsonDocument::Compact), QCryptographicHash::Sha256).toHex());
 }
 
+bool updateProjectConfiguration(const QString& projectRoot, const ProjectModel& model, QString* error)
+{
+    const QString fingerprint = projectConfigurationFingerprint(model, model.generationOptions());
+    const QString path = QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::ProjectConfiguration));
+    return writeJsonFile(path, projectConfiguration(model, fingerprint), error);
+}
+
 GenerationServices::GenerationServices(QObject* parent)
     : QObject(parent)
 {

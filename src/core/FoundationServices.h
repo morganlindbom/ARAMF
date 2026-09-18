@@ -209,14 +209,32 @@ public:
 // Owns evidence-bound foundation certification and completion.
 // Backed by CertificationService, MemoryEvidenceFoundation, and ProcessVersionLifecycle.
 
+struct F1VerificationCheck {
+    QString name;
+    QString command;
+    QString status = QStringLiteral("FAIL");
+    int exitCode = -1;
+    QString timestamp;
+    QString sourceRevision;
+    QString evidenceReference;
+    QString evidenceFingerprint;
+
+    bool isPass(const QString& expectedRevision = QString()) const;
+    QJsonObject toJson() const;
+    static F1VerificationCheck fromJson(const QJsonObject& json);
+};
+
 struct F1CertificationEvidence {
     QString foundation = QStringLiteral("F1");
     QString foundationName = QStringLiteral("Memory & Evidence Foundation");
-    QString foundationVersion = QStringLiteral("F1.1.1");
+    QString foundationVersion = QStringLiteral("F1.1.2");
     QString sourceRevision;
     QString verificationLevel = QStringLiteral("HOST_TEST");
 
-    // Actual verification results
+    // Machine-verifiable structured check records
+    QList<F1VerificationCheck> checks;
+
+    // Derived verification results
     bool f1FocusedPass = false;
     bool foundationNamespacePass = false;
     bool processMigrationPass = false;
@@ -236,9 +254,11 @@ struct F1CertificationEvidence {
     QJsonArray knownLimitations;
     QJsonObject rawDetails;
 
-    bool isComplete() const;
+    void updateDerivedFlags();
+    bool isComplete(const QString& expectedRevision = QString(), QString* error = nullptr) const;
     QJsonObject toJson() const;
     static F1CertificationEvidence fromJson(const QJsonObject& json);
+    static QStringList requiredCheckNames();
 };
 
 class FoundationCertificationService final
@@ -247,9 +267,21 @@ public:
     // Ensures certification directories and contract exist under ARAMF_WORKER/certification
     static bool ensureCertificationArea(const QString& projectRoot, QString* error = nullptr);
 
-    // Writes the atomic F1 evidence artifact to ARAMF_WORKER/certification/evidence/f1-evidence.json
+    // Verifies that sourceRevision is a real Git commit, matches clean HEAD, and working tree is clean
+    static bool verifyGitSourceRevision(const QString& projectRoot,
+                                        const QString& sourceRevision,
+                                        QString* error = nullptr);
+
+    // Writes the atomic F1 evidence artifact to ARAMF_WORKER/certification/evidence/f1-evidence.json (or versioned iteration path)
     static bool writeEvidenceArtifact(const QString& projectRoot,
                                       const F1CertificationEvidence& evidence,
+                                      QString* relativePath = nullptr,
+                                      QString* sha256 = nullptr,
+                                      QString* error = nullptr);
+
+    static bool writeEvidenceArtifact(const QString& projectRoot,
+                                      const F1CertificationEvidence& evidence,
+                                      const QString& customRelativePath,
                                       QString* relativePath = nullptr,
                                       QString* sha256 = nullptr,
                                       QString* error = nullptr);
@@ -259,10 +291,33 @@ public:
                                      F1CertificationEvidence* evidence = nullptr,
                                      QString* error = nullptr);
 
+    // Executes the 13 verification checks and collects real machine-verifiable results
+    static bool executeF1VerificationSuite(const QString& projectRoot,
+                                          const QString& sourceRevision,
+                                          F1CertificationEvidence* evidence,
+                                          QString* error = nullptr);
+
+    // Executes an individual check by name and returns its record
+    static F1VerificationCheck executeCheck(const QString& projectRoot,
+                                           const QString& checkName,
+                                           const QString& sourceRevision,
+                                           QString* error = nullptr);
+
+    // Loads verification checks from a directory of JSON check records
+    static bool loadVerificationChecks(const QString& checksDirectory,
+                                       const QString& expectedRevision,
+                                       QList<F1VerificationCheck>* checks,
+                                       QString* error = nullptr);
+
     // Starts F1 if inactive (transitions next F1.1.0.0.0 -> active F1.1.1.0.0)
     static bool startF1(const QString& projectRoot,
                         const QString& projectFilePath,
                         QString* error = nullptr);
+
+    // Reopens completed F1 for rework (transitions completed F1.1.1.1.1 -> active F1.1.2.0.0)
+    static bool reworkF1(const QString& projectRoot,
+                         const QString& projectFilePath,
+                         QString* error = nullptr);
 
     // Performs evidence-bound certification of F1
     static bool certifyF1(const QString& projectRoot,
@@ -272,12 +327,12 @@ public:
                           QJsonObject* issuedCertificate = nullptr,
                           QString* error = nullptr);
 
-    // Completes active certified F1 (transitions active F1.1.1.1.0 -> completed F1.1.1.1.1)
+    // Completes active certified F1 (transitions active F1.1.x.1.0 -> completed F1.1.x.1.1)
     static bool completeF1(const QString& projectRoot,
                            const QString& projectFilePath,
                            QString* error = nullptr);
 
-    // Synchronizes ARAMF_WORKER/project.json with the model's ProcessVersionState
+    // Synchronizes ARAMF_WORKER/project.json with the canonical producer
     static bool synchronizeProjectJson(const QString& projectRoot,
                                        const ProjectModel& model,
                                        QString* error = nullptr);

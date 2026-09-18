@@ -156,6 +156,53 @@ struct TestFixture {
     }
 };
 
+struct GitTestFixture : public TestFixture {
+    QString gitSha;
+
+    GitTestFixture() : TestFixture() {
+        if (valid) {
+            initGitRepo();
+        }
+    }
+
+    bool initGitRepo() {
+        QProcess git;
+        git.setWorkingDirectory(path());
+        git.start(QStringLiteral("git"), {QStringLiteral("init")});
+        if (!git.waitForFinished(5000) || git.exitCode() != 0) return false;
+
+        git.start(QStringLiteral("git"), {QStringLiteral("config"), QStringLiteral("user.email"), QStringLiteral("test@aramf.org")});
+        if (!git.waitForFinished(5000) || git.exitCode() != 0) return false;
+
+        git.start(QStringLiteral("git"), {QStringLiteral("config"), QStringLiteral("user.name"), QStringLiteral("ARAMF Test")});
+        if (!git.waitForFinished(5000) || git.exitCode() != 0) return false;
+
+        git.start(QStringLiteral("git"), {QStringLiteral("add"), QStringLiteral("-A")});
+        if (!git.waitForFinished(5000) || git.exitCode() != 0) return false;
+
+        git.start(QStringLiteral("git"), {QStringLiteral("commit"), QStringLiteral("-m"), QStringLiteral("initial")});
+        if (!git.waitForFinished(5000) || git.exitCode() != 0) return false;
+
+        git.start(QStringLiteral("git"), {QStringLiteral("rev-parse"), QStringLiteral("HEAD")});
+        if (!git.waitForFinished(5000) || git.exitCode() != 0) return false;
+        gitSha = QString::fromLocal8Bit(git.readAllStandardOutput()).trimmed();
+        return !gitSha.isEmpty();
+    }
+
+    bool commitAll(const QString& msg = QStringLiteral("update")) {
+        QProcess git;
+        git.setWorkingDirectory(path());
+        git.start(QStringLiteral("git"), {QStringLiteral("add"), QStringLiteral("-A")});
+        if (!git.waitForFinished(5000) || git.exitCode() != 0) return false;
+        git.start(QStringLiteral("git"), {QStringLiteral("commit"), QStringLiteral("-m"), msg});
+        if (!git.waitForFinished(5000) || git.exitCode() != 0) return false;
+        git.start(QStringLiteral("git"), {QStringLiteral("rev-parse"), QStringLiteral("HEAD")});
+        if (!git.waitForFinished(5000) || git.exitCode() != 0) return false;
+        gitSha = QString::fromLocal8Bit(git.readAllStandardOutput()).trimmed();
+        return !gitSha.isEmpty();
+    }
+};
+
 } // anonymous namespace
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -860,7 +907,7 @@ static F1CertificationEvidence makeCompleteF1Evidence(const QString& sourceRev =
     F1CertificationEvidence ev;
     ev.foundation = QStringLiteral("F1");
     ev.foundationName = QStringLiteral("Memory & Evidence Foundation");
-    ev.foundationVersion = QStringLiteral("F1.1.1");
+    ev.foundationVersion = QStringLiteral("F1.1.2");
     ev.sourceRevision = sourceRev;
     ev.verificationLevel = QStringLiteral("HOST_TEST");
     ev.f1FocusedPass = true;
@@ -882,6 +929,21 @@ static F1CertificationEvidence makeCompleteF1Evidence(const QString& sourceRev =
         ev.evidenceFingerprint = QStringLiteral("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     }
     ev.timestamp = QStringLiteral("2026-09-18T12:00:00Z");
+
+    const auto req = F1CertificationEvidence::requiredCheckNames();
+    for (const auto& name : req) {
+        F1VerificationCheck c;
+        c.name = name;
+        c.command = name;
+        c.status = QStringLiteral("PASS");
+        c.exitCode = 0;
+        c.timestamp = ev.timestamp;
+        c.sourceRevision = sourceRev;
+        c.evidenceReference = QStringLiteral("ARAMF_WORKER/certification/evidence/checks/%1.json").arg(name);
+        c.evidenceFingerprint = QStringLiteral("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        ev.checks.append(c);
+    }
+    ev.updateDerivedFlags();
     return ev;
 }
 
@@ -894,7 +956,7 @@ bool runF1CertificationTests()
 
     // F1-CERT-001: Missing evidence cannot produce lifecycle cert=1
     {
-        TestFixture fx;
+        GitTestFixture fx;
         ok &= require(fx.valid, "F1-CERT-001: Fixture initializes");
         QString err;
         bool started = FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
@@ -903,7 +965,7 @@ bool runF1CertificationTests()
         QJsonObject certObj;
         bool certOk = FoundationCertificationService::certifyF1(
             fx.path(), defaultProjectFile,
-            QStringLiteral("rev-001"), QString(), &certObj, &err);
+            fx.gitSha, QString(), &certObj, &err);
         ok &= require(!certOk, "F1-CERT-001: certifyF1 fails without evidence artifact");
         ok &= require(!err.isEmpty(), "F1-CERT-001: error explains missing evidence artifact");
 
@@ -916,14 +978,16 @@ bool runF1CertificationTests()
 
     // F1-CERT-002: Incomplete evidence cannot produce lifecycle cert=1
     {
-        TestFixture fx;
+        GitTestFixture fx;
         ok &= require(fx.valid, "F1-CERT-002: Fixture initializes");
         QString err;
         bool started = FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
         ok &= require(started, "F1-CERT-002: startF1 succeeds");
 
-        auto ev = makeCompleteF1Evidence(QStringLiteral("rev-002"), fx.path());
-        ev.fullCTestPass = false;
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        ev.checks.last().status = QStringLiteral("FAIL");
+        ev.checks.last().exitCode = 1;
+        ev.updateDerivedFlags();
         QString relPath, sha;
         bool wOk = FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev, &relPath, &sha, &err);
         ok &= require(wOk, "F1-CERT-002: writeEvidenceArtifact succeeds");
@@ -931,9 +995,10 @@ bool runF1CertificationTests()
         QJsonObject certObj;
         bool certOk = FoundationCertificationService::certifyF1(
             fx.path(), defaultProjectFile,
-            QStringLiteral("rev-002"), QString(), &certObj, &err);
+            fx.gitSha, QString(), &certObj, &err);
         ok &= require(!certOk, "F1-CERT-002: certifyF1 fails with incomplete evidence");
-        ok &= require(err.contains(QStringLiteral("incomplete")), "F1-CERT-002: error mentions incomplete evidence");
+        ok &= require(err.contains(QStringLiteral("incomplete")) || err.contains(QStringLiteral("did not PASS")),
+                      "F1-CERT-002: error mentions incomplete evidence or failed check");
 
         ProjectModel m;
         ProjectPersistence p;
@@ -943,13 +1008,13 @@ bool runF1CertificationTests()
 
     // F1-CERT-003: Failed CertificationService issue cannot produce lifecycle cert=1
     {
-        TestFixture fx;
+        GitTestFixture fx;
         ok &= require(fx.valid, "F1-CERT-003: Fixture initializes");
         QString err;
         bool started = FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
         ok &= require(started, "F1-CERT-003: startF1 succeeds");
 
-        auto ev = makeCompleteF1Evidence(QStringLiteral("rev-003"), fx.path());
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
         bool wOk = FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev, nullptr, nullptr, &err);
         ok &= require(wOk, "F1-CERT-003: writeEvidenceArtifact succeeds");
 
@@ -963,7 +1028,7 @@ bool runF1CertificationTests()
         QJsonObject certObj;
         bool certOk = FoundationCertificationService::certifyF1(
             fx.path(), defaultProjectFile,
-            QStringLiteral("rev-003"), QString(), &certObj, &err);
+            fx.gitSha, QString(), &certObj, &err);
         ok &= require(!certOk, "F1-CERT-003: certifyF1 fails when issue fails");
 
         ProjectModel m;
@@ -974,13 +1039,13 @@ bool runF1CertificationTests()
 
     // F1-CERT-004: Wrong Foundation (F2, F3, F4, P1) is rejected
     {
-        TestFixture fx;
+        GitTestFixture fx;
         ok &= require(fx.valid, "F1-CERT-004: Fixture initializes");
         QString err;
         FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
 
         for (const auto& wrongFoundation : {QStringLiteral("F2"), QStringLiteral("F3"), QStringLiteral("F4"), QStringLiteral("P1")}) {
-            auto ev = makeCompleteF1Evidence(QStringLiteral("rev-004"), fx.path());
+            auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
             ev.foundation = wrongFoundation;
             const QString artPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence/wrong-evidence.json"));
             QDir().mkpath(QFileInfo(artPath).path());
@@ -993,7 +1058,7 @@ bool runF1CertificationTests()
             QJsonObject certObj;
             bool certOk = FoundationCertificationService::certifyF1(
                 fx.path(), defaultProjectFile,
-                QStringLiteral("rev-004"), artPath, &certObj, &err);
+                fx.gitSha, artPath, &certObj, &err);
             ok &= require(!certOk, QString("F1-CERT-004: certifyF1 rejects foundation %1").arg(wrongFoundation).toUtf8().constData());
         }
 
@@ -1003,7 +1068,7 @@ bool runF1CertificationTests()
         int cliRes = runFoundationCommand({QStringLiteral("foundation"), QStringLiteral("certify"),
                                            QStringLiteral("--project"), fx.path(),
                                            QStringLiteral("--foundation"), QStringLiteral("F2"),
-                                           QStringLiteral("--source-revision"), QStringLiteral("rev-004")},
+                                           QStringLiteral("--source-revision"), fx.gitSha},
                                           outStr, errStr);
         ok &= require(cliRes != 0, "F1-CERT-004: CLI certify rejects --foundation F2");
 
@@ -1019,7 +1084,7 @@ bool runF1CertificationTests()
     {
         // Case A: F1 is already complete in history
         {
-            TestFixture fx;
+            GitTestFixture fx;
             ProcessVersionState pvState;
             pvState.namespaceVersion = 2;
             pvState.completedHistory.append(ProcessVersion(ProcessKind::Foundation, 1, 1, 1, 1, 1));
@@ -1027,36 +1092,36 @@ bool runF1CertificationTests()
             pvState.nextProcess = ProcessVersion(ProcessKind::Foundation, 2, 1, 0, 0, 0);
             fx.writeProcessVersion(pvState);
 
-            auto ev = makeCompleteF1Evidence(QStringLiteral("rev-005"), fx.path());
+            auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
             FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
 
             QString err;
             bool certOk = FoundationCertificationService::certifyF1(
                 fx.path(), defaultProjectFile,
-                QStringLiteral("rev-005"), QString(), nullptr, &err);
+                fx.gitSha, QString(), nullptr, &err);
             ok &= require(!certOk, "F1-CERT-005: certifyF1 fails when F1 is already complete in history");
         }
         // Case B: Active process is not F1 (e.g. active is F2)
         {
-            TestFixture fx;
+            GitTestFixture fx;
             ProcessVersionState pvState;
             pvState.namespaceVersion = 2;
             pvState.hasActiveProcess = true;
             pvState.activeProcess = ProcessVersion(ProcessKind::Foundation, 2, 1, 1, 0, 0);
             fx.writeProcessVersion(pvState);
 
-            auto ev = makeCompleteF1Evidence(QStringLiteral("rev-005"), fx.path());
+            auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
             FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
 
             QString err;
             bool certOk = FoundationCertificationService::certifyF1(
                 fx.path(), defaultProjectFile,
-                QStringLiteral("rev-005"), QString(), nullptr, &err);
+                fx.gitSha, QString(), nullptr, &err);
             ok &= require(!certOk, "F1-CERT-005: certifyF1 fails when active process is F2");
         }
         // Case C: Inactive but next is not F1
         {
-            TestFixture fx;
+            GitTestFixture fx;
             ProcessVersionState pvState;
             pvState.namespaceVersion = 2;
             pvState.hasActiveProcess = false;
@@ -1064,25 +1129,25 @@ bool runF1CertificationTests()
             pvState.nextProcess = ProcessVersion(ProcessKind::Foundation, 2, 1, 0, 0, 0);
             fx.writeProcessVersion(pvState);
 
-            auto ev = makeCompleteF1Evidence(QStringLiteral("rev-005"), fx.path());
+            auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
             FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
 
             QString err;
             bool certOk = FoundationCertificationService::certifyF1(
                 fx.path(), defaultProjectFile,
-                QStringLiteral("rev-005"), QString(), nullptr, &err);
+                fx.gitSha, QString(), nullptr, &err);
             ok &= require(!certOk, "F1-CERT-005: certifyF1 fails when next process is not F1");
         }
     }
 
     // F1-CERT-006: Empty sourceRevision is rejected
     {
-        TestFixture fx;
+        GitTestFixture fx;
         ok &= require(fx.valid, "F1-CERT-006: Fixture initializes");
         QString err;
         FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
 
-        auto ev = makeCompleteF1Evidence(QStringLiteral("rev-006"), fx.path());
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
         FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
 
         bool certEmpty = FoundationCertificationService::certifyF1(
@@ -1098,9 +1163,9 @@ bool runF1CertificationTests()
 
     // F1-CERT-007: sourceRevision is persisted in certification evidence and bound in certificate
     {
-        TestFixture fx;
+        GitTestFixture fx;
         ok &= require(fx.valid, "F1-CERT-007: Fixture initializes");
-        const QString testRev = QStringLiteral("git-sha-f1-cert-007-verified");
+        const QString testRev = fx.gitSha;
         auto ev = makeCompleteF1Evidence(testRev, fx.path());
         QString relPath, sha, err;
         bool wOk = FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev, &relPath, &sha, &err);
@@ -1130,9 +1195,9 @@ bool runF1CertificationTests()
 
     // F1-CERT-008: CertificationService PASS precedes lifecycle certification
     {
-        TestFixture fx;
+        GitTestFixture fx;
         ok &= require(fx.valid, "F1-CERT-008: Fixture initializes");
-        const QString testRev = QStringLiteral("rev-008");
+        const QString testRev = fx.gitSha;
         auto ev = makeCompleteF1Evidence(testRev, fx.path());
         FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
 
@@ -1157,7 +1222,7 @@ bool runF1CertificationTests()
 
     // F1-CERT-009: F1 completion before certification is rejected
     {
-        TestFixture fx;
+        GitTestFixture fx;
         ok &= require(fx.valid, "F1-CERT-009: Fixture initializes");
         QString err;
         FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
@@ -1178,7 +1243,7 @@ bool runF1CertificationTests()
 
     // F1-CERT-010: Successful fixture progression produces F1.1.1.0.0 -> F1.1.1.1.0 -> F1.1.1.1.1
     {
-        TestFixture fx;
+        GitTestFixture fx;
         ok &= require(fx.valid, "F1-CERT-010: Fixture initializes");
         ProjectModel m;
         ProjectPersistence p;
@@ -1199,12 +1264,12 @@ bool runF1CertificationTests()
                       "F1-CERT-010: Active is F1.1.1.0.0 after start");
 
         // Step 3: Certify F1 -> active F1.1.1.1.0
-        const QString testRev = QStringLiteral("rev-010-progress");
+        const QString testRev = fx.gitSha;
         auto ev = makeCompleteF1Evidence(testRev, fx.path());
         ok &= require(FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev, nullptr, nullptr, &err),
                       "F1-CERT-010: write evidence succeeds");
-        ok &= require(FoundationCertificationService::certifyF1(fx.path(), defaultProjectFile, testRev, QString(), nullptr, &err),
-                      "F1-CERT-010: certifyF1 succeeds");
+        bool c10Ok = FoundationCertificationService::certifyF1(fx.path(), defaultProjectFile, testRev, QString(), nullptr, &err);
+        ok &= require(c10Ok, "F1-CERT-010: certifyF1 succeeds");
         p.load(&m, absPj, nullptr);
         ok &= require(m.processVersionState().activeIdentifier() == QStringLiteral("F1.1.1.1.0"),
                       "F1-CERT-010: Active is F1.1.1.1.0 after certification");
@@ -1222,10 +1287,10 @@ bool runF1CertificationTests()
 
     // F1-CERT-011: After fixture F1 completion: active = null, next = F2.1.0.0.0, F2 remains not started
     {
-        TestFixture fx;
+        GitTestFixture fx;
         ok &= require(fx.valid, "F1-CERT-011: Fixture initializes");
         const QString absPj = QDir(fx.path()).filePath(defaultProjectFile);
-        const QString testRev = QStringLiteral("rev-011-complete");
+        const QString testRev = fx.gitSha;
 
         auto ev = makeCompleteF1Evidence(testRev, fx.path());
         FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
@@ -1253,11 +1318,11 @@ bool runF1CertificationTests()
 
     // F1-CERT-012: Persisted/generated lifecycle representations remain equivalent throughout progression
     {
-        TestFixture fx;
+        GitTestFixture fx;
         ok &= require(fx.valid, "F1-CERT-012: Fixture initializes");
         const QString absPj = QDir(fx.path()).filePath(defaultProjectFile);
         const QString genPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/project.json"));
-        const QString testRev = QStringLiteral("rev-012-parity");
+        const QString testRev = fx.gitSha;
 
         const auto checkEquivalence = [&](const char* phaseName) -> bool {
             Q_UNUSED(phaseName);
@@ -1286,6 +1351,302 @@ bool runF1CertificationTests()
 
         FoundationCertificationService::completeF1(fx.path(), defaultProjectFile);
         ok &= require(checkEquivalence("Completed"), "F1-CERT-012: Equivalence at Completed phase");
+    }
+
+    // F1-CERT-013: Fake source revision rejected
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-013: Fixture initializes");
+        QString err;
+        FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
+
+        bool certOk = FoundationCertificationService::certifyF1(
+            fx.path(), defaultProjectFile,
+            QStringLiteral("0123456789abcdef0123456789abcdef01234567"), QString(), nullptr, &err);
+        ok &= require(!certOk, "F1-CERT-013: Fake commit SHA rejected");
+        ok &= require(err.contains(QStringLiteral("not a valid commit")), "F1-CERT-013: Error explains commit invalid");
+        ProjectModel m;
+        ProjectPersistence p;
+        p.load(&m, QDir(fx.path()).filePath(defaultProjectFile), nullptr);
+        ok &= require(m.processVersionState().activeProcess.certification == 0, "F1-CERT-013: Active process cert remains 0");
+    }
+
+    // F1-CERT-014: Revision different from HEAD rejected
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-014: Fixture initializes");
+        QString err;
+        FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
+        const QString firstCommitSha = fx.gitSha;
+
+        // Make a second commit so firstCommitSha is no longer HEAD
+        QFile dummy(QDir(fx.path()).filePath(QStringLiteral("dummy.txt")));
+        dummy.open(QIODevice::WriteOnly);
+        dummy.write("second commit");
+        dummy.close();
+        QProcess git;
+        git.setWorkingDirectory(fx.path());
+        git.start(QStringLiteral("git"), {QStringLiteral("add"), QStringLiteral("dummy.txt")});
+        git.waitForFinished(5000);
+        git.start(QStringLiteral("git"), {QStringLiteral("commit"), QStringLiteral("-m"), QStringLiteral("second")});
+        git.waitForFinished(5000);
+
+        auto ev = makeCompleteF1Evidence(firstCommitSha, fx.path());
+        FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
+        bool certOk = FoundationCertificationService::certifyF1(
+            fx.path(), defaultProjectFile,
+            firstCommitSha, QString(), nullptr, &err);
+        ok &= require(!certOk, "F1-CERT-014: Revision different from HEAD rejected");
+        ok &= require(err.contains(QStringLiteral("does not match current HEAD")), "F1-CERT-014: Error explains HEAD mismatch");
+        ProjectModel m;
+        ProjectPersistence p;
+        p.load(&m, QDir(fx.path()).filePath(defaultProjectFile), nullptr);
+        ok &= require(m.processVersionState().activeProcess.certification == 0, "F1-CERT-014: Active process cert remains 0");
+    }
+
+    // F1-CERT-015: Dirty working tree rejected
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-015: Fixture initializes");
+        QString err;
+        FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
+
+        // Create an untracked dirty file outside permitted certification files
+        QFile dirty(QDir(fx.path()).filePath(QStringLiteral("dirty.txt")));
+        dirty.open(QIODevice::WriteOnly);
+        dirty.write("dirty content");
+        dirty.close();
+
+        bool certOk = FoundationCertificationService::certifyF1(
+            fx.path(), defaultProjectFile,
+            fx.gitSha, QString(), nullptr, &err);
+        ok &= require(!certOk, "F1-CERT-015: Dirty working tree rejected");
+        ok &= require(err.contains(QStringLiteral("working tree is dirty")), "F1-CERT-015: Error explains dirty tree");
+        ProjectModel m;
+        ProjectPersistence p;
+        p.load(&m, QDir(fx.path()).filePath(defaultProjectFile), nullptr);
+        ok &= require(m.processVersionState().activeProcess.certification == 0, "F1-CERT-015: Active process cert remains 0");
+    }
+
+    // F1-CERT-016: Result evidence bound to another source revision rejected
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-016: Fixture initializes");
+        QString err;
+        FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        // Mismatch one check's sourceRevision
+        ev.checks[0].sourceRevision = QStringLiteral("other-revision-sha");
+        FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
+
+        bool certOk = FoundationCertificationService::certifyF1(
+            fx.path(), defaultProjectFile,
+            fx.gitSha, QString(), nullptr, &err);
+        ok &= require(!certOk, "F1-CERT-016: Result evidence bound to another source revision rejected");
+        ProjectModel m;
+        ProjectPersistence p;
+        p.load(&m, QDir(fx.path()).filePath(defaultProjectFile), nullptr);
+        ok &= require(m.processVersionState().activeProcess.certification == 0, "F1-CERT-016: Active process cert remains 0");
+    }
+
+    // F1-CERT-017: Missing generated state blocks certificate fail-closed
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-017: Fixture initializes");
+        QString err;
+        FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
+        QFile::remove(QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/project.json")));
+
+        bool certOk = FoundationCertificationService::certifyF1(
+            fx.path(), defaultProjectFile,
+            fx.gitSha, QString(), nullptr, &err);
+        ok &= require(!certOk, "F1-CERT-017: Missing generated state blocks certificate");
+        ok &= require(err.contains(QStringLiteral("project.json")), "F1-CERT-017: Error mentions project.json");
+        ProjectModel m;
+        ProjectPersistence p;
+        p.load(&m, QDir(fx.path()).filePath(defaultProjectFile), nullptr);
+        ok &= require(m.processVersionState().activeProcess.certification == 0, "F1-CERT-017: Active process cert remains 0");
+    }
+
+    // F1-CERT-018: Malformed generated state blocks certificate fail-closed
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-018: Fixture initializes");
+        QString err;
+        FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
+        QFile f(QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/project.json")));
+        f.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        f.write("{ broken json syntax :::: ");
+        f.close();
+
+        bool certOk = FoundationCertificationService::certifyF1(
+            fx.path(), defaultProjectFile,
+            fx.gitSha, QString(), nullptr, &err);
+        ok &= require(!certOk, "F1-CERT-018: Malformed generated state blocks certificate");
+        ok &= require(err.contains(QStringLiteral("malformed")), "F1-CERT-018: Error explains malformed");
+        ProjectModel m;
+        ProjectPersistence p;
+        p.load(&m, QDir(fx.path()).filePath(defaultProjectFile), nullptr);
+        ok &= require(m.processVersionState().activeProcess.certification == 0, "F1-CERT-018: Active process cert remains 0");
+    }
+
+    // F1-CERT-019: One FAIL check blocks certificate, lifecycle cert remains 0
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-019: Fixture initializes");
+        QString err;
+        FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        // Check 6 is p4-predictive - fail it
+        ev.checks[6].status = QStringLiteral("FAIL");
+        ev.checks[6].exitCode = 1;
+        ev.updateDerivedFlags();
+        FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev);
+
+        bool certOk = FoundationCertificationService::certifyF1(
+            fx.path(), defaultProjectFile,
+            fx.gitSha, QString(), nullptr, &err);
+        ok &= require(!certOk, "F1-CERT-019: One FAIL check blocks certificate");
+        ProjectModel m;
+        ProjectPersistence p;
+        p.load(&m, QDir(fx.path()).filePath(defaultProjectFile), nullptr);
+        ok &= require(m.processVersionState().activeProcess.certification == 0, "F1-CERT-019: Active process cert remains 0");
+    }
+
+    // F1-CERT-020: Canonical rework of completed F1 preserves history, sets F1.1.2.0.0, supersedes certificate, and completes F1.1.2.1.1
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-020: Fixture initializes");
+        QString err;
+        const QString absPj = QDir(fx.path()).filePath(defaultProjectFile);
+
+        // Step 1: Initial run: start, certify, complete F1.1.1
+        FoundationCertificationService::startF1(fx.path(), defaultProjectFile, &err);
+        auto ev1 = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev1);
+        QJsonObject cert1;
+        bool cert1Ok = FoundationCertificationService::certifyF1(fx.path(), defaultProjectFile, fx.gitSha, QString(), &cert1, &err);
+        ok &= require(cert1Ok, "F1-CERT-020: First certification succeeds");
+        const QString cert1Id = cert1.value(QStringLiteral("certificateId")).toString();
+        ok &= require(!cert1Id.isEmpty(), "F1-CERT-020: First certificate ID present");
+        bool comp1Ok = FoundationCertificationService::completeF1(fx.path(), defaultProjectFile, &err);
+        ok &= require(comp1Ok, "F1-CERT-020: First complete succeeds");
+
+        ProjectModel m;
+        ProjectPersistence p;
+        p.load(&m, absPj, nullptr);
+        ok &= require(m.processVersionState().isFoundationComplete(1), "F1-CERT-020: F1 complete in history");
+        ok &= require(m.processVersionState().completedHistory.first().identifier() == QStringLiteral("F1.1.1.1.1"),
+                      "F1-CERT-020: Completed history has F1.1.1.1.1");
+
+        // Step 2: Rework completed F1 via reworkF1
+        bool reworkOk = FoundationCertificationService::reworkF1(fx.path(), defaultProjectFile, &err);
+        ok &= require(reworkOk, "F1-CERT-020: reworkF1 succeeds");
+        p.load(&m, absPj, nullptr);
+        ok &= require(m.processVersionState().hasActiveProcess, "F1-CERT-020: Has active process after rework");
+        ok &= require(m.processVersionState().activeIdentifier() == QStringLiteral("F1.1.2.0.0"),
+                      "F1-CERT-020: Active identifier is F1.1.2.0.0");
+        ok &= require(m.processVersionState().completedHistory.first().identifier() == QStringLiteral("F1.1.1.1.1"),
+                      "F1-CERT-020: Historical F1.1.1.1.1 remains intact in completedHistory");
+        ok &= require(m.processVersionState().nextIdentifier() == QStringLiteral("F2.1.0.0.0"),
+                      "F1-CERT-020: Next remains F2.1.0.0.0");
+        ok &= require(m.processVersionState().nextProcess.certification == 0 && m.processVersionState().nextProcess.done == 0,
+                      "F1-CERT-020: F2 not started");
+
+        // Commit repository state for rework iteration so working tree is clean for fx.gitSha
+        ok &= require(fx.commitAll(QStringLiteral("Rework F1 to F1.1.2.0.0")), "F1-CERT-020: Commit rework state");
+
+        // Step 3: Certify rework iteration
+        auto ev2 = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev2);
+        QJsonObject cert2;
+        bool cert2Ok = FoundationCertificationService::certifyF1(fx.path(), defaultProjectFile, fx.gitSha, QString(), &cert2, &err);
+        ok &= require(cert2Ok, "F1-CERT-020: Certify rework succeeds");
+        p.load(&m, absPj, nullptr);
+        ok &= require(m.processVersionState().activeIdentifier() == QStringLiteral("F1.1.2.1.0"),
+                      "F1-CERT-020: Active identifier is F1.1.2.1.0 after rework certification");
+        ok &= require(cert2.value(QStringLiteral("previousCertificateId")).toString() == cert1Id,
+                      "F1-CERT-020: New certificate references previous certificate");
+        ok &= require(cert2.value(QStringLiteral("supersedesCertificateId")).toString() == cert1Id,
+                      "F1-CERT-020: New certificate supersedes previous certificate");
+
+        // Step 4: Verify current-certification-state resolves the corrected certificate
+        CertificationService certService;
+        QJsonObject latestCert;
+        ok &= require(certService.latestForSubject(fx.path(), QStringLiteral("F1"), &latestCert),
+                      "F1-CERT-020: latestForSubject succeeds");
+        ok &= require(latestCert.value(QStringLiteral("certificateId")).toString() == cert2.value(QStringLiteral("certificateId")).toString(),
+                      "F1-CERT-020: current-certification-state resolves the corrected certificate");
+
+        // Step 5: Complete rework iteration
+        bool comp2Ok = FoundationCertificationService::completeF1(fx.path(), defaultProjectFile, &err);
+        ok &= require(comp2Ok, "F1-CERT-020: Complete rework succeeds");
+        p.load(&m, absPj, nullptr);
+        ok &= require(!m.processVersionState().hasActiveProcess, "F1-CERT-020: Active is null after complete");
+        ok &= require(m.processVersionState().completedHistory.size() == 2, "F1-CERT-020: Completed history has 2 entries");
+        ok &= require(m.processVersionState().completedHistory.first().identifier() == QStringLiteral("F1.1.1.1.1"),
+                      "F1-CERT-020: Historical F1.1.1.1.1 preserved");
+        ok &= require(m.processVersionState().completedHistory.last().identifier() == QStringLiteral("F1.1.2.1.1"),
+                      "F1-CERT-020: Latest completed is F1.1.2.1.1");
+        ok &= require(m.processVersionState().nextIdentifier() == QStringLiteral("F2.1.0.0.0"),
+                      "F1-CERT-020: Next remains F2.1.0.0.0");
+        ok &= require(m.processVersionState().nextProcess.certification == 0 && m.processVersionState().nextProcess.done == 0,
+                      "F1-CERT-020: F2 remains not started");
+        ok &= require(!m.processVersionState().foundationIntegrationValid,
+                      "F1-CERT-020: foundationIntegrationValid is false");
+    }
+
+    // F1-CERT-021: Persisted and generated states remain equal throughout rework progression
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-021: Fixture initializes");
+        const QString absPj = QDir(fx.path()).filePath(defaultProjectFile);
+        const QString genPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/project.json"));
+
+        const auto checkEquivalence = [&]() -> bool {
+            ProjectModel m;
+            ProjectPersistence p;
+            p.load(&m, absPj, nullptr);
+            QFile gf(genPath);
+            if (!gf.open(QIODevice::ReadOnly | QIODevice::Text)) return false;
+            const auto gDoc = QJsonDocument::fromJson(gf.readAll()).object();
+            gf.close();
+            ProcessVersionState gState;
+            QString gErr;
+            if (!processVersionStateFromJson(gDoc.value(QStringLiteral("processVersion")), &gState, &gErr)) return false;
+            return processVersionStateToJson(m.processVersionState()) == processVersionStateToJson(gState);
+        };
+
+        // Complete F1 iteration 1
+        FoundationCertificationService::startF1(fx.path(), defaultProjectFile);
+        auto ev1 = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev1);
+        FoundationCertificationService::certifyF1(fx.path(), defaultProjectFile, fx.gitSha);
+        FoundationCertificationService::completeF1(fx.path(), defaultProjectFile);
+        ok &= require(checkEquivalence(), "F1-CERT-021: Equivalence after F1.1.1 completion");
+
+        // Rework F1
+        FoundationCertificationService::reworkF1(fx.path(), defaultProjectFile);
+        ok &= require(checkEquivalence(), "F1-CERT-021: Equivalence after rework to F1.1.2.0.0");
+        ok &= require(fx.commitAll(QStringLiteral("Rework F1 in F1-CERT-021")), "F1-CERT-021: Commit rework state");
+
+        // Certify rework
+        auto ev2 = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev2);
+        FoundationCertificationService::certifyF1(fx.path(), defaultProjectFile, fx.gitSha);
+        ok &= require(checkEquivalence(), "F1-CERT-021: Equivalence after certify rework F1.1.2.1.0");
+
+        // Complete rework
+        FoundationCertificationService::completeF1(fx.path(), defaultProjectFile);
+        ok &= require(checkEquivalence(), "F1-CERT-021: Equivalence after complete rework F1.1.2.1.1");
     }
 
     std::cerr << (ok ? "F1 Certification: ALL PASS\n" : "F1 Certification: SOME FAILURES\n");
