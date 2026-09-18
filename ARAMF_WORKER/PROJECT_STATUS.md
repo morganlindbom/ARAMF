@@ -796,9 +796,62 @@ Campaign Evidence:
 - Recorder Events:
   - Start: Sequence 328 (`event-9be85781-0501-4b1b-89da-160a2f04eb4a`), `TASK_STARTED`.
   - Completion: Sequence 329 (`event-7cddef83-784e-4b61-a713-fdcbdbd534f2`), `TASK_COMPLETED`, status=PASS.
-- Final P4 Verdict: **CERTIFIED PASS** (`P4.1.4.1.1`, cert=1, done=1).
+- Final P4 Verdict: **CERTIFIED PASS** (`P4.1.4.1.1`, cert=1, done=1; canonical identifier: `P5.1.4.1.1`).
+
+### Governed ARAMF Lifecycle Namespace Migration (Legacy V1 -> Canonical V2)
+
+- Campaign Identity: `ARAMF-LIFECYCLE-NAMESPACE-MIGRATION-2026-09-18`
+- Purpose: Supersede the legacy P0–P12 lifecycle namespace with the canonical F1 Foundation and P1–P14 Process architecture cleanly before F1 / P6 development.
+- Architectural Decisions:
+  1. **Foundational Separation**: F1 (`Memory & Evidence Foundation`) is established as a shared, underlying architectural foundation (`F1.1.0.0.0`), not an ordinary linear sequential process (e.g. not "P0").
+  2. **Deterministic Process Shift**: Legacy processes P0 through P12 are mapped deterministically to Canonical processes P1 through P13 ($P_{canonical} = P_{legacy} + 1$).
+  3. **New Terminal Process**: Canonical P14 (`Governed Lifecycle Renewal`) is introduced with no legacy equivalent.
+  4. **Strict Historical Immutability**: Historical recorder events under `ARAMF_WORKER/memory/event-log.jsonl` are byte-immutable; they retain their authentic historical labels (`P0`, `P1`, `P2`, `P3`, `P4`) without synthetic rewrite.
+  5. **Dynamic Bidirectional Resolution**: C++ engine implements `ProcessNamespaceService` with deterministic `mapLegacyToCanonical` and `mapCanonicalToLegacy`. Canonical readers resolve legacy identities dynamically.
+  6. **P5/P6 Ambiguity Resolution**: Legacy P5 was "Canonical Code Bank"; Canonical P5 is "Self-Adjusting Routing"; Canonical P6 is "Canonical Code Bank". The namespace version (`namespaceVersion: 2`) resolves all potential collisions.
+  7. **Preservation of Certification Trust**: Certified processes (Legacy P0–P4 -> Canonical P1–P5) retain their certification (`cert=1, done=1`) grounded in authentic historical evidence without fabricating synthetic certification runs.
+
+#### Canonical Architecture Mapping Matrix
+
+| Legacy V1 Identity | Canonical V2 Identity | Canonical Name | Lifecycle Role | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| N/A | **`F1.1.0.0.0`** | **Memory & Evidence Foundation** | Shared Underlying Foundation | **UNSTARTED / ACTIVE NEXT** |
+| `P0.1.2.1.1` | **`P1.1.2.1.1`** | **Task Execution Governance** | Execution Guardrails & Ownership | **CERTIFIED PASS** |
+| `P1.1.1.1.1` | **`P2.1.1.1.1`** | **Context Coordination** | Scoped Context & Linear DAG | **CERTIFIED PASS** |
+| `P2.1.4.1.1` | **`P3.1.4.1.1`** | **Execution Orchestration** | Concurrent Execution & Postflight | **CERTIFIED PASS** |
+| `P3.1.4.1.1` | **`P4.1.4.1.1`** | **Predictive Task Optimization** | Evidence-Based Prediction | **CERTIFIED PASS** |
+| `P4.1.4.1.1` | **`P5.1.4.1.1`** | **Self-Adjusting Routing** | Dynamic Route Selection & Hysteresis | **CERTIFIED PASS** |
+| `P5.1.0.0.0` | **`P6.1.0.0.0`** | **Canonical Code Bank** | Asset Reuse & Curated Patterns | **FUTURE PROCESS / GATED ON F1** |
+| `P6.1.0.0.0` | **`P7.1.0.0.0`** | **Agent Quality Scoring** | Agent Evaluation & Trust Metrics | **ROADMAP** |
+| `P7.1.0.0.0` | **`P8.1.0.0.0`** | **Multi-Agent Orchestration** | Multi-Agent Coordination | **ROADMAP** |
+| `P8.1.0.0.0` | **`P9.1.0.0.0`** | **Semantic Conflict Reasoning** | Conflict Resolution & Merging | **ROADMAP** |
+| `P9.1.0.0.0` | **`P10.1.0.0.0`** | **Predictive Validation** | Pre-Execution Validation Planning | **ROADMAP** |
+| `P10.1.0.0.0` | **`P11.1.0.0.0`** | **Controlled Autonomous Improvement** | Safe Self-Directed Enhancement | **ROADMAP** |
+| `P11.1.0.0.0` | **`P12.1.0.0.0`** | **Evaluation & Continuous Improvement** | Framework-Level Feedback Loops | **ROADMAP** |
+| `P12.1.0.0.0` | **`P13.1.0.0.0`** | **Knowledge Harvest & Core Promotion** | Knowledge Promotion & Core Hardening | **ROADMAP** |
+| N/A | **`P14.1.0.0.0`** | **Governed Lifecycle Renewal** | Meta-Governance & Architecture Evolution | **ROADMAP (Canonical Only)** |
+
+- Verification Evidence:
+  - Dedicated Migration Matrix (`tests/ProcessNamespaceMigrationTests.cpp`): 20/20 PASS (`MIG-001` through `MIG-020`).
+  - Full CTest Suite: 5/5 PASS (100%, 0 failures across all project tests):
+    - `aramf_core_tests`: PASS
+    - `aramf_workflow_tests`: PASS
+    - `aramf_template_tests`: PASS
+    - `aramf_update_campaign`: PASS
+    - `aramf_configuration_update`: PASS
+  - Memory Cold-Start Validation: PASS (`ARAMF_WORKER/memory/cold-start-validation.json`).
+  - Memory Consistency Validation: PASS (`ARAMF_WORKER/memory/memory-consistency-validation.json`).
+- Recorder Events:
+  - Completion: Sequence 330 (`event-62d6c34d-f664-454b-9a13-3d839205d74f`), `TASK_COMPLETED`, status=PASS.
+- Current Lifecycle State:
+  - Canonical Namespace: `namespaceVersion: 2`
+  - Active: `null`
+  - Next: `F1.1.0.0.0` (Memory & Evidence Foundation)
+  - Future Process: `P6.1.0.0.0` (Canonical Code Bank)
+  - Completed Certified Chain: `P1.1.2.1.1`, `P2.1.1.1.1`, `P3.1.4.1.1`, `P4.1.4.1.1`, `P5.1.4.1.1`
 
 ## Latest Agent Task
 
-- Task: ARAMF P4.1.4 - Real Routing Dogfood Campaign, Bi-directional Adaptation Validation, and Final P4 Certification
+- Task: ARAMF Lifecycle Namespace Migration
 - Status: PASS
+- Evidence: Sequence 330, MIG-001..020 PASS, CTest 5/5 PASS, Cold-Start PASS, Memory Consistency PASS

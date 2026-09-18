@@ -55,14 +55,8 @@
     "orchestration": {
     },
     "processVersion": {
+        "namespaceVersion": 2,
         "completedHistory": [
-            {
-                "certification": 1,
-                "done": 1,
-                "iteration": 1,
-                "loop": 1,
-                "process": 0
-            },
             {
                 "certification": 1,
                 "done": 1,
@@ -73,16 +67,16 @@
             {
                 "certification": 1,
                 "done": 1,
-                "iteration": 2,
+                "iteration": 1,
                 "loop": 1,
-                "process": 0
+                "process": 2
             },
             {
                 "certification": 1,
                 "done": 1,
-                "iteration": 4,
+                "iteration": 2,
                 "loop": 1,
-                "process": 2
+                "process": 1
             },
             {
                 "certification": 1,
@@ -90,6 +84,20 @@
                 "iteration": 4,
                 "loop": 1,
                 "process": 3
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "process": 4
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "process": 5
             }
         ],
         "legacyHistory": [
@@ -100,21 +108,27 @@
             "P0.1.1.1.1",
             "P1.1.1.1.1",
             "P2.1.1.1.1",
-            "P1.1.1.1"
+            "P1.1.1.1",
+            "legacy:P0.1.2.1.1",
+            "legacy:P1.1.1.1.1",
+            "legacy:P2.1.4.1.1",
+            "legacy:P3.1.4.1.1",
+            "legacy:P4.1.4.1.1"
         ],
-        "active": {
-            "certification": 1,
-            "done": 1,
-            "iteration": 4,
-            "loop": 1,
-            "process": 4
-        },
+        "active": null,
         "next": {
+            "certification": 0,
+            "done": 0,
+            "foundation": 1,
+            "iteration": 0,
+            "loop": 1
+        },
+        "futureProcess": {
             "certification": 0,
             "done": 0,
             "iteration": 0,
             "loop": 1,
-            "process": 5
+            "process": 6
         }
     },
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",

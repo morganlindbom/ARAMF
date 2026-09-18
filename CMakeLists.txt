@@ -195,6 +195,7 @@ if(BUILD_TESTING)
         tests/WorkerTaskTests.cpp
         tests/ContextCoordinationTests.cpp
         tests/ProcessVersionTests.cpp
+        tests/ProcessNamespaceMigrationTests.cpp
         src/core/RuntimeOwnershipService.h
         src/core/RuntimeOwnershipService.cpp
         src/core/ExecutionOrchestrator.h
