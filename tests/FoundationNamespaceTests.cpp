@@ -355,10 +355,12 @@ bool runFoundationNamespaceTests(const QString& selfRepoPath)
         const QString persistedPath = QDir(repoRoot).filePath(QStringLiteral("ARAMF_WORKER.aramf.json"));
         bool ok = check(persistence.load(&persistedModel, persistedPath, &persistedError),
                         "FOUND-021", "Persisted ProjectModel loads through ProjectPersistence");
-        const auto canonical = ProcessVersionState::currentCanonicalState();
-        const auto canonicalJson = processVersionStateToJson(canonical);
-        ok &= check(processVersionStateToJson(persistedModel.processVersionState()) == canonicalJson,
-                    "FOUND-021", "Persisted ProjectModel resolves to current canonical lifecycle state");
+        QString persistedStateError;
+        ok &= check(persistedModel.processVersionState().isValid(&persistedStateError),
+                    "FOUND-021", "Persisted ProjectModel lifecycle state is valid");
+        ok &= check(persistedModel.processVersionState().namespaceVersion
+                        == static_cast<int>(ProcessNamespace::CanonicalV2),
+                    "FOUND-021", "Persisted ProjectModel uses CanonicalV2");
 
         const QString generatedPath = QDir(repoRoot).filePath(QStringLiteral("ARAMF_WORKER/project.json"));
         QFile generatedFile(generatedPath);
@@ -377,11 +379,109 @@ bool runFoundationNamespaceTests(const QString& selfRepoPath)
         ok &= check(processVersionStateFromJson(generatedRoot.value(QStringLiteral("processVersion")),
                                                 &generatedState, &generatedError),
                     "FOUND-021", "Generated Worker lifecycle state parses canonically");
-        ok &= check(processVersionStateToJson(generatedState) == canonicalJson,
-                    "FOUND-021", "Generated Worker resolves to current canonical lifecycle state");
+        QString generatedStateError;
+        ok &= check(generatedState.isValid(&generatedStateError),
+                    "FOUND-021", "Generated Worker lifecycle state is valid");
+        ok &= check(generatedState.namespaceVersion
+                        == static_cast<int>(ProcessNamespace::CanonicalV2),
+                    "FOUND-021", "Generated Worker uses CanonicalV2");
         ok &= check(processVersionStateToJson(persistedModel.processVersionState())
                         == processVersionStateToJson(generatedState),
                     "FOUND-021", "Persisted and generated lifecycle states are identical");
+
+        QTemporaryDir fixtureDirectory;
+        ok &= check(fixtureDirectory.isValid(),
+                    "FOUND-021", "Lifecycle progression fixture directory is available");
+        if (fixtureDirectory.isValid()) {
+            ProcessVersionState progressed = ProcessVersionState::currentCanonicalState();
+            QString progressionError;
+            ok &= check(ProcessVersionLifecycle::startNextProcess(&progressed, &progressionError),
+                        "FOUND-021", "Fixture starts F1 without changing live lifecycle state");
+            ok &= check(progressed.activeIdentifier() == QStringLiteral("F1.1.1.0.0"),
+                        "FOUND-021", "Fixture active state is F1.1.1.0.0 after start");
+            ok &= check(ProcessVersionLifecycle::certifyCurrentIteration(&progressed, &progressionError),
+                        "FOUND-021", "Fixture certifies F1 without changing live lifecycle state");
+            ok &= check(progressed.activeIdentifier() == QStringLiteral("F1.1.1.1.0"),
+                        "FOUND-021", "Fixture active state is F1.1.1.1.0 after certification");
+            ok &= check(ProcessVersionLifecycle::completeActiveProcess(&progressed, &progressionError),
+                        "FOUND-021", "Fixture completes F1 without changing live lifecycle state");
+            ok &= check(progressed.completedIdentifiers().contains(QStringLiteral("F1.1.1.1.1"))
+                            && progressed.nextIdentifier() == QStringLiteral("F2.1.0.0.0"),
+                        "FOUND-021", "Fixture advances to completed F1 and next F2");
+
+            QFile persistedSource(persistedPath);
+            QFile generatedSource(generatedPath);
+            QJsonParseError persistedParseError;
+            QJsonParseError generatedFixtureParseError;
+            QJsonObject persistedFixtureRoot;
+            QJsonObject generatedFixtureRoot;
+            if (persistedSource.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                persistedFixtureRoot = QJsonDocument::fromJson(
+                    persistedSource.readAll(), &persistedParseError).object();
+                persistedSource.close();
+            }
+            if (generatedSource.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                generatedFixtureRoot = QJsonDocument::fromJson(
+                    generatedSource.readAll(), &generatedFixtureParseError).object();
+                generatedSource.close();
+            }
+            persistedFixtureRoot.insert(QStringLiteral("processVersion"),
+                                        processVersionStateToJson(progressed));
+            generatedFixtureRoot.insert(QStringLiteral("processVersion"),
+                                        processVersionStateToJson(progressed));
+
+            const QString fixturePersistedPath = QDir(fixtureDirectory.path())
+                .filePath(QStringLiteral("fixture.aramf.json"));
+            const QString fixtureGeneratedPath = QDir(fixtureDirectory.path())
+                .filePath(QStringLiteral("project.json"));
+            QFile fixturePersistedFile(fixturePersistedPath);
+            QFile fixtureGeneratedFile(fixtureGeneratedPath);
+            if (fixturePersistedFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                fixturePersistedFile.write(QJsonDocument(persistedFixtureRoot)
+                                               .toJson(QJsonDocument::Indented));
+                fixturePersistedFile.close();
+            } else {
+                ok = check(false, "FOUND-021", "Progression fixture persisted state can be written");
+            }
+            if (fixtureGeneratedFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                fixtureGeneratedFile.write(QJsonDocument(generatedFixtureRoot)
+                                               .toJson(QJsonDocument::Indented));
+                fixtureGeneratedFile.close();
+            } else {
+                ok = check(false, "FOUND-021", "Progression fixture generated state can be written");
+            }
+
+            ProjectModel progressedPersistedModel;
+            QString progressedPersistedError;
+            ok &= check(persistence.load(&progressedPersistedModel, fixturePersistedPath,
+                                         &progressedPersistedError),
+                        "FOUND-021", "Progression fixture loads through ProjectPersistence");
+            QString progressedPersistedStateError;
+            ok &= check(progressedPersistedModel.processVersionState().isValid(
+                            &progressedPersistedStateError),
+                        "FOUND-021", "Progression fixture persisted state is valid");
+
+            QFile progressedGeneratedFile(fixtureGeneratedPath);
+            QJsonObject progressedGeneratedRoot;
+            QJsonParseError progressedGeneratedParseError;
+            if (progressedGeneratedFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                progressedGeneratedRoot = QJsonDocument::fromJson(
+                    progressedGeneratedFile.readAll(), &progressedGeneratedParseError).object();
+                progressedGeneratedFile.close();
+            }
+            ProcessVersionState progressedGeneratedState;
+            QString progressedGeneratedError;
+            ok &= check(processVersionStateFromJson(
+                            progressedGeneratedRoot.value(QStringLiteral("processVersion")),
+                            &progressedGeneratedState, &progressedGeneratedError),
+                        "FOUND-021", "Progression fixture generated state parses");
+            QString progressedGeneratedStateError;
+            ok &= check(progressedGeneratedState.isValid(&progressedGeneratedStateError),
+                        "FOUND-021", "Progression fixture generated state is valid");
+            ok &= check(processVersionStateToJson(progressedPersistedModel.processVersionState())
+                            == processVersionStateToJson(progressedGeneratedState),
+                        "FOUND-021", "Progressed persisted/generated states remain equivalent");
+        }
         allPass &= ok;
     }
 
