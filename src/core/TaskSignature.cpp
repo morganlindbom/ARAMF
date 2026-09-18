@@ -42,7 +42,6 @@ QStringList normalizePaths(const QStringList& paths)
 
 double jaccardSimilarity(const QStringList& listA, const QStringList& listB)
 {
-    if (listA.isEmpty() && listB.isEmpty()) return 1.0;
     if (listA.isEmpty() || listB.isEmpty()) return 0.0;
 
     const QSet<QString> setA(listA.begin(), listA.end());
@@ -52,8 +51,17 @@ double jaccardSimilarity(const QStringList& listA, const QStringList& listB)
     return unionSize > 0 ? static_cast<double>(intersectionSize) / static_cast<double>(unionSize) : 0.0;
 }
 
-QString inferSubsystemFromPaths(const QStringList& paths, const QStringList& scopes)
+QString inferSubsystemFromPaths(const QStringList& paths, const QStringList& scopes, const QString& task = {})
 {
+    const QString t = task.toLower();
+    if (t.contains(QStringLiteral("ui")) || t.contains(QStringLiteral("workflow")) || t.contains(QStringLiteral("layout"))) return QStringLiteral("ui");
+    if (t.contains(QStringLiteral("memory")) || t.contains(QStringLiteral("event-log")) || t.contains(QStringLiteral("decision"))) return QStringLiteral("memory");
+    if (t.contains(QStringLiteral("orchestrat")) || t.contains(QStringLiteral("p2"))) return QStringLiteral("orchestration");
+    if (t.contains(QStringLiteral("recertification")) || t.contains(QStringLiteral("governance"))) return QStringLiteral("governance");
+    if (t.contains(QStringLiteral("release")) || t.contains(QStringLiteral("version"))) return QStringLiteral("release");
+    if (t.contains(QStringLiteral("worker")) || t.contains(QStringLiteral("p0"))) return QStringLiteral("worker");
+    if (t.contains(QStringLiteral("context")) || t.contains(QStringLiteral("p1"))) return QStringLiteral("context");
+
     for (const auto& scope : scopes) {
         const QString s = scope.toLower();
         if (s.contains(QStringLiteral("memory")) || s.contains(QStringLiteral("knowledge")) || s.contains(QStringLiteral("decision"))) return QStringLiteral("memory");
@@ -223,10 +231,22 @@ TaskSignature TaskSignature::fromTaskAndCategory(const QString& task, const QStr
                                                  const QStringList& scopes, const QStringList& files)
 {
     TaskSignature sig;
-    sig.taskCategory = category.isEmpty() ? QStringLiteral("implementation") : category;
+    if (category.isEmpty()) {
+        const QString lower = task.toLower();
+        if (lower.contains(QStringLiteral("ui")) || lower.contains(QStringLiteral("layout"))) sig.taskCategory = QStringLiteral("ui");
+        else if (lower.contains(QStringLiteral("memory"))) sig.taskCategory = QStringLiteral("memory");
+        else if (lower.contains(QStringLiteral("release")) || lower.contains(QStringLiteral("version"))) sig.taskCategory = QStringLiteral("release");
+        else if (lower.contains(QStringLiteral("recertification")) || lower.contains(QStringLiteral("governance"))) sig.taskCategory = QStringLiteral("governance");
+        else if (lower.contains(QStringLiteral("orchestrat")) || lower.contains(QStringLiteral("p2"))) sig.taskCategory = QStringLiteral("orchestration");
+        else if (lower.contains(QStringLiteral("worker")) || lower.contains(QStringLiteral("p0"))) sig.taskCategory = QStringLiteral("worker");
+        else if (lower.contains(QStringLiteral("context")) || lower.contains(QStringLiteral("p1"))) sig.taskCategory = QStringLiteral("context");
+        else sig.taskCategory = QStringLiteral("implementation");
+    } else {
+        sig.taskCategory = category;
+    }
     sig.relevantScopes = scopes;
     sig.referencedFiles = files;
-    sig.targetSubsystem = inferSubsystemFromPaths(files, scopes);
+    sig.targetSubsystem = inferSubsystemFromPaths(files, scopes, task);
 
     const QString lowerTask = task.toLower();
     if (lowerTask.startsWith(QStringLiteral("add")) || lowerTask.startsWith(QStringLiteral("create"))) {

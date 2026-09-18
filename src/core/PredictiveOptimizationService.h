@@ -11,6 +11,35 @@
 #include <QString>
 #include <QStringList>
 
+// Evidence Source Taxonomy (P3.1.2)
+enum class EvidenceSourceType {
+    LocalOperationalEvent,   // P2 historical task/test/build event from local project
+    ApprovedGlobalKnowledge, // Explicitly approved Framework Knowledge entry
+    ScopePolicy,             // Validation policy or routing rule specification
+    ContractHistory          // Historical TaskContract handoff
+};
+
+QString evidenceSourceTypeToString(EvidenceSourceType type);
+EvidenceSourceType stringToEvidenceSourceType(const QString& str);
+
+// Ranked Evidence Structure (P3.1.2)
+struct RankedEvidence final
+{
+    QString evidenceId;
+    EvidenceSourceType sourceType = EvidenceSourceType::LocalOperationalEvent;
+    QString originProjectId;
+    double relevance = 0.0;          // [0.0, 1.0]
+    double freshness = 1.0;          // [0.0, 1.0]
+    double outcomeWeight = 1.0;      // 1.0 for pass/success, 0.5 for failure/risk, 0.0 for invalid
+    double sourceMultiplier = 1.0;   // 1.0 for local, 0.85 for global, 0.70 for policy, 0.90 for contract
+    double totalRank = 0.0;          // sourceMultiplier * (0.50 * relevance + 0.25 * freshness + 0.25 * outcomeWeight)
+    QString summary;
+    QJsonObject rawPayload;
+
+    QJsonObject toJson() const;
+    static RankedEvidence fromJson(const QJsonObject& obj);
+};
+
 // Single predicted dimension item with deterministic rationale and evidence references
 struct PredictedItem final
 {
@@ -19,11 +48,16 @@ struct PredictedItem final
     QString rationale;               // Deterministic reason: WHY was this predicted?
     QStringList evidenceReferences;  // Event IDs, sequence numbers, rule names, contract IDs
 
+    // Explainability Decomposition (P3.1.2)
+    QString primaryEvidenceId;       // Top-ranked evidence item that directly justified it
+    double contributionScore = 0.0;  // Aggregated evidence rank/relevance
+    QStringList sourceTypes;         // Distinct sources contributing to this item
+
     QJsonObject toJson() const;
     static PredictedItem fromJson(const QJsonObject& obj);
 };
 
-// Explainable confidence model based on measurable historical metrics
+// Explainable confidence model based on measurable historical metrics (P3.1.1, P3.1.4)
 struct PredictionConfidence final
 {
     double score = 0.0;                       // [0.0, 1.0]
@@ -52,10 +86,11 @@ struct PredictionContract final
     QList<PredictedItem> predictedFiles;
     QList<PredictedItem> predictedValidation;
     QList<PredictedItem> predictedRiskCategories;
-    QString predictedChangeBreadth;           // "NARROW", "MODERATE", "BROAD"
+    QString predictedChangeBreadth;           // "LOCAL", "COMPONENT", "MULTI_COMPONENT", "CROSS_LAYER", "PROJECT_WIDE", "UNKNOWN"
     QString breadthRationale;
     PredictionConfidence confidence;
     QStringList evidenceReferences;
+    QList<RankedEvidence> rankedEvidence;     // Structured ranked evidence list (P3.1.2)
     QJsonObject provenance;
     QString createdAt;
     QString sourceProjectId;
@@ -113,7 +148,38 @@ struct PredictionEvaluation final
     static bool fromJson(const QJsonObject& obj, PredictionEvaluation* result, QString* error = nullptr);
 };
 
-// Deterministic Evidence-Based Prediction Engine (P3.1.1)
+// Drift Report and Drift Detector (P3.1.4)
+struct PredictionDriftReport final
+{
+    QString status = QStringLiteral("STABLE"); // "STABLE", "DRIFT_SUSPECTED", "DRIFT_CONFIRMED"
+    bool driftDetected = false;
+    double rollingPrecision = 1.0;
+    double rollingRecall = 1.0;
+    int missedValidationCount = 0;
+    int overconfidenceCount = 0;
+    int evaluationCount = 0;
+    QStringList alerts;
+    QString evaluatedAt;
+
+    QJsonObject toJson() const;
+    static bool fromJson(const QJsonObject& obj, PredictionDriftReport* result, QString* error = nullptr);
+};
+
+class PredictionDriftDetector final
+{
+public:
+    static PredictionDriftReport evaluateDrift(const QList<PredictionEvaluation>& evaluations,
+                                               int windowSize = 10);
+    static bool saveDriftReport(const QString& projectRoot,
+                                const PredictionDriftReport& report,
+                                QString* error = nullptr);
+    static bool loadDriftReport(const QString& projectRoot,
+                                PredictionDriftReport* report,
+                                QString* error = nullptr);
+    static QString driftReportPath(const QString& projectRoot);
+};
+
+// Deterministic Evidence-Based Prediction Engine
 class PredictiveOptimizationService final
 {
 public:
@@ -152,4 +218,19 @@ public:
     static QString predictionsDirectory(const QString& projectRoot);
     static QString predictionsRegistryPath(const QString& projectRoot);
     static QString evaluationsPath(const QString& projectRoot);
+
+    // Ranking and Classification Helpers
+    static double calculateEvidenceRank(EvidenceSourceType type,
+                                        double relevance,
+                                        double freshness,
+                                        double outcomeWeight);
+
+    static QString determineChangeBreadth(const QStringList& predictedFiles,
+                                          const TaskSignature& signature);
+
+    static QString determineValidationLevel(const QString& breadth,
+                                            const QList<PredictedItem>& risks,
+                                            double confidenceScore);
+
+    static QStringList canonicalRiskCategories();
 };

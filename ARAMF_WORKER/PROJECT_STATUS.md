@@ -624,10 +624,71 @@ Campaign Evidence:
   - P3.1.1 is deterministic and evidence-backed; it does not utilize machine learning or neural networks.
   - Tasks with no historical precedent return `INSUFFICIENT_EVIDENCE` rather than speculating.
   - P3 does not autonomously self-modify prediction rules.
-- Next Recommended Iteration: P3.1.2 — Multi-project cross-pollination of prediction evidence via approved Framework Knowledge and refined change breadth estimation.
+- Next Recommended Iteration: Completed — all 4 iterations (P3.1.1 through P3.1.4) certified.
 
+### P3.1.2 Implementation & Certification — Multi-Project Evidence, Ranking & Explainability Decomposition
+
+- Campaign Identity: `P3-PREDICTIVE-OPTIMIZATION-ITERATION-2`
+- Canonical Transition: `P3.1.2.0.0` -> `P3.1.2.1.1` (loop=1, iteration=2, cert=1, done=1)
+- Architecture Implemented:
+  - `EvidenceSourceType` & `RankedEvidence` (`src/core/PredictiveOptimizationService.h`, `src/core/PredictiveOptimizationService.cpp`): 4-type evidence taxonomy (`LocalOperationalEvent`, `ApprovedGlobalKnowledge`, `ScopePolicy`, `ContractHistory`). Deterministic evidence ranking formula:
+    TotalRank = SourceMultiplier * (0.50 * Relevance + 0.25 * Freshness + 0.25 * OutcomeWeight)
+    with source multipliers: Local=1.0, ApprovedGlobal=0.85, ContractHistory=0.90, ScopePolicy=0.70. Deterministic tie-breaking: `(totalRank DESC, freshness DESC, evidenceId ASC)`.
+  - Multi-Project Evidence Isolation: Consumes approved Framework Knowledge (`FrameworkKnowledgeService::approvedEntries` and `approvedGlobalEntries`) with strict approval checks (`status == "approved"` && `reviewStatus == "approved"`). Candidate and unapproved entries strictly excluded.
+  - Foreign Path Injection Prevention: Foreign file paths from external projects are strictly prohibited from entering local `predictedFiles`.
+  - Explainability Decomposition: Every `PredictedItem` explicitly links to its `primaryEvidenceId`, aggregated `contributionScore`, and contributing `sourceTypes`, with human-readable rationales explaining why the item was predicted.
+- Verification Evidence:
+  - Hermetic test suite: Tests `P3-019` through `P3-022` PASS.
+- Recorder Events:
+  - Start: Sequence 316 (`event-76db301a-fe1c-4c47-a540-514edd2c1d8a`), `TASK_STARTED`.
+  - Completion: Sequence 317 (`event-13c792aa-a3a5-43c6-9392-3293db5243f5`), `TASK_COMPLETED`, status=PASS.
+
+### P3.1.3 Implementation & Certification — Refined Change Breadth, 11-Category Risk Taxonomy & Validation Routing
+
+- Campaign Identity: `P3-PREDICTIVE-OPTIMIZATION-ITERATION-3`
+- Canonical Transition: `P3.1.3.0.0` -> `P3.1.3.1.1` (loop=1, iteration=3, cert=1, done=1)
+- Architecture Implemented:
+  - 6-Tier Change Breadth Taxonomy: `LOCAL`, `COMPONENT`, `MULTI_COMPONENT`, `CROSS_LAYER`, `PROJECT_WIDE`, `UNKNOWN`. Implemented deterministic boundary classification in `determineChangeBreadth` based on touched subsystems, layer boundaries, and project configuration files.
+  - 11-Category Canonical Risk Taxonomy: `OWNERSHIP_CONFLICT`, `SCOPE_EXPANSION`, `STALE_CONTEXT`, `STALE_VALIDATION`, `RECORDER_CONSISTENCY`, `PROVENANCE_MISSING`, `PERSISTENCE_FAULT`, `CROSS_LAYER_REGRESSION`, `DEPENDENCY_REGRESSION`, `RECOVERY_RETRY`, `DESTRUCTIVE_OPERATION`. Deterministically detected from historical clusters, failure patterns, and approved knowledge.
+  - Proportional Validation Routing: Implemented `determineValidationLevel` escalating from `FOCUSED` to `SUBSYSTEM` or `FULL_REGRESSION` based on breadth, critical risks, and confidence scores.
+  - Boundary Governance: Strict enforcement that predicted breadth or risks never grant execution authority or override P0 TaskContract file claim restrictions.
+- Verification Evidence:
+  - Hermetic test suite: Tests `P3-023` through `P3-026` PASS.
+- Recorder Events:
+  - Start: Sequence 318 (`event-d840bf07-63b9-4567-af0d-569a93641fd3`), `TASK_STARTED`.
+  - Completion: Sequence 319 (`event-ef0b72c7-e4c8-4493-80d8-5d174b877204`), `TASK_COMPLETED`, status=PASS.
+
+### P3.1.4 Implementation & Certification — Strict Calibration, Rolling Drift Detection & Dogfood Campaign
+
+- Campaign Identity: `P3-PREDICTIVE-OPTIMIZATION-ITERATION-4`
+- Canonical Transition: `P3.1.4.0.0` -> `P3.1.4.1.1` (loop=1, iteration=4, cert=1, done=1)
+- Architecture Implemented:
+  - Strict Confidence Calibration: Implemented sample-size scaling:
+    - N=0: score = 0.0, rating = `INSUFFICIENT_EVIDENCE`.
+    - N=1: score strictly capped at <= 0.35, rating = `LOW`.
+    - N=2: score strictly capped at <= 0.70, rating = `MEDIUM` or `LOW`.
+    - N>=3: eligible for `HIGH` only if consistency >= 0.85, match precision >= 0.75, freshness >= 0.70, and zero conflicting evidence penalty.
+  - Rolling Prediction Drift Detector: `PredictionDriftDetector` evaluates rolling window of evaluations for precision, recall, missed validations, and overconfidence, producing advisory `PredictionDriftReport` (`STABLE`, `DRIFT_SUSPECTED`, `DRIFT_CONFIRMED`). Saved to `ARAMF_WORKER/predictions/drift-report.json`.
+  - Multi-Scenario Dogfood Campaign: Evaluated across 6 diverse historical scenarios on the ARAMF self-model (Memory, UI, Release Management, Governance/Recertification, Configuration Update, and Novel Task), verifying 0 missed validations for known subsystems and zero hallucinations for novel tasks.
+- Verification Evidence:
+  - Dedicated P3 test suite: 31/31 hermetic checks PASS (`P3-001` through `P3-031`).
+  - Full CTest suite: 5/5 PASS (100%, 0 failures)
+    - 1/5 `aramf_core_tests`: PASS (60.06s)
+    - 2/5 `aramf_workflow_tests`: PASS (2.16s)
+    - 3/5 `aramf_template_tests`: PASS (79.26s)
+    - 4/5 `aramf_update_campaign`: PASS (6.28s)
+    - 5/5 `aramf_configuration_update`: PASS (0.16s)
+  - P0 regression: 275/275 checks PASS (`aramf_core_tests --worker-tasks`).
+  - P1 regression: 33/33 checks PASS (`ContextCoordinationTests`).
+  - P2 regression: PASS (`aramf_core_tests --p2-execution`).
+  - Memory cold-start validation: PASS (`ARAMF_WORKER/memory/cold-start-validation.json`).
+  - Memory consistency validation: PASS (`ARAMF_WORKER/memory/memory-consistency-validation.json`).
+- Recorder Events:
+  - Start: Sequence 320 (`event-790c5643-488b-4938-a121-026954dec49f`), `TASK_STARTED`.
+  - Completion: Sequence 321 (`event-f0b6e976-43b2-467d-a929-7c32ef735dd2`), `TASK_COMPLETED`, status=PASS.
+- Final P3 Verdict: **CERTIFIED PASS** (`P3.1.4.1.1`, cert=1, done=1).
 
 ## Latest Agent Task
 
-- Task: Start governed implementation of ARAMF P3 - Predictive Task Optimization
+- Task: ARAMF P3.1.4 - Strict Confidence Calibration, Rolling Drift Detection, and Multi-Scenario Dogfood Campaign
 - Status: PASS
