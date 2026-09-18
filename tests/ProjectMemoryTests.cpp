@@ -60,6 +60,7 @@ bool runContextCoordinationTests();
 bool runProcessVersionTests();
 bool runP2ExecutionTests();
 bool runProvenanceAndScopeTests();
+bool runP3PredictiveTests();
 
 int main(int argc, char** argv)
 {
@@ -73,6 +74,7 @@ int main(int argc, char** argv)
     if (app.arguments().contains(QStringLiteral("--worker-tasks"))) return runWorkerTaskTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--p2-execution"))) return runP2ExecutionTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--provenance-and-scope"))) return runProvenanceAndScopeTests() ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--p3-predictive"))) return runP3PredictiveTests() ? 0 : 1;
     QTemporaryDir temporaryProject;
     if (!require(temporaryProject.isValid(), "temporary project directory must be valid")) {
         return 1;
@@ -2190,6 +2192,7 @@ int main(int argc, char** argv)
     ok &= runProcessVersionTests();
     ok &= runP2ExecutionTests();
     ok &= runProvenanceAndScopeTests();
+    ok &= runP3PredictiveTests();
     return ok ? 0 : 1;
 }
 
