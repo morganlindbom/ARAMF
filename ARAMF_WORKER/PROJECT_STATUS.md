@@ -982,9 +982,67 @@ Campaign Evidence:
 - Recorder Event:
   - Sequence 333 (`event-2520afa1-e348-40e5-90de-5cf18cdf470d`), `TASK_COMPLETED`, status=PASS, actor=agent, agentId=antigravity, tool=aramf-cli, scope=project.
 
+### 2026-09-18 — F1 Memory & Evidence Foundation Evidence-Bound Certification and Completion (F1.1.1.1.1)
+
+- Objective: Fully complete F1 Memory & Evidence Foundation, verify exact source revision, issue durable CertificationService evidence, certify F1, and complete F1 lifecycle while keeping F2-F4 unstarted, foundationIntegrationValid false, and P6 blocked.
+- Source Revision Bound: `9556c63aab0363fdd5837c5ee440ccb2fa1f6f64`
+- Final Foundation Lifecycle State:
+  - F1 (Memory & Evidence Foundation): Certified & Complete (`F1.1.1.1.1`, cert=1, done=1)
+  - F2 (Identity, Provenance & Trust Foundation): Ready (Pre-Certification, `F2.1.0.0.0`, cert=0, done=0, not started)
+  - F3 (Scope, State & Integrity Foundation): Ready (Pre-Certification, `F3.1.0.0.0`, cert=0, done=0, unstarted queue)
+  - F4 (Lifecycle & Certification Foundation): Ready (Pre-Certification, `F4.1.0.0.0`, cert=0, done=0, unstarted queue)
+  - `foundationIntegrationValid`: `false`
+  - `P6.1.0.0.0`: strictly `BLOCKED` ("Foundation F2 (Identity, Provenance & Trust Foundation) is not certified complete.")
+- Implementation:
+  - Implemented `FoundationCertificationService` in `src/core/FoundationServices.h` and `src/core/FoundationServices.cpp`:
+    - `ensureCertificationArea`: guarantees existence of `ARAMF_WORKER/certification/` directory, `evidence/` directory, and `certification-contract.json`.
+    - `writeEvidenceArtifact`: atomically writes `ARAMF_WORKER/certification/evidence/f1-evidence.json` with 13 required verification checks, sourceRevision, and SHA-256 fingerprint.
+    - `readEvidenceArtifact`: parses and validates completeness of existing evidence artifacts on disk.
+    - `startF1`: starts F1 if inactive (transitions next `F1.1.0.0.0` -> active `F1.1.1.0.0`).
+    - `certifyF1`: enforces strict transaction order: validates preconditions, runs `MemoryEvidenceFoundation::validate`, validates complete evidence artifact matching source revision, calls `CertificationService::start` and `CertificationService::issue(PASS)`, verifies certificate durability and rediscovery, performs lifecycle certification `model.certifyCurrentProcessIteration()`, persists model, and synchronizes `ARAMF_WORKER/project.json`.
+    - `completeF1`: validates certified active F1 (`cert=1, done=0`), checks post-certification physical validation and PASS certificate, advances model via `model.completeActiveProcess()`, persists model, synchronizes `project.json`, and asserts final state invariants (`completedHistory` has `F1.1.1.1.1`, next is `F2.1.0.0.0`, active is null, P6 blocked).
+    - `synchronizeProjectJson`: eliminates lifecycle drift by keeping `ARAMF_WORKER.aramf.json` and `ARAMF_WORKER/project.json` processVersion states synchronized on every transition.
+  - Extended CLI runner `runFoundationCommand` in `src/core/FoundationServices.cpp` with subcommands: `certify`, `complete`, `start`, `write-f1-evidence`.
+  - Added 12 hermetic certification regression tests (`F1-CERT-001` through `F1-CERT-012`) in `tests/FoundationTests.cpp` and wired `--f1-certification` in `tests/ProjectMemoryTests.cpp`.
+- Verification Evidence:
+  - Phase A hermetic unit & regression tests:
+    - `aramf_core_tests.exe --f1-certification`: ALL PASS (12/12)
+    - `aramf_core_tests.exe --f1-memory-evidence`: ALL PASS (38/38)
+    - `aramf_core_tests.exe --foundation-namespace`: ALL PASS (21/21)
+    - `aramf_core_tests.exe --process-migration`: ALL PASS (20/20)
+    - CTest: 5/5 PASS (100%, 0 failures)
+  - Phase B sequential verification on clean commit `9556c63aab0363fdd5837c5ee440ccb2fa1f6f64`:
+    - `aramf_core_tests.exe --f1-certification`: ALL PASS
+    - `aramf_core_tests.exe --f1-memory-evidence`: ALL PASS
+    - `aramf_core_tests.exe --foundation-namespace`: ALL PASS
+    - `aramf_core_tests.exe --process-migration`: ALL PASS
+    - `aramf_core_tests.exe --p1-governance`: 275 checks PASS, matrix=11
+    - `aramf_core_tests.exe --p2-context`: 33 checks PASS
+    - `aramf_core_tests.exe --p3-execution`: PASS
+    - `aramf_core_tests.exe --p4-predictive`: ALL PASS
+    - `aramf_core_tests.exe --p5-routing`: 35 checks + 9 dogfood scenarios + bi-directional adaptation ALL PASS
+    - `aramf_core_tests.exe --provenance-and-scope`: PASS
+    - `aramf.exe foundation f1-validate --project .`: PASS (ledger intact, sequence monotonic, manifest consistent, certificates intact)
+    - `aramf.exe memory cold-start --project .`: PASS
+    - `aramf.exe memory validate --project .`: PASS
+    - Full CTest Suite: 5/5 PASS
+  - Phase C live F1 certification & completion:
+    - Generated evidence artifact: `ARAMF_WORKER/certification/evidence/f1-evidence.json` (fingerprint: `aa87213b5e5df159c3fbeef9ef69846b776b53ef1b111b4c9b7421fdd0343176`)
+    - Issued certificate: `cert-1dd63f13-02da-458a-ab55-bde43f79738b` (status: CERTIFIED, result: PASS, evidenceComplete: true)
+    - Active iteration certified: `F1.1.1.1.0`
+    - Post-cert physical validation: PASS (total events: 335)
+    - Post-cert memory cold-start: PASS
+    - Post-cert memory validate: PASS
+    - Completed foundation: `F1.1.1.1.1` (completedHistory has `F1.1.1.1.1`, active is none, next is `F2.1.0.0.0`)
+    - Post-completion status check: `aramf.exe foundation status --project .` confirms F1 Certified, F2 Ready (Pre-Certification), P6 Gating BLOCKED
+- Recorder Events:
+  - Sequence 334: `CERTIFICATION_STARTED` (subject F1, certId `cert-1dd63f13-02da-458a-ab55-bde43f79738b`)
+  - Sequence 335: `CERTIFICATE_ISSUED` (status PASS, certId `cert-1dd63f13-02da-458a-ab55-bde43f79738b`)
+  - Sequence 336: `TASK_COMPLETED` (ARAMF F1 Evidence-Bound Certification and Completion, eventId `event-7a7ef3e0-b53f-465f-b965-0f5a9e98bfa3`)
+
 ## Latest Agent Task
 
-- Task: ARAMF F1-F4 Pre-Certification Architectural Repair
+- Task: ARAMF F1 Evidence-Bound Certification and Completion
 - Status: PASS
-- Summary: Repaired 28 architectural gaps, upward inversions, and durability findings across F1-F4 foundations, wired production core, and verified complete regression. F1-F4 remain cert=0, done=0; foundationIntegrationValid remains false; P6 remains strictly blocked.
-- Next Recommended State: Independent Final Audit and Certification of F1-F4 Foundations by Antigravity (AGY).
+- Summary: Certified and completed F1 Memory and Evidence Foundation (F1.1.1.1.1) with durable certificate bound to sourceRevision 9556c63aab0363fdd5837c5ee440ccb2fa1f6f64. F2-F4 remain unstarted (F2.1.0.0.0, cert=0, done=0), foundationIntegrationValid remains false, and P6 remains strictly blocked.
+- Next Recommended State: Independent certification campaign for F2 (Identity, Provenance & Trust Foundation).

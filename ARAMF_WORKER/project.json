@@ -55,7 +55,7 @@
     "orchestration": {
     },
     "processVersion": {
-        "namespaceVersion": 2,
+        "active": null,
         "completedHistory": [
             {
                 "certification": 1,
@@ -98,39 +98,16 @@
                 "iteration": 4,
                 "loop": 1,
                 "process": 5
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "foundation": 1,
+                "iteration": 1,
+                "loop": 1
             }
         ],
-        "legacyHistory": [
-            "P0.1.1.1",
-            "P1.1.1.1",
-            "P2.1.1.1",
-            "P3.1.0.0",
-            "P0.1.1.1.1",
-            "P1.1.1.1.1",
-            "P2.1.1.1.1",
-            "P1.1.1.1",
-            "legacy:P0.1.2.1.1",
-            "legacy:P1.1.1.1.1",
-            "legacy:P2.1.4.1.1",
-            "legacy:P3.1.4.1.1",
-            "legacy:P4.1.4.1.1"
-        ],
-        "active": null,
-        "next": {
-            "certification": 0,
-            "done": 0,
-            "foundation": 1,
-            "iteration": 0,
-            "loop": 1
-        },
         "foundationQueue": [
-            {
-                "certification": 0,
-                "done": 0,
-                "foundation": 2,
-                "iteration": 0,
-                "loop": 1
-            },
             {
                 "certification": 0,
                 "done": 0,
@@ -152,6 +129,29 @@
             "iteration": 0,
             "loop": 1,
             "process": 6
+        },
+        "legacyHistory": [
+            "P0.1.1.1",
+            "P1.1.1.1",
+            "P2.1.1.1",
+            "P3.1.0.0",
+            "P0.1.1.1.1",
+            "P1.1.1.1.1",
+            "P2.1.1.1.1",
+            "P1.1.1.1",
+            "legacy:P0.1.2.1.1",
+            "legacy:P1.1.1.1.1",
+            "legacy:P2.1.4.1.1",
+            "legacy:P3.1.4.1.1",
+            "legacy:P4.1.4.1.1"
+        ],
+        "namespaceVersion": 2,
+        "next": {
+            "certification": 0,
+            "done": 0,
+            "foundation": 2,
+            "iteration": 0,
+            "loop": 1
         }
     },
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",

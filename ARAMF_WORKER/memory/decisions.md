@@ -264,3 +264,14 @@ creating parallel lessons.
 - Superseded-By: none
 - Summary: TOP PRIORITY: ARAMF agents and tools must never use recursive shell deletion for cleanup or fixture removal, including cmd.exe rmdir /s /q, rd /s /q, PowerShell Remove-Item -Recurse, Unix rm -rf, or equivalents. The 2026-08-23 incident demonstrated that malformed Windows quoting can widen scope and destroy unrelated repositories. Preserve state, verify exact targets, and use non-destructive alternatives.
 <!-- /ARAMF-DECISION -->
+
+## Decision Record: evidence-bound-foundation-certification
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: evidence-bound-foundation-certification
+- Topic: foundation-certification-protocol
+- Scope: project
+- Status: current
+- Superseded-By: none
+- Summary: Foundation certification strictly requires verified sourceRevision, complete 13-check physical evidence artifact, CertificationService PASS certificate issuance prior to lifecycle cert=1, and certified active state prior to completion (done=1).
+<!-- /ARAMF-DECISION -->

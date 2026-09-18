@@ -1,0 +1,108 @@
+{
+    "_file": "f1-evidence.json",
+    "checks": [
+        {
+            "name": "f1-focused-suite",
+            "status": "PASS"
+        },
+        {
+            "name": "foundation-namespace",
+            "status": "PASS"
+        },
+        {
+            "name": "process-namespace-migration",
+            "status": "PASS"
+        },
+        {
+            "name": "p1-governance",
+            "status": "PASS"
+        },
+        {
+            "name": "p2-context",
+            "status": "PASS"
+        },
+        {
+            "name": "p3-execution",
+            "status": "PASS"
+        },
+        {
+            "name": "p4-predictive",
+            "status": "PASS"
+        },
+        {
+            "name": "p5-routing",
+            "status": "PASS"
+        },
+        {
+            "name": "provenance-and-scope",
+            "status": "PASS"
+        },
+        {
+            "name": "f1-physical-validation",
+            "status": "PASS"
+        },
+        {
+            "name": "memory-cold-start",
+            "status": "PASS"
+        },
+        {
+            "name": "memory-consistency",
+            "status": "PASS"
+        },
+        {
+            "name": "full-ctest",
+            "status": "PASS"
+        }
+    ],
+    "contract": {
+        "bootstrapOrder": 1,
+        "dependsOn": [
+        ],
+        "foundation": "F1",
+        "name": "Memory & Evidence Foundation",
+        "owns": [
+            "append-only-ledger",
+            "cold-start-reconstruction",
+            "certification-evidence",
+            "memory-consistency",
+            "compaction-governance",
+            "ledger-manifest-recovery"
+        ],
+        "requiredBy": [
+            "F2",
+            "F3",
+            "F4"
+        ],
+        "responsibility": "Stores and reconstructs evidence"
+    },
+    "evidenceFingerprint": "46db91f00302aabf82e8d703bd4c08db25038bc4af40768796c2f1744ef15856",
+    "foundation": "F1",
+    "foundationName": "Memory & Evidence Foundation",
+    "foundationVersion": "F1.1.1",
+    "knownLimitations": [
+        "F1 covers Memory & Evidence Foundation only; F2-F4 remain uncertified and in pre-certification state.",
+        "Integrated foundation validation (foundationIntegrationValid) remains false; P6 gating remains strictly BLOCKED."
+    ],
+    "overallStatus": "PASS",
+    "rawDetails": {
+    },
+    "results": {
+        "f1FocusedSuite": "PASS",
+        "f1PhysicalValidation": "PASS",
+        "foundationNamespace": "PASS",
+        "fullCTest": "PASS",
+        "memoryColdStart": "PASS",
+        "memoryConsistency": "PASS",
+        "p1Governance": "PASS",
+        "p2Context": "PASS",
+        "p3Execution": "PASS",
+        "p4Predictive": "PASS",
+        "p5Routing": "PASS",
+        "processNamespaceMigration": "PASS",
+        "provenanceAndScope": "PASS"
+    },
+    "schemaVersion": 1,
+    "sourceRevision": "9556c63aab0363fdd5837c5ee440ccb2fa1f6f64",
+    "timestamp": "2026-09-18T18:23:53Z",
+    "verificationLevel": "HOST_TEST"
+}
