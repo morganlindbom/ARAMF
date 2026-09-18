@@ -65,6 +65,7 @@ bool runP4RoutingTests();
 bool runProcessNamespaceMigrationTests(const QString& selfRepoPath);
 bool runFoundationNamespaceTests(const QString& selfRepoPath);
 bool runF1FoundationTests(const QString& selfRepoPath);
+bool runF1CertificationTests();
 bool runF2FoundationTests(const QString& selfRepoPath);
 bool runF3FoundationTests(const QString& selfRepoPath);
 bool runF4FoundationTests(const QString& selfRepoPath);
@@ -88,6 +89,7 @@ int main(int argc, char** argv)
     if (app.arguments().contains(QStringLiteral("--p4-routing")) || app.arguments().contains(QStringLiteral("--p5-routing"))) return runP4RoutingTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--process-migration"))) return runProcessNamespaceMigrationTests(AramfPaths::programRoot()) ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--foundation-namespace"))) return runFoundationNamespaceTests(AramfPaths::programRoot()) ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--f1-certification"))) return runF1CertificationTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--f1-memory-evidence"))) return runF1FoundationTests(AramfPaths::programRoot()) ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--f2-identity-trust"))) return runF2FoundationTests(AramfPaths::programRoot()) ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--f3-scope-integrity"))) return runF3FoundationTests(AramfPaths::programRoot()) ? 0 : 1;

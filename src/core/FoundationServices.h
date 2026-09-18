@@ -204,3 +204,81 @@ public:
     // Returns machine-testable P <-> F dependency matrix.
     static QJsonObject dependencyMatrix();
 };
+
+// ─── Foundation Certification Service ───────────────────────────────────────
+// Owns evidence-bound foundation certification and completion.
+// Backed by CertificationService, MemoryEvidenceFoundation, and ProcessVersionLifecycle.
+
+struct F1CertificationEvidence {
+    QString foundation = QStringLiteral("F1");
+    QString foundationName = QStringLiteral("Memory & Evidence Foundation");
+    QString foundationVersion = QStringLiteral("F1.1.1");
+    QString sourceRevision;
+    QString verificationLevel = QStringLiteral("HOST_TEST");
+
+    // Actual verification results
+    bool f1FocusedPass = false;
+    bool foundationNamespacePass = false;
+    bool processMigrationPass = false;
+    bool p1GovernancePass = false;
+    bool p2ContextPass = false;
+    bool p3ExecutionPass = false;
+    bool p4PredictivePass = false;
+    bool p5RoutingPass = false;
+    bool provenanceAndScopePass = false;
+    bool f1PhysicalValidationPass = false;
+    bool memoryColdStartPass = false;
+    bool memoryConsistencyPass = false;
+    bool fullCTestPass = false;
+
+    QString evidenceFingerprint;
+    QString timestamp;
+    QJsonArray knownLimitations;
+    QJsonObject rawDetails;
+
+    bool isComplete() const;
+    QJsonObject toJson() const;
+    static F1CertificationEvidence fromJson(const QJsonObject& json);
+};
+
+class FoundationCertificationService final
+{
+public:
+    // Ensures certification directories and contract exist under ARAMF_WORKER/certification
+    static bool ensureCertificationArea(const QString& projectRoot, QString* error = nullptr);
+
+    // Writes the atomic F1 evidence artifact to ARAMF_WORKER/certification/evidence/f1-evidence.json
+    static bool writeEvidenceArtifact(const QString& projectRoot,
+                                      const F1CertificationEvidence& evidence,
+                                      QString* relativePath = nullptr,
+                                      QString* sha256 = nullptr,
+                                      QString* error = nullptr);
+
+    // Reads and validates an existing evidence artifact from disk
+    static bool readEvidenceArtifact(const QString& artifactAbsolutePath,
+                                     F1CertificationEvidence* evidence = nullptr,
+                                     QString* error = nullptr);
+
+    // Starts F1 if inactive (transitions next F1.1.0.0.0 -> active F1.1.1.0.0)
+    static bool startF1(const QString& projectRoot,
+                        const QString& projectFilePath,
+                        QString* error = nullptr);
+
+    // Performs evidence-bound certification of F1
+    static bool certifyF1(const QString& projectRoot,
+                          const QString& projectFilePath,
+                          const QString& sourceRevision,
+                          const QString& evidenceArtifactPath = QString(),
+                          QJsonObject* issuedCertificate = nullptr,
+                          QString* error = nullptr);
+
+    // Completes active certified F1 (transitions active F1.1.1.1.0 -> completed F1.1.1.1.1)
+    static bool completeF1(const QString& projectRoot,
+                           const QString& projectFilePath,
+                           QString* error = nullptr);
+
+    // Synchronizes ARAMF_WORKER/project.json with the model's ProcessVersionState
+    static bool synchronizeProjectJson(const QString& projectRoot,
+                                       const ProjectModel& model,
+                                       QString* error = nullptr);
+};
