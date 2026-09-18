@@ -1,0 +1,123 @@
+Starting P4 Self-Adjusting Routing test matrix...
+PASS [P4-001]: Default registry provides at least 5 canonical routes
+PASS [P4-001]: Route version is explicit and 1.0
+PASS [P4-001]: Route version is explicit and 1.0
+PASS [P4-001]: Route version is explicit and 1.0
+PASS [P4-001]: Route version is explicit and 1.0
+PASS [P4-001]: Route version is explicit and 1.0
+PASS [P4-001]: All 5 canonical routes registered
+PASS [P4-002]: FastLocal correctly rejected for multi-component cross-layer task
+PASS [P4-002]: All surviving candidate routes are marked eligible
+PASS [P4-002]: All surviving candidate routes are marked eligible
+PASS [P4-002]: All surviving candidate routes are marked eligible
+PASS [P4-003]: Disabled route cannot win
+PASS [P4-003]: Violation category is STATUS
+PASS [P4-003]: StandardDirect explicitly placed in rejectedRoutes
+PASS [P4-004]: Route selection is deterministic across identical inputs
+PASS [P4-004]: Candidate counts match
+PASS [P4-004]: Candidate ranking order is identical
+PASS [P4-004]: Candidate scores match exactly
+PASS [P4-004]: Candidate ranking order is identical
+PASS [P4-004]: Candidate scores match exactly
+PASS [P4-004]: Candidate ranking order is identical
+PASS [P4-004]: Candidate scores match exactly
+PASS [P4-005]: Alphabetical tie-breaking when scores and health are identical
+PASS [P4-006]: Provenance actor preserved
+PASS [P4-006]: Provenance agentId preserved
+PASS [P4-006]: Provenance tool preserved
+PASS [P4-007]: Decision references P3 predictionId
+PASS [P4-007]: P3 predictionId added to evidenceReferences
+PASS [P4-007]: P3 prediction object was not mutated
+PASS [P4-008]: Decision complies with P0 governance
+PASS [P4-008]: P4 explicitly denies execution authority
+PASS [P4-009]: RuntimeOwnershipService rejects P4 routing decision as TaskContract
+PASS [P4-010]: Context route uses legal P1 strategy
+PASS [P4-011]: Evaluation recorded faithfully
+PASS [P4-011]: Evaluation record matches original
+PASS [P4-012]: Status is CONSERVATIVE_ROUTE when evidence is insufficient
+PASS [P4-012]: Selected RouteConservativeIsolated as safe default
+PASS [P4-012]: Routing confidence rating reflects weak evidence
+PASS [P4-013]: Returns NO_ELIGIBLE_ROUTE when all routes are disabled
+PASS [P4-013]: Candidate list is empty
+PASS [P4-013]: All routes recorded in rejectedRoutes
+PASS [P4-014]: Fallback route selected
+PASS [P4-014]: Fallback route is distinct from selected route
+PASS [P4-014]: Fallback route has fallbackEligibility == true
+PASS [P4-015]: Fallback carries zero authority to expand permissions
+PASS [P4-016]: Health tracks total runs correctly
+PASS [P4-016]: Health tracks success rate correctly
+PASS [P4-016]: Historically successful route wins ranking
+PASS [P4-016]: Confidence elevated to HIGH with N=5 clean runs
+PASS [P4-017]: Total runs is 1
+PASS [P4-017]: N=1 cannot achieve HIGH confidence
+PASS [P4-017]: N=1 score is strictly capped at <= 0.45
+PASS [P4-018]: One consecutive failure recorded
+PASS [P4-018]: Route is NOT degraded on a single failure
+PASS [P4-018]: Route status remains Active after 1 failure
+PASS [P4-019]: Hysteresis bonus applied to incumbent preferred route
+PASS [P4-019]: Hysteresis delta matches 0.08 switching threshold
+PASS [P4-020]: RouteFastLocal marked isDegraded=true after 2 consecutive failures
+PASS [P4-020]: Route status transitioned to DEGRADED
+PASS [P4-021]: Circuit breaker enters OPEN state after 3 failures
+PASS [P4-022]: StandardDirect rejected when contract mandates full-regression
+PASS [P4-022]: Winning route maintains full-regression validation
+PASS [P4-023]: Validation safely escalated to full-regression for CROSS_LAYER task
+PASS [P4-024]: Foreign path rejected by cross-project isolation filter
+PASS [P4-025]: Route registry contains zero absolute/foreign paths
+PASS [P4-026]: Decision saved to ARAMF_WORKER/routing/decisions/
+PASS [P4-026]: Decision ID reloaded accurately
+PASS [P4-026]: Selected route reloaded accurately
+PASS [P4-026]: Schema version reloaded accurately
+PASS [P4-027]: Legacy decision preserves original algorithmVersion
+PASS [P4-028]: Health persisted and reloaded from health.json
+PASS [P4-028]: Health success rate reloaded accurately
+PASS [P4-029]: Historical decision was not mutated
+PASS [P4-029]: Historical candidates immutable
+PASS [P4-030]: No agent reputation in route health
+PASS [P4-030]: No agent quality score in route health
+PASS [P4-030]: No agent rank in route health
+PASS [P4-031]: No promoted code in decision
+PASS [P4-031]: No code bank asset in decision
+PASS [P4-031]: No certified snippet in decision
+PASS [P4-032]: P0 postflight rejects P4 routing decision as execution evidence
+PASS [P4-033]: routes.json exists
+PASS [P4-033]: health.json exists
+PASS [P4-033]: circuits.json exists
+PASS [P4-034]: Memory validator tolerates P4 routing artifacts
+PASS [P4-035]: P4 produces valid route decision
+PASS [P4-035]: Route selected
+PASS [P4-035]: Fallback route selected
+PASS [P4-035]: P0 authorizes execution under selected route
+PASS [P4-035]: P1 context strategy provided
+PASS [P4-035]: P2 execution feedback successfully recorded into P4
+
+Starting P4 Multi-Scenario Dogfood Campaign against ARAMF self-model...
+PASS [DOGFOOD-S1]: Scenario 1 (Core/Memory) selects valid route
+PASS [DOGFOOD-S1]: Scenario 1 selects valid fallback
+PASS [DOGFOOD-S1]: Context route appropriate
+PASS [DOGFOOD-S2]: Scenario 2 (UI/Workflow) selects valid route
+PASS [DOGFOOD-S2]: Context route FOCUSED
+PASS [DOGFOOD-S3]: Cross-layer routes to RouteHighRiskCrossLayer
+PASS [DOGFOOD-S3]: Validation escalated to full-regression
+PASS [DOGFOOD-S3]: Context escalated to FULL_PROJECT
+PASS [DOGFOOD-S4]: Config change selects valid route
+PASS [DOGFOOD-S4]: Project-wide config change mandates full-regression
+PASS [DOGFOOD-S5]: Read-only analysis selects valid route
+PASS [DOGFOOD-S5]: Context route FOCUSED
+PASS [DOGFOOD-S6]: Novel low-evidence task selects CONSERVATIVE_ROUTE
+PASS [DOGFOOD-S6]: Conservative default selected
+PASS [DOGFOOD-S7]: Fallback route is available
+PASS [DOGFOOD-S7]: Health tracks fallback activation
+PASS [DOGFOOD-S8]: Collision tracked in route health
+PASS [DOGFOOD-S9]: Validation safely escalated to full-regression
+PASS [DOGFOOD-S9]: High risk task routes to HighRiskCrossLayer
+P4 Dogfood Campaign completed: ALL PASS
+
+Starting P4 Adaptation Validation (Bi-directional Hysteresis & Learning)...
+PASS [ADAPT-01]: Initial baseline route selected
+PASS [ADAPT-02]: RouteStandardDirect preferred after repeated success
+PASS [ADAPT-02]: Confidence elevated to HIGH
+PASS [ADAPT-03]: Degraded RouteStandardDirect discarded
+PASS [ADAPT-03]: System successfully adapted back to RouteConservativeIsolated
+P4 Adaptation Validation completed: ALL PASS
+P4 Self-Adjusting Routing test matrix completed: ALL PASS
