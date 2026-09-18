@@ -1685,7 +1685,7 @@ F1VerificationCheck FoundationCertificationService::executeCheck(const QString& 
     proc.setProgram(program);
     proc.setArguments(args);
     proc.start();
-    const bool finished = proc.waitForFinished(180000);
+    const bool finished = proc.waitForFinished(300000);
     const int exitCode = finished ? proc.exitCode() : -1;
     const QByteArray stdoutBytes = proc.readAllStandardOutput();
     const QByteArray stderrBytes = proc.readAllStandardError();
