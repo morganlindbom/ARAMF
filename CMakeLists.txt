@@ -89,6 +89,8 @@ set(ARAMF_CORE_SOURCES
     src/core/PredictiveOptimizationService.cpp
     src/core/AdaptiveRoutingService.h
     src/core/AdaptiveRoutingService.cpp
+    src/core/MemoryEvidenceFoundation.h
+    src/core/MemoryEvidenceFoundation.cpp
     src/core/FoundationServices.h
     src/core/FoundationServices.cpp
 )
@@ -200,6 +202,8 @@ if(BUILD_TESTING)
         tests/ProcessNamespaceMigrationTests.cpp
         tests/FoundationNamespaceTests.cpp
         tests/FoundationTests.cpp
+        src/core/MemoryEvidenceFoundation.h
+        src/core/MemoryEvidenceFoundation.cpp
         src/core/FoundationServices.h
         src/core/FoundationServices.cpp
         src/core/RuntimeOwnershipService.h
@@ -303,6 +307,8 @@ if(BUILD_TESTING)
         src/core/ComponentVersion.cpp
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
+        src/core/MemoryEvidenceFoundation.h
+        src/core/MemoryEvidenceFoundation.cpp
         src/core/FoundationServices.h
         src/core/FoundationServices.cpp
         src/core/ProjectMemoryCompaction.h

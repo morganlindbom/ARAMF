@@ -11,7 +11,6 @@
 #include "ProjectMemoryCompaction.h"
 #include "CertificationService.h"
 #include "ProcessVersion.h"
-#include "WorkerContextResolver.h"
 
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -62,201 +61,9 @@ QString computeFingerprint(const QJsonObject& obj)
 
 } // anonymous namespace
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// F1: Memory & Evidence Foundation
-// ═══════════════════════════════════════════════════════════════════════════════
+// F1: Memory & Evidence Foundation implementation is located in MemoryEvidenceFoundation.cpp.
 
-F1EvidenceReport MemoryEvidenceFoundation::validate(const QString& projectRoot, QString* error)
-{
-    F1EvidenceReport report;
-    ProjectMemory memory;
 
-    // 1. Validate the memory consistency (includes ledger, sequence, manifest checks)
-    const auto memReport = memory.validate(projectRoot, error, false);
-    report.fullReport.insert(QStringLiteral("memoryValidation"), memReport);
-
-    const auto checks = memReport.value(QStringLiteral("checks")).toArray();
-    auto isCheckPass = [&checks](const QString& name) -> bool {
-        for (const auto& v : checks) {
-            const auto obj = v.toObject();
-            if (obj.value(QStringLiteral("name")).toString() == name)
-                return obj.value(QStringLiteral("status")).toString() == QStringLiteral("PASS");
-        }
-        return false;
-    };
-
-    // Sequence monotonicity
-    report.sequenceMonotonic = isCheckPass(QStringLiteral("sequence-order"));
-    if (!report.sequenceMonotonic)
-        report.errors.append(QStringLiteral("F1: Event sequence is not monotonically increasing"));
-
-    // Manifest consistency
-    report.manifestConsistent = isCheckPass(QStringLiteral("manifest-next-sequence"))
-                             && isCheckPass(QStringLiteral("manifest-event-count"));
-    if (!report.manifestConsistent)
-        report.errors.append(QStringLiteral("F1: Manifest is inconsistent with event log"));
-
-    // Event identifier uniqueness (ledger integrity)
-    report.ledgerIntact = isCheckPass(QStringLiteral("event-identifiers-unique"));
-    if (!report.ledgerIntact)
-        report.errors.append(QStringLiteral("F1: Ledger integrity violated - duplicate event IDs"));
-
-    // 2. Cold-start validation
-    const auto csReport = memory.validateColdStart(projectRoot, error);
-    report.fullReport.insert(QStringLiteral("coldStartValidation"), csReport);
-    report.coldStartFresh = csReport.value(QStringLiteral("status")).toString() == QStringLiteral("PASS");
-    report.coldStartFingerprint = csReport.value(QStringLiteral("fingerprint")).toString();
-    if (!report.coldStartFresh)
-        report.errors.append(QStringLiteral("F1: Cold-start reconstruction is stale or failed"));
-
-    // 3. Count events
-    const QString eventLogPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
-    const auto events = readJsonlEvents(eventLogPath);
-    report.totalEvents = events.size();
-
-    // 4. Certification ledger integrity with explicit error detection
-    CertificationService certService;
-    QString certError;
-    const auto certs = certService.certificates(projectRoot, &certError);
-    report.totalCertificates = certs.size();
-    if (!certError.isEmpty()) {
-        report.certificatesIntact = false;
-        report.errors.append(QStringLiteral("F1: Certification ledger error: %1").arg(certError));
-    } else {
-        report.certificatesIntact = true;
-        for (const auto& cert : certs) {
-            if (cert.value(QStringLiteral("certificateId")).toString().isEmpty()) {
-                report.certificatesIntact = false;
-                report.errors.append(QStringLiteral("F1: Certificate missing ID"));
-                break;
-            }
-        }
-    }
-
-    // Overall validity
-    report.valid = report.ledgerIntact && report.coldStartFresh
-                && report.sequenceMonotonic && report.manifestConsistent
-                && report.certificatesIntact;
-
-    return report;
-}
-
-QJsonObject MemoryEvidenceFoundation::evidenceSummary(const QString& projectRoot, QString* error)
-{
-    QJsonObject summary;
-    ProjectMemory memory;
-
-    const auto events = memory.events(projectRoot, error);
-    summary.insert(QStringLiteral("totalEvents"), events.size());
-
-    const auto decisions = memory.currentDecisions(projectRoot, error);
-    summary.insert(QStringLiteral("currentDecisions"), decisions.size());
-
-    const auto checkpoints = memory.checkpoints(projectRoot, error);
-    summary.insert(QStringLiteral("checkpoints"), checkpoints.size());
-
-    CertificationService certService;
-    QString certError;
-    const auto certs = certService.certificates(projectRoot, &certError);
-    summary.insert(QStringLiteral("certificates"), certs.size());
-
-    summary.insert(QStringLiteral("memoryUsageBytes"), memory.memoryUsageBytes(projectRoot));
-    summary.insert(QStringLiteral("foundation"), QStringLiteral("F1"));
-    summary.insert(QStringLiteral("name"), QStringLiteral("Memory & Evidence Foundation"));
-
-    return summary;
-}
-
-bool MemoryEvidenceFoundation::canReconstructFromColdStart(const QString& projectRoot, QString* error)
-{
-    ProjectMemory memory;
-    const auto csReport = memory.validateColdStart(projectRoot, error);
-    return csReport.value(QStringLiteral("status")).toString() == QStringLiteral("PASS");
-}
-
-bool MemoryEvidenceFoundation::reconstructManifestFromLedger(const QString& projectRoot, QString* error)
-{
-    const QString eventLogPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
-    QFile eventFile(eventLogPath);
-    if (!eventFile.exists()) {
-        if (error) *error = QStringLiteral("Cannot reconstruct manifest: event-log.jsonl does not exist");
-        return false;
-    }
-    if (!eventFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        if (error) *error = QStringLiteral("Cannot open event-log.jsonl: %1").arg(eventFile.errorString());
-        return false;
-    }
-
-    qint64 maxSeq = 0;
-    int count = 0;
-    QString latestId;
-    while (!eventFile.atEnd()) {
-        const auto line = eventFile.readLine().trimmed();
-        if (line.isEmpty()) continue;
-        QJsonParseError parseErr;
-        const auto doc = QJsonDocument::fromJson(line, &parseErr);
-        if (parseErr.error == QJsonParseError::NoError && doc.isObject()) {
-            const auto obj = doc.object();
-            const qint64 seq = obj.value(QStringLiteral("sequenceNumber")).toVariant().toLongLong();
-            if (seq > maxSeq) maxSeq = seq;
-            const QString id = obj.value(QStringLiteral("eventId")).toString();
-            if (!id.isEmpty()) latestId = id;
-            count++;
-        }
-    }
-    eventFile.close();
-
-    const QString manifestPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/memory/memory-manifest.json"));
-    QJsonObject manifest = readJsonFile(manifestPath);
-    if (manifest.isEmpty()) {
-        manifest.insert(QStringLiteral("_file"), QStringLiteral("memory-manifest.json"));
-        manifest.insert(QStringLiteral("memoryVersion"), QStringLiteral("3"));
-        manifest.insert(QStringLiteral("legacyProvenanceCutoffSequence"), 0);
-    }
-    manifest.insert(QStringLiteral("nextSequenceNumber"), maxSeq + 1);
-    manifest.insert(QStringLiteral("eventCount"), count);
-    if (!latestId.isEmpty()) {
-        manifest.insert(QStringLiteral("latestEventId"), latestId);
-    }
-
-    QDir(projectRoot).mkpath(QStringLiteral("ARAMF_WORKER/memory"));
-    QSaveFile saveFile(manifestPath);
-    if (!saveFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        if (error) *error = QStringLiteral("Cannot open memory-manifest.json for write: %1").arg(saveFile.errorString());
-        return false;
-    }
-    saveFile.write(QJsonDocument(manifest).toJson(QJsonDocument::Indented));
-    if (!saveFile.commit()) {
-        if (error) *error = QStringLiteral("Cannot commit memory-manifest.json: %1").arg(saveFile.errorString());
-        return false;
-    }
-    return true;
-}
-
-QJsonObject MemoryEvidenceFoundation::contract()
-{
-    return QJsonObject{
-        {QStringLiteral("foundation"), QStringLiteral("F1")},
-        {QStringLiteral("name"), QStringLiteral("Memory & Evidence Foundation")},
-        {QStringLiteral("responsibility"), QStringLiteral("Stores and reconstructs evidence")},
-        {QStringLiteral("owns"), QJsonArray{
-            QStringLiteral("append-only-ledger"),
-            QStringLiteral("cold-start-reconstruction"),
-            QStringLiteral("certification-evidence"),
-            QStringLiteral("memory-consistency"),
-            QStringLiteral("compaction-governance"),
-            QStringLiteral("ledger-manifest-recovery")
-        }},
-        {QStringLiteral("bootstrapOrder"), 1},
-        {QStringLiteral("dependsOn"), QJsonArray{}},
-        {QStringLiteral("requiredBy"), QJsonArray{
-            QStringLiteral("F2"), QStringLiteral("F3"), QStringLiteral("F4")
-        }}
-    };
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // F2: Identity, Provenance & Trust Foundation
@@ -1172,15 +979,50 @@ int runFoundationCommand(const QStringList& arguments, QTextStream& output, QTex
     }
 
     if (subcommand.isEmpty() || subcommand == QStringLiteral("status")) {
-        const auto pvState = LifecycleCertificationFoundation::lifecycleSummary(projectRoot);
+        const auto pvSummary = LifecycleCertificationFoundation::lifecycleSummary(projectRoot);
+        const auto completed = pvSummary.value(QStringLiteral("completedIdentifiers")).toArray();
+        auto isFoundationCertified = [&completed](int num) -> bool {
+            const QString prefix = QStringLiteral("F%1.").arg(num);
+            for (const auto& item : completed) {
+                if (item.toString().startsWith(prefix) && item.toString().endsWith(QStringLiteral(".1.1")))
+                    return true;
+            }
+            return false;
+        };
         output << "=== ARAMF Foundation Status ===\n";
-        output << "F1 (Memory & Evidence): Ready (Pre-Certification)\n";
-        output << "F2 (Identity, Provenance & Trust): Ready (Pre-Certification)\n";
-        output << "F3 (Scope, State & Integrity): Ready (Pre-Certification)\n";
-        output << "F4 (Lifecycle & Certification): Ready (Pre-Certification)\n";
-        output << "P6 Gating: " << (pvState.value("p6Eligible").toBool() ? "ELIGIBLE" : "BLOCKED") << "\n";
-        output << "P6 Reason: " << pvState.value("p6Reason").toString() << "\n";
+        output << "F1 (Memory & Evidence): " << (isFoundationCertified(1) ? "Certified (F1.1.1.1.1)" : "Ready (Pre-Certification)") << "\n";
+        output << "F2 (Identity, Provenance & Trust): " << (isFoundationCertified(2) ? "Certified (F2.1.1.1.1)" : "Ready (Pre-Certification)") << "\n";
+        output << "F3 (Scope, State & Integrity): " << (isFoundationCertified(3) ? "Certified (F3.1.1.1.1)" : "Ready (Pre-Certification)") << "\n";
+        output << "F4 (Lifecycle & Certification): " << (isFoundationCertified(4) ? "Certified (F4.1.1.1.1)" : "Ready (Pre-Certification)") << "\n";
+        output << "P6 Gating: " << (pvSummary.value(QStringLiteral("p6Eligible")).toBool() ? "ELIGIBLE" : "BLOCKED") << "\n";
+        output << "P6 Reason: " << pvSummary.value(QStringLiteral("p6Reason")).toString() << "\n";
         return 0;
+    }
+
+    if (subcommand == QStringLiteral("f1-validate")) {
+        QString valErr;
+        const auto r = MemoryEvidenceFoundation::validate(projectRoot, &valErr);
+        output << "=== ARAMF F1 Physical Evidence Validation ===\n";
+        output << "F1-VALIDATION: " << (r.valid ? "PASS" : "FAIL") << "\n";
+        output << "Ledger Intact: " << (r.ledgerIntact ? "PASS" : "FAIL") << "\n";
+        output << "Sequence Monotonic: " << (r.sequenceMonotonic ? "PASS" : "FAIL") << "\n";
+        output << "Manifest Consistent: " << (r.manifestConsistent ? "PASS" : "FAIL") << "\n";
+        output << "Certificates Intact: " << (r.certificatesIntact ? "PASS" : "FAIL") << "\n";
+        output << "Total Events: " << r.totalEvents << "\n";
+        output << "Evidence Fingerprint: " << r.evidenceFingerprint << "\n";
+        if (!r.errors.isEmpty()) {
+            output << "Errors:\n";
+            for (const auto& err : r.errors) output << "  - " << err << "\n";
+        }
+        return r.valid ? 0 : 1;
+    }
+
+    if (subcommand == QStringLiteral("f1-recover")) {
+        QString recErr;
+        const bool ok = MemoryEvidenceFoundation::recoverPhysicalState(projectRoot, &recErr);
+        output << "F1-RECOVERY: " << (ok ? "PASS" : "FAIL") << "\n";
+        if (!ok && !recErr.isEmpty()) error << recErr << "\n";
+        return ok ? 0 : 1;
     }
 
     if (subcommand == QStringLiteral("validate")) {

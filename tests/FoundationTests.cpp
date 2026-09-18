@@ -124,10 +124,15 @@ struct TestFixture {
 // F1 Tests: Memory & Evidence Foundation
 // ═══════════════════════════════════════════════════════════════════════════════
 
-bool runF1MemoryEvidenceTests()
+bool runF1MemoryEvidenceTests(const QString& selfRepoPath = QString())
 {
     bool ok = true;
     std::cerr << "=== F1: Memory & Evidence Foundation Tests ===\n";
+
+    QString resolvedRepoPath = selfRepoPath;
+    if (resolvedRepoPath.isEmpty() || !QFileInfo(QDir(resolvedRepoPath).filePath(QStringLiteral("CMakeLists.txt"))).isFile()) {
+        resolvedRepoPath = AramfPaths::programRoot();
+    }
 
     // F1-001: Contract has correct metadata
     {
@@ -289,45 +294,329 @@ bool runF1MemoryEvidenceTests()
                        "F1-010: Full report contains coldStartValidation");
     }
 
-    // F1-011: Deterministic manifest recovery from append-only ledger
+    // F1-011: Zero upward/peer dependency architecture test
     {
-        TestFixture fx;
-        ok &= require(fx.valid, "F1-011: Fixture initializes");
-        fx.recordTask(QStringLiteral("F1-011 task 1"));
-        fx.recordTask(QStringLiteral("F1-011 task 2"));
+        const QString hPath = QDir(resolvedRepoPath).filePath(QStringLiteral("src/core/MemoryEvidenceFoundation.h"));
+        const QString cppPath = QDir(resolvedRepoPath).filePath(QStringLiteral("src/core/MemoryEvidenceFoundation.cpp"));
+        ok &= require(QFile::exists(hPath), "F1-011: MemoryEvidenceFoundation.h exists");
+        ok &= require(QFile::exists(cppPath), "F1-011: MemoryEvidenceFoundation.cpp exists");
 
-        // Tamper with manifest sequence and count
-        const QString manifestPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/memory-manifest.json"));
-        QFile mf(manifestPath);
-        if (mf.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-            mf.write("{\"nextSequenceNumber\": 1, \"eventCount\": 0}\n");
-            mf.close();
+        QFile hFile(hPath);
+        ok &= require(hFile.open(QIODevice::ReadOnly | QIODevice::Text), "F1-011: hFile opens");
+        const QString hContent = QString::fromUtf8(hFile.readAll());
+        hFile.close();
+
+        QFile cppFile(cppPath);
+        ok &= require(cppFile.open(QIODevice::ReadOnly | QIODevice::Text), "F1-011: cppFile opens");
+        const QString cppContent = QString::fromUtf8(cppFile.readAll());
+        cppFile.close();
+
+        const QString combined = hContent + "\n" + cppContent;
+        const QStringList forbiddenSubsystems = {
+            QStringLiteral("IdentityTrustFoundation"),
+            QStringLiteral("ScopeIntegrityFoundation"),
+            QStringLiteral("LifecycleCertificationFoundation"),
+            QStringLiteral("WorkerTaskServices"),
+            QStringLiteral("WorkerContextResolver"),
+            QStringLiteral("ContextCoordinationService"),
+            QStringLiteral("ExecutionOrchestrator"),
+            QStringLiteral("PredictiveOptimizationService"),
+            QStringLiteral("AdaptiveRoutingService"),
+            QStringLiteral("ValidationRouting")
+        };
+        for (const auto& forbidden : forbiddenSubsystems) {
+            ok &= require(!combined.contains(forbidden),
+                           qPrintable(QStringLiteral("F1-011: F1 has zero dependency on %1").arg(forbidden)));
         }
-        auto reportBefore = MemoryEvidenceFoundation::validate(fx.path());
-        ok &= require(!reportBefore.manifestConsistent, "F1-011: Stale manifest is detected as inconsistent");
-
-        // Reconstruct from ledger
-        QString recErr;
-        bool recOk = MemoryEvidenceFoundation::reconstructManifestFromLedger(fx.path(), &recErr);
-        ok &= require(recOk, "F1-011: Manifest reconstruction succeeds");
-
-        auto reportAfter = MemoryEvidenceFoundation::validate(fx.path());
-        ok &= require(reportAfter.manifestConsistent, "F1-011: Reconstructed manifest matches ledger");
     }
 
-    // F1-012: Corrupt certificate JSONL causes validation failure
+    // F1-012: True process-boundary durability test
     {
         TestFixture fx;
         ok &= require(fx.valid, "F1-012: Fixture initializes");
-        const QString certPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/certification/certificates.jsonl"));
-        QDir(fx.path()).mkpath(QStringLiteral("ARAMF_WORKER/certification"));
-        QFile cf(certPath);
-        if (cf.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-            cf.write("{corrupt unclosed json\n");
-            cf.close();
+        const QString aramfExe = QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("aramf.exe"));
+        ok &= require(QFile::exists(aramfExe), "F1-012: aramf.exe must exist in build directory");
+
+        // Process A: independent OS process writes governed evidence and exits
+        QProcess procA;
+        procA.start(aramfExe, {
+            QStringLiteral("memory"), QStringLiteral("record"),
+            QStringLiteral("--project"), fx.path(),
+            QStringLiteral("--operation"), QStringLiteral("task-complete"),
+            QStringLiteral("--task"), QStringLiteral("F1-ProcessA-Durability-Task"),
+            QStringLiteral("--status"), QStringLiteral("PASS"),
+            QStringLiteral("--actor"), QStringLiteral("agent"),
+            QStringLiteral("--agent-id"), QStringLiteral("proc-a-agent"),
+            QStringLiteral("--tool"), QStringLiteral("f1-durability"),
+            QStringLiteral("--scope"), QStringLiteral("source-code")
+        });
+        bool procAOk = procA.waitForFinished(15000) && procA.exitStatus() == QProcess::NormalExit && procA.exitCode() == 0;
+        ok &= require(procAOk, "F1-012: Process A writes evidence and exits with code 0");
+
+        // Process B: independent OS process validates F1 evidence
+        QProcess procB;
+        procB.start(aramfExe, {
+            QStringLiteral("foundation"), QStringLiteral("f1-validate"),
+            QStringLiteral("--project"), fx.path()
+        });
+        bool procBOk = procB.waitForFinished(15000) && procB.exitStatus() == QProcess::NormalExit && procB.exitCode() == 0;
+        ok &= require(procBOk, "F1-012: Process B executes f1-validate and exits with code 0");
+        const QString outB = QString::fromUtf8(procB.readAllStandardOutput());
+        ok &= require(outB.contains(QStringLiteral("F1-VALIDATION: PASS")),
+                       "F1-012: Process B reports machine-readable F1-VALIDATION: PASS");
+    }
+
+    // F1-013: Hardened manifest reconstruction tests
+    {
+        TestFixture fx;
+        ok &= require(fx.valid, "F1-013: Fixture initializes");
+        fx.recordTask(QStringLiteral("F1-013 task 1"));
+        fx.recordTask(QStringLiteral("F1-013 task 2"));
+
+        const QString logPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
+        const QString manifestPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/memory-manifest.json"));
+
+        // Case 1: Valid ledger reconstructs manifest
+        QFile::remove(manifestPath);
+        QString err1;
+        bool ok1 = MemoryEvidenceFoundation::reconstructManifestFromLedger(fx.path(), &err1);
+        ok &= require(ok1, "F1-013: Reconstructs valid manifest when file is missing");
+        auto rep1 = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(rep1.manifestConsistent, "F1-013: Reconstructed manifest is consistent with ledger");
+
+        // Case 2: Malformed JSON line is never skipped, causes failure
+        {
+            QFile lf(logPath);
+            if (lf.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+                lf.write("{malformed-json-never-skipped\n");
+                lf.close();
+            }
+            QString err2;
+            bool ok2 = MemoryEvidenceFoundation::reconstructManifestFromLedger(fx.path(), &err2);
+            ok &= require(!ok2, "F1-013: Rejects reconstruction when malformed JSON line present");
+            ok &= require(err2.contains(QStringLiteral("malformed JSON")), "F1-013: Returns malformed JSON error");
         }
-        const auto report = MemoryEvidenceFoundation::validate(fx.path());
-        ok &= require(!report.certificatesIntact, "F1-012: Corrupt certificate ledger detected");
+    }
+
+    // F1-014: Durability Recovery Tests (Cases A, B, C, D)
+    {
+        // Case A: Missing manifest
+        {
+            TestFixture fx;
+            fx.recordTask(QStringLiteral("Case A task"));
+            const QString manifestPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/memory-manifest.json"));
+            QFile::remove(manifestPath);
+            QString err;
+            bool recOk = MemoryEvidenceFoundation::recoverPhysicalState(fx.path(), &err);
+            ok &= require(recOk, "F1-014: Case A recovery succeeds for missing manifest");
+            ok &= require(QFile::exists(manifestPath), "F1-014: Manifest restored");
+            auto rep = MemoryEvidenceFoundation::validate(fx.path());
+            ok &= require(rep.valid, "F1-014: Validation passes after Case A recovery");
+        }
+
+        // Case B: Missing metrics
+        {
+            TestFixture fx;
+            fx.recordTask(QStringLiteral("Case B task"));
+            const QString metricsPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/metrics.json"));
+            QFile::remove(metricsPath);
+            QString err;
+            bool recOk = MemoryEvidenceFoundation::recoverPhysicalState(fx.path(), &err);
+            ok &= require(recOk, "F1-014: Case B recovery succeeds for missing metrics");
+            ok &= require(QFile::exists(metricsPath), "F1-014: Metrics restored");
+            auto rep = MemoryEvidenceFoundation::validate(fx.path());
+            ok &= require(rep.metricsConsistent, "F1-014: Metrics consistent after Case B recovery");
+        }
+
+        // Case C: Missing derived current-state
+        {
+            TestFixture fx;
+            fx.recordTask(QStringLiteral("Case C task"));
+            const QString csPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/current-state.md"));
+            QFile::remove(csPath);
+            QString err;
+            bool recOk = MemoryEvidenceFoundation::recoverPhysicalState(fx.path(), &err);
+            ok &= require(recOk, "F1-014: Case C recovery succeeds for missing current-state");
+            ok &= require(QFile::exists(csPath), "F1-014: Current state restored");
+        }
+
+        // Case D: Corrupt authoritative ledger fails closed
+        {
+            TestFixture fx;
+            const QString logPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
+            QFile lf(logPath);
+            if (lf.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+                lf.write("corrupt-ledger-entry\n");
+                lf.close();
+            }
+            QString err;
+            bool recOk = MemoryEvidenceFoundation::recoverPhysicalState(fx.path(), &err);
+            ok &= require(!recOk, "F1-014: Case D recovery fails closed on corrupt ledger");
+        }
+    }
+
+    // F1-015: Physical Certification Ledger Tests
+    {
+        // Malformed JSONL
+        {
+            TestFixture fx;
+            const QString certPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/certification/certificates.jsonl"));
+            QDir(fx.path()).mkpath(QStringLiteral("ARAMF_WORKER/certification"));
+            QFile cf(certPath);
+            if (cf.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+                cf.write("{corrupt unclosed json\n");
+                cf.close();
+            }
+            auto rep = MemoryEvidenceFoundation::validate(fx.path());
+            ok &= require(!rep.certificatesIntact, "F1-015: Malformed certification JSONL detected");
+        }
+        // Duplicate certificateId
+        {
+            TestFixture fx;
+            const QString certPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/certification/certificates.jsonl"));
+            QDir(fx.path()).mkpath(QStringLiteral("ARAMF_WORKER/certification"));
+            QFile cf(certPath);
+            if (cf.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+                QJsonObject c1{{QStringLiteral("certificateId"), QStringLiteral("cert-dup-1")},
+                               {QStringLiteral("subject"), QStringLiteral("P1")}};
+                QJsonObject c2{{QStringLiteral("certificateId"), QStringLiteral("cert-dup-1")},
+                               {QStringLiteral("subject"), QStringLiteral("P2")}};
+                cf.write(QJsonDocument(c1).toJson(QJsonDocument::Compact) + "\n");
+                cf.write(QJsonDocument(c2).toJson(QJsonDocument::Compact) + "\n");
+                cf.close();
+            }
+            auto rep = MemoryEvidenceFoundation::validate(fx.path());
+            ok &= require(!rep.certificatesIntact, "F1-015: Duplicate certificateId detected");
+        }
+        // Missing certificateId
+        {
+            TestFixture fx;
+            const QString certPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/certification/certificates.jsonl"));
+            QDir(fx.path()).mkpath(QStringLiteral("ARAMF_WORKER/certification"));
+            QFile cf(certPath);
+            if (cf.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+                QJsonObject c1{{QStringLiteral("subject"), QStringLiteral("P1")}};
+                cf.write(QJsonDocument(c1).toJson(QJsonDocument::Compact) + "\n");
+                cf.close();
+            }
+            auto rep = MemoryEvidenceFoundation::validate(fx.path());
+            ok &= require(!rep.certificatesIntact, "F1-015: Missing certificateId detected");
+        }
+    }
+
+    // F1-016: F1 Query API Tests
+    {
+        TestFixture fx;
+        fx.recordTask(QStringLiteral("Query API task 1"));
+        fx.recordTask(QStringLiteral("Query API task 2"));
+
+        const auto records = MemoryEvidenceFoundation::evidenceRecords(fx.path());
+        ok &= require(records.size() >= 4, "F1-016: evidenceRecords returns parsed events");
+
+        const QString firstId = records.first().value(QStringLiteral("eventId")).toString();
+        QJsonObject found;
+        bool findOk = MemoryEvidenceFoundation::evidenceRecordById(fx.path(), firstId, &found);
+        ok &= require(findOk && found.value(QStringLiteral("eventId")).toString() == firstId,
+                       "F1-016: evidenceRecordById finds existing record");
+
+        bool fakeFind = MemoryEvidenceFoundation::evidenceRecordById(fx.path(), QStringLiteral("non-existent-id"));
+        ok &= require(!fakeFind, "F1-016: evidenceRecordById fails for missing ID");
+
+        const auto rangeRecords = MemoryEvidenceFoundation::evidenceRecordsBySequenceRange(fx.path(), 1, 2);
+        ok &= require(!rangeRecords.isEmpty() && rangeRecords.size() <= 2,
+                       "F1-016: evidenceRecordsBySequenceRange filters by sequence");
+
+        const QString fp = MemoryEvidenceFoundation::evidenceFingerprint(fx.path());
+        ok &= require(!fp.isEmpty() && fp.length() == 64, "F1-016: evidenceFingerprint returns SHA-256 hex");
+
+        const auto meta = MemoryEvidenceFoundation::sourceBindingMetadata(fx.path());
+        ok &= require(meta.contains(QStringLiteral("evidenceFingerprint")), "F1-016: sourceBindingMetadata has fingerprint");
+        ok &= require(meta.contains(QStringLiteral("nextSequenceNumber")), "F1-016: sourceBindingMetadata has sequence");
+
+        const auto recon = MemoryEvidenceFoundation::reconstructionStatus(fx.path());
+        ok &= require(recon.value(QStringLiteral("manifestConsistent")).toBool(), "F1-016: reconstructionStatus reports manifest consistent");
+
+        const auto corrupt = MemoryEvidenceFoundation::physicalCorruptionStatus(fx.path());
+        ok &= require(corrupt.value(QStringLiteral("physicallyValid")).toBool(), "F1-016: physicalCorruptionStatus reports physically valid");
+    }
+
+    // F1-017: Corrupted manifest recovery
+    {
+        TestFixture fx;
+        fx.recordTask(QStringLiteral("F1-017 task"));
+        const QString manifestPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/memory-manifest.json"));
+        QFile mf(manifestPath);
+        if (mf.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+            mf.write("{corrupt-manifest-json-data\n");
+            mf.close();
+        }
+
+        auto reportBefore = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(!reportBefore.manifestConsistent, "F1-017: Malformed manifest detected as inconsistent");
+        ok &= require(reportBefore.recoveryRequired, "F1-017: Recovery flagged as required");
+
+        bool recOk = MemoryEvidenceFoundation::recoverPhysicalState(fx.path());
+        ok &= require(recOk, "F1-017: Recovery succeeds for malformed manifest");
+
+        auto reportAfter = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(reportAfter.valid && reportAfter.manifestConsistent, "F1-017: Validation passes after recovery");
+    }
+
+    // F1-018: Truncated JSONL line detected
+    {
+        TestFixture fx;
+        const QString logPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
+        QFile lf(logPath);
+        if (lf.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+            lf.write("{\"eventId\": \"truncated-event\", \"eventType\": \"TASK_START\"\n");
+            lf.close();
+        }
+
+        auto rep = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(!rep.ledgerIntact, "F1-018: Truncated JSON line detected as ledger violation");
+        ok &= require(!rep.valid, "F1-018: Overall validation fails on truncated line");
+    }
+
+    // F1-019: Duplicate sequence number detected
+    {
+        TestFixture fx;
+        fx.recordTask(QStringLiteral("F1-019 task"));
+        const QString logPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
+        QFile lf(logPath);
+        if (lf.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+            QJsonObject dupSeqEvent{
+                {QStringLiteral("eventId"), QStringLiteral("event-dup-seq-1234")},
+                {QStringLiteral("eventType"), QStringLiteral("TEST_RESULT")},
+                {QStringLiteral("sequenceNumber"), 1}, // already used sequence
+                {QStringLiteral("timestamp"), QStringLiteral("2026-09-18T00:00:00Z")},
+                {QStringLiteral("task"), QStringLiteral("dup seq test")}
+            };
+            lf.write(QJsonDocument(dupSeqEvent).toJson(QJsonDocument::Compact) + "\n");
+            lf.close();
+        }
+
+        auto rep = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(!rep.sequenceMonotonic, "F1-019: Duplicate sequence number detected");
+    }
+
+    // F1-020: Unsupported future schema version
+    {
+        TestFixture fx;
+        const QString manifestPath = QDir(fx.path()).filePath(QStringLiteral("ARAMF_WORKER/memory/memory-manifest.json"));
+        QFile mf(manifestPath);
+        if (mf.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            auto doc = QJsonDocument::fromJson(mf.readAll()).object();
+            mf.close();
+            doc.insert(QStringLiteral("memoryVersion"), QStringLiteral("99.0"));
+            if (mf.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+                mf.write(QJsonDocument(doc).toJson(QJsonDocument::Indented));
+                mf.close();
+            }
+        }
+
+        auto rep = MemoryEvidenceFoundation::validate(fx.path());
+        ok &= require(!rep.schemaCompatible, "F1-020: Unsupported future memory version detected");
+        ok &= require(!rep.valid, "F1-020: Overall validation fails on incompatible schema");
     }
 
     std::cerr << (ok ? "F1: ALL PASS\n" : "F1: SOME FAILURES\n");
@@ -1278,9 +1567,9 @@ bool runFoundationIntegrationTests()
 // Combined Foundation Test Runner
 // ═══════════════════════════════════════════════════════════════════════════════
 
-bool runF1FoundationTests(const QString& /*selfRepoPath*/)
+bool runF1FoundationTests(const QString& selfRepoPath)
 {
-    return runF1MemoryEvidenceTests();
+    return runF1MemoryEvidenceTests(selfRepoPath);
 }
 
 bool runF2FoundationTests(const QString& /*selfRepoPath*/)

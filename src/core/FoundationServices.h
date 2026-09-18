@@ -18,45 +18,8 @@ class QTextStream;
 // ─── CLI Entry Point ─────────────────────────────────────────────────────────
 int runFoundationCommand(const QStringList& arguments, QTextStream& output, QTextStream& error);
 
-// ─── F1: Memory & Evidence Foundation ───────────────────────────────────────
-// F1 STORES AND RECONSTRUCTS EVIDENCE.
-// Wraps ProjectMemory, ProjectMemoryCompaction, and CertificationService
-// into a unified evidence persistence and reconstruction contract.
+#include "MemoryEvidenceFoundation.h"
 
-struct F1EvidenceReport {
-    bool valid = false;
-    bool ledgerIntact = false;
-    bool coldStartFresh = false;
-    bool sequenceMonotonic = false;
-    bool manifestConsistent = false;
-    bool manifestReconstructed = false;
-    bool certificatesIntact = false;
-    int totalEvents = 0;
-    int totalCertificates = 0;
-    QString coldStartFingerprint;
-    QStringList errors;
-    QJsonObject fullReport;
-};
-
-class MemoryEvidenceFoundation final
-{
-public:
-    // Validates the entire evidence layer: append-only ledger integrity,
-    // cold-start reconstruction, manifest consistency, and certification ledger.
-    static F1EvidenceReport validate(const QString& projectRoot, QString* error = nullptr);
-
-    // Returns the current evidence summary for cold-start reconstruction.
-    static QJsonObject evidenceSummary(const QString& projectRoot, QString* error = nullptr);
-
-    // Checks whether the ledger can be reconstructed from cold-start.
-    static bool canReconstructFromColdStart(const QString& projectRoot, QString* error = nullptr);
-
-    // Deterministically recovers memory-manifest.json from append-only event-log.jsonl.
-    static bool reconstructManifestFromLedger(const QString& projectRoot, QString* error = nullptr);
-
-    // Returns the foundation contract describing F1 responsibilities.
-    static QJsonObject contract();
-};
 
 // ─── F2: Identity, Provenance & Trust Foundation ────────────────────────────
 // F2 ESTABLISHES WHO/WHAT PRODUCED EVIDENCE AND WHETHER ATTRIBUTION IS TRUSTWORTHY.
