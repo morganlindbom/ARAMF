@@ -50,6 +50,34 @@ inline const QString CertificationContract = QStringLiteral("ARAMF_WORKER/certif
 inline const QString Certificates = QStringLiteral("ARAMF_WORKER/certification/certificates.jsonl");
 inline const QString CurrentCertificationState = QStringLiteral("ARAMF_WORKER/certification/current-certification-state.json");
 inline const QString CertificationEvidenceDirectory = QStringLiteral("ARAMF_WORKER/certification/evidence");
+inline const QString F1EvidenceVersion = QStringLiteral("F1.1.4");
+
+// F1.1.4 evidence is immutable and scoped to one lifecycle iteration.  Keep
+// construction here so writers, readers, and validators cannot drift apart.
+struct F1EvidenceNamespace final {
+    QString version;
+    int iteration = 0;
+    int namespaceVersion = 2;
+
+    QString identity() const
+    {
+        return QStringLiteral("%1/iteration-%2/namespace-v%3")
+            .arg(version).arg(iteration).arg(namespaceVersion);
+    }
+    QString relativeDirectory() const
+    {
+        return QStringLiteral("ARAMF_WORKER/certification/evidence/%1/iteration-%2")
+            .arg(version.toLower()).arg(iteration);
+    }
+};
+
+inline bool isF1EvidenceNamespace(const QString& relativePath,
+                                  const F1EvidenceNamespace& ns)
+{
+    const QString prefix = ns.relativeDirectory() + QStringLiteral("/");
+    return QDir::cleanPath(relativePath).startsWith(prefix)
+        && !QDir::cleanPath(relativePath).contains(QStringLiteral(".."));
+}
 inline const QString ResourceManifest = QStringLiteral("ARAMF_WORKER/resources/resources.json");
 inline const QString CustomTemplates = QStringLiteral("ARAMF_WORKER/templates/custom-templates.json");
 inline const QString Provenance = QStringLiteral("ARAMF_WORKER/provenance.json");

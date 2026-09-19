@@ -70,6 +70,12 @@ Windows builds now deploy the MinGW runtime DLLs beside ARAMF and its test
 executables in addition to the Qt runtime, so launching `build/aramf.exe` does
 not depend on the developer's MSYS2 `PATH`.
 
+F1.1.4 evidence now uses a centralized immutable namespace authority. Evidence
+artifacts and check records are bound to the F1.1.4 version, lifecycle
+iteration, and CanonicalV2 namespace; legacy or cross-iteration paths are
+rejected and sealed artifacts cannot be rewritten. Canonical command identities
+remain persisted with each check.
+
 Project navigation layout V1 now gives PROJECT a reusable soft blue section
 header and an always-expanded hierarchy: page 1 is a small overview parent,
 1.1 owns project file/path/Worker identity controls, and 1.2 owns the existing

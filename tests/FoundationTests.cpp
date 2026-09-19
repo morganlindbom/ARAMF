@@ -907,7 +907,21 @@ static F1CertificationEvidence makeCompleteF1Evidence(const QString& sourceRev =
     F1CertificationEvidence ev;
     ev.foundation = QStringLiteral("F1");
     ev.foundationName = QStringLiteral("Memory & Evidence Foundation");
-    ev.foundationVersion = QStringLiteral("F1.1.3");
+    ev.foundationVersion = QStringLiteral("F1.1.4");
+    ev.iteration = 1;
+    if (!projectRoot.isEmpty()) {
+        ProjectModel current;
+        ProjectPersistence persistence;
+        const QString projectFile = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER.aramf.json"));
+        if (persistence.load(&current, projectFile, nullptr)
+            && current.processVersionState().hasActiveProcess
+            && current.processVersionState().activeProcess.isFoundation()
+            && current.processVersionState().activeProcess.foundationNumber() == 1
+            && current.processVersionState().activeProcess.iteration > 0) {
+            ev.iteration = current.processVersionState().activeProcess.iteration;
+        }
+    }
+    ev.evidenceNamespace = QStringLiteral("F1.1.4/iteration-%1/namespace-v2").arg(ev.iteration);
     ev.sourceRevision = sourceRev;
     ev.verificationLevel = QStringLiteral("HOST_TEST");
     ev.f1FocusedPass = true;
@@ -935,7 +949,8 @@ static F1CertificationEvidence makeCompleteF1Evidence(const QString& sourceRev =
 
     // Create physical evidence log files when projectRoot is provided
     if (!projectRoot.isEmpty()) {
-        const QString checksDir = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence/checks"));
+        const QString checksDir = QDir(projectRoot).filePath(
+            QStringLiteral("ARAMF_WORKER/certification/evidence/f1.1.4/iteration-%1/checks").arg(ev.iteration));
         QDir().mkpath(checksDir);
     }
 
@@ -952,7 +967,12 @@ static F1CertificationEvidence makeCompleteF1Evidence(const QString& sourceRev =
         c.exitCode = 0;
         c.timestamp = ev.timestamp;
         c.sourceRevision = sourceRev;
-        c.evidenceReference = QStringLiteral("ARAMF_WORKER/certification/evidence/checks/%1.log").arg(name);
+        c.foundationVersion = ev.foundationVersion;
+        c.iteration = ev.iteration;
+        c.evidenceNamespace = ev.evidenceNamespace;
+        c.evidenceReference = QStringLiteral(
+            "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-%1/checks/%2.log")
+                .arg(ev.iteration).arg(name);
         c.evidenceFingerprint = emptyHash;
 
         // Create physical empty log file to satisfy evidence chain validation
@@ -1900,8 +1920,12 @@ bool runF1CertificationTests()
         extra.status = QStringLiteral("PASS");
         extra.exitCode = 0;
         extra.sourceRevision = fx.gitSha;
+        extra.foundationVersion = ev.foundationVersion;
+        extra.iteration = ev.iteration;
+        extra.evidenceNamespace = ev.evidenceNamespace;
         extra.evidenceReference = QStringLiteral(
-            "ARAMF_WORKER/certification/evidence/checks/unexpected-check.log");
+            "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-%1/checks/unexpected-check.log")
+                .arg(ev.iteration);
         extra.evidenceFingerprint = QStringLiteral(
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
         QFile extraLog(QDir(fx.path()).filePath(extra.evidenceReference));
@@ -2026,6 +2050,42 @@ bool runF1CertificationTests()
         ok &= require(!FoundationCertificationService::certifyF1(
                            fx.path(), defaultProjectFile, fx.gitSha, artifactPath, nullptr, &err),
                        "F1-CERT-038: Certification rejects command mismatch");
+    }
+
+    // F1-CERT-039: F1.1.4 evidence is bound to one immutable version/iteration namespace.
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-039: Fixture initializes");
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        QString err;
+        ok &= require(!FoundationCertificationService::writeEvidenceArtifact(
+                           fx.path(), ev,
+                           QStringLiteral("ARAMF_WORKER/certification/evidence/f1-evidence.json"),
+                           nullptr, nullptr, &err),
+                       "F1-CERT-039: Legacy evidence path rejected");
+        ev.checks[0].evidenceReference =
+            QStringLiteral("ARAMF_WORKER/certification/evidence/f1.1.4/iteration-2/checks/f1-focused-suite.log");
+        ok &= require(!ev.isCompleteWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-039: Cross-iteration check path rejected");
+    }
+
+    // F1-CERT-040: A sealed namespace cannot be rewritten.
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-040: Fixture initializes");
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        QString err;
+        ok &= require(FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev, nullptr, nullptr, &err),
+                       "F1-CERT-040: Initial namespace write succeeds");
+        ok &= require(!FoundationCertificationService::writeEvidenceArtifact(fx.path(), ev, nullptr, nullptr, &err),
+                       "F1-CERT-040: Sealed namespace rewrite rejected");
+        F1CertificationEvidence readBack;
+        QString path = QDir(fx.path()).filePath(
+            QStringLiteral("ARAMF_WORKER/certification/evidence/f1.1.4/iteration-1/f1-evidence.json"));
+        ok &= require(FoundationCertificationService::readEvidenceArtifact(path, &readBack, &err),
+                       "F1-CERT-040: Sealed artifact remains readable");
+        ok &= require(readBack.checks.first().commandIdentity == ev.checks.first().commandIdentity,
+                       "F1-CERT-040: commandIdentity preserved");
     }
 
     std::cerr << (ok ? "F1 Certification: ALL PASS\n" : "F1 Certification: SOME FAILURES\n");

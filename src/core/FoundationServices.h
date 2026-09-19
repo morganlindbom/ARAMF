@@ -226,6 +226,9 @@ struct F1VerificationCheck {
     QString sourceRevision;
     QString evidenceReference;
     QString evidenceFingerprint;
+    QString foundationVersion;
+    int iteration = 0;
+    QString evidenceNamespace;
 
     bool isPass(const QString& expectedRevision = QString()) const;
     // Full evidence chain validation: also verifies evidenceReference is non-empty,
@@ -241,7 +244,9 @@ struct F1VerificationCheck {
 struct F1CertificationEvidence {
     QString foundation = QStringLiteral("F1");
     QString foundationName = QStringLiteral("Memory & Evidence Foundation");
-    QString foundationVersion = QStringLiteral("F1.1.2");
+    QString foundationVersion = QStringLiteral("F1.1.4");
+    int iteration = 0;
+    QString evidenceNamespace;
     QString sourceRevision;
     QString verificationLevel = QStringLiteral("HOST_TEST");
 

@@ -78,6 +78,31 @@ QString computeFileSha256(const QString& path)
     return QString::fromLatin1(hash.result().toHex());
 }
 
+int activeF1Iteration(const QString& projectRoot)
+{
+    const QStringList candidates{
+        QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER.aramf.json")),
+        QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/project.json"))
+    };
+    for (const auto& candidate : candidates) {
+        ProjectModel model;
+        ProjectPersistence persistence;
+        if (persistence.load(&model, candidate, nullptr)
+            && model.processVersionState().hasActiveProcess
+            && model.processVersionState().activeProcess.isFoundation()
+            && model.processVersionState().activeProcess.foundationNumber() == 1
+            && model.processVersionState().activeProcess.iteration > 0) {
+            return model.processVersionState().activeProcess.iteration;
+        }
+    }
+    return 0;
+}
+
+bool isVersionedF1Evidence(const F1CertificationEvidence& evidence)
+{
+    return evidence.foundationVersion == AramfPaths::F1EvidenceVersion;
+}
+
 } // anonymous namespace
 
 // F1: Memory & Evidence Foundation implementation is located in MemoryEvidenceFoundation.cpp.
@@ -1043,6 +1068,19 @@ bool F1VerificationCheck::isPassWithEvidence(const QString& projectRoot,
         return false;
     }
 
+    if (foundationVersion == AramfPaths::F1EvidenceVersion) {
+        if (iteration <= 0 || evidenceNamespace.isEmpty()) {
+            if (error) *error = QStringLiteral("Check '%1' is missing its immutable F1.1.4 namespace binding.").arg(name);
+            return false;
+        }
+        const AramfPaths::F1EvidenceNamespace ns{foundationVersion, iteration, 2};
+        if (evidenceNamespace != ns.identity()
+            || !AramfPaths::isF1EvidenceNamespace(evidenceReference, ns)) {
+            if (error) *error = QStringLiteral("Check '%1' evidence path is outside its immutable namespace.").arg(name);
+            return false;
+        }
+    }
+
     // Path traversal protection: must be within ARAMF_WORKER/certification/evidence/
     const QString normalizedRef = QDir::cleanPath(evidenceReference);
     if (normalizedRef.contains(QStringLiteral(".."))
@@ -1091,7 +1129,10 @@ QJsonObject F1VerificationCheck::toJson() const
         {QStringLiteral("timestamp"), timestamp},
         {QStringLiteral("sourceRevision"), sourceRevision},
         {QStringLiteral("evidenceReference"), evidenceReference},
-        {QStringLiteral("evidenceFingerprint"), evidenceFingerprint}
+        {QStringLiteral("evidenceFingerprint"), evidenceFingerprint},
+        {QStringLiteral("foundationVersion"), foundationVersion},
+        {QStringLiteral("iteration"), iteration},
+        {QStringLiteral("evidenceNamespace"), evidenceNamespace}
     };
 }
 
@@ -1107,6 +1148,9 @@ F1VerificationCheck F1VerificationCheck::fromJson(const QJsonObject& json)
     c.sourceRevision = json.value(QStringLiteral("sourceRevision")).toString();
     c.evidenceReference = json.value(QStringLiteral("evidenceReference")).toString();
     c.evidenceFingerprint = json.value(QStringLiteral("evidenceFingerprint")).toString();
+    c.foundationVersion = json.value(QStringLiteral("foundationVersion")).toString();
+    c.iteration = json.value(QStringLiteral("iteration")).toInt(0);
+    c.evidenceNamespace = json.value(QStringLiteral("evidenceNamespace")).toString();
     return c;
 }
 
@@ -1256,6 +1300,18 @@ bool F1CertificationEvidence::isCompleteWithEvidence(const QString& projectRoot,
                                                       const QString& expectedRevision,
                                                       QString* error) const
 {
+    if (isVersionedF1Evidence(*this)) {
+        if (iteration <= 0 || evidenceNamespace.isEmpty()) {
+            if (error) *error = QStringLiteral("F1.1.4 evidence is not bound to an iteration and namespace.");
+            return false;
+        }
+        const AramfPaths::F1EvidenceNamespace ns{foundationVersion, iteration, 2};
+        if (evidenceNamespace != ns.identity()) {
+            if (error) *error = QStringLiteral("F1.1.4 evidence namespace does not match its version and iteration.");
+            return false;
+        }
+    }
+
     if (sourceRevision.trimmed().isEmpty()) {
         if (error) *error = QStringLiteral("F1 certification evidence has empty sourceRevision.");
         return false;
@@ -1281,6 +1337,14 @@ bool F1CertificationEvidence::isCompleteWithEvidence(const QString& projectRoot,
             return false;
         }
         presentNames.insert(c.name);
+
+        if (isVersionedF1Evidence(*this)
+            && (c.foundationVersion != foundationVersion
+                || c.iteration != iteration
+                || c.evidenceNamespace != evidenceNamespace)) {
+            if (error) *error = QStringLiteral("Check '%1' is bound to a different F1.1.4 namespace.").arg(c.name);
+            return false;
+        }
 
         // Full evidence chain validation for each check
         QString checkErr;
@@ -1328,6 +1392,8 @@ QJsonObject F1CertificationEvidence::toJson() const
         {QStringLiteral("foundation"), foundation},
         {QStringLiteral("foundationName"), foundationName},
         {QStringLiteral("foundationVersion"), foundationVersion},
+        {QStringLiteral("iteration"), iteration},
+        {QStringLiteral("evidenceNamespace"), evidenceNamespace},
         {QStringLiteral("sourceRevision"), sourceRevision},
         {QStringLiteral("verificationLevel"), verificationLevel},
         {QStringLiteral("timestamp"), timestamp.isEmpty() ? QDateTime::currentDateTimeUtc().toString(Qt::ISODate) : timestamp},
@@ -1363,7 +1429,9 @@ F1CertificationEvidence F1CertificationEvidence::fromJson(const QJsonObject& jso
     F1CertificationEvidence ev;
     ev.foundation = json.value(QStringLiteral("foundation")).toString(QStringLiteral("F1"));
     ev.foundationName = json.value(QStringLiteral("foundationName")).toString();
-    ev.foundationVersion = json.value(QStringLiteral("foundationVersion")).toString(QStringLiteral("F1.1.2"));
+    ev.foundationVersion = json.value(QStringLiteral("foundationVersion")).toString(QStringLiteral("F1.1.4"));
+    ev.iteration = json.value(QStringLiteral("iteration")).toInt(0);
+    ev.evidenceNamespace = json.value(QStringLiteral("evidenceNamespace")).toString();
     ev.sourceRevision = json.value(QStringLiteral("sourceRevision")).toString();
     ev.verificationLevel = json.value(QStringLiteral("verificationLevel")).toString(QStringLiteral("HOST_TEST"));
     ev.timestamp = json.value(QStringLiteral("timestamp")).toString();
@@ -1596,9 +1664,35 @@ bool FoundationCertificationService::writeEvidenceArtifact(const QString& projec
 {
     if (!ensureCertificationArea(projectRoot, error)) return false;
 
+    F1CertificationEvidence normalizedEvidence = evidence;
+    if (normalizedEvidence.foundationVersion == AramfPaths::F1EvidenceVersion) {
+        if (normalizedEvidence.iteration <= 0)
+            normalizedEvidence.iteration = activeF1Iteration(projectRoot);
+        if (normalizedEvidence.iteration <= 0) {
+            if (error) *error = QStringLiteral("F1.1.4 evidence requires an active foundation iteration.");
+            return false;
+        }
+        const AramfPaths::F1EvidenceNamespace ns{
+            normalizedEvidence.foundationVersion, normalizedEvidence.iteration, 2};
+        if (!normalizedEvidence.evidenceNamespace.isEmpty()
+            && normalizedEvidence.evidenceNamespace != ns.identity()) {
+            if (error) *error = QStringLiteral("Evidence namespace does not match F1.1.4 version and iteration.");
+            return false;
+        }
+        normalizedEvidence.evidenceNamespace = ns.identity();
+        for (auto& check : normalizedEvidence.checks) {
+            if (check.foundationVersion.isEmpty()) check.foundationVersion = normalizedEvidence.foundationVersion;
+            if (check.iteration == 0) check.iteration = normalizedEvidence.iteration;
+            if (check.evidenceNamespace.isEmpty()) check.evidenceNamespace = normalizedEvidence.evidenceNamespace;
+        }
+    }
+
     QString rel = customRelativePath.trimmed();
     if (rel.isEmpty()) {
-        const QString defaultRel = QStringLiteral("ARAMF_WORKER/certification/evidence/f1-evidence.json");
+        const QString defaultRel = normalizedEvidence.foundationVersion == AramfPaths::F1EvidenceVersion
+            ? QDir::cleanPath(QStringLiteral("ARAMF_WORKER/certification/evidence/%1/iteration-%2/f1-evidence.json")
+                .arg(normalizedEvidence.foundationVersion.toLower()).arg(normalizedEvidence.iteration))
+            : QStringLiteral("ARAMF_WORKER/certification/evidence/f1-evidence.json");
         const QString certsPath = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/certification/certificates.jsonl"));
         bool defaultBound = false;
         if (QFile::exists(certsPath)) {
@@ -1614,7 +1708,7 @@ bool FoundationCertificationService::writeEvidenceArtifact(const QString& projec
             }
         }
 
-        if (defaultBound) {
+        if (defaultBound && normalizedEvidence.foundationVersion != AramfPaths::F1EvidenceVersion) {
             int activeIteration = 0;
             const QString pjPath = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER.aramf.json"));
             if (QFile::exists(pjPath)) {
@@ -1634,14 +1728,27 @@ bool FoundationCertificationService::writeEvidenceArtifact(const QString& projec
         }
     }
 
+    if (normalizedEvidence.foundationVersion == AramfPaths::F1EvidenceVersion) {
+        const AramfPaths::F1EvidenceNamespace ns{
+            normalizedEvidence.foundationVersion, normalizedEvidence.iteration, 2};
+        if (!AramfPaths::isF1EvidenceNamespace(rel, ns)) {
+            if (error) *error = QStringLiteral("F1.1.4 evidence must be written inside its immutable versioned namespace.");
+            return false;
+        }
+    }
+
     const QString full = QFileInfo(rel).isAbsolute() ? rel : QDir(projectRoot).filePath(rel);
+    if (QFileInfo::exists(full)) {
+        if (error) *error = QStringLiteral("Evidence namespace is sealed; refusing to rewrite %1.").arg(rel);
+        return false;
+    }
     QDir().mkpath(QFileInfo(full).path());
     QSaveFile file(full);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         if (error) *error = QStringLiteral("Cannot open %1 for writing: %2").arg(full, file.errorString());
         return false;
     }
-    const QByteArray content = QJsonDocument(evidence.toJson()).toJson(QJsonDocument::Indented);
+    const QByteArray content = QJsonDocument(normalizedEvidence.toJson()).toJson(QJsonDocument::Indented);
     if (file.write(content) != content.size()) {
         if (error) *error = QStringLiteral("Cannot write full content to %1: %2").arg(full, file.errorString());
         return false;
@@ -1675,7 +1782,20 @@ bool FoundationCertificationService::readEvidenceArtifact(const QString& artifac
         if (error) *error = QStringLiteral("Malformed evidence artifact JSON: %1").arg(parseErr.errorString());
         return false;
     }
-    if (evidence) *evidence = F1CertificationEvidence::fromJson(doc.object());
+    const auto parsed = F1CertificationEvidence::fromJson(doc.object());
+    if (parsed.foundationVersion == AramfPaths::F1EvidenceVersion) {
+        const AramfPaths::F1EvidenceNamespace ns{parsed.foundationVersion, parsed.iteration, 2};
+        const QString normalized = QDir::cleanPath(artifactAbsolutePath).replace(QLatin1Char('\\'), QLatin1Char('/'));
+        const QString marker = QStringLiteral("/certification/evidence/%1/iteration-%2/")
+            .arg(parsed.foundationVersion.toLower()).arg(parsed.iteration);
+        if (parsed.iteration <= 0 || !normalized.contains(marker)
+            || !normalized.endsWith(QStringLiteral("/f1-evidence.json"))) {
+            if (error) *error = QStringLiteral("F1.1.4 evidence artifact is outside its immutable namespace.");
+            return false;
+        }
+        Q_UNUSED(ns);
+    }
+    if (evidence) *evidence = parsed;
     return true;
 }
 
@@ -1695,6 +1815,12 @@ F1VerificationCheck FoundationCertificationService::executeCheck(const QString& 
         return check;
     }
     check.commandIdentity = spec.identity;
+    check.foundationVersion = AramfPaths::F1EvidenceVersion;
+    check.iteration = activeF1Iteration(projectRoot);
+    if (check.iteration > 0) {
+        check.evidenceNamespace = AramfPaths::F1EvidenceNamespace{
+            check.foundationVersion, check.iteration, 2}.identity();
+    }
 
     QString program = findExecutablePath(projectRoot, spec.executable);
     QStringList args = spec.argumentTemplates;
@@ -1722,11 +1848,22 @@ F1VerificationCheck FoundationCertificationService::executeCheck(const QString& 
     const QByteArray stderrBytes = proc.readAllStandardError();
     const QByteArray outputBytes = stdoutBytes + stderrBytes;
 
-    const QString checksDir = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence/checks"));
+    const QString checksDir = check.iteration > 0
+        ? QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence/%1/iteration-%2/checks")
+            .arg(check.foundationVersion.toLower()).arg(check.iteration))
+        : QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence/checks"));
     QDir().mkpath(checksDir);
 
-    const QString logRel = QStringLiteral("ARAMF_WORKER/certification/evidence/checks/%1.log").arg(checkName);
+    const QString logRel = check.iteration > 0
+        ? QDir::cleanPath(QStringLiteral("ARAMF_WORKER/certification/evidence/%1/iteration-%2/checks/%3.log")
+            .arg(check.foundationVersion.toLower()).arg(check.iteration).arg(checkName))
+        : QStringLiteral("ARAMF_WORKER/certification/evidence/checks/%1.log").arg(checkName);
     const QString logPath = QDir(projectRoot).filePath(logRel);
+    if (check.iteration > 0 && QFileInfo::exists(logPath)) {
+        check.status = QStringLiteral("FAIL");
+        if (error) *error = QStringLiteral("F1.1.4 evidence namespace is sealed; refusing to rewrite check '%1'.").arg(checkName);
+        return check;
+    }
     QSaveFile logFile(logPath);
     if (!logFile.open(QIODevice::WriteOnly | QIODevice::Text)
         || logFile.write(outputBytes) != outputBytes.size()
@@ -1752,8 +1889,16 @@ F1VerificationCheck FoundationCertificationService::executeCheck(const QString& 
     check.status = (finished && proc.exitStatus() == QProcess::NormalExit && exitCode == 0)
         ? QStringLiteral("PASS") : QStringLiteral("FAIL");
 
-    const QString jsonRel = QStringLiteral("ARAMF_WORKER/certification/evidence/checks/%1.json").arg(checkName);
+    const QString jsonRel = check.iteration > 0
+        ? QDir::cleanPath(QStringLiteral("ARAMF_WORKER/certification/evidence/%1/iteration-%2/checks/%3.json")
+            .arg(check.foundationVersion.toLower()).arg(check.iteration).arg(checkName))
+        : QStringLiteral("ARAMF_WORKER/certification/evidence/checks/%1.json").arg(checkName);
     const QString jsonPath = QDir(projectRoot).filePath(jsonRel);
+    if (check.iteration > 0 && QFileInfo::exists(jsonPath)) {
+        check.status = QStringLiteral("FAIL");
+        if (error) *error = QStringLiteral("F1.1.4 evidence namespace is sealed; refusing to rewrite check '%1'.").arg(checkName);
+        return check;
+    }
     QSaveFile jsonFile(jsonPath);
     const QByteArray jData = QJsonDocument(check.toJson()).toJson(QJsonDocument::Indented);
     if (!jsonFile.open(QIODevice::WriteOnly | QIODevice::Text)
@@ -1781,13 +1926,21 @@ bool FoundationCertificationService::executeF1VerificationSuite(const QString& p
     if (!evidence) return false;
     evidence->foundation = QStringLiteral("F1");
     evidence->foundationName = QStringLiteral("Memory & Evidence Foundation");
-    evidence->foundationVersion = QStringLiteral("F1.1.3");
+    evidence->foundationVersion = AramfPaths::F1EvidenceVersion;
+    evidence->iteration = activeF1Iteration(projectRoot);
+    if (evidence->iteration > 0) {
+        evidence->evidenceNamespace = AramfPaths::F1EvidenceNamespace{
+            evidence->foundationVersion, evidence->iteration, 2}.identity();
+    }
     evidence->sourceRevision = sourceRevision;
     evidence->verificationLevel = QStringLiteral("HOST_TEST");
     evidence->timestamp = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
     evidence->checks.clear();
 
-    const QString checksDir = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence/checks"));
+    const QString checksDir = evidence->iteration > 0
+        ? QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence/%1/iteration-%2/checks")
+            .arg(evidence->foundationVersion.toLower()).arg(evidence->iteration))
+        : QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence/checks"));
     const auto req = F1CertificationEvidence::requiredCheckNames();
     QStringList failedChecks;
 
@@ -1838,8 +1991,15 @@ bool FoundationCertificationService::loadVerificationChecks(const QString& check
         return false;
     }
 
-    QDir projectDir(checksDirectory);
-    if (!projectDir.cdUp() || !projectDir.cdUp() || !projectDir.cdUp() || !projectDir.cdUp()) {
+    QDir projectDir = QDir(checksDirectory);
+    bool foundWorker = false;
+    for (int depth = 0; depth < 12 && projectDir.cdUp(); ++depth) {
+        if (projectDir.dirName().startsWith(QStringLiteral("ARAMF_WORKER"))) {
+            foundWorker = true;
+            break;
+        }
+    }
+    if (!foundWorker || !projectDir.cdUp()) {
         if (error) *error = QStringLiteral("Cannot resolve project root from checks directory: %1").arg(checksDirectory);
         return false;
     }
@@ -2025,20 +2185,9 @@ bool FoundationCertificationService::certifyF1(const QString& projectRoot,
         artPath = QFileInfo(evidenceArtifactPath).isAbsolute()
             ? evidenceArtifactPath : QDir(projectRoot).filePath(evidenceArtifactPath);
     } else {
-        if (act.iteration > 1) {
-            const QString iterPath = QDir(projectRoot).filePath(
-                QStringLiteral("ARAMF_WORKER/certification/evidence/f1-evidence-iteration-%1.json").arg(act.iteration));
-            const QString reworkPath = QDir(projectRoot).filePath(
-                QStringLiteral("ARAMF_WORKER/certification/evidence/f1-evidence-rework.json"));
-            if (QFile::exists(iterPath)) {
-                artPath = iterPath;
-            } else if (QFile::exists(reworkPath)) {
-                artPath = reworkPath;
-            }
-        }
-        if (artPath.isEmpty()) {
-            artPath = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER/certification/evidence/f1-evidence.json"));
-        }
+        artPath = QDir(projectRoot).filePath(
+            QStringLiteral("ARAMF_WORKER/certification/evidence/%1/iteration-%2/f1-evidence.json")
+                .arg(AramfPaths::F1EvidenceVersion.toLower()).arg(act.iteration));
     }
 
     F1CertificationEvidence ev;
@@ -2046,6 +2195,16 @@ bool FoundationCertificationService::certifyF1(const QString& projectRoot,
 
     if (ev.foundation != QStringLiteral("F1")) {
         if (error) *error = QStringLiteral("Evidence artifact foundation '%1' does not match F1.").arg(ev.foundation);
+        return false;
+    }
+    if (ev.foundationVersion != AramfPaths::F1EvidenceVersion) {
+        if (error) *error = QStringLiteral("F1 certification requires evidence version %1; found '%2'.")
+            .arg(AramfPaths::F1EvidenceVersion, ev.foundationVersion);
+        return false;
+    }
+    if (ev.iteration != act.iteration) {
+        if (error) *error = QStringLiteral("Evidence iteration %1 does not match active F1 iteration %2.")
+            .arg(ev.iteration).arg(act.iteration);
         return false;
     }
     if (ev.sourceRevision != sourceRevision) {
