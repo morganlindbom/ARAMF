@@ -907,7 +907,7 @@ static F1CertificationEvidence makeCompleteF1Evidence(const QString& sourceRev =
     F1CertificationEvidence ev;
     ev.foundation = QStringLiteral("F1");
     ev.foundationName = QStringLiteral("Memory & Evidence Foundation");
-    ev.foundationVersion = QStringLiteral("F1.1.2");
+    ev.foundationVersion = QStringLiteral("F1.1.3");
     ev.sourceRevision = sourceRev;
     ev.verificationLevel = QStringLiteral("HOST_TEST");
     ev.f1FocusedPass = true;
@@ -944,6 +944,10 @@ static F1CertificationEvidence makeCompleteF1Evidence(const QString& sourceRev =
         F1VerificationCheck c;
         c.name = name;
         c.command = name;
+        F1CommandSpec spec;
+        if (FoundationCertificationService::canonicalCommandSpec(name, &spec, nullptr)) {
+            c.commandIdentity = spec.identity;
+        }
         c.status = QStringLiteral("PASS");
         c.exitCode = 0;
         c.timestamp = ev.timestamp;
@@ -972,6 +976,14 @@ bool runF1CertificationTests()
     std::cerr << "=== F1: Certification & Lifecycle Completion Tests ===\n";
 
     const QString defaultProjectFile = QStringLiteral("ARAMF_WORKER.aramf.json");
+    const auto writeJsonFile = [](const QString& path, const QJsonObject& object) {
+        QDir().mkpath(QFileInfo(path).path());
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) return false;
+        file.write(QJsonDocument(object).toJson(QJsonDocument::Indented));
+        file.close();
+        return true;
+    };
 
     // F1-CERT-001: Missing evidence cannot produce lifecycle cert=1
     {
@@ -1676,7 +1688,8 @@ bool runF1CertificationTests()
     // F1-CERT-022: Missing evidenceReference rejects isPassWithEvidence
     {
         F1VerificationCheck c;
-        c.name = QStringLiteral("test-check");
+        c.name = QStringLiteral("p1-governance");
+        c.commandIdentity = QStringLiteral("aramf_core_tests::--p1-governance");
         c.status = QStringLiteral("PASS");
         c.exitCode = 0;
         c.sourceRevision = QStringLiteral("rev-test-12345");
@@ -1696,7 +1709,8 @@ bool runF1CertificationTests()
         ok &= require(fx.valid, "F1-CERT-023: Fixture initializes");
 
         F1VerificationCheck c;
-        c.name = QStringLiteral("test-check");
+        c.name = QStringLiteral("p1-governance");
+        c.commandIdentity = QStringLiteral("aramf_core_tests::--p1-governance");
         c.status = QStringLiteral("PASS");
         c.exitCode = 0;
         c.sourceRevision = fx.gitSha;
@@ -1724,7 +1738,8 @@ bool runF1CertificationTests()
         logFile.close();
 
         F1VerificationCheck c;
-        c.name = QStringLiteral("test-check");
+        c.name = QStringLiteral("p1-governance");
+        c.commandIdentity = QStringLiteral("aramf_core_tests::--p1-governance");
         c.status = QStringLiteral("PASS");
         c.exitCode = 0;
         c.sourceRevision = fx.gitSha;
@@ -1741,7 +1756,8 @@ bool runF1CertificationTests()
     // F1-CERT-025: Path traversal rejects isPassWithEvidence
     {
         F1VerificationCheck c;
-        c.name = QStringLiteral("test-check");
+        c.name = QStringLiteral("p1-governance");
+        c.commandIdentity = QStringLiteral("aramf_core_tests::--p1-governance");
         c.status = QStringLiteral("PASS");
         c.exitCode = 0;
         c.sourceRevision = QStringLiteral("rev-test-12345");
@@ -1899,6 +1915,117 @@ bool runF1CertificationTests()
                        "F1-CERT-031: Unexpected check rejected");
         ok &= require(err.contains(QStringLiteral("Unexpected")),
                        "F1-CERT-031: Error explains unexpected check");
+    }
+
+    // F1-CERT-032: Arbitrary command identity is rejected
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-032: Fixture initializes");
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        ev.checks[3].commandIdentity = QStringLiteral("arbitrary-command");
+        QString err;
+        ok &= require(!ev.isCompleteWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-032: Arbitrary command identity rejected");
+    }
+
+    // F1-CERT-033: Command identity from another required check is rejected
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-033: Fixture initializes");
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        F1CommandSpec other;
+        FoundationCertificationService::canonicalCommandSpec(QStringLiteral("p2-context"), &other);
+        ev.checks[3].commandIdentity = other.identity;
+        QString err;
+        ok &= require(!ev.isCompleteWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-033: Cross-check command identity rejected");
+    }
+
+    // F1-CERT-034: Missing command identity is rejected
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-034: Fixture initializes");
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        ev.checks[3].commandIdentity.clear();
+        QString err;
+        ok &= require(!ev.isCompleteWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-034: Missing command identity rejected");
+    }
+
+    // F1-CERT-035: Canonical mapping is complete, unique, and path-independent
+    {
+        const auto names = F1CertificationEvidence::requiredCheckNames();
+        QSet<QString> identities;
+        bool mappingOk = true;
+        for (const auto& name : names) {
+            F1CommandSpec spec;
+            mappingOk = FoundationCertificationService::canonicalCommandSpec(name, &spec, nullptr) && mappingOk;
+            mappingOk = !spec.identity.isEmpty() && !identities.contains(spec.identity) && mappingOk;
+            identities.insert(spec.identity);
+        }
+        F1CommandSpec unknown;
+        ok &= require(mappingOk && identities.size() == names.size(),
+                       "F1-CERT-035: All required checks have unique canonical identities");
+        ok &= require(!FoundationCertificationService::canonicalCommandSpec(
+                           QStringLiteral("unknown-check"), &unknown, nullptr),
+                       "F1-CERT-035: Unknown check has no canonical identity");
+        ok &= require(names.size() == 13, "F1-CERT-035: Exactly 13 canonical mappings exist");
+        F1CommandSpec physical;
+        FoundationCertificationService::canonicalCommandSpec(
+            QStringLiteral("f1-physical-validation"), &physical, nullptr);
+        ok &= require(physical.identity.contains(QStringLiteral("{PROJECT_ROOT}")),
+                       "F1-CERT-035: Variable project path uses a semantic placeholder");
+    }
+
+    // F1-CERT-036: Altered canonical arguments are rejected
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-036: Fixture initializes");
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        ev.checks[3].commandIdentity = QStringLiteral("aramf_core_tests::--p1-governance --altered");
+        QString err;
+        ok &= require(!ev.isCompleteWithEvidence(fx.path(), fx.gitSha, &err),
+                       "F1-CERT-036: Altered canonical arguments rejected");
+    }
+
+    // F1-CERT-037: loadVerificationChecks uses the same physical and identity validator
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-037: Fixture initializes");
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        const QString checksDir = QDir(fx.path()).filePath(
+            QStringLiteral("ARAMF_WORKER/certification/evidence/checks"));
+        for (const auto& check : ev.checks) {
+            writeJsonFile(QDir(checksDir).filePath(check.name + QStringLiteral(".json")), check.toJson());
+        }
+        QList<F1VerificationCheck> loaded;
+        QString err;
+        ok &= require(FoundationCertificationService::loadVerificationChecks(
+                           checksDir, fx.gitSha, &loaded, &err),
+                       "F1-CERT-037: Canonical records load successfully");
+        auto bad = ev.checks[3];
+        bad.commandIdentity = QStringLiteral("arbitrary-command");
+        writeJsonFile(QDir(checksDir).filePath(bad.name + QStringLiteral(".json")), bad.toJson());
+        loaded.clear();
+        ok &= require(!FoundationCertificationService::loadVerificationChecks(
+                           checksDir, fx.gitSha, &loaded, &err),
+                       "F1-CERT-037: Mismatched command identity rejected on load");
+    }
+
+    // F1-CERT-038: Certification rejects a command-identity mismatch
+    {
+        GitTestFixture fx;
+        ok &= require(fx.valid, "F1-CERT-038: Fixture initializes");
+        auto ev = makeCompleteF1Evidence(fx.gitSha, fx.path());
+        ev.checks[3].commandIdentity = QStringLiteral("arbitrary-command");
+        QString artifactPath;
+        ok &= require(FoundationCertificationService::writeEvidenceArtifact(
+                           fx.path(), ev, &artifactPath, nullptr, nullptr),
+                       "F1-CERT-038: Mismatched artifact written");
+        QString err;
+        ok &= require(!FoundationCertificationService::certifyF1(
+                           fx.path(), defaultProjectFile, fx.gitSha, artifactPath, nullptr, &err),
+                       "F1-CERT-038: Certification rejects command mismatch");
     }
 
     std::cerr << (ok ? "F1 Certification: ALL PASS\n" : "F1 Certification: SOME FAILURES\n");

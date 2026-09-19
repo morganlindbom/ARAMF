@@ -209,9 +209,17 @@ public:
 // Owns evidence-bound foundation certification and completion.
 // Backed by CertificationService, MemoryEvidenceFoundation, and ProcessVersionLifecycle.
 
+struct F1CommandSpec {
+    QString name;
+    QString identity;
+    QString executable;
+    QStringList argumentTemplates;
+};
+
 struct F1VerificationCheck {
     QString name;
     QString command;
+    QString commandIdentity;
     QString status = QStringLiteral("FAIL");
     int exitCode = -1;
     QString timestamp;
@@ -313,6 +321,11 @@ public:
                                            const QString& checkName,
                                            const QString& sourceRevision,
                                            QString* error = nullptr);
+
+    // Returns the single canonical semantic command specification for a required check.
+    static bool canonicalCommandSpec(const QString& checkName,
+                                     F1CommandSpec* spec,
+                                     QString* error = nullptr);
 
     // Loads verification checks from a directory of JSON check records
     static bool loadVerificationChecks(const QString& checksDirectory,

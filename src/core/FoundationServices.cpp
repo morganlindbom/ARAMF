@@ -1000,6 +1000,20 @@ bool F1VerificationCheck::isPassWithEvidence(const QString& projectRoot,
                                               const QString& expectedRevision,
                                               QString* error) const
 {
+    F1CommandSpec spec;
+    if (!FoundationCertificationService::canonicalCommandSpec(name, &spec, error)) {
+        return false;
+    }
+    if (commandIdentity.trimmed().isEmpty()) {
+        if (error) *error = QStringLiteral("Check '%1' has empty commandIdentity.").arg(name);
+        return false;
+    }
+    if (commandIdentity != spec.identity) {
+        if (error) *error = QStringLiteral("Check '%1' commandIdentity '%2' does not match canonical identity '%3'.")
+            .arg(name, commandIdentity, spec.identity);
+        return false;
+    }
+
     // All basic checks first
     if (status != QStringLiteral("PASS")) {
         if (error) *error = QStringLiteral("Check '%1' did not PASS: status is '%2'.").arg(name, status);
@@ -1071,6 +1085,7 @@ QJsonObject F1VerificationCheck::toJson() const
     return QJsonObject{
         {QStringLiteral("name"), name},
         {QStringLiteral("command"), command},
+        {QStringLiteral("commandIdentity"), commandIdentity},
         {QStringLiteral("status"), status},
         {QStringLiteral("exitCode"), exitCode},
         {QStringLiteral("timestamp"), timestamp},
@@ -1085,6 +1100,7 @@ F1VerificationCheck F1VerificationCheck::fromJson(const QJsonObject& json)
     F1VerificationCheck c;
     c.name = json.value(QStringLiteral("name")).toString();
     c.command = json.value(QStringLiteral("command")).toString();
+    c.commandIdentity = json.value(QStringLiteral("commandIdentity")).toString();
     c.status = json.value(QStringLiteral("status")).toString(QStringLiteral("FAIL"));
     c.exitCode = json.value(QStringLiteral("exitCode")).toInt(-1);
     c.timestamp = json.value(QStringLiteral("timestamp")).toString();
@@ -1111,6 +1127,53 @@ QStringList F1CertificationEvidence::requiredCheckNames()
         QStringLiteral("memory-consistency"),
         QStringLiteral("full-ctest")
     };
+}
+
+bool FoundationCertificationService::canonicalCommandSpec(const QString& checkName,
+                                                          F1CommandSpec* spec,
+                                                          QString* error)
+{
+    static const QList<F1CommandSpec> specs{
+        {QStringLiteral("f1-focused-suite"), QStringLiteral("aramf_core_tests::--f1-certification"),
+         QStringLiteral("aramf_core_tests"), {QStringLiteral("--f1-certification")}},
+        {QStringLiteral("foundation-namespace"), QStringLiteral("aramf_core_tests::--foundation-namespace"),
+         QStringLiteral("aramf_core_tests"), {QStringLiteral("--foundation-namespace")}},
+        {QStringLiteral("process-namespace-migration"), QStringLiteral("aramf_core_tests::--process-migration"),
+         QStringLiteral("aramf_core_tests"), {QStringLiteral("--process-migration")}},
+        {QStringLiteral("p1-governance"), QStringLiteral("aramf_core_tests::--p1-governance"),
+         QStringLiteral("aramf_core_tests"), {QStringLiteral("--p1-governance")}},
+        {QStringLiteral("p2-context"), QStringLiteral("aramf_core_tests::--p2-context"),
+         QStringLiteral("aramf_core_tests"), {QStringLiteral("--p2-context")}},
+        {QStringLiteral("p3-execution"), QStringLiteral("aramf_core_tests::--p3-execution"),
+         QStringLiteral("aramf_core_tests"), {QStringLiteral("--p3-execution")}},
+        {QStringLiteral("p4-predictive"), QStringLiteral("aramf_core_tests::--p4-predictive"),
+         QStringLiteral("aramf_core_tests"), {QStringLiteral("--p4-predictive")}},
+        {QStringLiteral("p5-routing"), QStringLiteral("aramf_core_tests::--p5-routing"),
+         QStringLiteral("aramf_core_tests"), {QStringLiteral("--p5-routing")}},
+        {QStringLiteral("provenance-and-scope"), QStringLiteral("aramf_core_tests::--provenance-and-scope"),
+         QStringLiteral("aramf_core_tests"), {QStringLiteral("--provenance-and-scope")}},
+        {QStringLiteral("f1-physical-validation"), QStringLiteral("aramf::foundation f1-validate --project {PROJECT_ROOT}"),
+         QStringLiteral("aramf"), {QStringLiteral("foundation"), QStringLiteral("f1-validate"),
+                                   QStringLiteral("--project"), QStringLiteral("{PROJECT_ROOT}")}},
+        {QStringLiteral("memory-cold-start"), QStringLiteral("aramf::memory cold-start --project {PROJECT_ROOT}"),
+         QStringLiteral("aramf"), {QStringLiteral("memory"), QStringLiteral("cold-start"),
+                                   QStringLiteral("--project"), QStringLiteral("{PROJECT_ROOT}")}},
+        {QStringLiteral("memory-consistency"), QStringLiteral("aramf::memory validate --project {PROJECT_ROOT}"),
+         QStringLiteral("aramf"), {QStringLiteral("memory"), QStringLiteral("validate"),
+                                   QStringLiteral("--project"), QStringLiteral("{PROJECT_ROOT}")}},
+        {QStringLiteral("full-ctest"), QStringLiteral("ctest::--test-dir {BUILD_DIR} --output-on-failure"),
+         QStringLiteral("ctest"), {QStringLiteral("--test-dir"), QStringLiteral("{BUILD_DIR}"),
+                                   QStringLiteral("--output-on-failure")}}
+    };
+
+    for (const auto& candidate : specs) {
+        if (candidate.name == checkName) {
+            if (spec) *spec = candidate;
+            return true;
+        }
+    }
+    if (error) *error = QStringLiteral("Unknown check name: %1").arg(checkName);
+    return false;
 }
 
 void F1CertificationEvidence::updateDerivedFlags()
@@ -1626,56 +1689,24 @@ F1VerificationCheck FoundationCertificationService::executeCheck(const QString& 
     check.sourceRevision = sourceRevision;
     check.timestamp = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
 
-    QString program;
-    QStringList args;
+    F1CommandSpec spec;
+    if (!FoundationCertificationService::canonicalCommandSpec(checkName, &spec, error)) {
+        check.status = QStringLiteral("FAIL");
+        return check;
+    }
+    check.commandIdentity = spec.identity;
 
-    if (checkName == QStringLiteral("f1-focused-suite")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf_core_tests"));
-        args = {QStringLiteral("--f1-certification")};
-    } else if (checkName == QStringLiteral("foundation-namespace")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf_core_tests"));
-        args = {QStringLiteral("--foundation-namespace")};
-    } else if (checkName == QStringLiteral("process-namespace-migration")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf_core_tests"));
-        args = {QStringLiteral("--process-migration")};
-    } else if (checkName == QStringLiteral("p1-governance")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf_core_tests"));
-        args = {QStringLiteral("--p1-governance")};
-    } else if (checkName == QStringLiteral("p2-context")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf_core_tests"));
-        args = {QStringLiteral("--p2-context")};
-    } else if (checkName == QStringLiteral("p3-execution")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf_core_tests"));
-        args = {QStringLiteral("--p3-execution")};
-    } else if (checkName == QStringLiteral("p4-predictive")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf_core_tests"));
-        args = {QStringLiteral("--p4-predictive")};
-    } else if (checkName == QStringLiteral("p5-routing")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf_core_tests"));
-        args = {QStringLiteral("--p5-routing")};
-    } else if (checkName == QStringLiteral("provenance-and-scope")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf_core_tests"));
-        args = {QStringLiteral("--provenance-and-scope")};
-    } else if (checkName == QStringLiteral("f1-physical-validation")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf"));
-        args = {QStringLiteral("foundation"), QStringLiteral("f1-validate"), QStringLiteral("--project"), projectRoot};
-    } else if (checkName == QStringLiteral("memory-cold-start")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf"));
-        args = {QStringLiteral("memory"), QStringLiteral("cold-start"), QStringLiteral("--project"), projectRoot};
-    } else if (checkName == QStringLiteral("memory-consistency")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("aramf"));
-        args = {QStringLiteral("memory"), QStringLiteral("validate"), QStringLiteral("--project"), projectRoot};
-    } else if (checkName == QStringLiteral("full-ctest")) {
-        program = findExecutablePath(projectRoot, QStringLiteral("ctest"));
+    QString program = findExecutablePath(projectRoot, spec.executable);
+    QStringList args = spec.argumentTemplates;
+    for (auto& arg : args) {
+        arg.replace(QStringLiteral("{PROJECT_ROOT}"), projectRoot);
+    }
+    if (checkName == QStringLiteral("full-ctest")) {
         QString testDir = QDir(projectRoot).filePath(QStringLiteral("build"));
         if (!QFile::exists(QDir(testDir).filePath(QStringLiteral("CTestTestfile.cmake")))) {
             testDir = QCoreApplication::applicationDirPath();
         }
-        args = {QStringLiteral("--test-dir"), testDir, QStringLiteral("--output-on-failure")};
-    } else {
-        check.status = QStringLiteral("FAIL");
-        if (error) *error = QStringLiteral("Unknown check name: %1").arg(checkName);
-        return check;
+        args.replaceInStrings(QStringLiteral("{BUILD_DIR}"), testDir);
     }
 
     check.command = QStringLiteral("%1 %2").arg(program, args.join(QLatin1Char(' ')));
@@ -1750,7 +1781,7 @@ bool FoundationCertificationService::executeF1VerificationSuite(const QString& p
     if (!evidence) return false;
     evidence->foundation = QStringLiteral("F1");
     evidence->foundationName = QStringLiteral("Memory & Evidence Foundation");
-    evidence->foundationVersion = QStringLiteral("F1.1.2");
+    evidence->foundationVersion = QStringLiteral("F1.1.3");
     evidence->sourceRevision = sourceRevision;
     evidence->verificationLevel = QStringLiteral("HOST_TEST");
     evidence->timestamp = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
@@ -1807,6 +1838,12 @@ bool FoundationCertificationService::loadVerificationChecks(const QString& check
         return false;
     }
 
+    QDir projectDir(checksDirectory);
+    if (!projectDir.cdUp() || !projectDir.cdUp() || !projectDir.cdUp() || !projectDir.cdUp()) {
+        if (error) *error = QStringLiteral("Cannot resolve project root from checks directory: %1").arg(checksDirectory);
+        return false;
+    }
+    const QString projectRoot = projectDir.absolutePath();
     const auto req = F1CertificationEvidence::requiredCheckNames();
     for (const auto& name : req) {
         const QString checkFilePath = dir.filePath(name + QStringLiteral(".json"));
@@ -1826,8 +1863,9 @@ bool FoundationCertificationService::loadVerificationChecks(const QString& check
             return false;
         }
         const auto check = F1VerificationCheck::fromJson(doc.object());
-        if (!check.isPass(expectedRevision)) {
-            if (error) *error = QStringLiteral("Check record %1 did not PASS or revision mismatched").arg(name);
+        QString checkErr;
+        if (!check.isPassWithEvidence(projectRoot, expectedRevision, &checkErr)) {
+            if (error) *error = checkErr;
             return false;
         }
         checks->append(check);
