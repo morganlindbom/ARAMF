@@ -452,7 +452,8 @@ bool runP2ExecutionTests()
         status.close();
     }
     ok &= check(!stale.claimTask(QStringLiteral("stale-worker"), QStringLiteral("stale"), &error)
-                    && error == QStringLiteral("STALE_CONTEXT"), QStringLiteral("stale P1 context blocks dispatch"));
+                    && error == QStringLiteral("GOVERNANCE_BLOCKED"),
+                QStringLiteral("stale P1 context is blocked by read-only PREPARE"));
 
     const QString savePath = QDir(project.path()).filePath(QStringLiteral("p2.aramf.json"));
     ok &= check(persistence.save(model, savePath, &error), QStringLiteral("canonical P2 state saves: %1").arg(error));

@@ -1,6 +1,6 @@
 {
     "_file": "scope-routes.json",
-    "inputFingerprint": "55d55f4a340e41ddb19cbcf12b010c99f06a61b7ad3d39c8ec99b2930b63adb6",
+    "inputFingerprint": "9885c175104ed6eb9b9c7c09a5aa1f0978e8d525ed896427f5042b40f7277bcd",
     "schemaVersion": 1,
     "scopes": [
         {
@@ -129,6 +129,20 @@
                 "ARAMF_WORKER/memory/current-state.md"
             ],
             "taskMetadata": {
+                "affects": [
+                    "tests"
+                ],
+                "files": [
+                    "src/core/WorkerTaskServices.cpp"
+                ],
+                "generatedArtifacts": [
+                ],
+                "riskTraits": [
+                    "governance"
+                ],
+                "tests": [
+                    "aramf_core_tests::--worker-tasks"
+                ]
             }
         },
         {
@@ -145,6 +159,21 @@
                 "ARAMF_WORKER/memory/current-state.md"
             ],
             "taskMetadata": {
+                "affects": [
+                ],
+                "files": [
+                    "tests/P2ExecutionTests.cpp",
+                    "tests/WorkerTaskTests.cpp"
+                ],
+                "generatedArtifacts": [
+                ],
+                "riskTraits": [
+                    "governance"
+                ],
+                "tests": [
+                    "aramf_core_tests::--p3-execution",
+                    "aramf_core_tests::--worker-tasks"
+                ]
             }
         },
         {

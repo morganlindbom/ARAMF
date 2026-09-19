@@ -30,7 +30,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "1255c891d8e72912178a6991fad7a33ba00035a99bcab80d4da483557f308702",
+    "configurationFingerprint": "9885c175104ed6eb9b9c7c09a5aa1f0978e8d525ed896427f5042b40f7277bcd",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",

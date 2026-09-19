@@ -615,7 +615,7 @@
             "id": "d6ba3523-c781-4897-9ffa-144cae535632",
             "lastModified": "",
             "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF-p2-current/test_250",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250",
             "locationMode": "referenced",
             "name": "test_250",
             "role": "supporting-material",
@@ -636,7 +636,7 @@
             "id": "47cf373a-e57b-49fa-b876-c21d975986e8",
             "lastModified": "",
             "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF-p2-current/test_550",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550",
             "locationMode": "referenced",
             "name": "test_550",
             "role": "supporting-material",
@@ -654,7 +654,7 @@
             "id": "769b24cd-ace8-482f-8f96-05c09a1a4cb8",
             "lastModified": "",
             "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF-p2-current/CMakeLists.txt",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/CMakeLists.txt",
             "locationMode": "referenced",
             "name": "CMakeLists.txt",
             "role": "source-of-truth",
@@ -673,7 +673,7 @@
             "id": "1e352162-a59b-4e73-89fb-a35072a97cfd",
             "lastModified": "",
             "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF-p2-current/test_250/info.md",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/info.md",
             "locationMode": "referenced",
             "name": "info.md",
             "role": "supporting-material",
@@ -690,7 +690,7 @@
             "id": "eb45af79-6ae2-43df-aafa-a41b80ba8f2b",
             "lastModified": "",
             "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF-p2-current/aramf_setup",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/aramf_setup",
             "locationMode": "referenced",
             "name": "aramf_setup",
             "role": "supporting-material",
@@ -708,7 +708,7 @@
             "id": "226c31e8-233e-4bcb-acf0-f1f853c04cbf",
             "lastModified": "",
             "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF-p2-current/src",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/src",
             "locationMode": "referenced",
             "name": "src",
             "role": "source-of-truth",
@@ -727,7 +727,7 @@
             "id": "ad17b8ba-7dfb-4fed-998b-ca0a66a9ab48",
             "lastModified": "",
             "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF-p2-current/test_550/info.md",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550/info.md",
             "locationMode": "referenced",
             "name": "info.md",
             "role": "supporting-material",
@@ -744,7 +744,7 @@
             "id": "04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3",
             "lastModified": "",
             "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF-p2-current/ARAMF_WORKER",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER",
             "locationMode": "referenced",
             "name": "ARAMF_WORKER",
             "role": "source-of-truth",
@@ -763,7 +763,7 @@
             "id": "be17deda-e75e-47bc-afd8-5c83472af077",
             "lastModified": "",
             "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF-p2-current/tests",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/tests",
             "locationMode": "referenced",
             "name": "tests",
             "role": "supporting-material",
@@ -781,7 +781,7 @@
             "id": "c693014c-27ef-4ce1-9291-6fb37ff0c375",
             "lastModified": "",
             "loadingStrategyOverride": "",
-            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF-p2-current/AGENTS.md",
+            "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/AGENTS.md",
             "locationMode": "referenced",
             "name": "AGENTS.md",
             "role": "source-of-truth",
@@ -881,6 +881,36 @@
             "ui-ux"
         ],
         "scopeMetadata": {
+            "source-code": {
+                "affects": [
+                    "tests"
+                ],
+                "files": [
+                    "src/core/WorkerTaskServices.cpp"
+                ],
+                "generatedArtifacts": [],
+                "riskTraits": [
+                    "governance"
+                ],
+                "tests": [
+                    "aramf_core_tests::--worker-tasks"
+                ]
+            },
+            "tests": {
+                "affects": [],
+                "files": [
+                    "tests/P2ExecutionTests.cpp",
+                    "tests/WorkerTaskTests.cpp"
+                ],
+                "generatedArtifacts": [],
+                "riskTraits": [
+                    "governance"
+                ],
+                "tests": [
+                    "aramf_core_tests::--p3-execution",
+                    "aramf_core_tests::--worker-tasks"
+                ]
+            }
         },
         "workScopes": [
             "planning",

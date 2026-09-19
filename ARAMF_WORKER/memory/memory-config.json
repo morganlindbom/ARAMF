@@ -39,7 +39,6 @@
         "failure-history",
         "milestone-history"
     ],
-    "legacyProvenanceCutoffSequence": 311,
     "maintenanceOptions": [
         "update-current-state",
         "record-decisions",
@@ -62,9 +61,7 @@
         "conflicting-decisions",
         "stale-current-state",
         "referenced-resources",
-        "project-status-consistency",
-        "event-provenance-valid",
-        "persisted-scope-validity"
+        "project-status-consistency"
     ],
     "writerMode": "agent-direct"
 }

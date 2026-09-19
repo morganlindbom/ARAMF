@@ -1,4 +1,5 @@
 #include "core/WorkerTaskServices.h"
+#include "core/ContextCoordinationService.h"
 #include "core/WorkerContextResolver.h"
 #include "core/ProjectPersistence.h"
 #include "core/Services.h"
@@ -9,8 +10,10 @@
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QJsonDocument>
+#include <QMap>
 #include <QProcess>
 #include <QTemporaryDir>
 #include <atomic>
@@ -28,6 +31,16 @@ QByteArray bytes(const QString& path)
 {
     QFile file(path);
     return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{};
+}
+QMap<QString, QByteArray> treeBytes(const QString& root)
+{
+    QMap<QString, QByteArray> result;
+    QDirIterator iterator(root, QDir::Files | QDir::Hidden, QDirIterator::Subdirectories);
+    while (iterator.hasNext()) {
+        const QString path = iterator.next();
+        result.insert(QDir(root).relativeFilePath(path), bytes(path));
+    }
+    return result;
 }
 bool hasCode(const QJsonObject& value, const QString& code)
 {
@@ -51,6 +64,8 @@ bool runWorkerTaskTests()
         check(result.success, "fixture generation: " + result.error);
         const auto verified = VerificationServices().verify(model, model.generationOptions());
         check(verified.overallStatus == VerificationStatus::Pass, "fixture verification");
+        const auto context = ContextCoordinationService::generate(model);
+        check(context.value(QStringLiteral("success")).toBool(), "fixture context generation");
     };
     QTemporaryDir project;
     ProjectModel model;
@@ -95,6 +110,43 @@ bool runWorkerTaskTests()
     };
     const QList<QStringList> matrix{{"generic"}, {"ui", "android"}, {"communication"}, {"pico"}, {"machine-learning"},
         {"thesis"}, {"report"}, {"thesis", "report"}, {"android", "pico"}, {"governance"}, {"persistence"}};
+
+    // PREPARE is a strictly read-only gate. Protect the complete fixture and
+    // explicitly name every context artifact whose canonical producer is P1.
+    const QStringList protectedContextArtifacts{
+        QStringLiteral("ARAMF_WORKER/context/context-index.json"),
+        QStringLiteral("ARAMF_WORKER/context/compressed-context.json"),
+        QStringLiteral("ARAMF_WORKER/context/freshness.json"),
+        QStringLiteral("ARAMF_WORKER/context/agent-adapters.json")};
+    const auto freshTreeBefore = treeBytes(project.path());
+    QMap<QString, QByteArray> freshContextBefore;
+    for (const auto& path : protectedContextArtifacts)
+        freshContextBefore.insert(path, bytes(QDir(project.path()).filePath(path)));
+    const auto freshPrepare = WorkerTaskServices::prepare(model, requestFor({"ui"}));
+    check(ready(freshPrepare), "fresh PREPARE is ready");
+    check(treeBytes(project.path()) == freshTreeBefore, "fresh PREPARE changes no repository file");
+    for (const auto& path : protectedContextArtifacts)
+        check(bytes(QDir(project.path()).filePath(path)) == freshContextBefore.value(path),
+              "fresh PREPARE preserves " + path);
+
+    const QString staleSourcePath = QDir(project.path()).filePath(
+        QStringLiteral("ARAMF_WORKER/memory/current-state.md"));
+    const QByteArray currentSource = bytes(staleSourcePath);
+    check(write(staleSourcePath, currentSource + "stale context input\n"), "make context stale");
+    const auto staleTreeBefore = treeBytes(project.path());
+    QMap<QString, QByteArray> staleContextBefore;
+    for (const auto& path : protectedContextArtifacts)
+        staleContextBefore.insert(path, bytes(QDir(project.path()).filePath(path)));
+    const auto stalePrepare = WorkerTaskServices::prepare(model, requestFor({"ui"}));
+    check(!ready(stalePrepare) && hasCode(stalePrepare, "STALE_DERIVED_ARTIFACT"),
+          "stale PREPARE blocks without regeneration");
+    check(treeBytes(project.path()) == staleTreeBefore, "stale PREPARE changes no repository file");
+    for (const auto& path : protectedContextArtifacts)
+        check(bytes(QDir(project.path()).filePath(path)) == staleContextBefore.value(path),
+              "stale PREPARE preserves " + path);
+    check(write(staleSourcePath, currentSource), "restore stale input fixture");
+    generate(model);
+
     for (const auto& scopes : matrix) {
         const auto request = requestFor(scopes);
         const auto contract = WorkerTaskServices::prepare(model, request);
@@ -278,6 +330,8 @@ bool runWorkerTaskTests()
         const QJsonArray references{QJsonObject{{"reference", path}, {"fingerprint", QString::fromLatin1(QCryptographicHash::hash(content, QCryptographicHash::Sha256).toHex())},
             {"verified", true}, {"type", level == "HARDWARE_CERTIFIED" ? "physical" : "host-test"}}};
         check(certificates.issue(project.path(), started, "PASS", references, nullptr, &error), "canonical certificate issue: " + error);
+        const auto context = ContextCoordinationService::generate(model);
+        check(context.value(QStringLiteral("success")).toBool(), "refresh context after canonical certificate issue");
         return path;
     };
     const auto softwareContract = WorkerTaskServices::prepare(model, ui);

@@ -239,9 +239,11 @@ void validateCanonical(const ProjectModel& model, QJsonArray& errors)
         issue(errors, "STALE_DERIVED_ARTIFACT", "Project/manifest generation fingerprints are stale.");
     const QString contextIndexPath = pathFor(model, workerPath(model, "context/context-index.json"));
     if (QFileInfo::exists(contextIndexPath)) {
-        const auto context = ContextCoordinationService::generate(model);
-        if (!context.value(QStringLiteral("success")).toBool())
-            issue(errors, "STALE_DERIVED_ARTIFACT", "Derived P1 context could not be safely regenerated.", context.value(QStringLiteral("error")).toString());
+        const auto context = ContextCoordinationService::validate(model);
+        if (!context.value(QStringLiteral("valid")).toBool())
+            issue(errors, "STALE_DERIVED_ARTIFACT",
+                  "Derived P1 context is stale or invalid; regenerate it through ContextCoordinationService.",
+                  context.value(QStringLiteral("errorCode")).toString());
     }
     const auto expected = GenerationServices::derivedTaskArtifacts(model, model.generationOptions());
     for (auto it = expected.begin(); it != expected.end(); ++it) {

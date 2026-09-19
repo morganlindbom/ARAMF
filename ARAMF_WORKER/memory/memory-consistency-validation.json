@@ -1,6 +1,6 @@
 {
     "_file": "memory-consistency-validation.json",
-    "checkedAt": "2026-09-19T12:35:28Z",
+    "checkedAt": "2026-09-19T19:32:18Z",
     "checks": [
         {
             "name": "event-identifiers-unique",
@@ -75,22 +75,12 @@
             "message": "Sequence continuity check executed.",
             "name": "sequence-continuity",
             "status": "PASS"
-        },
-        {
-            "message": "Event provenance validation executed.",
-            "name": "event-provenance-valid",
-            "status": "PASS"
-        },
-        {
-            "message": "Persisted scope validity check executed.",
-            "name": "persisted-scope-validity",
-            "status": "PASS"
         }
     ],
-    "durableSequence": 343,
+    "durableSequence": 351,
     "errors": [
     ],
-    "productionSequence": 343,
+    "productionSequence": 351,
     "status": "PASS",
     "unsupportedValidations": [
     ],
