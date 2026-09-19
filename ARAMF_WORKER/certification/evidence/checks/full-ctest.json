@@ -1,10 +1,11 @@
 {
     "command": "C:/Program Files/CMake/bin/ctest.exe --test-dir ./build --output-on-failure",
-    "evidenceFingerprint": "93c2321e87c13d34955b649881b6612b816f8ddf9b6cd7709c143d71f43f3593",
+    "commandIdentity": "ctest::--test-dir {BUILD_DIR} --output-on-failure",
+    "evidenceFingerprint": "93596147c6f5f4f3056269007255c7d13a48b3b291b81065bc25231153c7fc15",
     "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/full-ctest.log",
     "exitCode": 0,
     "name": "full-ctest",
-    "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+    "sourceRevision": "7ea4fc367d1d58b121707a239add5e006ff89cdf",
     "status": "PASS",
-    "timestamp": "2026-09-18T20:49:28Z"
+    "timestamp": "2026-09-19T05:53:29Z"
 }

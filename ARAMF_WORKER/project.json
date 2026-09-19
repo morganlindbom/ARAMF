@@ -30,7 +30,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "f206eb2db071f83a1184346bb83396ba0f186c179b10b7dfa292339141d04dc9",
+    "configurationFingerprint": "fba5aabbf6ff246dcd0f0b0bab7abf9de305723d62c03a643baaf2d5062bdb84",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",
@@ -111,6 +111,13 @@
                 "done": 1,
                 "foundation": 1,
                 "iteration": 2,
+                "loop": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "foundation": 1,
+                "iteration": 3,
                 "loop": 1
             }
         ],

@@ -4,5 +4,5 @@ Ledger Intact: PASS
 Sequence Monotonic: PASS
 Manifest Consistent: PASS
 Certificates Intact: PASS
-Total Events: 337
-Evidence Fingerprint: 01844fa22c64ff904ccfe41a6e6fb4e36210593ae187b71b9aff1aa3a82e8a81
+Total Events: 339
+Evidence Fingerprint: 1109ca10bf5f676b7d228a4c1484dcca43a4d1ff54d7cd348e494f800b67e68b

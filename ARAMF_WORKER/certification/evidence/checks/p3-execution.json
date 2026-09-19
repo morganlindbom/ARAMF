@@ -1,10 +1,11 @@
 {
     "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --p3-execution",
+    "commandIdentity": "aramf_core_tests::--p3-execution",
     "evidenceFingerprint": "b5c8183acaf91590663a2a6750e0bb8d9b0da7c2d6e6438270952d6d0606d7d2",
     "evidenceReference": "ARAMF_WORKER/certification/evidence/checks/p3-execution.log",
     "exitCode": 0,
     "name": "p3-execution",
-    "sourceRevision": "4d593d5c6af78d074654afb6e9cb2e766b0229e9",
+    "sourceRevision": "7ea4fc367d1d58b121707a239add5e006ff89cdf",
     "status": "PASS",
-    "timestamp": "2026-09-18T20:48:51Z"
+    "timestamp": "2026-09-19T05:52:55Z"
 }
