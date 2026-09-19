@@ -1,0 +1,8 @@
+=== ARAMF F1 Physical Evidence Validation ===
+F1-VALIDATION: PASS
+Ledger Intact: PASS
+Sequence Monotonic: PASS
+Manifest Consistent: PASS
+Certificates Intact: PASS
+Total Events: 341
+Evidence Fingerprint: d55ed9e387ae34d2be73ce277ff9e14e5d2392a1b4b9d62e0d0981233b2a9f16

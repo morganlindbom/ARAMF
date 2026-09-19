@@ -1,0 +1,15 @@
+Test project D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build
+    Start 1: aramf_core_tests
+1/5 Test #1: aramf_core_tests .................   Passed  102.22 sec
+    Start 2: aramf_workflow_tests
+2/5 Test #2: aramf_workflow_tests .............   Passed    3.34 sec
+    Start 3: aramf_template_tests
+3/5 Test #3: aramf_template_tests .............   Passed   94.17 sec
+    Start 4: aramf_update_campaign
+4/5 Test #4: aramf_update_campaign ............   Passed    7.56 sec
+    Start 5: aramf_configuration_update
+5/5 Test #5: aramf_configuration_update .......   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Total Test time (real) = 207.38 sec

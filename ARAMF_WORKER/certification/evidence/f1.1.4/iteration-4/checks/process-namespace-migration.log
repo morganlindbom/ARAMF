@@ -1,0 +1,106 @@
+Starting Process Namespace Migration test matrix (MIG-001 through MIG-020)...
+PASS [MIG-001]: Legacy P0 maps deterministically to canonical P1
+PASS [MIG-001]: Legacy P0 name is Task Execution Governance
+PASS [MIG-001]: Canonical P1 name is Task Execution Governance
+PASS [MIG-002]: Legacy P1 maps deterministically to canonical P2
+PASS [MIG-002]: Legacy P1 name is Context Coordination
+PASS [MIG-002]: Canonical P2 name is Context Coordination
+PASS [MIG-003]: Legacy P2 maps deterministically to canonical P3
+PASS [MIG-003]: Legacy P2 name is Execution Orchestration
+PASS [MIG-003]: Canonical P3 name is Execution Orchestration
+PASS [MIG-004]: Legacy P3 maps deterministically to canonical P4
+PASS [MIG-004]: Legacy P3 name is Predictive Task Optimization
+PASS [MIG-004]: Canonical P4 name is Predictive Task Optimization
+PASS [MIG-005]: Legacy P4 maps deterministically to canonical P5
+PASS [MIG-005]: Legacy P4 name is Self-Adjusting Routing
+PASS [MIG-005]: Canonical P5 name is Self-Adjusting Routing
+PASS [MIG-006]: Legacy P5 maps to canonical P6
+PASS [MIG-006]: Name for legacy P5 matches canonical P6: Canonical Code Bank
+PASS [MIG-006]: Legacy P6 maps to canonical P7
+PASS [MIG-006]: Name for legacy P6 matches canonical P7: Agent Quality Scoring
+PASS [MIG-006]: Legacy P7 maps to canonical P8
+PASS [MIG-006]: Name for legacy P7 matches canonical P8: Multi-Agent Orchestration
+PASS [MIG-006]: Legacy P8 maps to canonical P9
+PASS [MIG-006]: Name for legacy P8 matches canonical P9: Semantic Conflict Reasoning
+PASS [MIG-006]: Legacy P9 maps to canonical P10
+PASS [MIG-006]: Name for legacy P9 matches canonical P10: Predictive Validation
+PASS [MIG-006]: Legacy P10 maps to canonical P11
+PASS [MIG-006]: Name for legacy P10 matches canonical P11: Controlled Autonomous Improvement
+PASS [MIG-006]: Legacy P11 maps to canonical P12
+PASS [MIG-006]: Name for legacy P11 matches canonical P12: Evaluation & Continuous Improvement Framework
+PASS [MIG-006]: Legacy P12 maps to canonical P13
+PASS [MIG-006]: Name for legacy P12 matches canonical P13: Knowledge Harvest & Core Promotion
+PASS [MIG-007]: Canonical P14 has no legacy mapping
+PASS [MIG-007]: Error explains P14 has no legacy process equivalent
+PASS [MIG-007]: canonicalToLegacy string conversion fails for P14
+PASS [MIG-008]: F1.1.0.0.0 parsed successfully
+PASS [MIG-008]: v.isFoundation() is true
+PASS [MIG-008]: v.isProcess() is false
+PASS [MIG-008]: prefix is F
+PASS [MIG-008]: foundationNumber is 1
+PASS [MIG-008]: processNumber is 0
+PASS [MIG-008]: F1 canonicalName is Memory & Evidence Foundation
+PASS [MIG-009]: JSON contains foundation key
+PASS [MIG-009]: JSON does NOT contain process key
+PASS [MIG-009]: foundation number is 1
+PASS [MIG-009]: loop is 1
+PASS [MIG-009]: iteration is 0
+PASS [MIG-009]: certification is 0
+PASS [MIG-009]: done is 0
+PASS [MIG-009]: deserialized successfully
+PASS [MIG-009]: deserialized object matches original
+PASS [MIG-009]: deserialized identifier is F1.1.0.0.0
+PASS [MIG-010]: event-log.jsonl exists and opened
+PASS [MIG-010]: Historical events contain original P3.1.4.1.1
+PASS [MIG-010]: Historical events contain original P4.1.1
+PASS [MIG-010]: Historical events contain original P4.1.4.1.1
+PASS [MIG-010]: Historical events were NOT rewritten with synthetic canonical labels
+PASS [MIG-011]: P0.1.2.1.1 resolves to P1.1.2.1.1
+PASS [MIG-011]: legacy:P3.1.4.1.1 resolves to P4.1.4.1.1
+PASS [MIG-011]: legacy:P4.1.4.1.1 resolves to P5.1.4.1.1
+PASS [MIG-011]: canonical:P5.1.4.1.1 resolves to P5.1.4.1.1
+PASS [MIG-011]: F1.1.0.0.0 resolves to F1.1.0.0.0
+PASS [MIG-012]: Completed history contains canonical P1.1.2.1.1
+PASS [MIG-012]: Completed history contains canonical P2.1.1.1.1
+PASS [MIG-012]: Completed history contains canonical P3.1.4.1.1
+PASS [MIG-012]: Completed history contains canonical P4.1.4.1.1
+PASS [MIG-012]: Completed history contains canonical P5.1.4.1.1
+PASS [MIG-013]: nextIdentifier() is F1.1.0.0.0
+PASS [MIG-013]: nextProcess is Foundation
+PASS [MIG-013]: nextProcess foundation number is 1
+PASS [MIG-013]: nextProcess is unstarted (iter=0, cert=0, done=0)
+PASS [MIG-014]: Canonical P6 name is Canonical Code Bank
+PASS [MIG-014]: futureIdentifier() is P6.1.0.0.0
+PASS [MIG-014]: futureProcess is process 6
+PASS [MIG-015]: Legacy P5 is Canonical Code Bank
+PASS [MIG-015]: Canonical P5 is Self-Adjusting Routing
+PASS [MIG-015]: Canonical P6 is Canonical Code Bank
+PASS [MIG-015]: Legacy P5 and Canonical P5 names are completely distinct
+PASS [MIG-016]: Version P1.1.1.1.1 has certification=1
+PASS [MIG-016]: Version P1.1.1.1.1 has done=1
+PASS [MIG-016]: Version P2.1.1.1.1 has certification=1
+PASS [MIG-016]: Version P2.1.1.1.1 has done=1
+PASS [MIG-016]: Version P1.1.2.1.1 has certification=1
+PASS [MIG-016]: Version P1.1.2.1.1 has done=1
+PASS [MIG-016]: Version P3.1.4.1.1 has certification=1
+PASS [MIG-016]: Version P3.1.4.1.1 has done=1
+PASS [MIG-016]: Version P4.1.4.1.1 has certification=1
+PASS [MIG-016]: Version P4.1.4.1.1 has done=1
+PASS [MIG-016]: Version P5.1.4.1.1 has certification=1
+PASS [MIG-016]: Version P5.1.4.1.1 has done=1
+PASS [MIG-017]: Recovered events from ProjectMemory
+PASS [MIG-017]: Provenance actor is agent
+PASS [MIG-017]: Provenance agentId is antigravity
+PASS [MIG-017]: Provenance tool is aramf-cli
+PASS [MIG-017]: Provenance scope is project
+PASS [MIG-017]: Verified sequence 329 certification event provenance
+PASS [MIG-018]: validateColdStart reports PASS on canonical state
+PASS [MIG-019]: Memory consistency validate reports PASS on canonical state
+PASS [MIG-020]: P1 (Task Execution Governance) is certified
+PASS [MIG-020]: P2 (Context Coordination) is certified
+PASS [MIG-020]: P3 (Execution Orchestration) is certified
+PASS [MIG-020]: P4 (Predictive Task Optimization) is certified
+PASS [MIG-020]: P5 (Self-Adjusting Routing) is certified
+PASS [MIG-020]: F1 Foundation is scheduled before P6 Code Bank
+PASS [MIG-020]: Canonical ProcessVersionState is fully valid
+Process Namespace Migration test matrix completed: ALL PASS

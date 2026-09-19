@@ -2,35 +2,35 @@
     "_file": "current-certification-state.json",
     "subjects": {
         "F1": {
-            "certificateId": "cert-ae0d99f5-f9eb-4f59-99ea-9706be64be3b",
+            "certificateId": "cert-474a78ad-7f0d-4d48-9506-797e7846efef",
             "certificateType": "FOUNDATION",
             "certificationStatus": "CERTIFIED",
             "context": {
-                "evidenceArtifact": "ARAMF_WORKER/certification/evidence/f1-evidence-iteration-3.json",
-                "evidenceFingerprint": "d46f0785c9e6cb859ab59a78440e69de574b7c86640c40cbef2b7ec96407bc01",
+                "evidenceArtifact": "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/f1-evidence.json",
+                "evidenceFingerprint": "c0aac36aa2e1fe4d5157b19bf7b6e0e8d188c86309100f5f0f42800e03f69b81",
                 "foundation": "F1",
                 "foundationName": "Memory & Evidence Foundation",
-                "foundationVersion": "F1.1.3",
-                "iteration": 3,
-                "sourceRevision": "7ea4fc367d1d58b121707a239add5e006ff89cdf",
+                "foundationVersion": "F1.1.4",
+                "iteration": 4,
+                "sourceRevision": "6574a5191bd9a581dc8d7b8eb7d1462082cb4230",
                 "verificationLevel": "HOST_TEST"
             },
-            "evidenceArtifact": "ARAMF_WORKER/certification/evidence/f1-evidence-iteration-3.json",
+            "evidenceArtifact": "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/f1-evidence.json",
             "evidenceComplete": true,
-            "evidenceFingerprint": "d46f0785c9e6cb859ab59a78440e69de574b7c86640c40cbef2b7ec96407bc01",
+            "evidenceFingerprint": "c0aac36aa2e1fe4d5157b19bf7b6e0e8d188c86309100f5f0f42800e03f69b81",
             "evidenceReferences": [
                 {
-                    "fingerprint": "d46f0785c9e6cb859ab59a78440e69de574b7c86640c40cbef2b7ec96407bc01",
-                    "reference": "ARAMF_WORKER/certification/evidence/f1-evidence-iteration-3.json",
+                    "fingerprint": "c0aac36aa2e1fe4d5157b19bf7b6e0e8d188c86309100f5f0f42800e03f69b81",
+                    "reference": "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/f1-evidence.json",
                     "type": "HOST_TEST",
                     "verified": true
                 }
             ],
             "foundationName": "Memory & Evidence Foundation",
-            "foundationVersion": "F1.1.3",
-            "issuedAt": "2026-09-19T05:57:04Z",
-            "iteration": 3,
-            "previousCertificateId": "cert-78c910a0-ea8c-494d-8b11-b9dc310841da",
+            "foundationVersion": "F1.1.4",
+            "issuedAt": "2026-09-19T12:33:02Z",
+            "iteration": 4,
+            "previousCertificateId": "cert-ae0d99f5-f9eb-4f59-99ea-9706be64be3b",
             "relatedProjectMemoryEvents": [
                 "latest:CERTIFICATION_STARTED"
             ],
@@ -39,11 +39,11 @@
             ],
             "result": "PASS",
             "scope": "project",
-            "sourceRevision": "7ea4fc367d1d58b121707a239add5e006ff89cdf",
+            "sourceRevision": "6574a5191bd9a581dc8d7b8eb7d1462082cb4230",
             "status": "PASS",
             "subject": "F1",
-            "supersedesCertificateId": "cert-78c910a0-ea8c-494d-8b11-b9dc310841da",
-            "timestamp": "2026-09-19T05:57:04Z",
+            "supersedesCertificateId": "cert-ae0d99f5-f9eb-4f59-99ea-9706be64be3b",
+            "timestamp": "2026-09-19T12:33:02Z",
             "verificationLevel": "HOST_TEST"
         }
     },

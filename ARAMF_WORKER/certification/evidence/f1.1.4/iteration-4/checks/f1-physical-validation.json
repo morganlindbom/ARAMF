@@ -1,0 +1,14 @@
+{
+    "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf.exe foundation f1-validate --project .",
+    "commandIdentity": "aramf::foundation f1-validate --project {PROJECT_ROOT}",
+    "evidenceFingerprint": "6218edfef4453af8c91935e3f7136f5977cfdedabbb23c23ca10bed22854b165",
+    "evidenceNamespace": "F1.1.4/iteration-4/namespace-v2",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/f1-physical-validation.log",
+    "exitCode": 0,
+    "foundationVersion": "F1.1.4",
+    "iteration": 4,
+    "name": "f1-physical-validation",
+    "sourceRevision": "6574a5191bd9a581dc8d7b8eb7d1462082cb4230",
+    "status": "PASS",
+    "timestamp": "2026-09-19T12:28:56Z"
+}

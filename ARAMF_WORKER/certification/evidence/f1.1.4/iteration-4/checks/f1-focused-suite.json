@@ -1,0 +1,14 @@
+{
+    "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --f1-certification",
+    "commandIdentity": "aramf_core_tests::--f1-certification",
+    "evidenceFingerprint": "a4ea3f731e6feb07c20a9b0247862ffdb46b9a235c1691d36e6dd9e8c760b04d",
+    "evidenceNamespace": "F1.1.4/iteration-4/namespace-v2",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/f1-focused-suite.log",
+    "exitCode": 0,
+    "foundationVersion": "F1.1.4",
+    "iteration": 4,
+    "name": "f1-focused-suite",
+    "sourceRevision": "6574a5191bd9a581dc8d7b8eb7d1462082cb4230",
+    "status": "PASS",
+    "timestamp": "2026-09-19T12:27:34Z"
+}

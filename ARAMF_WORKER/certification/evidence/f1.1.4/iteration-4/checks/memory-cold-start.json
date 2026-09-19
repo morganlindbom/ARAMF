@@ -1,0 +1,14 @@
+{
+    "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf.exe memory cold-start --project .",
+    "commandIdentity": "aramf::memory cold-start --project {PROJECT_ROOT}",
+    "evidenceFingerprint": "35021676a9a2a9cad08a673b6e9a4cd60ff568e43b41f54c26680d8f8f3c4e77",
+    "evidenceNamespace": "F1.1.4/iteration-4/namespace-v2",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/memory-cold-start.log",
+    "exitCode": 0,
+    "foundationVersion": "F1.1.4",
+    "iteration": 4,
+    "name": "memory-cold-start",
+    "sourceRevision": "6574a5191bd9a581dc8d7b8eb7d1462082cb4230",
+    "status": "PASS",
+    "timestamp": "2026-09-19T12:28:56Z"
+}

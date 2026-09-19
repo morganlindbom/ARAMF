@@ -1,0 +1,14 @@
+{
+    "command": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe --p2-context",
+    "commandIdentity": "aramf_core_tests::--p2-context",
+    "evidenceFingerprint": "937802ce92f58f7d219eb7e5aa044e7c4c8e9d0f4e7a7e827f69a9d1e10b62ec",
+    "evidenceNamespace": "F1.1.4/iteration-4/namespace-v2",
+    "evidenceReference": "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/p2-context.log",
+    "exitCode": 0,
+    "foundationVersion": "F1.1.4",
+    "iteration": 4,
+    "name": "p2-context",
+    "sourceRevision": "6574a5191bd9a581dc8d7b8eb7d1462082cb4230",
+    "status": "PASS",
+    "timestamp": "2026-09-19T12:28:22Z"
+}
