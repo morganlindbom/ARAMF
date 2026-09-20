@@ -25,6 +25,8 @@ set(ARAMF_CORE_SOURCES
     src/core/ProjectMemoryCompaction.cpp
     src/core/CertificationService.h
     src/core/CertificationService.cpp
+    src/core/CertificationFreshness.h
+    src/core/CertificationFreshness.cpp
     src/core/MemoryCommand.h
     src/core/MemoryCommand.cpp
     src/core/ImprovementBacklog.h
@@ -281,6 +283,8 @@ if(BUILD_TESTING)
         src/core/ProjectMemoryCompaction.cpp
         src/core/CertificationService.h
         src/core/CertificationService.cpp
+        src/core/CertificationFreshness.h
+        src/core/CertificationFreshness.cpp
         src/core/MemoryCommand.h
         src/core/MemoryCommand.cpp
         src/core/ImprovementBacklog.h
@@ -362,6 +366,15 @@ if(BUILD_TESTING)
     add_dependencies(aramf_core_tests aramf)
     add_test(NAME aramf_core_tests COMMAND aramf_core_tests)
 
+    add_executable(aramf_freshness_tests
+        tests/CertificationFreshnessTests.cpp
+        src/core/CertificationFreshness.h
+        src/core/CertificationFreshness.cpp
+    )
+    target_include_directories(aramf_freshness_tests PRIVATE src)
+    target_link_libraries(aramf_freshness_tests PRIVATE Qt6::Core)
+    add_test(NAME aramf_freshness_tests COMMAND aramf_freshness_tests)
+
     add_executable(aramf_workflow_tests
         tests/WorkflowNavigationTests.cpp
         src/core/AramfPaths.h
@@ -379,6 +392,12 @@ if(BUILD_TESTING)
         src/structure/S2/PhysicalStructure.cpp
         src/structure/S3/DependencyInterfaces.h
         src/structure/S3/DependencyInterfaces.cpp
+        src/structure/S4/CompositionEncapsulation.h
+        src/structure/S4/CompositionEncapsulation.cpp
+        src/structure/S5/DecompositionModularity.h
+        src/structure/S5/DecompositionModularity.cpp
+        src/structure/S6/StructuralEvolutionEnforcement.h
+        src/structure/S6/StructuralEvolutionEnforcement.cpp
         src/core/ProcessVersion.h
         src/core/ProcessVersion.cpp
         src/core/WorkflowPageMetadata.h

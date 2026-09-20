@@ -1072,5 +1072,9 @@ Campaign Evidence:
 
 ## Latest Agent Task
 
-- Task: Governance bootstrap PREPARE read-only repair
-- Status: PASS
+- Task: Certification freshness infrastructure Phase A
+- Status: IMPLEMENTED; component revalidation and recertification intentionally not performed
+- Added canonical source/dependency manifest and read-only freshness evaluation services.
+- Added explicit future S6 dependency-bound certification seam.
+- Full CTest: PASS (12/12, including the new freshness suite).
+- Next: Phase B bottom-up freshness revalidation after review and commit.
