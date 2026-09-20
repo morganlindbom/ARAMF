@@ -620,14 +620,14 @@
                 "done": 1,
                 "iteration": 1,
                 "loop": 1,
-                "structure": 2
+                "structure": 3
             },
             {
                 "certification": 1,
                 "done": 1,
                 "iteration": 2,
                 "loop": 1,
-                "structure": 2
+                "structure": 3
             }
         ]
     },
@@ -1101,6 +1101,54 @@
             "placements": [
             ],
             "rootId": "physical-root",
+            "schemaVersion": 1
+        },
+        "s3DependencyInterfaces": {
+            "dependencies": [
+            ],
+            "interfaces": [
+                {
+                    "artifactIds": [
+                    ],
+                    "contractVersion": "",
+                    "description": "",
+                    "id": "project-api",
+                    "interfaceKind": "API",
+                    "metadata": {
+                    },
+                    "name": "Project public contract",
+                    "ownerResponsibilityId": "s1-implementation",
+                    "stableKey": "project-api",
+                    "visibility": "PUBLIC"
+                }
+            ],
+            "lifecycle": {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "structure": 3
+            },
+            "lifecycleHistory": [
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 3
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 2,
+                    "loop": 1,
+                    "structure": 3
+                }
+            ],
+            "metadata": {
+            },
+            "observations": [
+            ],
             "schemaVersion": 1
         }
     },

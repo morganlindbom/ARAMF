@@ -81,7 +81,7 @@
         "validationEvidence": "VALIDATION_EVIDENCE",
         "workerManifest": "DERIVED"
     },
-    "generatedFromFingerprint": "7aa7609529f395ce3905f6e5895af5223431153c772f4869e1730892e0b1ad7b",
+    "generatedFromFingerprint": "b4def61f6f8bd0f335606556c5731704e683214284d9b6e372b5ab327100e1c3",
     "generationOptions": {
         "agentRules": true,
         "memory": true,
@@ -97,6 +97,177 @@
         "taskDag": "ARAMF_WORKER/context/task-dag.json"
     },
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
+    "structure": {
+        "s1ResponsibilityOwnership": {
+            "artifacts": [
+            ],
+            "lifecycle": {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "structure": 1
+            },
+            "lifecycleHistory": [
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 2,
+                    "loop": 1,
+                    "structure": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 3,
+                    "loop": 1,
+                    "structure": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 4,
+                    "loop": 1,
+                    "structure": 1
+                }
+            ],
+            "responsibilities": [
+                {
+                    "childIds": [
+                    ],
+                    "description": "Canonical S1 implementation responsibility.",
+                    "id": "s1-implementation",
+                    "kind": "PROJECT",
+                    "metadata": {
+                    },
+                    "name": "S1 Responsibility & Ownership",
+                    "ownerMetadata": "ARAMF Structure family",
+                    "parentId": "",
+                    "stableKey": "s1-implementation"
+                }
+            ],
+            "rootId": "s1-implementation",
+            "schemaVersion": 1
+        },
+        "s2PhysicalStructure": {
+            "boundaries": [
+                {
+                    "allowedChildDirectories": [
+                    ],
+                    "containmentMode": "EXCLUSIVE",
+                    "excludePatterns": [
+                    ],
+                    "externalLocationAllowed": false,
+                    "generatedDirectories": [
+                    ],
+                    "id": "project-boundary",
+                    "includePatterns": [
+                    ],
+                    "metadata": {
+                    },
+                    "responsibilityId": "s1-implementation",
+                    "rootRelativePath": "."
+                }
+            ],
+            "lifecycle": {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "structure": 2
+            },
+            "lifecycleHistory": [
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 2
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 2,
+                    "loop": 1,
+                    "structure": 2
+                }
+            ],
+            "nodes": [
+                {
+                    "childIds": [
+                    ],
+                    "id": "physical-root",
+                    "metadata": {
+                    },
+                    "name": "Project",
+                    "parentId": "",
+                    "relativePath": "",
+                    "responsibilityId": "s1-implementation",
+                    "role": "root",
+                    "stableKey": "physical-root"
+                }
+            ],
+            "placements": [
+            ],
+            "rootId": "physical-root",
+            "schemaVersion": 1
+        },
+        "s3DependencyInterfaces": {
+            "dependencies": [
+            ],
+            "interfaces": [
+                {
+                    "artifactIds": [
+                    ],
+                    "contractVersion": "",
+                    "description": "",
+                    "id": "project-api",
+                    "interfaceKind": "API",
+                    "metadata": {
+                    },
+                    "name": "Project public contract",
+                    "ownerResponsibilityId": "s1-implementation",
+                    "stableKey": "project-api",
+                    "visibility": "PUBLIC"
+                }
+            ],
+            "lifecycle": {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "structure": 3
+            },
+            "lifecycleHistory": [
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 3
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 2,
+                    "loop": 1,
+                    "structure": 3
+                }
+            ],
+            "metadata": {
+            },
+            "observations": [
+            ],
+            "schemaVersion": 1
+        }
+    },
     "taskContract": {
         "authority": "DERIVED",
         "policyOwner": "ProjectModel.rules.scopeMetadata",

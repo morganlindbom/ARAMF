@@ -349,6 +349,39 @@
             "subject": "S2",
             "timestamp": "2026-09-20T17:52:31Z",
             "verificationLevel": "HOST_TEST"
+        },
+        "S3": {
+            "certificateId": "cert-7321b05c-5564-4e32-b646-9432a2d34e29",
+            "certificateType": "STRUCTURE",
+            "certificationStatus": "CERTIFIED",
+            "context": {
+                "evidenceArtifact": "ARAMF_WORKER/certification/evidence/s3.1.2/iteration-2/s3-evidence.json",
+                "evidenceFingerprint": "cbd7cab7f05a50aea2ebdf7c48d4e74713bf5fb3bdc831f4c475b30adaec088a",
+                "sourceRevision": "8b187b244465ab073b01bf55f17f414d201c4999:S3:a60cc9d65925f4021f0b489defd0a0e7bca94d479fa104b4eab5c764e99f484d",
+                "structureVersion": "S3.1.2"
+            },
+            "evidenceComplete": true,
+            "evidenceReferences": [
+                {
+                    "fingerprint": "cbd7cab7f05a50aea2ebdf7c48d4e74713bf5fb3bdc831f4c475b30adaec088a",
+                    "reference": "ARAMF_WORKER/certification/evidence/s3.1.2/iteration-2/s3-evidence.json",
+                    "type": "HOST_TEST",
+                    "verified": true
+                }
+            ],
+            "issuedAt": "2026-09-20T18:32:03Z",
+            "relatedProjectMemoryEvents": [
+                "latest:CERTIFICATION_STARTED"
+            ],
+            "requirements": [
+                "s3-evidence-artifact"
+            ],
+            "result": "PASS",
+            "scope": "project",
+            "status": "PASS",
+            "subject": "S3",
+            "timestamp": "2026-09-20T18:32:03Z",
+            "verificationLevel": "HOST_TEST"
         }
     },
     "version": 1

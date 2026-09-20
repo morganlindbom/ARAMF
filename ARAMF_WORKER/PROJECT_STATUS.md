@@ -19,6 +19,18 @@ This is the live development status for the ARAMF repository itself.
 `aramf_setup/` directory is product/bootstrap source material and is not a
 second live project-status authority.
 
+## Canonical Structure Status
+
+- S1 Responsibility & Ownership: certified and complete; prior certification
+  history is preserved and its shared dependency freshness remains governed
+  separately.
+- S2 Physical Structure & Artifact Placement: certified and complete; prior
+  certification history is preserved.
+- S3 Dependency & Interface Boundaries: `S3.1.2.1.1`, certified and complete.
+  S3.1.1 evidence remains append-only history; the final S3.1.2 certificate is
+  bound to the exact implementation commit and generated Worker lifecycle.
+- S4, S5, and S6: not implemented.
+
 ## Current Architecture
 
 ARAMF is a C++17 / Qt 6 desktop application. The repository's live project

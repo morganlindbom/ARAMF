@@ -1,0 +1,24 @@
+{
+    "audit": {
+        "diagnostics": [
+        ],
+        "modelFingerprint": "927e22eff933570766d2f0cdd62404db8d98564f3edc5ea18722bffe52eeee89",
+        "valid": true
+    },
+    "authority": "S3",
+    "generatedAt": "2026-09-20T18:27:07Z",
+    "lifecycle": "S3.1.1.0.0",
+    "s1ContractFingerprint": "9e3a1c837667d39ab7e396f0c4d3c4adaf130429b55bf790d6f233e45ea92d7d",
+    "s2ContractFingerprint": "a48a8cc1689ce37b5b668ded42ba4b6fd41dc914ec1ba778cf9547117de042cb",
+    "schemaVersion": 1,
+    "sourceFingerprint": "927e22eff933570766d2f0cdd62404db8d98564f3edc5ea18722bffe52eeee89",
+    "sourceRevision": "7cd3b92ea147536172d7608a5e14d3b478268cd8:S3:d3e5cb845b723c7d9db8b9d9618b56105fbb02ada22ba88f2372703116b4e138",
+    "subject": "S3",
+    "testResult": {
+        "failed": 0,
+        "passed": 1,
+        "regression": "CTest 8/8 PASS",
+        "status": "PASS",
+        "suite": "aramf_s3_tests"
+    }
+}
