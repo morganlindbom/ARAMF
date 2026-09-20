@@ -6,6 +6,7 @@
 #include "ProcessVersion.h"
 #include "../structure/S2/PhysicalStructure.h"
 #include "../structure/S5/DecompositionModularity.h"
+#include "../structure/S6/StructuralEvolutionEnforcement.h"
 
 #include <QDir>
 #include <QFile>
@@ -250,7 +251,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     root.insert(QStringLiteral("workflowProgress"), QJsonObject{
         {QStringLiteral("completedPages"), toJsonArray(completedPageIds)}});
     root.insert(QStringLiteral("processVersion"), processVersionStateToJson(model.processVersionState()));
-    root.insert(QStringLiteral("structure"), QJsonObject{{QStringLiteral("s1ResponsibilityOwnership"), S1::toJson(model.responsibilityOwnership())}, {QStringLiteral("s2PhysicalStructure"), S2::toJson(model.physicalStructure())}, {QStringLiteral("s3DependencyInterfaces"), S3::toJson(model.dependencyInterfaces())}, {QStringLiteral("s4CompositionEncapsulation"), S4::toJson(model.compositionEncapsulation())}, {QStringLiteral("s5DecompositionModularity"), S5::toJson(model.decompositionModularity())}});
+    root.insert(QStringLiteral("structure"), QJsonObject{{QStringLiteral("s1ResponsibilityOwnership"), S1::toJson(model.responsibilityOwnership())}, {QStringLiteral("s2PhysicalStructure"), S2::toJson(model.physicalStructure())}, {QStringLiteral("s3DependencyInterfaces"), S3::toJson(model.dependencyInterfaces())}, {QStringLiteral("s4CompositionEncapsulation"), S4::toJson(model.compositionEncapsulation())}, {QStringLiteral("s5DecompositionModularity"), S5::toJson(model.decompositionModularity())}, {QStringLiteral("s6StructuralEvolutionEnforcement"), S6::toJson(model.structuralEvolutionEnforcement())}});
     if (!model.orchestrationState().isEmpty()) root.insert(QStringLiteral("orchestration"), model.orchestrationState());
     root.insert(QStringLiteral("runtimeOwnership"), model.runtimeOwnershipState());
     root.insert(QStringLiteral("releaseManagement"), QJsonObject{
@@ -522,6 +523,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
     S3::Configuration dependencyInterfaces;
     S4::Configuration compositionEncapsulation;
     S5::Configuration decompositionModularity;
+    S6::Configuration structuralEvolutionEnforcement;
     const auto structure = root.value(QStringLiteral("structure")).toObject();
     if (structure.contains(QStringLiteral("s1ResponsibilityOwnership"))
         && !S1::fromJson(structure.value(QStringLiteral("s1ResponsibilityOwnership")), &responsibilityOwnership, error)) return false;
@@ -533,6 +535,8 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
         && !S4::fromJson(structure.value(QStringLiteral("s4CompositionEncapsulation")), &compositionEncapsulation, error)) return false;
     if (structure.contains(QStringLiteral("s5DecompositionModularity"))
         && !S5::fromJson(structure.value(QStringLiteral("s5DecompositionModularity")), &decompositionModularity, error)) return false;
+    if (structure.contains(QStringLiteral("s6StructuralEvolutionEnforcement"))
+        && !S6::fromJson(structure.value(QStringLiteral("s6StructuralEvolutionEnforcement")), &structuralEvolutionEnforcement, error)) return false;
     const auto taskMetadata = root.value("rules").toObject().value("scopeMetadata");
     if (!taskMetadata.isUndefined() && !taskMetadata.isObject()) {
         if (error) *error = "rules.scopeMetadata must be an object when present.";
@@ -899,6 +903,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
     model->setDependencyInterfaces(dependencyInterfaces);
     model->setCompositionEncapsulation(compositionEncapsulation);
     model->setDecompositionModularity(decompositionModularity);
+    model->setStructuralEvolutionEnforcement(structuralEvolutionEnforcement);
     const auto ownership = root.value(QStringLiteral("runtimeOwnership")).toObject();
     model->setRuntimeOwnershipState(ownership.isEmpty()
         ? QJsonObject{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("claims"), QJsonArray{}}}

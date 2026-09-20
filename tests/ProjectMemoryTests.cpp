@@ -78,6 +78,7 @@ bool runS2CertificationForProject(const QString& projectRoot);
 bool runS3CertificationForProject(const QString& projectRoot);
 bool runS4CertificationForProject(const QString& projectRoot);
 bool runS5CertificationForProject(const QString& projectRoot);
+bool runS6CertificationForProject(const QString& projectRoot);
 
 int main(int argc, char** argv)
 {
@@ -109,6 +110,7 @@ int main(int argc, char** argv)
     if (app.arguments().contains(QStringLiteral("--s3-certification"))) return runS3CertificationForProject(AramfPaths::programRoot()) ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--s4-certification"))) return runS4CertificationForProject(AramfPaths::programRoot()) ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--s5-certification"))) return runS5CertificationForProject(AramfPaths::programRoot()) ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--s6-certification"))) return runS6CertificationForProject(AramfPaths::programRoot()) ? 0 : 1;
     QTemporaryDir temporaryProject;
     if (!require(temporaryProject.isValid(), "temporary project directory must be valid")) {
         return 1;

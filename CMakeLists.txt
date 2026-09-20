@@ -113,6 +113,10 @@ set(ARAMF_CORE_SOURCES
     src/structure/S5/DecompositionModularity.cpp
     src/structure/S5/S5CertificationService.h
     src/structure/S5/S5CertificationService.cpp
+    src/structure/S6/StructuralEvolutionEnforcement.h
+    src/structure/S6/StructuralEvolutionEnforcement.cpp
+    src/structure/S6/S6CertificationService.h
+    src/structure/S6/S6CertificationService.cpp
 )
 
 set(ARAMF_UI_SOURCES
@@ -227,6 +231,7 @@ if(BUILD_TESTING)
         tests/S3CertificationTests.cpp
         tests/S4CertificationTests.cpp
         tests/S5CertificationTests.cpp
+        tests/S6CertificationTests.cpp
         src/core/MemoryEvidenceFoundation.h
         src/core/MemoryEvidenceFoundation.cpp
         src/core/FoundationServices.h
@@ -251,6 +256,10 @@ if(BUILD_TESTING)
         src/structure/S5/DecompositionModularity.cpp
         src/structure/S5/S5CertificationService.h
         src/structure/S5/S5CertificationService.cpp
+        src/structure/S6/StructuralEvolutionEnforcement.h
+        src/structure/S6/StructuralEvolutionEnforcement.cpp
+        src/structure/S6/S6CertificationService.h
+        src/structure/S6/S6CertificationService.cpp
         src/core/RuntimeOwnershipService.h
         src/core/RuntimeOwnershipService.cpp
         src/core/ExecutionOrchestrator.h
@@ -323,6 +332,10 @@ if(BUILD_TESTING)
         src/structure/S5/DecompositionModularity.cpp
         src/structure/S5/S5CertificationService.h
         src/structure/S5/S5CertificationService.cpp
+        src/structure/S6/StructuralEvolutionEnforcement.h
+        src/structure/S6/StructuralEvolutionEnforcement.cpp
+        src/structure/S6/S6CertificationService.h
+        src/structure/S6/S6CertificationService.cpp
         src/core/ProcessVersion.h
         src/core/ProcessVersion.cpp
         src/core/WorkflowPageMetadata.h
@@ -536,6 +549,17 @@ if(BUILD_TESTING)
     target_include_directories(aramf_s5_tests PRIVATE src)
     target_link_libraries(aramf_s5_tests PRIVATE Qt6::Core)
     add_test(NAME aramf_s5_tests COMMAND aramf_s5_tests)
+
+    add_executable(aramf_s6_tests
+        tests/S6StructuralEvolutionEnforcementTests.cpp
+        src/core/ProcessVersion.h
+        src/core/ProcessVersion.cpp
+        src/structure/S6/StructuralEvolutionEnforcement.h
+        src/structure/S6/StructuralEvolutionEnforcement.cpp
+    )
+    target_include_directories(aramf_s6_tests PRIVATE src)
+    target_link_libraries(aramf_s6_tests PRIVATE Qt6::Core)
+    add_test(NAME aramf_s6_tests COMMAND aramf_s6_tests)
     set_tests_properties(aramf_template_tests PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=windows;PATH=C:/msys64/ucrt64/bin")
 
