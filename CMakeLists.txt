@@ -109,6 +109,10 @@ set(ARAMF_CORE_SOURCES
     src/structure/S4/CompositionEncapsulation.cpp
     src/structure/S4/S4CertificationService.h
     src/structure/S4/S4CertificationService.cpp
+    src/structure/S5/DecompositionModularity.h
+    src/structure/S5/DecompositionModularity.cpp
+    src/structure/S5/S5CertificationService.h
+    src/structure/S5/S5CertificationService.cpp
 )
 
 set(ARAMF_UI_SOURCES
@@ -222,6 +226,7 @@ if(BUILD_TESTING)
         tests/S2CertificationTests.cpp
         tests/S3CertificationTests.cpp
         tests/S4CertificationTests.cpp
+        tests/S5CertificationTests.cpp
         src/core/MemoryEvidenceFoundation.h
         src/core/MemoryEvidenceFoundation.cpp
         src/core/FoundationServices.h
@@ -242,6 +247,10 @@ if(BUILD_TESTING)
         src/structure/S4/CompositionEncapsulation.cpp
         src/structure/S4/S4CertificationService.h
         src/structure/S4/S4CertificationService.cpp
+        src/structure/S5/DecompositionModularity.h
+        src/structure/S5/DecompositionModularity.cpp
+        src/structure/S5/S5CertificationService.h
+        src/structure/S5/S5CertificationService.cpp
         src/core/RuntimeOwnershipService.h
         src/core/RuntimeOwnershipService.cpp
         src/core/ExecutionOrchestrator.h
@@ -310,6 +319,10 @@ if(BUILD_TESTING)
         src/structure/S4/CompositionEncapsulation.cpp
         src/structure/S4/S4CertificationService.h
         src/structure/S4/S4CertificationService.cpp
+        src/structure/S5/DecompositionModularity.h
+        src/structure/S5/DecompositionModularity.cpp
+        src/structure/S5/S5CertificationService.h
+        src/structure/S5/S5CertificationService.cpp
         src/core/ProcessVersion.h
         src/core/ProcessVersion.cpp
         src/core/WorkflowPageMetadata.h
@@ -504,6 +517,25 @@ if(BUILD_TESTING)
     target_include_directories(aramf_s4_tests PRIVATE src)
     target_link_libraries(aramf_s4_tests PRIVATE Qt6::Core)
     add_test(NAME aramf_s4_tests COMMAND aramf_s4_tests)
+
+    add_executable(aramf_s5_tests
+        tests/S5DecompositionModularityTests.cpp
+        src/core/ProcessVersion.h
+        src/core/ProcessVersion.cpp
+        src/structure/S1/ResponsibilityOwnership.h
+        src/structure/S1/ResponsibilityOwnership.cpp
+        src/structure/S2/PhysicalStructure.h
+        src/structure/S2/PhysicalStructure.cpp
+        src/structure/S3/DependencyInterfaces.h
+        src/structure/S3/DependencyInterfaces.cpp
+        src/structure/S4/CompositionEncapsulation.h
+        src/structure/S4/CompositionEncapsulation.cpp
+        src/structure/S5/DecompositionModularity.h
+        src/structure/S5/DecompositionModularity.cpp
+    )
+    target_include_directories(aramf_s5_tests PRIVATE src)
+    target_link_libraries(aramf_s5_tests PRIVATE Qt6::Core)
+    add_test(NAME aramf_s5_tests COMMAND aramf_s5_tests)
     set_tests_properties(aramf_template_tests PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=windows;PATH=C:/msys64/ucrt64/bin")
 

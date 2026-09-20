@@ -15,6 +15,7 @@
 #include "../structure/S2/PhysicalStructure.h"
 #include "../structure/S3/DependencyInterfaces.h"
 #include "../structure/S4/CompositionEncapsulation.h"
+#include "../structure/S5/DecompositionModularity.h"
 
 class ProjectPersistence;
 
@@ -427,6 +428,7 @@ public:
     const S2::Configuration& physicalStructure() const { return physicalStructure_; }
     const S3::Configuration& dependencyInterfaces() const { return dependencyInterfaces_; }
     const S4::Configuration& compositionEncapsulation() const { return compositionEncapsulation_; }
+    const S5::Configuration& decompositionModularity() const { return decompositionModularity_; }
     QJsonObject runtimeOwnershipState() const { return runtimeOwnershipState_; }
     QJsonObject orchestrationState() const { return orchestrationState_; }
     QSet<QString> completedPageIds() const { return completedPageIds_; }
@@ -497,6 +499,11 @@ public:
     bool certifyS4Iteration(QString* error = nullptr);
     bool completeS4Iteration(QString* error = nullptr);
     bool reworkS4(QString* error = nullptr);
+    void setDecompositionModularity(const S5::Configuration& value);
+    bool startS5Iteration(QString* error = nullptr);
+    bool certifyS5Iteration(QString* error = nullptr);
+    bool completeS5Iteration(QString* error = nullptr);
+    bool reworkS5(QString* error = nullptr);
 
     void beginUpdate();
     void endUpdate();
@@ -557,6 +564,7 @@ private:
     S2::Configuration physicalStructure_;
     S3::Configuration dependencyInterfaces_;
     S4::Configuration compositionEncapsulation_;
+    S5::Configuration decompositionModularity_;
     QJsonObject runtimeOwnershipState_;
     QJsonObject orchestrationState_;
 };

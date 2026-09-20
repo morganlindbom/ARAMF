@@ -1235,3 +1235,51 @@ bool ProjectModel::reworkS4(QString* error)
     modified_ = true;
     return true;
 }
+
+void ProjectModel::setDecompositionModularity(const S5::Configuration& value)
+{
+    decompositionModularity_ = value;
+    modified_ = true;
+    emit modelChanged();
+}
+
+bool ProjectModel::startS5Iteration(QString* error)
+{
+    processVersionState_.hasNextStructure = true;
+    processVersionState_.nextStructure = decompositionModularity_.lifecycle;
+    if (!ProcessVersionLifecycle::startNextStructure(&processVersionState_, error)) return false;
+    decompositionModularity_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::certifyS5Iteration(QString* error)
+{
+    processVersionState_.hasActiveStructure = true;
+    processVersionState_.activeStructure = decompositionModularity_.lifecycle;
+    if (!ProcessVersionLifecycle::certifyCurrentStructureIteration(&processVersionState_, error)) return false;
+    decompositionModularity_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::completeS5Iteration(QString* error)
+{
+    processVersionState_.hasActiveStructure = true;
+    processVersionState_.activeStructure = decompositionModularity_.lifecycle;
+    if (!ProcessVersionLifecycle::completeActiveStructure(&processVersionState_, error)) return false;
+    decompositionModularity_.lifecycle = processVersionState_.structureHistory.last();
+    decompositionModularity_.lifecycleHistory.append(decompositionModularity_.lifecycle);
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::reworkS5(QString* error)
+{
+    if (decompositionModularity_.lifecycleHistory.isEmpty()) { if (error) *error = QStringLiteral("S5 has no completed iteration to rework."); return false; }
+    processVersionState_.structureHistory = decompositionModularity_.lifecycleHistory;
+    if (!ProcessVersionLifecycle::reworkCompletedStructure(&processVersionState_, 5, error)) return false;
+    decompositionModularity_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
