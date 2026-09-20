@@ -458,10 +458,10 @@
         "writerMode": "agent-direct"
     },
     "migration": {
-        "currentSchemaVersion": 1,
+        "currentSchemaVersion": 2,
         "notices": [
         ],
-        "sourceSchemaVersion": 0,
+        "sourceSchemaVersion": 1,
         "status": "MIGRATION_OK"
     },
     "options": {
@@ -469,13 +469,6 @@
     "processVersion": {
         "active": null,
         "completedHistory": [
-            {
-                "certification": 1,
-                "done": 1,
-                "iteration": 1,
-                "loop": 1,
-                "process": 1
-            },
             {
                 "certification": 1,
                 "done": 1,
@@ -624,7 +617,7 @@
     },
     "profileSelections": [
     ],
-    "projectFilePath": "ARAMF_WORKER.aramf.json",
+    "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER.aramf.json",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "projectName": "ARAMF_WORKER",
     "projectPath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
@@ -971,7 +964,60 @@
         ],
         "schemaVersion": 1
     },
-    "schemaVersion": 1,
+    "schemaVersion": 2,
+    "structure": {
+        "s1ResponsibilityOwnership": {
+            "artifacts": [
+            ],
+            "lifecycle": {
+                "certification": 1,
+                "done": 1,
+                "iteration": 3,
+                "loop": 1,
+                "structure": 1
+            },
+            "responsibilities": [
+                {
+                    "childIds": [
+                    ],
+                    "description": "Canonical S1 implementation responsibility.",
+                    "id": "s1-implementation",
+                    "kind": "PROJECT",
+                    "metadata": {
+                    },
+                    "name": "S1 Responsibility & Ownership",
+                    "ownerMetadata": "ARAMF Structure family",
+                    "parentId": "",
+                    "stableKey": "s1-implementation"
+                }
+            ],
+            "rootId": "s1-implementation",
+            "lifecycleHistory": [
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 2,
+                    "loop": 1,
+                    "structure": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 3,
+                    "loop": 1,
+                    "structure": 1
+                }
+            ],
+            "schemaVersion": 1
+        }
+    },
     "templateId": "",
     "templateModules": [
     ],

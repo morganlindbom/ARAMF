@@ -9,7 +9,8 @@
 // Lifecycle process kind: standard sequential process (P) or foundational layer (F).
 enum class ProcessKind {
     Process,
-    Foundation
+    Foundation,
+    Structure
 };
 
 // Versioned lifecycle process namespace:
@@ -39,10 +40,12 @@ struct ProcessVersion final
 
     bool isFoundation() const { return kind == ProcessKind::Foundation; }
     bool isProcess() const { return kind == ProcessKind::Process; }
+    bool isStructure() const { return kind == ProcessKind::Structure; }
     int foundationNumber() const { return isFoundation() ? number : 0; }
     int processNumber() const { return isProcess() ? number : 0; }
+    int structureNumber() const { return isStructure() ? number : 0; }
 
-    QString prefix() const { return kind == ProcessKind::Foundation ? QStringLiteral("F") : QStringLiteral("P"); }
+    QString prefix() const { return kind == ProcessKind::Foundation ? QStringLiteral("F") : kind == ProcessKind::Structure ? QStringLiteral("S") : QStringLiteral("P"); }
     QString identifier() const;
     QString canonicalName() const;
 
@@ -103,12 +106,22 @@ struct ProcessVersionState final
     QList<ProcessVersion> foundationQueue;
     bool foundationIntegrationValid = false;
 
+    // Structure lifecycle is an independent canonical lane. It shares the
+    // ProcessVersion value object and five-part lifecycle rules but never
+    // participates in F/P sequencing or gating.
+    QList<ProcessVersion> structureHistory;
+    bool hasActiveStructure = false;
+    ProcessVersion activeStructure;
+    bool hasNextStructure = false;
+    ProcessVersion nextStructure;
+
     bool isValid(QString* error = nullptr) const;
     QStringList completedIdentifiers() const;
     QString activeIdentifier() const;
     QString nextIdentifier() const;
     QString futureIdentifier() const;
     QStringList foundationQueueIdentifiers() const;
+    QStringList structureIdentifiers() const;
 
     bool isFoundationComplete(int foundationNumber) const;
     bool allFoundationsComplete() const;
@@ -143,5 +156,11 @@ public:
     static bool advanceIteration(ProcessVersionState* state, QString* error = nullptr);
     static bool certifyCurrentIteration(ProcessVersionState* state, QString* error = nullptr);
     static bool completeActiveProcess(ProcessVersionState* state, QString* error = nullptr);
+    static bool startNextStructure(ProcessVersionState* state, QString* error = nullptr);
+    static bool reworkCompletedStructure(ProcessVersionState* state, int structure,
+                                         QString* error = nullptr);
+    static bool advanceStructureIteration(ProcessVersionState* state, QString* error = nullptr);
+    static bool certifyCurrentStructureIteration(ProcessVersionState* state, QString* error = nullptr);
+    static bool completeActiveStructure(ProcessVersionState* state, QString* error = nullptr);
     static bool resetForFiveStageCampaign(ProcessVersionState* state, QString* error = nullptr);
 };

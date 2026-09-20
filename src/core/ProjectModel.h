@@ -11,6 +11,7 @@
 
 #include "ProjectSchema.h"
 #include "ProcessVersion.h"
+#include "../structure/S1/ResponsibilityOwnership.h"
 
 class ProjectPersistence;
 
@@ -419,6 +420,7 @@ public:
     int targetRelease() const { return targetRelease_; }
     bool hasTargetRelease() const { return targetRelease_ > 0; }
     ProcessVersionState processVersionState() const { return processVersionState_; }
+    const S1::Configuration& responsibilityOwnership() const { return responsibilityOwnership_; }
     QJsonObject runtimeOwnershipState() const { return runtimeOwnershipState_; }
     QJsonObject orchestrationState() const { return orchestrationState_; }
     QSet<QString> completedPageIds() const { return completedPageIds_; }
@@ -468,6 +470,12 @@ public:
     bool certifyCurrentProcessIteration(QString* error = nullptr);
     bool completeActiveProcess(QString* error = nullptr);
     bool resetForFiveStageProcessCampaign(QString* error = nullptr);
+    void setResponsibilityOwnership(const S1::Configuration& value);
+    bool startS1Iteration(QString* error = nullptr);
+    bool advanceS1Iteration(QString* error = nullptr);
+    bool certifyS1Iteration(QString* error = nullptr);
+    bool completeS1Iteration(QString* error = nullptr);
+    bool reworkS1(QString* error = nullptr);
 
     void beginUpdate();
     void endUpdate();
@@ -524,6 +532,7 @@ private:
     int targetRelease_ = 0;
     QSet<QString> completedPageIds_;
     ProcessVersionState processVersionState_;
+    S1::Configuration responsibilityOwnership_;
     QJsonObject runtimeOwnershipState_;
     QJsonObject orchestrationState_;
 };

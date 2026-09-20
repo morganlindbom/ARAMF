@@ -63,7 +63,7 @@
             "scope": "all",
             "section": "routing",
             "source": "ARAMF_WORKER/routing/task-routes.json",
-            "sourceFingerprint": "1cd3381d4d220e4eac270c9aff8a1b50c0b33c5ec8870ff2191a233a77093721",
+            "sourceFingerprint": "adc98e496fa2ab1a99271432f6f5eccb5bbd6bb6a06a488d8eb70cec81155d17",
             "status": "CURRENT",
             "summary": "routing context from ARAMF_WORKER/routing/task-routes.json"
         },
@@ -89,7 +89,7 @@
             "scope": "all",
             "section": "routing",
             "source": "ARAMF_WORKER/routing/scope-routes.json",
-            "sourceFingerprint": "4f61c74e0125d9f56e48e477c1e480201d8903bc67bd3eebef44c564a693e7c8",
+            "sourceFingerprint": "baea9db8142cec40d4661734ec842ff68e6827be17050dd73792122cef2ea1bb",
             "status": "CURRENT",
             "summary": "routing context from ARAMF_WORKER/routing/scope-routes.json"
         },
@@ -167,7 +167,7 @@
             "scope": "software",
             "section": "resources",
             "source": "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8",
-            "sourceFingerprint": "17dcbcf65c2bcce461d077b86fd739261fd401280e57c4a901baa12e797b960d",
+            "sourceFingerprint": "8cbbfe44c0529c83ea3f277c934dacf42cd90a1acd7f7499d4b5a90caa84cc0a",
             "status": "CURRENT",
             "summary": "resources context from external:769b24cd-ace8-482f-8f96-05c09a1a4cb8"
         },
@@ -180,7 +180,7 @@
             "scope": "all",
             "section": "governance",
             "source": "ARAMF_WORKER/AGENTS.md",
-            "sourceFingerprint": "1e26795022466b963728ce02c8f9441ec017e84bfc2b43c85ce4c0d9cc6b5de8",
+            "sourceFingerprint": "5fe2a5df880f133b4e1206469fa17b1750b2efeb9c1d4d38b15ef5a1b5c5263e",
             "status": "CURRENT",
             "summary": "governance context from ARAMF_WORKER/AGENTS.md"
         },
@@ -258,7 +258,7 @@
             "scope": "all",
             "section": "project-state",
             "source": "ARAMF_WORKER/memory/current-state.md",
-            "sourceFingerprint": "4ee554d487cfe9ae6bac3e585f63b0e506ae8460c29fba760852313c410cc940",
+            "sourceFingerprint": "eb96382d931b7f0057246dec0c373801e7b0c650db94aa24ad9550ceb0a12f51",
             "status": "CURRENT",
             "summary": "project-state context from ARAMF_WORKER/memory/current-state.md"
         },
@@ -349,7 +349,7 @@
             "scope": "all",
             "section": "topology",
             "source": "ARAMF_WORKER/worker-manifest.json",
-            "sourceFingerprint": "b3899ad466e6034520a2ec445d919a84ae6d4aaeab9cfef1af731cd9d27e79df",
+            "sourceFingerprint": "a001ce745bb1a32ad49bd6e5107fb8c22792ed852932c05027f9c2a1a0724f44",
             "status": "CURRENT",
             "summary": "topology context from ARAMF_WORKER/worker-manifest.json"
         },
@@ -362,7 +362,7 @@
             "scope": "build-system",
             "section": "resources",
             "source": "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8",
-            "sourceFingerprint": "17dcbcf65c2bcce461d077b86fd739261fd401280e57c4a901baa12e797b960d",
+            "sourceFingerprint": "8cbbfe44c0529c83ea3f277c934dacf42cd90a1acd7f7499d4b5a90caa84cc0a",
             "status": "CURRENT",
             "summary": "resources context from external:769b24cd-ace8-482f-8f96-05c09a1a4cb8"
         },
@@ -393,7 +393,7 @@
             "summary": "resources context from external:c693014c-27ef-4ce1-9291-6fb37ff0c375"
         }
     ],
-    "indexFingerprint": "20924fee7da11bd2e2b084a8ab83d38a9b62d7895ceecc36f4e27fbc7978ea97",
+    "indexFingerprint": "b0541e2c55907fc0a8c2b4765d2ba2de367687e94d1befe151772aeac99f1078",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "schemaVersion": 1,
     "sourceIndex": "context-index.json"

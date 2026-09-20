@@ -30,7 +30,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "880810e37dde4d5bc0e028c68b1899cf288cae98334b1f3ab24cecc8a3821761",
+    "configurationFingerprint": "a6296dba541213dc2efff08b692ffd5ab730b0e89cca74f0943f44bff892e26d",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",
@@ -57,13 +57,6 @@
     "processVersion": {
         "active": null,
         "completedHistory": [
-            {
-                "certification": 1,
-                "done": 1,
-                "iteration": 1,
-                "loop": 1,
-                "process": 1
-            },
             {
                 "certification": 1,
                 "done": 1,
@@ -213,6 +206,59 @@
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "projectName": "ARAMF_WORKER",
     "schemaVersion": 1,
+    "structure": {
+        "s1ResponsibilityOwnership": {
+            "artifacts": [
+            ],
+            "lifecycle": {
+                "certification": 1,
+                "done": 1,
+                "iteration": 3,
+                "loop": 1,
+                "structure": 1
+            },
+            "lifecycleHistory": [
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 2,
+                    "loop": 1,
+                    "structure": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 3,
+                    "loop": 1,
+                    "structure": 1
+                }
+            ],
+            "responsibilities": [
+                {
+                    "childIds": [
+                    ],
+                    "description": "Canonical S1 implementation responsibility.",
+                    "id": "s1-implementation",
+                    "kind": "PROJECT",
+                    "metadata": {
+                    },
+                    "name": "S1 Responsibility & Ownership",
+                    "ownerMetadata": "ARAMF Structure family",
+                    "parentId": "",
+                    "stableKey": "s1-implementation"
+                }
+            ],
+            "rootId": "s1-implementation",
+            "schemaVersion": 1
+        }
+    },
     "targetPlatforms": [
         "desktop",
         "windows-desktop"

@@ -93,6 +93,10 @@ set(ARAMF_CORE_SOURCES
     src/core/MemoryEvidenceFoundation.cpp
     src/core/FoundationServices.h
     src/core/FoundationServices.cpp
+    src/structure/S1/ResponsibilityOwnership.h
+    src/structure/S1/ResponsibilityOwnership.cpp
+    src/structure/S1/S1CertificationService.h
+    src/structure/S1/S1CertificationService.cpp
 )
 
 set(ARAMF_UI_SOURCES
@@ -202,10 +206,15 @@ if(BUILD_TESTING)
         tests/ProcessNamespaceMigrationTests.cpp
         tests/FoundationNamespaceTests.cpp
         tests/FoundationTests.cpp
+        tests/S1CertificationTests.cpp
         src/core/MemoryEvidenceFoundation.h
         src/core/MemoryEvidenceFoundation.cpp
         src/core/FoundationServices.h
         src/core/FoundationServices.cpp
+        src/structure/S1/ResponsibilityOwnership.h
+        src/structure/S1/ResponsibilityOwnership.cpp
+        src/structure/S1/S1CertificationService.h
+        src/structure/S1/S1CertificationService.cpp
         src/core/RuntimeOwnershipService.h
         src/core/RuntimeOwnershipService.cpp
         src/core/ExecutionOrchestrator.h
@@ -262,6 +271,8 @@ if(BUILD_TESTING)
         src/core/UpdateExecutionService.cpp
         src/core/ProjectPersistence.h
         src/core/ProjectPersistence.cpp
+        src/structure/S1/ResponsibilityOwnership.h
+        src/structure/S1/ResponsibilityOwnership.cpp
         src/core/ProcessVersion.h
         src/core/ProcessVersion.cpp
         src/core/WorkflowPageMetadata.h
@@ -299,6 +310,8 @@ if(BUILD_TESTING)
         src/core/ProjectModel.cpp
         src/core/ProjectPersistence.h
         src/core/ProjectPersistence.cpp
+        src/structure/S1/ResponsibilityOwnership.h
+        src/structure/S1/ResponsibilityOwnership.cpp
         src/core/ProcessVersion.h
         src/core/ProcessVersion.cpp
         src/core/WorkflowPageMetadata.h
@@ -394,6 +407,17 @@ if(BUILD_TESTING)
     target_include_directories(aramf_template_tests PRIVATE src)
     target_link_libraries(aramf_template_tests PRIVATE Qt6::Core Qt6::Widgets)
     add_test(NAME aramf_template_tests COMMAND aramf_template_tests)
+
+    add_executable(aramf_s1_tests
+        tests/S1ResponsibilityTests.cpp
+        src/core/ProcessVersion.h
+        src/core/ProcessVersion.cpp
+        src/structure/S1/ResponsibilityOwnership.h
+        src/structure/S1/ResponsibilityOwnership.cpp
+    )
+    target_include_directories(aramf_s1_tests PRIVATE src)
+    target_link_libraries(aramf_s1_tests PRIVATE Qt6::Core)
+    add_test(NAME aramf_s1_tests COMMAND aramf_s1_tests)
     set_tests_properties(aramf_template_tests PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=windows;PATH=C:/msys64/ucrt64/bin")
 

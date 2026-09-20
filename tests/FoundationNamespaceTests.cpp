@@ -291,7 +291,7 @@ bool runFoundationNamespaceTests(const QString& selfRepoPath)
         ok &= check(!ProcessVersion::isCanonicalProcess(0), "FOUND-016", "P0 is not canonical process");
         ok &= check(!ProcessVersion::isCanonicalProcess(15), "FOUND-016", "P15 is not canonical process");
         const auto roadmap = ProcessNamespaceService::canonicalRoadmapNames();
-        ok &= check(roadmap.size() == 18, "FOUND-016", "Roadmap has 18 entries (4 foundations + 14 processes)");
+        ok &= check(roadmap.size() == 24, "FOUND-016", "Roadmap has 24 entries (4 foundations + 14 processes + 6 structures)");
         allPass &= ok;
     }
 

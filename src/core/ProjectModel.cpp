@@ -1033,3 +1033,61 @@ bool ProjectModel::restoreProcessVersionState(const ProcessVersionState& state, 
     processVersionState_ = state;
     return true;
 }
+
+void ProjectModel::setResponsibilityOwnership(const S1::Configuration& value)
+{
+    responsibilityOwnership_ = value;
+    modified_ = true;
+    emit modelChanged();
+}
+
+bool ProjectModel::startS1Iteration(QString* error)
+{
+    processVersionState_.hasNextStructure = true;
+    processVersionState_.nextStructure = responsibilityOwnership_.lifecycle;
+    if (!ProcessVersionLifecycle::startNextStructure(&processVersionState_, error)) return false;
+    responsibilityOwnership_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::advanceS1Iteration(QString* error)
+{
+    processVersionState_.hasActiveStructure = true;
+    processVersionState_.activeStructure = responsibilityOwnership_.lifecycle;
+    if (!ProcessVersionLifecycle::advanceStructureIteration(&processVersionState_, error)) return false;
+    responsibilityOwnership_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::certifyS1Iteration(QString* error)
+{
+    processVersionState_.hasActiveStructure = true;
+    processVersionState_.activeStructure = responsibilityOwnership_.lifecycle;
+    if (!ProcessVersionLifecycle::certifyCurrentStructureIteration(&processVersionState_, error)) return false;
+    responsibilityOwnership_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::completeS1Iteration(QString* error)
+{
+    processVersionState_.hasActiveStructure = true;
+    processVersionState_.activeStructure = responsibilityOwnership_.lifecycle;
+    if (!ProcessVersionLifecycle::completeActiveStructure(&processVersionState_, error)) return false;
+    responsibilityOwnership_.lifecycle = processVersionState_.structureHistory.last();
+    responsibilityOwnership_.lifecycleHistory.append(responsibilityOwnership_.lifecycle);
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::reworkS1(QString* error)
+{
+    if (responsibilityOwnership_.lifecycleHistory.isEmpty()) { if (error) *error = QStringLiteral("S1 has no completed iteration to rework."); return false; }
+    processVersionState_.structureHistory = responsibilityOwnership_.lifecycleHistory;
+    if (!ProcessVersionLifecycle::reworkCompletedStructure(&processVersionState_, 1, error)) return false;
+    responsibilityOwnership_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}

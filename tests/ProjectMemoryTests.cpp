@@ -71,6 +71,9 @@ bool runF3FoundationTests(const QString& selfRepoPath);
 bool runF4FoundationTests(const QString& selfRepoPath);
 bool runFoundationIntegrationTestSuite(const QString& selfRepoPath);
 bool runAllFoundationTests(const QString& selfRepoPath);
+bool runS1CertificationTests();
+bool runS1CertificationForProject(const QString& projectRoot);
+bool runS1CloseoutGeneration(const QString& projectRoot);
 
 int main(int argc, char** argv)
 {
@@ -96,6 +99,8 @@ int main(int argc, char** argv)
     if (app.arguments().contains(QStringLiteral("--f4-lifecycle-certification"))) return runF4FoundationTests(AramfPaths::programRoot()) ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--foundation-integration"))) return runFoundationIntegrationTestSuite(AramfPaths::programRoot()) ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--all-foundations"))) return runAllFoundationTests(AramfPaths::programRoot()) ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--s1-certification"))) return runS1CertificationForProject(AramfPaths::programRoot()) ? 0 : 1;
+    if (app.arguments().contains(QStringLiteral("--s1-closeout"))) return runS1CloseoutGeneration(AramfPaths::programRoot()) ? 0 : 1;
     QTemporaryDir temporaryProject;
     if (!require(temporaryProject.isValid(), "temporary project directory must be valid")) {
         return 1;
@@ -2218,6 +2223,7 @@ int main(int argc, char** argv)
     ok &= runProcessNamespaceMigrationTests(AramfPaths::programRoot());
     ok &= runFoundationNamespaceTests(AramfPaths::programRoot());
     ok &= runAllFoundationTests(AramfPaths::programRoot());
+    ok &= runS1CertificationTests();
     return ok ? 0 : 1;
 }
 

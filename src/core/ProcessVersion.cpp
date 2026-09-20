@@ -82,6 +82,10 @@ bool ProcessVersion::isValid(QString* error) const
         setError(error, QStringLiteral("Foundation number must be between 1 and 4."));
         return false;
     }
+    if (kind == ProcessKind::Structure && (number < 1 || number > 6)) {
+        setError(error, QStringLiteral("Structure number must be between 1 and 6."));
+        return false;
+    }
     if (loop < 1) { setError(error, QStringLiteral("Process loop must be at least 1.")); return false; }
     if (iteration < 0) { setError(error, QStringLiteral("Process iteration must be non-negative.")); return false; }
     if (certification != 0 && certification != 1) { setError(error, QStringLiteral("Process certification flag must be 0 or 1.")); return false; }
@@ -93,15 +97,16 @@ bool ProcessVersion::isValid(QString* error) const
 bool ProcessVersion::parse(const QString& value, ProcessVersion* result, QString* error)
 {
     if (!result) { setError(error, QStringLiteral("Process version result is not available.")); return false; }
-    const auto match = QRegularExpression(QStringLiteral("^([PF])([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.([01])\\.([01])$")).match(value.trimmed());
+    const auto match = QRegularExpression(QStringLiteral("^([PFS])([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.([01])\\.([01])$")).match(value.trimmed());
     if (!match.hasMatch()) {
-        setError(error, QStringLiteral("Invalid process version '%1'. Expected [P|F]<number>.<loop>.<iteration>.<cert>.<done>.").arg(value));
+        setError(error, QStringLiteral("Invalid lifecycle version '%1'. Expected [P|F|S]<number>.<loop>.<iteration>.<cert>.<done>.").arg(value));
         return false;
     }
     const QString typeChar = match.captured(1);
     bool ok = false;
     ProcessVersion candidate;
-    candidate.kind = (typeChar == QStringLiteral("F")) ? ProcessKind::Foundation : ProcessKind::Process;
+    candidate.kind = typeChar == QStringLiteral("F") ? ProcessKind::Foundation
+        : typeChar == QStringLiteral("S") ? ProcessKind::Structure : ProcessKind::Process;
     candidate.number = match.captured(2).toInt(&ok);
     if (!ok) { setError(error, QStringLiteral("Process/foundation number is too large.")); return false; }
     candidate.process = (candidate.kind == ProcessKind::Process) ? candidate.number : 0;
@@ -221,6 +226,17 @@ QString ProcessVersion::processName(int processNumber, ProcessNamespace ns)
 QString ProcessVersion::canonicalName() const
 {
     if (isFoundation()) return foundationName(number);
+    if (isStructure()) {
+        switch (number) {
+        case 1: return QStringLiteral("Responsibility & Ownership");
+        case 2: return QStringLiteral("Physical Structure & Artifact Placement");
+        case 3: return QStringLiteral("Dependency & Interface Boundaries");
+        case 4: return QStringLiteral("Composition & Encapsulation");
+        case 5: return QStringLiteral("Decomposition & Modularity");
+        case 6: return QStringLiteral("Structural Evolution & Enforcement");
+        default: return QStringLiteral("Unknown Structure");
+        }
+    }
     return processName(number, ProcessNamespace::CanonicalV2);
 }
 
@@ -351,6 +367,12 @@ QStringList ProcessNamespaceService::canonicalRoadmapNames()
         QStringLiteral("P12 — Evaluation & Continuous Improvement Framework"),
         QStringLiteral("P13 — Knowledge Harvest & Core Promotion"),
         QStringLiteral("P14 — Governed Lifecycle Renewal")
+        ,QStringLiteral("S1 — Responsibility & Ownership")
+        ,QStringLiteral("S2 — Physical Structure & Artifact Placement")
+        ,QStringLiteral("S3 — Dependency & Interface Boundaries")
+        ,QStringLiteral("S4 — Composition & Encapsulation")
+        ,QStringLiteral("S5 — Decomposition & Modularity")
+        ,QStringLiteral("S6 — Structural Evolution & Enforcement")
     };
 }
 
@@ -392,8 +414,12 @@ bool processVersionFromJson(const QJsonValue& value, ProcessVersion* result, QSt
         candidate.kind = ProcessKind::Process;
         if (!readNonNegativeInt(object, QStringLiteral("process"), &candidate.number, error)) return false;
         candidate.process = candidate.number;
+    } else if (object.contains(QStringLiteral("structure"))) {
+        candidate.kind = ProcessKind::Structure;
+        if (!readNonNegativeInt(object, QStringLiteral("structure"), &candidate.number, error)) return false;
+        candidate.process = 0;
     } else {
-        setError(error, QStringLiteral("Process version must specify either 'process' or 'foundation'."));
+        setError(error, QStringLiteral("Process version must specify 'process', 'foundation', or 'structure'."));
         return false;
     }
 
@@ -411,7 +437,8 @@ bool processVersionFromJson(const QJsonValue& value, ProcessVersion* result, QSt
 QJsonObject processVersionToJson(const ProcessVersion& version)
 {
     QJsonObject obj{
-        {version.kind == ProcessKind::Foundation ? QStringLiteral("foundation") : QStringLiteral("process"), version.number},
+        {version.kind == ProcessKind::Foundation ? QStringLiteral("foundation")
+            : version.kind == ProcessKind::Structure ? QStringLiteral("structure") : QStringLiteral("process"), version.number},
         {QStringLiteral("loop"), version.loop},
         {QStringLiteral("iteration"), version.iteration},
         {QStringLiteral("certification"), version.certification},
@@ -550,6 +577,39 @@ bool ProcessVersionState::isValid(QString* error) const
             return false;
         }
     }
+    ProcessVersion previousStructure;
+    bool hasPreviousStructure = false;
+    for (const auto& version : structureHistory) {
+        if (!version.isStructure() || !version.isValid(error) || version.done != 1) {
+            setError(error, QStringLiteral("Structure history must contain certified completed S versions."));
+            return false;
+        }
+        if (hasPreviousStructure && std::any_of(structureHistory.cbegin(), structureHistory.cend(),
+            [&version](const auto& prior) { return &prior != &version && prior == version; })) {
+            setError(error, QStringLiteral("Structure history must not contain duplicate versions."));
+            return false;
+        }
+        previousStructure = version;
+        hasPreviousStructure = true;
+    }
+    if (hasActiveStructure) {
+        if (!activeStructure.isStructure() || !activeStructure.isValid(error) || activeStructure.done != 0) {
+            setError(error, QStringLiteral("Active structure must be an uncertified S version."));
+            return false;
+        }
+        if (hasPreviousStructure && activeStructure.number != previousStructure.number
+            && activeStructure.number < previousStructure.number) {
+            setError(error, QStringLiteral("Active structure cannot move backwards."));
+            return false;
+        }
+    }
+    if (hasNextStructure) {
+        if (!nextStructure.isStructure() || !nextStructure.isValid(error)
+            || nextStructure.iteration != 0 || nextStructure.certification != 0 || nextStructure.done != 0) {
+            setError(error, QStringLiteral("Next structure must start as S<number>.<loop>.0.0.0."));
+            return false;
+        }
+    }
     return true;
 }
 
@@ -580,6 +640,15 @@ QStringList ProcessVersionState::foundationQueueIdentifiers() const
     QStringList ids;
     for (const auto& f : foundationQueue) ids.append(f.identifier());
     return ids;
+}
+
+QStringList ProcessVersionState::structureIdentifiers() const
+{
+    QStringList result;
+    for (const auto& version : structureHistory) result << version.identifier();
+    if (hasActiveStructure) result << activeStructure.identifier();
+    if (hasNextStructure) result << nextStructure.identifier();
+    return result;
 }
 
 bool ProcessVersionState::isFoundationComplete(int foundationNumber) const
@@ -711,6 +780,13 @@ QJsonObject processVersionStateToJson(const ProcessVersionState& state)
     if (state.foundationIntegrationValid) {
         obj.insert(QStringLiteral("foundationIntegrationValid"), true);
     }
+    if (!state.structureHistory.isEmpty()) {
+        QJsonArray history;
+        for (const auto& version : state.structureHistory) history.append(processVersionToJson(version));
+        obj.insert(QStringLiteral("structureHistory"), history);
+    }
+    if (state.hasActiveStructure) obj.insert(QStringLiteral("activeStructure"), processVersionToJson(state.activeStructure));
+    if (state.hasNextStructure) obj.insert(QStringLiteral("nextStructure"), processVersionToJson(state.nextStructure));
     return obj;
 }
 
@@ -785,6 +861,24 @@ bool processVersionStateFromJson(const QJsonValue& value, ProcessVersionState* s
 
     if (object.contains(QStringLiteral("foundationIntegrationValid"))) {
         candidate.foundationIntegrationValid = object.value(QStringLiteral("foundationIntegrationValid")).toBool(false);
+    }
+
+    if (object.contains(QStringLiteral("structureHistory"))) {
+        for (const auto& entry : object.value(QStringLiteral("structureHistory")).toArray()) {
+            ProcessVersion version;
+            if (!processVersionFromJson(entry, &version, error) || !version.isStructure()) return false;
+            candidate.structureHistory.append(version);
+        }
+    }
+    if (object.contains(QStringLiteral("activeStructure"))) {
+        if (!processVersionFromJson(object.value(QStringLiteral("activeStructure")), &candidate.activeStructure, error)
+            || !candidate.activeStructure.isStructure()) return false;
+        candidate.hasActiveStructure = true;
+    }
+    if (object.contains(QStringLiteral("nextStructure"))) {
+        if (!processVersionFromJson(object.value(QStringLiteral("nextStructure")), &candidate.nextStructure, error)
+            || !candidate.nextStructure.isStructure()) return false;
+        candidate.hasNextStructure = true;
     }
 
     if (!candidate.isValid(error)) return false;
@@ -936,6 +1030,71 @@ bool ProcessVersionLifecycle::completeActiveProcess(ProcessVersionState* state, 
     state->completedHistory << completed;
     state->hasActiveProcess = false;
     state->activeProcess = {};
+    return state->isValid(error);
+}
+
+bool ProcessVersionLifecycle::startNextStructure(ProcessVersionState* state, QString* error)
+{
+    if (!state || !state->isValid(error) || state->hasActiveStructure || !state->hasNextStructure) {
+        setError(error, QStringLiteral("A valid inactive structure state with a next S version is required.")); return false;
+    }
+    state->activeStructure = state->nextStructure;
+    state->activeStructure.iteration = 1;
+    state->activeStructure.certification = 0;
+    state->activeStructure.done = 0;
+    state->hasActiveStructure = true;
+    state->hasNextStructure = false;
+    return state->isValid(error);
+}
+
+bool ProcessVersionLifecycle::reworkCompletedStructure(ProcessVersionState* state, int structure, QString* error)
+{
+    if (!state || !state->isValid(error) || state->hasActiveStructure) {
+        setError(error, QStringLiteral("A structure rework requires no active structure.")); return false;
+    }
+    auto match = std::find_if(state->structureHistory.crbegin(), state->structureHistory.crend(),
+                              [structure](const auto& version) { return version.number == structure; });
+    if (match == state->structureHistory.crend() || match->certification != 1 || match->done != 1
+        || match->iteration == std::numeric_limits<int>::max()) {
+        setError(error, QStringLiteral("Only a completed certified structure can be reopened.")); return false;
+    }
+    state->activeStructure = ProcessVersion(ProcessKind::Structure, structure, match->loop, match->iteration + 1, 0, 0);
+    state->hasActiveStructure = true;
+    return state->isValid(error);
+}
+
+bool ProcessVersionLifecycle::advanceStructureIteration(ProcessVersionState* state, QString* error)
+{
+    if (!state || !state->isValid(error) || !state->hasActiveStructure
+        || state->activeStructure.iteration == std::numeric_limits<int>::max()) {
+        setError(error, QStringLiteral("Only an active structure may advance iteration.")); return false;
+    }
+    ++state->activeStructure.iteration;
+    state->activeStructure.certification = 0;
+    return state->isValid(error);
+}
+
+bool ProcessVersionLifecycle::certifyCurrentStructureIteration(ProcessVersionState* state, QString* error)
+{
+    if (!state || !state->isValid(error) || !state->hasActiveStructure
+        || state->activeStructure.certification != 0 || state->activeStructure.done != 0) {
+        setError(error, QStringLiteral("Only an active uncertified structure may be certified.")); return false;
+    }
+    state->activeStructure.certification = 1;
+    return state->isValid(error);
+}
+
+bool ProcessVersionLifecycle::completeActiveStructure(ProcessVersionState* state, QString* error)
+{
+    if (!state || !state->isValid(error) || !state->hasActiveStructure
+        || state->activeStructure.certification != 1 || state->activeStructure.done != 0) {
+        setError(error, QStringLiteral("Only an active certified structure may be completed.")); return false;
+    }
+    auto completed = state->activeStructure;
+    completed.done = 1;
+    state->structureHistory.append(completed);
+    state->activeStructure = {};
+    state->hasActiveStructure = false;
     return state->isValid(error);
 }
 
