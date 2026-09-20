@@ -415,6 +415,39 @@
             "subject": "S4",
             "timestamp": "2026-09-20T19:02:07Z",
             "verificationLevel": "HOST_TEST"
+        },
+        "S5": {
+            "certificateId": "cert-b4f5f580-92c4-4132-a28d-a2996760163e",
+            "certificateType": "STRUCTURE",
+            "certificationStatus": "CERTIFIED",
+            "context": {
+                "evidenceArtifact": "ARAMF_WORKER/certification/evidence/s5.1.1/iteration-1/s5-evidence.json",
+                "evidenceFingerprint": "2efc59129ef045081b8f26d4a772f1c79568f5264349e00566fff84a0b2dbed0",
+                "sourceRevision": "092d160eaca55bf8b78d65d25d9b97b98efc48eb:S5:259f50b05997310d87e3a5bc4c58d1d1b2c41c371955c07bbfb2fba8dfc49949",
+                "structureVersion": "S5.1.1"
+            },
+            "evidenceComplete": true,
+            "evidenceReferences": [
+                {
+                    "fingerprint": "2efc59129ef045081b8f26d4a772f1c79568f5264349e00566fff84a0b2dbed0",
+                    "reference": "ARAMF_WORKER/certification/evidence/s5.1.1/iteration-1/s5-evidence.json",
+                    "type": "HOST_TEST",
+                    "verified": true
+                }
+            ],
+            "issuedAt": "2026-09-20T20:01:26Z",
+            "relatedProjectMemoryEvents": [
+                "latest:CERTIFICATION_STARTED"
+            ],
+            "requirements": [
+                "s5-evidence-artifact"
+            ],
+            "result": "PASS",
+            "scope": "project",
+            "status": "PASS",
+            "subject": "S5",
+            "timestamp": "2026-09-20T20:01:26Z",
+            "verificationLevel": "HOST_TEST"
         }
     },
     "version": 1

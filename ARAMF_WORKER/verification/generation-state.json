@@ -645,6 +645,13 @@
                     "iteration": 1,
                     "loop": 1,
                     "structure": 4
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 5
                 }
             ]
         },
@@ -1200,6 +1207,36 @@
                 "observations": [
                 ],
                 "schemaVersion": 1
+            },
+            "s5DecompositionModularity": {
+                "assessments": [
+                ],
+                "decompositionProposals": [
+                ],
+                "lifecycle": {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 5
+                },
+                "lifecycleHistory": [
+                    {
+                        "certification": 1,
+                        "done": 1,
+                        "iteration": 1,
+                        "loop": 1,
+                        "structure": 5
+                    }
+                ],
+                "metadata": {
+                    "legacyBaseline": true
+                },
+                "modularityPolicies": [
+                ],
+                "observations": [
+                ],
+                "schemaVersion": 1
             }
         },
         "templateId": "",
@@ -1215,8 +1252,8 @@
         },
         "workerNameSuffix": ""
     },
-    "fingerprint": "df682fe6ff1778e58a4c4936faef4aa184f57a08489b674bde2001c02e3173ce",
-    "generatedAt": "2026-09-20T19:02:07Z",
+    "fingerprint": "5ddfa3a2ae1993c8dea66a95d68b2d10668e79e2ae9197614231783af5c98d3e",
+    "generatedAt": "2026-09-20T20:01:26Z",
     "memory": true,
     "platforms": true,
     "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",

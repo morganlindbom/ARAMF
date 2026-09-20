@@ -1,0 +1,26 @@
+{
+    "audit": {
+        "diagnostics": [
+        ],
+        "modelFingerprint": "a8cef5ef04515695f7fb2599e51a10c77a179a3430c9cfe0ebd369ddfc892bd5",
+        "valid": true
+    },
+    "authority": "S5",
+    "generatedAt": "2026-09-20T20:01:26Z",
+    "lifecycle": "S5.1.1.0.0",
+    "s1ContractFingerprint": "9e3a1c837667d39ab7e396f0c4d3c4adaf130429b55bf790d6f233e45ea92d7d",
+    "s2ContractFingerprint": "a48a8cc1689ce37b5b668ded42ba4b6fd41dc914ec1ba778cf9547117de042cb",
+    "s3ContractFingerprint": "fa23cbd9c88e627c63115a66d592d49a17a74ba9c0dee4d83b6793934f473752",
+    "s4ContractFingerprint": "5c6d9f07ae66c74847a9d121028533408e175bdfc4c9507b7e7878891b499985",
+    "schemaVersion": 1,
+    "sourceFingerprint": "a8cef5ef04515695f7fb2599e51a10c77a179a3430c9cfe0ebd369ddfc892bd5",
+    "sourceRevision": "092d160eaca55bf8b78d65d25d9b97b98efc48eb:S5:259f50b05997310d87e3a5bc4c58d1d1b2c41c371955c07bbfb2fba8dfc49949",
+    "subject": "S5",
+    "testResult": {
+        "failed": 0,
+        "passed": 1,
+        "regression": "CTest 10/10 PASS",
+        "status": "PASS",
+        "suite": "aramf_s5_tests"
+    }
+}

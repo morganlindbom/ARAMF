@@ -32,7 +32,11 @@ second live project-status authority.
 - S4 Composition & Encapsulation: `S4.1.1.1.1`, certified and complete. S4
   composition contracts, encapsulation policies, host operations, and audit
   evidence are bound to the exact implementation commit.
-- S5 and S6: not implemented.
+- S5 Decomposition & Modularity: `S5.1.1.1.1`, certified and complete. S5
+  semantic modularity assessments, deterministic decomposition proposals, and
+  audit evidence are bound to the exact implementation commit. Proposals
+  remain non-authoritative and do not create S1 responsibilities.
+- S6 Structural Evolution & Enforcement: not implemented.
 
 ## Current Architecture
 

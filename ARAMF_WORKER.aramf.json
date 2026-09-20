@@ -642,6 +642,13 @@
                 "iteration": 1,
                 "loop": 1,
                 "structure": 4
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 5
             }
         ]
     },
@@ -1196,6 +1203,36 @@
             "metadata": {
                 "legacyBaseline": true
             },
+            "observations": [
+            ],
+            "schemaVersion": 1
+        },
+        "s5DecompositionModularity": {
+            "assessments": [
+            ],
+            "decompositionProposals": [
+            ],
+            "lifecycle": {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 5
+            },
+            "lifecycleHistory": [
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 5
+                }
+            ],
+            "metadata": {
+                "legacyBaseline": true
+            },
+            "modularityPolicies": [
+            ],
             "observations": [
             ],
             "schemaVersion": 1
