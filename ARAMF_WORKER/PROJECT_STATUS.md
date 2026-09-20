@@ -29,7 +29,10 @@ second live project-status authority.
 - S3 Dependency & Interface Boundaries: `S3.1.2.1.1`, certified and complete.
   S3.1.1 evidence remains append-only history; the final S3.1.2 certificate is
   bound to the exact implementation commit and generated Worker lifecycle.
-- S4, S5, and S6: not implemented.
+- S4 Composition & Encapsulation: `S4.1.1.1.1`, certified and complete. S4
+  composition contracts, encapsulation policies, host operations, and audit
+  evidence are bound to the exact implementation commit.
+- S5 and S6: not implemented.
 
 ## Current Architecture
 

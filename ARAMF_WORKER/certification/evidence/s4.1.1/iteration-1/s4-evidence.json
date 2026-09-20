@@ -1,0 +1,25 @@
+{
+    "audit": {
+        "diagnostics": [
+        ],
+        "modelFingerprint": "6d801ed9e048a55623f75f0abc36eadbbb76739df2f7dc1261ed0a13dd82cc3f",
+        "valid": true
+    },
+    "authority": "S4",
+    "generatedAt": "2026-09-20T19:02:07Z",
+    "lifecycle": "S4.1.1.0.0",
+    "s1ContractFingerprint": "9e3a1c837667d39ab7e396f0c4d3c4adaf130429b55bf790d6f233e45ea92d7d",
+    "s2ContractFingerprint": "a48a8cc1689ce37b5b668ded42ba4b6fd41dc914ec1ba778cf9547117de042cb",
+    "s3ContractFingerprint": "fa23cbd9c88e627c63115a66d592d49a17a74ba9c0dee4d83b6793934f473752",
+    "schemaVersion": 1,
+    "sourceFingerprint": "6d801ed9e048a55623f75f0abc36eadbbb76739df2f7dc1261ed0a13dd82cc3f",
+    "sourceRevision": "37c5c85e71b29e42cc0ad8e545194c8e1a6796be:S4:c9fc1f68d30d4d45a7e440601c9316f69a20533edc8de27b4565a489746da144",
+    "subject": "S4",
+    "testResult": {
+        "failed": 0,
+        "passed": 1,
+        "regression": "CTest 9/9 PASS",
+        "status": "PASS",
+        "suite": "aramf_s4_tests"
+    }
+}

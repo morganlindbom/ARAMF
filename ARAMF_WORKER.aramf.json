@@ -635,6 +635,13 @@
                 "iteration": 3,
                 "loop": 1,
                 "structure": 3
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 4
             }
         ]
     },
@@ -1160,6 +1167,34 @@
                 }
             ],
             "metadata": {
+            },
+            "observations": [
+            ],
+            "schemaVersion": 1
+        },
+        "s4CompositionEncapsulation": {
+            "compositionContracts": [
+            ],
+            "encapsulationPolicies": [
+            ],
+            "lifecycle": {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 4
+            },
+            "lifecycleHistory": [
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 4
+                }
+            ],
+            "metadata": {
+                "legacyBaseline": true
             },
             "observations": [
             ],
