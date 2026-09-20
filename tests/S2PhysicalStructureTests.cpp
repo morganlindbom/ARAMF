@@ -27,7 +27,7 @@ S2::Configuration validModel()
 {
     S2::Configuration configuration;
     configuration.rootId = QStringLiteral("physical-root");
-    configuration.nodes.append({QStringLiteral("physical-root"), QStringLiteral("physical-root"), QStringLiteral("Project"), {}, {}, QStringLiteral("project"), {}, QStringLiteral("root"), {}});
+    configuration.nodes.append({QStringLiteral("physical-root"), QStringLiteral("physical-root"), QStringLiteral("Project"), {}, {QStringLiteral("lab1-boundary")}, QStringLiteral("project"), {}, QStringLiteral("root"), {}});
     configuration.nodes.append({QStringLiteral("lab1-boundary"), QStringLiteral("lab1-boundary"), QStringLiteral("Lab 1"), QStringLiteral("physical-root"), {}, QStringLiteral("lab1"), QStringLiteral("Reports/Lab1"), QStringLiteral("document"), {}});
     configuration.boundaries.append({QStringLiteral("lab1-boundary"), QStringLiteral("lab1"), QStringLiteral("Reports/Lab1"), QStringLiteral("EXCLUSIVE"), {}, {}, {QStringLiteral("Images"), QStringLiteral("References"), QStringLiteral("Data")}, {}, false, {}});
     configuration.placements.append({QStringLiteral("report-image"), QStringLiteral("lab1"), QStringLiteral("lab1-boundary"), QStringLiteral("Reports/Lab1/Images/correlation.png"), S2::PlacementMode::Exact, QStringLiteral("image"), false, {}, {}});
@@ -58,6 +58,8 @@ int main(int argc, char** argv)
     invalid = configuration; invalid.placements[0].placementMode = S2::PlacementMode::Generated; invalid.placements[0].canonicalProducer.clear(); result = S2::audit(invalid, ownership); all &= check(!result.valid, "generated producer required");
     invalid = configuration; invalid.placements[0].placementMode = S2::PlacementMode::Mirrored; result = S2::audit(invalid, ownership); all &= check(result.valid, "mirrored placement supported");
     invalid = configuration; invalid.placements[0].placementMode = S2::PlacementMode::External; invalid.placements[0].expectedBoundaryId.clear(); result = S2::audit(invalid, ownership); all &= check(result.valid, "external placement supported");
+    invalid = configuration; invalid.nodes[1].parentId = QStringLiteral("missing"); result = S2::audit(invalid, ownership); all &= check(!result.valid, "parent child reciprocity is enforced");
+    invalid = configuration; invalid.nodes[0].childIds.append(QStringLiteral("missing")); result = S2::audit(invalid, ownership); all &= check(!result.valid, "unknown child reference is rejected");
     QTemporaryDir fixture; const QString marker = fixture.filePath(QStringLiteral("user.txt")); QFile file(marker); file.open(QIODevice::WriteOnly); file.write("unchanged"); file.close(); const QByteArray before = [&] { QFile read(marker); read.open(QIODevice::ReadOnly); return read.readAll(); }(); S2::audit(configuration, ownership, fixture.path()); QFile read(marker); read.open(QIODevice::ReadOnly); all &= check(read.readAll() == before, "audit does not modify user files");
     std::cout << (all ? "S2 tests PASS\n" : "S2 tests FAIL\n");
     return all ? 0 : 1;

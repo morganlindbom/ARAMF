@@ -13,14 +13,20 @@ bool runS2CertificationForProject(const QString& projectRoot)
     QString error;
     const QString projectFile = QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER.aramf.json"));
     if (!persistence.load(&model, projectFile, &error)) return false;
-    S2::Configuration configuration;
-    configuration.rootId = QStringLiteral("physical-root");
-    const QString responsibility = model.responsibilityOwnership().rootId;
-    configuration.nodes.append({QStringLiteral("physical-root"), QStringLiteral("physical-root"), QStringLiteral("Project"), {}, {}, responsibility, {}, QStringLiteral("root"), {}});
-    configuration.boundaries.append({QStringLiteral("project-boundary"), responsibility, QStringLiteral("."), QStringLiteral("EXCLUSIVE"), {}, {}, {}, {}, false, {}});
-    model.setPhysicalStructure(configuration);
-    if (!model.startS2Iteration(&error)) return false;
-    if (model.physicalStructure().lifecycle.identifier() != QStringLiteral("S2.1.1.0.0")) return false;
+    int iteration = 1;
+    if (model.physicalStructure().lifecycleHistory.isEmpty()) {
+        S2::Configuration configuration;
+        configuration.rootId = QStringLiteral("physical-root");
+        const QString responsibility = model.responsibilityOwnership().rootId;
+        configuration.nodes.append({QStringLiteral("physical-root"), QStringLiteral("physical-root"), QStringLiteral("Project"), {}, {}, responsibility, {}, QStringLiteral("root"), {}});
+        configuration.boundaries.append({QStringLiteral("project-boundary"), responsibility, QStringLiteral("."), QStringLiteral("EXCLUSIVE"), {}, {}, {}, {}, false, {}});
+        model.setPhysicalStructure(configuration);
+        if (!model.startS2Iteration(&error)) return false;
+    } else {
+        iteration = model.physicalStructure().lifecycleHistory.last().iteration + 1;
+        if (!model.reworkS2(&error)) return false;
+    }
+    if (model.physicalStructure().lifecycle.iteration != iteration || model.physicalStructure().lifecycle.certification != 0 || model.physicalStructure().lifecycle.done != 0) return false;
     if (!persistence.save(model, projectFile, &error)) return false;
 
     QByteArray material;
@@ -30,7 +36,7 @@ bool runS2CertificationForProject(const QString& projectRoot)
     QProcess git; git.start(QStringLiteral("git"), {QStringLiteral("rev-parse"), QStringLiteral("HEAD")}); if (!git.waitForFinished(10000) || git.exitCode() != 0) return false;
     const QString commit = QString::fromUtf8(git.readAllStandardOutput()).trimmed(); if (commit.isEmpty()) return false;
     QJsonObject issued;
-    if (!S2::CertificationServiceAdapter::certify(projectRoot, model.physicalStructure(), model.responsibilityOwnership(), QStringLiteral("%1:S2:%2").arg(commit, sourceFingerprint), QJsonObject{{"suite", "aramf_s2_tests"}, {"status", "PASS"}, {"passed", 1}, {"failed", 0}, {"regression", "CTest 7/7 PASS"}}, 1, &issued, &error)) return false;
+    if (!S2::CertificationServiceAdapter::certify(projectRoot, model.physicalStructure(), model.responsibilityOwnership(), QStringLiteral("%1:S2:%2").arg(commit, sourceFingerprint), QJsonObject{{"suite", "aramf_s2_tests"}, {"status", "PASS"}, {"passed", 1}, {"failed", 0}, {"regression", "CTest 7/7 PASS"}}, iteration, &issued, &error)) return false;
     if (issued.value(QStringLiteral("subject")).toString() != QStringLiteral("S2")) return false;
     if (!model.certifyS2Iteration(&error) || !model.completeS2Iteration(&error)) return false;
     if (!persistence.save(model, projectFile, &error)) return false;
