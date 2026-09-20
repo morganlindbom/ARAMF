@@ -1,0 +1,24 @@
+{
+    "audit": {
+        "authority": "S1",
+        "diagnostics": [
+        ],
+        "modelFingerprint": "cd8ea2663ca76f9d04ca2a99357fe87a320516683abb00c188ac32c73064ac8b",
+        "schemaVersion": 1,
+        "valid": true
+    },
+    "authority": "S1",
+    "generatedAt": "2026-09-20T17:10:52Z",
+    "lifecycle": "S1.1.4.0.0",
+    "schemaVersion": 1,
+    "sourceFingerprint": "cd8ea2663ca76f9d04ca2a99357fe87a320516683abb00c188ac32c73064ac8b",
+    "sourceRevision": "0a6fad08c0907b9b2a6276f09f467a2a001bfb92:S1:14839f7bd72aae674aea289976bc6d25764db4fb0bc89c5b07f2d8f39b0096ff",
+    "subject": "S1",
+    "testResult": {
+        "failed": 0,
+        "passed": 1,
+        "regression": "CTest 6/6 PASS",
+        "status": "PASS",
+        "suite": "aramf_s1_tests"
+    }
+}

@@ -30,7 +30,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "a6296dba541213dc2efff08b692ffd5ab730b0e89cca74f0943f44bff892e26d",
+    "configurationFingerprint": "dfe992c8df0a71458602749ba0659a499d9451ff33a9f28c1f52f4f0a0269a6e",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",
@@ -201,7 +201,37 @@
             "foundation": 2,
             "iteration": 0,
             "loop": 1
-        }
+        },
+        "structureHistory": [
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "structure": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 3,
+                "loop": 1,
+                "structure": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "structure": 1
+            }
+        ]
     },
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "projectName": "ARAMF_WORKER",
@@ -213,7 +243,7 @@
             "lifecycle": {
                 "certification": 1,
                 "done": 1,
-                "iteration": 3,
+                "iteration": 4,
                 "loop": 1,
                 "structure": 1
             },
@@ -236,6 +266,13 @@
                     "certification": 1,
                     "done": 1,
                     "iteration": 3,
+                    "loop": 1,
+                    "structure": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 4,
                     "loop": 1,
                     "structure": 1
                 }

@@ -613,7 +613,37 @@
             "foundation": 2,
             "iteration": 0,
             "loop": 1
-        }
+        },
+        "structureHistory": [
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "structure": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 3,
+                "loop": 1,
+                "structure": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "structure": 1
+            }
+        ]
     },
     "profileSelections": [
     ],
@@ -972,26 +1002,10 @@
             "lifecycle": {
                 "certification": 1,
                 "done": 1,
-                "iteration": 3,
+                "iteration": 4,
                 "loop": 1,
                 "structure": 1
             },
-            "responsibilities": [
-                {
-                    "childIds": [
-                    ],
-                    "description": "Canonical S1 implementation responsibility.",
-                    "id": "s1-implementation",
-                    "kind": "PROJECT",
-                    "metadata": {
-                    },
-                    "name": "S1 Responsibility & Ownership",
-                    "ownerMetadata": "ARAMF Structure family",
-                    "parentId": "",
-                    "stableKey": "s1-implementation"
-                }
-            ],
-            "rootId": "s1-implementation",
             "lifecycleHistory": [
                 {
                     "certification": 1,
@@ -1013,8 +1027,31 @@
                     "iteration": 3,
                     "loop": 1,
                     "structure": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 4,
+                    "loop": 1,
+                    "structure": 1
                 }
             ],
+            "responsibilities": [
+                {
+                    "childIds": [
+                    ],
+                    "description": "Canonical S1 implementation responsibility.",
+                    "id": "s1-implementation",
+                    "kind": "PROJECT",
+                    "metadata": {
+                    },
+                    "name": "S1 Responsibility & Ownership",
+                    "ownerMetadata": "ARAMF Structure family",
+                    "parentId": "",
+                    "stableKey": "s1-implementation"
+                }
+            ],
+            "rootId": "s1-implementation",
             "schemaVersion": 1
         }
     },
