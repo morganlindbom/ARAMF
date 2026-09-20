@@ -620,28 +620,14 @@
                 "done": 1,
                 "iteration": 1,
                 "loop": 1,
-                "structure": 1
+                "structure": 2
             },
             {
                 "certification": 1,
                 "done": 1,
                 "iteration": 2,
                 "loop": 1,
-                "structure": 1
-            },
-            {
-                "certification": 1,
-                "done": 1,
-                "iteration": 3,
-                "loop": 1,
-                "structure": 1
-            },
-            {
-                "certification": 1,
-                "done": 1,
-                "iteration": 4,
-                "loop": 1,
-                "structure": 1
+                "structure": 2
             }
         ]
     },
@@ -1052,6 +1038,69 @@
                 }
             ],
             "rootId": "s1-implementation",
+            "schemaVersion": 1
+        },
+        "s2PhysicalStructure": {
+            "boundaries": [
+                {
+                    "allowedChildDirectories": [
+                    ],
+                    "containmentMode": "EXCLUSIVE",
+                    "excludePatterns": [
+                    ],
+                    "externalLocationAllowed": false,
+                    "generatedDirectories": [
+                    ],
+                    "id": "project-boundary",
+                    "includePatterns": [
+                    ],
+                    "metadata": {
+                    },
+                    "responsibilityId": "s1-implementation",
+                    "rootRelativePath": "."
+                }
+            ],
+            "lifecycle": {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "structure": 2
+            },
+            "lifecycleHistory": [
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 2
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 2,
+                    "loop": 1,
+                    "structure": 2
+                }
+            ],
+            "nodes": [
+                {
+                    "childIds": [
+                    ],
+                    "id": "physical-root",
+                    "metadata": {
+                    },
+                    "name": "Project",
+                    "parentId": "",
+                    "relativePath": "",
+                    "responsibilityId": "s1-implementation",
+                    "role": "root",
+                    "stableKey": "physical-root"
+                }
+            ],
+            "placements": [
+            ],
+            "rootId": "physical-root",
             "schemaVersion": 1
         }
     },

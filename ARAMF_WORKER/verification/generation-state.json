@@ -623,28 +623,14 @@
                     "done": 1,
                     "iteration": 1,
                     "loop": 1,
-                    "structure": 1
+                    "structure": 2
                 },
                 {
                     "certification": 1,
                     "done": 1,
                     "iteration": 2,
                     "loop": 1,
-                    "structure": 1
-                },
-                {
-                    "certification": 1,
-                    "done": 1,
-                    "iteration": 3,
-                    "loop": 1,
-                    "structure": 1
-                },
-                {
-                    "certification": 1,
-                    "done": 1,
-                    "iteration": 4,
-                    "loop": 1,
-                    "structure": 1
+                    "structure": 2
                 }
             ]
         },
@@ -1054,6 +1040,69 @@
                 ],
                 "rootId": "s1-implementation",
                 "schemaVersion": 1
+            },
+            "s2PhysicalStructure": {
+                "boundaries": [
+                    {
+                        "allowedChildDirectories": [
+                        ],
+                        "containmentMode": "EXCLUSIVE",
+                        "excludePatterns": [
+                        ],
+                        "externalLocationAllowed": false,
+                        "generatedDirectories": [
+                        ],
+                        "id": "project-boundary",
+                        "includePatterns": [
+                        ],
+                        "metadata": {
+                        },
+                        "responsibilityId": "s1-implementation",
+                        "rootRelativePath": "."
+                    }
+                ],
+                "lifecycle": {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 2,
+                    "loop": 1,
+                    "structure": 2
+                },
+                "lifecycleHistory": [
+                    {
+                        "certification": 1,
+                        "done": 1,
+                        "iteration": 1,
+                        "loop": 1,
+                        "structure": 2
+                    },
+                    {
+                        "certification": 1,
+                        "done": 1,
+                        "iteration": 2,
+                        "loop": 1,
+                        "structure": 2
+                    }
+                ],
+                "nodes": [
+                    {
+                        "childIds": [
+                        ],
+                        "id": "physical-root",
+                        "metadata": {
+                        },
+                        "name": "Project",
+                        "parentId": "",
+                        "relativePath": "",
+                        "responsibilityId": "s1-implementation",
+                        "role": "root",
+                        "stableKey": "physical-root"
+                    }
+                ],
+                "placements": [
+                ],
+                "rootId": "physical-root",
+                "schemaVersion": 1
             }
         },
         "templateId": "",
@@ -1069,8 +1118,8 @@
         },
         "workerNameSuffix": ""
     },
-    "fingerprint": "dfe992c8df0a71458602749ba0659a499d9451ff33a9f28c1f52f4f0a0269a6e",
-    "generatedAt": "2026-09-20T17:10:52Z",
+    "fingerprint": "7aa7609529f395ce3905f6e5895af5223431153c772f4869e1730892e0b1ad7b",
+    "generatedAt": "2026-09-20T17:52:31Z",
     "memory": true,
     "platforms": true,
     "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
