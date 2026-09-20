@@ -14,6 +14,7 @@
 #include "../structure/S1/ResponsibilityOwnership.h"
 #include "../structure/S2/PhysicalStructure.h"
 #include "../structure/S3/DependencyInterfaces.h"
+#include "../structure/S4/CompositionEncapsulation.h"
 
 class ProjectPersistence;
 
@@ -425,6 +426,7 @@ public:
     const S1::Configuration& responsibilityOwnership() const { return responsibilityOwnership_; }
     const S2::Configuration& physicalStructure() const { return physicalStructure_; }
     const S3::Configuration& dependencyInterfaces() const { return dependencyInterfaces_; }
+    const S4::Configuration& compositionEncapsulation() const { return compositionEncapsulation_; }
     QJsonObject runtimeOwnershipState() const { return runtimeOwnershipState_; }
     QJsonObject orchestrationState() const { return orchestrationState_; }
     QSet<QString> completedPageIds() const { return completedPageIds_; }
@@ -490,6 +492,11 @@ public:
     bool certifyS3Iteration(QString* error = nullptr);
     bool completeS3Iteration(QString* error = nullptr);
     bool reworkS3(QString* error = nullptr);
+    void setCompositionEncapsulation(const S4::Configuration& value);
+    bool startS4Iteration(QString* error = nullptr);
+    bool certifyS4Iteration(QString* error = nullptr);
+    bool completeS4Iteration(QString* error = nullptr);
+    bool reworkS4(QString* error = nullptr);
 
     void beginUpdate();
     void endUpdate();
@@ -549,6 +556,7 @@ private:
     S1::Configuration responsibilityOwnership_;
     S2::Configuration physicalStructure_;
     S3::Configuration dependencyInterfaces_;
+    S4::Configuration compositionEncapsulation_;
     QJsonObject runtimeOwnershipState_;
     QJsonObject orchestrationState_;
 };

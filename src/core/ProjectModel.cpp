@@ -1187,3 +1187,51 @@ bool ProjectModel::reworkS3(QString* error)
     modified_ = true;
     return true;
 }
+
+void ProjectModel::setCompositionEncapsulation(const S4::Configuration& value)
+{
+    compositionEncapsulation_ = value;
+    modified_ = true;
+    emit modelChanged();
+}
+
+bool ProjectModel::startS4Iteration(QString* error)
+{
+    processVersionState_.hasNextStructure = true;
+    processVersionState_.nextStructure = compositionEncapsulation_.lifecycle;
+    if (!ProcessVersionLifecycle::startNextStructure(&processVersionState_, error)) return false;
+    compositionEncapsulation_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::certifyS4Iteration(QString* error)
+{
+    processVersionState_.hasActiveStructure = true;
+    processVersionState_.activeStructure = compositionEncapsulation_.lifecycle;
+    if (!ProcessVersionLifecycle::certifyCurrentStructureIteration(&processVersionState_, error)) return false;
+    compositionEncapsulation_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::completeS4Iteration(QString* error)
+{
+    processVersionState_.hasActiveStructure = true;
+    processVersionState_.activeStructure = compositionEncapsulation_.lifecycle;
+    if (!ProcessVersionLifecycle::completeActiveStructure(&processVersionState_, error)) return false;
+    compositionEncapsulation_.lifecycle = processVersionState_.structureHistory.last();
+    compositionEncapsulation_.lifecycleHistory.append(compositionEncapsulation_.lifecycle);
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::reworkS4(QString* error)
+{
+    if (compositionEncapsulation_.lifecycleHistory.isEmpty()) { if (error) *error = QStringLiteral("S4 has no completed iteration to rework."); return false; }
+    processVersionState_.structureHistory = compositionEncapsulation_.lifecycleHistory;
+    if (!ProcessVersionLifecycle::reworkCompletedStructure(&processVersionState_, 4, error)) return false;
+    compositionEncapsulation_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
