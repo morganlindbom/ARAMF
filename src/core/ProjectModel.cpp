@@ -1091,3 +1091,51 @@ bool ProjectModel::reworkS1(QString* error)
     modified_ = true;
     return true;
 }
+
+void ProjectModel::setPhysicalStructure(const S2::Configuration& value)
+{
+    physicalStructure_ = value;
+    modified_ = true;
+    emit modelChanged();
+}
+
+bool ProjectModel::startS2Iteration(QString* error)
+{
+    processVersionState_.hasNextStructure = true;
+    processVersionState_.nextStructure = physicalStructure_.lifecycle;
+    if (!ProcessVersionLifecycle::startNextStructure(&processVersionState_, error)) return false;
+    physicalStructure_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::certifyS2Iteration(QString* error)
+{
+    processVersionState_.hasActiveStructure = true;
+    processVersionState_.activeStructure = physicalStructure_.lifecycle;
+    if (!ProcessVersionLifecycle::certifyCurrentStructureIteration(&processVersionState_, error)) return false;
+    physicalStructure_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::completeS2Iteration(QString* error)
+{
+    processVersionState_.hasActiveStructure = true;
+    processVersionState_.activeStructure = physicalStructure_.lifecycle;
+    if (!ProcessVersionLifecycle::completeActiveStructure(&processVersionState_, error)) return false;
+    physicalStructure_.lifecycle = processVersionState_.structureHistory.last();
+    physicalStructure_.lifecycleHistory.append(physicalStructure_.lifecycle);
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::reworkS2(QString* error)
+{
+    if (physicalStructure_.lifecycleHistory.isEmpty()) { if (error) *error = QStringLiteral("S2 has no completed iteration to rework."); return false; }
+    processVersionState_.structureHistory = physicalStructure_.lifecycleHistory;
+    if (!ProcessVersionLifecycle::reworkCompletedStructure(&processVersionState_, 2, error)) return false;
+    physicalStructure_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}

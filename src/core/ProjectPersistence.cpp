@@ -4,6 +4,7 @@
 #include "AramfPaths.h"
 #include "WorkflowPageMetadata.h"
 #include "ProcessVersion.h"
+#include "../structure/S2/PhysicalStructure.h"
 
 #include <QDir>
 #include <QFile>
@@ -248,7 +249,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     root.insert(QStringLiteral("workflowProgress"), QJsonObject{
         {QStringLiteral("completedPages"), toJsonArray(completedPageIds)}});
     root.insert(QStringLiteral("processVersion"), processVersionStateToJson(model.processVersionState()));
-    root.insert(QStringLiteral("structure"), QJsonObject{{QStringLiteral("s1ResponsibilityOwnership"), S1::toJson(model.responsibilityOwnership())}});
+    root.insert(QStringLiteral("structure"), QJsonObject{{QStringLiteral("s1ResponsibilityOwnership"), S1::toJson(model.responsibilityOwnership())}, {QStringLiteral("s2PhysicalStructure"), S2::toJson(model.physicalStructure())}});
     if (!model.orchestrationState().isEmpty()) root.insert(QStringLiteral("orchestration"), model.orchestrationState());
     root.insert(QStringLiteral("runtimeOwnership"), model.runtimeOwnershipState());
     root.insert(QStringLiteral("releaseManagement"), QJsonObject{
@@ -516,9 +517,12 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
         return false;
     }
     S1::Configuration responsibilityOwnership;
+    S2::Configuration physicalStructure;
     const auto structure = root.value(QStringLiteral("structure")).toObject();
     if (structure.contains(QStringLiteral("s1ResponsibilityOwnership"))
         && !S1::fromJson(structure.value(QStringLiteral("s1ResponsibilityOwnership")), &responsibilityOwnership, error)) return false;
+    if (structure.contains(QStringLiteral("s2PhysicalStructure"))
+        && !S2::fromJson(structure.value(QStringLiteral("s2PhysicalStructure")), &physicalStructure, error)) return false;
     const auto taskMetadata = root.value("rules").toObject().value("scopeMetadata");
     if (!taskMetadata.isUndefined() && !taskMetadata.isObject()) {
         if (error) *error = "rules.scopeMetadata must be an object when present.";
@@ -881,6 +885,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
         return false;
     }
     model->setResponsibilityOwnership(responsibilityOwnership);
+    model->setPhysicalStructure(physicalStructure);
     const auto ownership = root.value(QStringLiteral("runtimeOwnership")).toObject();
     model->setRuntimeOwnershipState(ownership.isEmpty()
         ? QJsonObject{{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("claims"), QJsonArray{}}}

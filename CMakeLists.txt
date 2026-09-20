@@ -97,6 +97,10 @@ set(ARAMF_CORE_SOURCES
     src/structure/S1/ResponsibilityOwnership.cpp
     src/structure/S1/S1CertificationService.h
     src/structure/S1/S1CertificationService.cpp
+    src/structure/S2/PhysicalStructure.h
+    src/structure/S2/PhysicalStructure.cpp
+    src/structure/S2/S2CertificationService.h
+    src/structure/S2/S2CertificationService.cpp
 )
 
 set(ARAMF_UI_SOURCES
@@ -207,6 +211,7 @@ if(BUILD_TESTING)
         tests/FoundationNamespaceTests.cpp
         tests/FoundationTests.cpp
         tests/S1CertificationTests.cpp
+        tests/S2CertificationTests.cpp
         src/core/MemoryEvidenceFoundation.h
         src/core/MemoryEvidenceFoundation.cpp
         src/core/FoundationServices.h
@@ -215,6 +220,10 @@ if(BUILD_TESTING)
         src/structure/S1/ResponsibilityOwnership.cpp
         src/structure/S1/S1CertificationService.h
         src/structure/S1/S1CertificationService.cpp
+        src/structure/S2/PhysicalStructure.h
+        src/structure/S2/PhysicalStructure.cpp
+        src/structure/S2/S2CertificationService.h
+        src/structure/S2/S2CertificationService.cpp
         src/core/RuntimeOwnershipService.h
         src/core/RuntimeOwnershipService.cpp
         src/core/ExecutionOrchestrator.h
@@ -273,6 +282,8 @@ if(BUILD_TESTING)
         src/core/ProjectPersistence.cpp
         src/structure/S1/ResponsibilityOwnership.h
         src/structure/S1/ResponsibilityOwnership.cpp
+        src/structure/S2/PhysicalStructure.h
+        src/structure/S2/PhysicalStructure.cpp
         src/core/ProcessVersion.h
         src/core/ProcessVersion.cpp
         src/core/WorkflowPageMetadata.h
@@ -312,6 +323,8 @@ if(BUILD_TESTING)
         src/core/ProjectPersistence.cpp
         src/structure/S1/ResponsibilityOwnership.h
         src/structure/S1/ResponsibilityOwnership.cpp
+        src/structure/S2/PhysicalStructure.h
+        src/structure/S2/PhysicalStructure.cpp
         src/core/ProcessVersion.h
         src/core/ProcessVersion.cpp
         src/core/WorkflowPageMetadata.h
@@ -418,6 +431,19 @@ if(BUILD_TESTING)
     target_include_directories(aramf_s1_tests PRIVATE src)
     target_link_libraries(aramf_s1_tests PRIVATE Qt6::Core)
     add_test(NAME aramf_s1_tests COMMAND aramf_s1_tests)
+
+    add_executable(aramf_s2_tests
+        tests/S2PhysicalStructureTests.cpp
+        src/core/ProcessVersion.h
+        src/core/ProcessVersion.cpp
+        src/structure/S1/ResponsibilityOwnership.h
+        src/structure/S1/ResponsibilityOwnership.cpp
+        src/structure/S2/PhysicalStructure.h
+        src/structure/S2/PhysicalStructure.cpp
+    )
+    target_include_directories(aramf_s2_tests PRIVATE src)
+    target_link_libraries(aramf_s2_tests PRIVATE Qt6::Core)
+    add_test(NAME aramf_s2_tests COMMAND aramf_s2_tests)
     set_tests_properties(aramf_template_tests PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=windows;PATH=C:/msys64/ucrt64/bin")
 
