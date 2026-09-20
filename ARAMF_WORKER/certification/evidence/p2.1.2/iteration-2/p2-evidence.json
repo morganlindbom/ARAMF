@@ -1,0 +1,53 @@
+{
+    "schemaVersion": 1,
+    "authority": "CERTIFICATION_EVIDENCE",
+    "subject": "P2",
+    "processName": "Context Coordination",
+    "processVersion": "P2.1.2",
+    "iteration": 2,
+    "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+    "timestamp": "2026-09-20T12:25:53.171Z",
+    "overallStatus": "PASS",
+    "validationBasis": "Dependency revalidation is sufficient: commit 803d changed P1 governance semantics and P3 integration expectations, but no P2 production source changed; current P2 context suite and current generated context/verification pass.",
+    "semanticImpact": [
+        "P2 context remains read-only and project-bound.",
+        "P1 stale-context governance behavior is consumed and validated by current P3 integration."
+    ],
+    "checks": [
+        {
+            "name": "p2-context",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/checks/p2-context.log",
+            "evidenceFingerprint": "1c4732ee3f2bf9d8b66c7a19807f0ae7eb3125f81852403e57469a1ac2a3bc2e",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "full-ctest",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/checks/full-ctest.log",
+            "evidenceFingerprint": "1282697a4cffa996072dec1c5237aad92f68849ccd1fd97a7604a2b342658a31",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "memory-consistency",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/checks/memory-consistency.log",
+            "evidenceFingerprint": "c58277d83034fc5222febf0dc9581d827c089e59173fe2f51a7afa66f5073dd9",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "cold-start",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/checks/cold-start.log",
+            "evidenceFingerprint": "98cd1b8a91bf677fe73a69717cd0fcf6b916a0cb721fbccbfd93f947db4c98d2",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "lifecycle-verification",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/checks/lifecycle-sync.log",
+            "evidenceFingerprint": "b8b6bef607a139d21f678c84679ae29b05d8a2469f6636991a1bf4095869dc31",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        }
+    ]
+}

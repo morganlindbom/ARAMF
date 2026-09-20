@@ -1,0 +1,53 @@
+{
+    "schemaVersion": 1,
+    "authority": "CERTIFICATION_EVIDENCE",
+    "subject": "P3",
+    "processName": "Execution Orchestration",
+    "processVersion": "P3.1.5",
+    "iteration": 5,
+    "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+    "timestamp": "2026-09-20T12:26:29.436Z",
+    "overallStatus": "PASS",
+    "validationBasis": "Full focused recertification required: commit 803d changed P3 execution integration expectations for stale P1 context governance blocking; current P3 suite and regression baseline pass.",
+    "semanticImpact": [
+        "P3 execution now expects stale P1 context to be GOVERNANCE_BLOCKED.",
+        "Current P3 execution integration and predictive/routing dependency suites pass."
+    ],
+    "checks": [
+        {
+            "name": "p3-execution",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/checks/p3-execution.log",
+            "evidenceFingerprint": "750f1ded28f9e8b194b39c5e4a9dddc59e84925ebca12aa84383a5a2857005f7",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "full-ctest",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/checks/full-ctest.log",
+            "evidenceFingerprint": "1282697a4cffa996072dec1c5237aad92f68849ccd1fd97a7604a2b342658a31",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "memory-consistency",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/checks/memory-consistency.log",
+            "evidenceFingerprint": "c58277d83034fc5222febf0dc9581d827c089e59173fe2f51a7afa66f5073dd9",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "cold-start",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/checks/cold-start.log",
+            "evidenceFingerprint": "98cd1b8a91bf677fe73a69717cd0fcf6b916a0cb721fbccbfd93f947db4c98d2",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "lifecycle-verification",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/checks/lifecycle-sync.log",
+            "evidenceFingerprint": "b8b6bef607a139d21f678c84679ae29b05d8a2469f6636991a1bf4095869dc31",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        }
+    ]
+}

@@ -1,0 +1,132 @@
+{
+    "acceptedEvidence": [
+        {
+            "artifact": "build/p1-evidence/acceptance-criteria.json",
+            "artifactFingerprint": "360c208b87aa71d63a83829ba8564e9ba0df6c0ed8eacc4e2b59be50c2cc9c4b",
+            "check": "acceptance-criteria"
+        },
+        {
+            "artifact": "build/p1-evidence/affected-workflow-tests.json",
+            "artifactFingerprint": "833b480b024282595cc3b3097043e3e6e2e1a5df791c677825db103d06c727f4",
+            "check": "affected-workflow-tests"
+        },
+        {
+            "artifact": "build/p1-evidence/application-startup.json",
+            "artifactFingerprint": "7bef3162f2e4ddfbe5d97df8b9559a215452ac7cb9c62deb3a94b9fdda73837f",
+            "check": "application-startup"
+        },
+        {
+            "artifact": "build/p1-evidence/aramf-worker-migration.json",
+            "artifactFingerprint": "ddb16e035f87e3e616aa84f3b02b9ee4a7ff668e717234563310211b12ae2bb0",
+            "check": "aramf-worker-migration"
+        },
+        {
+            "artifact": "build/p1-evidence/p3-execution.json",
+            "artifactFingerprint": "9cc20932d196114b7b1aa04e73a9e0530ee6f728d39d05a33a77cc06e39d2718",
+            "check": "aramf_core_tests::--p3-execution"
+        },
+        {
+            "artifact": "build/p1-evidence/worker-tasks.json",
+            "artifactFingerprint": "8f3b7360b87be24805cc469fd76dc5720b8b4080c0ddf6544b06dd8cc7295791",
+            "check": "aramf_core_tests::--worker-tasks"
+        },
+        {
+            "artifact": "build/p1-evidence/cold-start.json",
+            "artifactFingerprint": "acc8e3f154d8862808d8bf418dcfe20bf9b0ffd1e00d160477d5e355dacb0916",
+            "check": "cold-start"
+        },
+        {
+            "artifact": "build/p1-evidence/ctest.json",
+            "artifactFingerprint": "d04904fae80a8319b418492edda72dcd3fb2b54c107bddd043c0c14c258861f7",
+            "check": "ctest"
+        },
+        {
+            "artifact": "build/p1-evidence/git-diff-check.json",
+            "artifactFingerprint": "d368d882f1baf560628b6b7562f3b03a5ed3d998641a77bc3f75d392fb48e2e1",
+            "check": "git-diff-check"
+        },
+        {
+            "artifact": "build/p1-evidence/impacted-validation.json",
+            "artifactFingerprint": "c866a53e0d98194ebc9cd8b4a386e6fd0de4e4c5d7dec5e4f8eb1afcfa6554a1",
+            "check": "impacted-validation"
+        },
+        {
+            "artifact": "build/p1-evidence/memory-consistency.json",
+            "artifactFingerprint": "39c577369d4965051a917bb879527b81959d98ed644f3622bfacbd4c7a59053b",
+            "check": "memory-consistency"
+        },
+        {
+            "artifact": "build/p1-evidence/production-build.json",
+            "artifactFingerprint": "fe4912ab92f46c5dd625e7abb71e9ec13b9b1418eb93a4fde43558004150d678",
+            "check": "production-build"
+        },
+        {
+            "artifact": "build/p1-evidence/targeted-regression.json",
+            "artifactFingerprint": "409a34488efc8108f447485d6e395e355f9b6069d60c89338edbb20f7ff362ab",
+            "check": "targeted-regression"
+        },
+        {
+            "artifact": "build/p1-evidence/test-250.json",
+            "artifactFingerprint": "1e34a296070b47414d48e376c247d1f2c0fc27c5d2ad411025477e5de9535af4",
+            "check": "test_250"
+        },
+        {
+            "artifact": "build/p1-evidence/test-550-automated.json",
+            "artifactFingerprint": "cbde67a599a60a2987c6230645ccfdc62d490f0b17f018160a8b44581860aad4",
+            "check": "test_550-automated"
+        },
+        {
+            "artifact": "build/p1-evidence/worker-topology.json",
+            "artifactFingerprint": "2a77b5a213c3979b9eb8a40d99e5714d32e5cad5a4c12b2a2f83da675dd58fd7",
+            "check": "worker-topology"
+        }
+    ],
+    "authority": "DERIVED",
+    "certificateId": null,
+    "certification": "CERTIFIED is issued only by the canonical CertificationService; physical evidence is never inferred.",
+    "completionState": "VERIFIED",
+    "contractId": "d0621139fc707fb5fe5920edd10d98998c5ec14c611bf20a626592d4e8e5f283",
+    "errors": [
+    ],
+    "evidenceFingerprints": {
+        "acceptance-criteria": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "affected-workflow-tests": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "application-startup": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "aramf-worker-migration": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "aramf_core_tests::--p3-execution": "b0f27982dcba52f4cf71ba19fa70285bb4bedb031962aa263a7ece070fa4d2d8",
+        "aramf_core_tests::--worker-tasks": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "cold-start": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "ctest": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "diff-boundary": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "git-diff-check": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "impacted-validation": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "memory-consistency": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "production-build": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "targeted-regression": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "test_250": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "test_550-automated": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+        "worker-topology": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa"
+    },
+    "missingEvidence": [
+    ],
+    "modifiedFiles": [
+        "ARAMF_WORKER/memory/cold-start-validation.json",
+        "ARAMF_WORKER/memory/memory-consistency-validation.json"
+    ],
+    "resultFingerprint": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+    "schemaVersion": 1,
+    "serviceChanges": [
+        {
+            "path": "ARAMF_WORKER/memory/cold-start-validation.json",
+            "service": "ProjectMemory recorder",
+            "validation": "canonical-producer-and-boundary"
+        },
+        {
+            "path": "ARAMF_WORKER/memory/memory-consistency-validation.json",
+            "service": "ProjectMemory recorder",
+            "validation": "canonical-producer-and-boundary"
+        }
+    ],
+    "status": "PASS"
+}
+

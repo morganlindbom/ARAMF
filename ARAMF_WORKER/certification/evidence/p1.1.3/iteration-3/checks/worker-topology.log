@@ -1,0 +1,10 @@
+WORKER_TOPOLOGY_PASS
+Worker identity: ARAMF_WORKER
+Canonical empty-evidence postflight status: PASS
+TaskContract: d0621139fc707fb5fe5920edd10d98998c5ec14c611bf20a626592d4e8e5f283
+Verification result: PASS
+Latest validation: PASS
+Context stale count: 0
+Canonical postflight service changes: ProjectMemory validation artifacts only
+Source revision: 803d001d6bac44dca4a3a8b577a2014dc5f2a4f8
+

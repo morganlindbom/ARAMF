@@ -1,0 +1,145 @@
+{
+    "schemaVersion": 1,
+    "authority": "CERTIFICATION_EVIDENCE",
+    "subject": "P1",
+    "processName": "Task Execution Governance",
+    "processVersion": "P1.1.3",
+    "iteration": 3,
+    "taskContractId": "d0621139fc707fb5fe5920edd10d98998c5ec14c611bf20a626592d4e8e5f283",
+    "taskResultFingerprint": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+    "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+    "timestamp": "2026-09-20T07:35:32Z",
+    "verificationLevel": "HOST_TEST",
+    "overallStatus": "PASS",
+    "semanticImpact": [
+        "PREPARE validates existing governed context instead of regenerating it.",
+        "Stale governed context blocks task preparation with a governance error.",
+        "Fresh and stale PREPARE paths preserve zero-side-effect behavior.",
+        "P3 execution integration treats stale P1 context as GOVERNANCE_BLOCKED."
+    ],
+    "checks": [
+        {
+            "name": "acceptance-criteria",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/task-postflight-verified.json",
+            "evidenceFingerprint": "e5f07657b83164cded63c24d6a70562194853523b33cd07b3efe6560ec86222a",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "affected-workflow-tests",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/worker-tasks.log",
+            "evidenceFingerprint": "69d530345ac004f1116b97a1c6c658ce594cb05d256f1da60fdd36144ff1b4dd",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "application-startup",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/application-startup.log",
+            "evidenceFingerprint": "32e12f579e26fdb231e14e317ceb6bd4d6db47d630a202fef38f2b8a07d2a6ee",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "aramf-worker-migration",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/process-namespace-migration.log",
+            "evidenceFingerprint": "28521b8e5db51b7d38ac78809c6835ce964954697facc38135b7f2d35393afdb",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "aramf_core_tests::--p3-execution",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/p3-execution.log",
+            "evidenceFingerprint": "750f1ded28f9e8b194b39c5e4a9dddc59e84925ebca12aa84383a5a2857005f7",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "aramf_core_tests::--worker-tasks",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/worker-tasks.log",
+            "evidenceFingerprint": "69d530345ac004f1116b97a1c6c658ce594cb05d256f1da60fdd36144ff1b4dd",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "cold-start",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/cold-start.log",
+            "evidenceFingerprint": "98cd1b8a91bf677fe73a69717cd0fcf6b916a0cb721fbccbfd93f947db4c98d2",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "ctest",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/full-ctest.log",
+            "evidenceFingerprint": "1282697a4cffa996072dec1c5237aad92f68849ccd1fd97a7604a2b342658a31",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "diff-boundary",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/task-postflight-verified.json",
+            "evidenceFingerprint": "e5f07657b83164cded63c24d6a70562194853523b33cd07b3efe6560ec86222a",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "git-diff-check",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/git-diff-check.log",
+            "evidenceFingerprint": "40a750951e9a400fdc924ead0b17dff9bc95b2bb6c97f6ca807d98593d96c18e",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "impacted-validation",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/task-postflight-verified.json",
+            "evidenceFingerprint": "e5f07657b83164cded63c24d6a70562194853523b33cd07b3efe6560ec86222a",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "memory-consistency",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/memory-consistency.log",
+            "evidenceFingerprint": "c58277d83034fc5222febf0dc9581d827c089e59173fe2f51a7afa66f5073dd9",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "production-build",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/production-build.log",
+            "evidenceFingerprint": "c5ef02f79e88170dd220c10ddbc4fa6533db879ae1e9d5f6ae489a7183337a64",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "targeted-regression",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/p3-execution.log",
+            "evidenceFingerprint": "750f1ded28f9e8b194b39c5e4a9dddc59e84925ebca12aa84383a5a2857005f7",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "test_250",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/test-250.log",
+            "evidenceFingerprint": "48ee96cc76f20c6d8a88101b7eff03166f788fc61183e293fdc1471508a36d76",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "test_550-automated",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/test-550-automated.log",
+            "evidenceFingerprint": "60fec1ebcc787da1b8c23e88be9689b122198cfe35d71d5b1cc22e85e6259006",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "worker-topology",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/worker-topology.log",
+            "evidenceFingerprint": "6d1552239afa6591465f9dad283a8d1c03f30fd2916d4143f05a915cbde77420",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        }
+    ],
+    "limitations": [
+        "test_550 certification uses the current-semantics ignored validation harness; the first current-HEAD run exposed stale historical harness assumptions, not production defects.",
+        "No physical or hardware certification is claimed."
+    ]
+}

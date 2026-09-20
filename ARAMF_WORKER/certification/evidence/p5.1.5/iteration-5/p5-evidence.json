@@ -1,0 +1,53 @@
+{
+    "schemaVersion": 1,
+    "authority": "CERTIFICATION_EVIDENCE",
+    "subject": "P5",
+    "processName": "Self-Adjusting Routing",
+    "processVersion": "P5.1.5",
+    "iteration": 5,
+    "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+    "timestamp": "2026-09-20T12:27:39.358Z",
+    "overallStatus": "PASS",
+    "validationBasis": "Dependency revalidation is sufficient: no P5 production source changed in commit 803d; fresh P5 routing matrix, regression, and generated verification pass.",
+    "semanticImpact": [
+        "P5 routing remains downstream of validated P1-P4 governance and context dependencies.",
+        "No P5 semantic implementation change was identified at current HEAD."
+    ],
+    "checks": [
+        {
+            "name": "p5-routing",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/checks/p5-routing.log",
+            "evidenceFingerprint": "5ac15c73cab75ece0d2b7cca026cc31231fced2423ce91a0ca4237fde2291d10",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "full-ctest",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/checks/full-ctest.log",
+            "evidenceFingerprint": "1282697a4cffa996072dec1c5237aad92f68849ccd1fd97a7604a2b342658a31",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "memory-consistency",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/checks/memory-consistency.log",
+            "evidenceFingerprint": "c58277d83034fc5222febf0dc9581d827c089e59173fe2f51a7afa66f5073dd9",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "cold-start",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/checks/cold-start.log",
+            "evidenceFingerprint": "98cd1b8a91bf677fe73a69717cd0fcf6b916a0cb721fbccbfd93f947db4c98d2",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        },
+        {
+            "name": "lifecycle-verification",
+            "status": "PASS",
+            "evidenceReference": "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/checks/lifecycle-sync.log",
+            "evidenceFingerprint": "b8b6bef607a139d21f678c84679ae29b05d8a2469f6636991a1bf4095869dc31",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8"
+        }
+    ]
+}

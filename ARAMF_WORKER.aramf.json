@@ -538,6 +538,41 @@
                 "foundation": 1,
                 "iteration": 4,
                 "loop": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 3,
+                "loop": 1,
+                "process": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "process": 2
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 5,
+                "loop": 1,
+                "process": 3
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 5,
+                "loop": 1,
+                "process": 4
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 5,
+                "loop": 1,
+                "process": 5
             }
         ],
         "foundationQueue": [
@@ -589,7 +624,7 @@
     },
     "profileSelections": [
     ],
-    "projectFilePath": "./ARAMF_WORKER.aramf.json",
+    "projectFilePath": "ARAMF_WORKER.aramf.json",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "projectName": "ARAMF_WORKER",
     "projectPath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
@@ -888,7 +923,8 @@
                 "files": [
                     "src/core/WorkerTaskServices.cpp"
                 ],
-                "generatedArtifacts": [],
+                "generatedArtifacts": [
+                ],
                 "riskTraits": [
                     "governance"
                 ],
@@ -897,12 +933,14 @@
                 ]
             },
             "tests": {
-                "affects": [],
+                "affects": [
+                ],
                 "files": [
                     "tests/P2ExecutionTests.cpp",
                     "tests/WorkerTaskTests.cpp"
                 ],
-                "generatedArtifacts": [],
+                "generatedArtifacts": [
+                ],
                 "riskTraits": [
                     "governance"
                 ],

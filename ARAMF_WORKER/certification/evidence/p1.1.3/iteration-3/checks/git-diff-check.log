@@ -1,0 +1,10 @@
+GIT_DIFF_CHECK_PASS
+HEAD: 803d001d6bac44dca4a3a8b577a2014dc5f2a4f8
+origin/main: 803d001d6bac44dca4a3a8b577a2014dc5f2a4f8
+Tracked source/test changes after P1 PREPARE: none
+Canonical service changes accepted by postflight:
+- ARAMF_WORKER/memory/cold-start-validation.json
+- ARAMF_WORKER/memory/memory-consistency-validation.json
+F1-owned source/test changes from certified revision 6574a5191bd9a581dc8d7b8eb7d1462082cb4230 to HEAD: none
+F2 lifecycle transition: not started
+

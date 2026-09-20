@@ -1,0 +1,9 @@
+APPLICATION_STARTUP_PASS
+Executable: build/aramf.exe
+Working directory: repository root
+Observed running after: 5 seconds
+Process scope: exact launched process only
+Shutdown: exact process stopped after successful startup observation
+Qt platform: deployed Windows runtime
+Source revision: 803d001d6bac44dca4a3a8b577a2014dc5f2a4f8
+

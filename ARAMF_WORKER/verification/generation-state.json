@@ -541,6 +541,41 @@
                     "foundation": 1,
                     "iteration": 4,
                     "loop": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 3,
+                    "loop": 1,
+                    "process": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 2,
+                    "loop": 1,
+                    "process": 2
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 5,
+                    "loop": 1,
+                    "process": 3
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 5,
+                    "loop": 1,
+                    "process": 4
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 5,
+                    "loop": 1,
+                    "process": 5
                 }
             ],
             "foundationQueue": [
@@ -951,8 +986,8 @@
         },
         "workerNameSuffix": ""
     },
-    "fingerprint": "9885c175104ed6eb9b9c7c09a5aa1f0978e8d525ed896427f5042b40f7277bcd",
-    "generatedAt": "2026-09-19T19:32:18Z",
+    "fingerprint": "880810e37dde4d5bc0e028c68b1899cf288cae98334b1f3ab24cecc8a3821761",
+    "generatedAt": "2026-09-20T12:27:56Z",
     "memory": true,
     "platforms": true,
     "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",

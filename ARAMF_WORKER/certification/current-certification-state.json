@@ -45,6 +45,244 @@
             "supersedesCertificateId": "cert-ae0d99f5-f9eb-4f59-99ea-9706be64be3b",
             "timestamp": "2026-09-19T12:33:02Z",
             "verificationLevel": "HOST_TEST"
+        },
+        "P1": {
+            "certificateId": "cert-823fefb3-0004-489e-b1c5-496bfcc6c254",
+            "certificateType": "PROCESS",
+            "certificationStatus": "CERTIFIED",
+            "context": {
+                "evidenceArtifact": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/p1-evidence.json",
+                "evidenceFingerprint": "94f8e9f41217d09cd971437812685f326b805b9affa2da23c22241cbba72fa4f",
+                "iteration": 3,
+                "processVersion": "P1.1.3",
+                "resultFingerprint": "2af5173f42416e345e20cdb9db2319db94c8f657b61f12f2149af19fe0f31aaa",
+                "semanticImpact": [
+                    "PREPARE validates existing governed context instead of regenerating it.",
+                    "Stale governed context blocks task preparation with a governance error.",
+                    "Fresh and stale PREPARE paths preserve zero-side-effect behavior.",
+                    "P3 execution integration treats stale P1 context as GOVERNANCE_BLOCKED."
+                ],
+                "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+                "taskContractId": "d0621139fc707fb5fe5920edd10d98998c5ec14c611bf20a626592d4e8e5f283"
+            },
+            "evidenceArtifact": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/p1-evidence.json",
+            "evidenceComplete": true,
+            "evidenceFingerprint": "94f8e9f41217d09cd971437812685f326b805b9affa2da23c22241cbba72fa4f",
+            "evidenceReferences": [
+                {
+                    "fingerprint": "94f8e9f41217d09cd971437812685f326b805b9affa2da23c22241cbba72fa4f",
+                    "reference": "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/p1-evidence.json",
+                    "type": "HOST_TEST",
+                    "verified": true
+                }
+            ],
+            "issuedAt": "2026-09-20T12:23:30Z",
+            "iteration": 3,
+            "previousCertificateId": null,
+            "processVersion": "P1.1.3",
+            "relatedProjectMemoryEvents": [
+                "latest:CERTIFICATION_STARTED"
+            ],
+            "requirements": [
+                "p1-evidence-artifact"
+            ],
+            "result": "PASS",
+            "scope": "project",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+            "status": "PASS",
+            "subject": "P1",
+            "supersedesCertificateId": null,
+            "testMethod": "Governed current-HEAD P1 TaskContract campaign",
+            "timestamp": "2026-09-20T12:23:30Z",
+            "verificationLevel": "HOST_TEST"
+        },
+        "P2": {
+            "certificateId": "cert-1826c6e7-e7af-4ffb-8de2-938c120a0b2a",
+            "certificateType": "PROCESS",
+            "certificationStatus": "CERTIFIED",
+            "context": {
+                "evidenceArtifact": "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/p2-evidence.json",
+                "evidenceFingerprint": "fbc563987b51b06f38e87c4ae85d4c908e086bb2f5fea7a17d04a4dc7a2dd15e",
+                "iteration": 2,
+                "processVersion": "P2.1.2",
+                "semanticImpact": [
+                    "P2 context remains read-only and project-bound.",
+                    "P1 stale-context governance behavior is consumed and validated by current P3 integration."
+                ],
+                "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+                "validationBasis": "Dependency revalidation is sufficient: commit 803d changed P1 governance semantics and P3 integration expectations, but no P2 production source changed; current P2 context suite and current generated context/verification pass."
+            },
+            "evidenceArtifact": "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/p2-evidence.json",
+            "evidenceComplete": true,
+            "evidenceFingerprint": "fbc563987b51b06f38e87c4ae85d4c908e086bb2f5fea7a17d04a4dc7a2dd15e",
+            "evidenceReferences": [
+                {
+                    "fingerprint": "fbc563987b51b06f38e87c4ae85d4c908e086bb2f5fea7a17d04a4dc7a2dd15e",
+                    "reference": "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/p2-evidence.json",
+                    "type": "HOST_TEST",
+                    "verified": true
+                }
+            ],
+            "issuedAt": "2026-09-20T12:25:57Z",
+            "iteration": 2,
+            "previousCertificateId": null,
+            "processVersion": "P2.1.2",
+            "relatedProjectMemoryEvents": [
+                "latest:CERTIFICATION_STARTED"
+            ],
+            "requirements": [
+                "process-evidence-artifact"
+            ],
+            "result": "PASS",
+            "scope": "project",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+            "status": "PASS",
+            "subject": "P2",
+            "supersedesCertificateId": null,
+            "testMethod": "Governed current-HEAD dependency freshness campaign",
+            "timestamp": "2026-09-20T12:25:57Z",
+            "verificationLevel": "HOST_TEST"
+        },
+        "P3": {
+            "certificateId": "cert-677ad827-a1ab-4e0e-af82-308a7c71bab6",
+            "certificateType": "PROCESS",
+            "certificationStatus": "CERTIFIED",
+            "context": {
+                "evidenceArtifact": "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/p3-evidence.json",
+                "evidenceFingerprint": "a73d8900e964fe1bf2b42c98f074cb9cb411310d37407777f308a7d5987167ac",
+                "iteration": 5,
+                "processVersion": "P3.1.5",
+                "semanticImpact": [
+                    "P3 execution now expects stale P1 context to be GOVERNANCE_BLOCKED.",
+                    "Current P3 execution integration and predictive/routing dependency suites pass."
+                ],
+                "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+                "validationBasis": "Full focused recertification required: commit 803d changed P3 execution integration expectations for stale P1 context governance blocking; current P3 suite and regression baseline pass."
+            },
+            "evidenceArtifact": "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/p3-evidence.json",
+            "evidenceComplete": true,
+            "evidenceFingerprint": "a73d8900e964fe1bf2b42c98f074cb9cb411310d37407777f308a7d5987167ac",
+            "evidenceReferences": [
+                {
+                    "fingerprint": "a73d8900e964fe1bf2b42c98f074cb9cb411310d37407777f308a7d5987167ac",
+                    "reference": "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/p3-evidence.json",
+                    "type": "HOST_TEST",
+                    "verified": true
+                }
+            ],
+            "issuedAt": "2026-09-20T12:26:34Z",
+            "iteration": 5,
+            "previousCertificateId": null,
+            "processVersion": "P3.1.5",
+            "relatedProjectMemoryEvents": [
+                "latest:CERTIFICATION_STARTED"
+            ],
+            "requirements": [
+                "process-evidence-artifact"
+            ],
+            "result": "PASS",
+            "scope": "project",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+            "status": "PASS",
+            "subject": "P3",
+            "supersedesCertificateId": null,
+            "testMethod": "Governed current-HEAD dependency freshness campaign",
+            "timestamp": "2026-09-20T12:26:34Z",
+            "verificationLevel": "HOST_TEST"
+        },
+        "P4": {
+            "certificateId": "cert-2b6052e6-bc54-447f-96a5-33de08f21b13",
+            "certificateType": "PROCESS",
+            "certificationStatus": "CERTIFIED",
+            "context": {
+                "evidenceArtifact": "ARAMF_WORKER/certification/evidence/p4.1.5/iteration-5/p4-evidence.json",
+                "evidenceFingerprint": "6ae9942a0b81a76c70da2fa9a5d1ae7cd6e095e48c83ae9729b69a432d0eceeb",
+                "iteration": 5,
+                "processVersion": "P4.1.5",
+                "semanticImpact": [
+                    "P4 routing remains bounded by P1 governance and P2 context.",
+                    "No P4 semantic implementation change was identified at current HEAD."
+                ],
+                "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+                "validationBasis": "Dependency revalidation is sufficient: no P4 production source changed in commit 803d; fresh P4 predictive/routing matrix, dogfood, adaptation, regression, and generated verification pass."
+            },
+            "evidenceArtifact": "ARAMF_WORKER/certification/evidence/p4.1.5/iteration-5/p4-evidence.json",
+            "evidenceComplete": true,
+            "evidenceFingerprint": "6ae9942a0b81a76c70da2fa9a5d1ae7cd6e095e48c83ae9729b69a432d0eceeb",
+            "evidenceReferences": [
+                {
+                    "fingerprint": "6ae9942a0b81a76c70da2fa9a5d1ae7cd6e095e48c83ae9729b69a432d0eceeb",
+                    "reference": "ARAMF_WORKER/certification/evidence/p4.1.5/iteration-5/p4-evidence.json",
+                    "type": "HOST_TEST",
+                    "verified": true
+                }
+            ],
+            "issuedAt": "2026-09-20T12:27:09Z",
+            "iteration": 5,
+            "previousCertificateId": null,
+            "processVersion": "P4.1.5",
+            "relatedProjectMemoryEvents": [
+                "latest:CERTIFICATION_STARTED"
+            ],
+            "requirements": [
+                "process-evidence-artifact"
+            ],
+            "result": "PASS",
+            "scope": "project",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+            "status": "PASS",
+            "subject": "P4",
+            "supersedesCertificateId": null,
+            "testMethod": "Governed current-HEAD dependency freshness campaign",
+            "timestamp": "2026-09-20T12:27:09Z",
+            "verificationLevel": "HOST_TEST"
+        },
+        "P5": {
+            "certificateId": "cert-ca24b0d8-0226-45ee-afaa-00deff013395",
+            "certificateType": "PROCESS",
+            "certificationStatus": "CERTIFIED",
+            "context": {
+                "evidenceArtifact": "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/p5-evidence.json",
+                "evidenceFingerprint": "d579a5cc20004e275b9787c29c29fcd94603bec1e971bafb1918665a49da33de",
+                "iteration": 5,
+                "processVersion": "P5.1.5",
+                "semanticImpact": [
+                    "P5 routing remains downstream of validated P1-P4 governance and context dependencies.",
+                    "No P5 semantic implementation change was identified at current HEAD."
+                ],
+                "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+                "validationBasis": "Dependency revalidation is sufficient: no P5 production source changed in commit 803d; fresh P5 routing matrix, regression, and generated verification pass."
+            },
+            "evidenceArtifact": "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/p5-evidence.json",
+            "evidenceComplete": true,
+            "evidenceFingerprint": "d579a5cc20004e275b9787c29c29fcd94603bec1e971bafb1918665a49da33de",
+            "evidenceReferences": [
+                {
+                    "fingerprint": "d579a5cc20004e275b9787c29c29fcd94603bec1e971bafb1918665a49da33de",
+                    "reference": "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/p5-evidence.json",
+                    "type": "HOST_TEST",
+                    "verified": true
+                }
+            ],
+            "issuedAt": "2026-09-20T12:27:43Z",
+            "iteration": 5,
+            "previousCertificateId": null,
+            "processVersion": "P5.1.5",
+            "relatedProjectMemoryEvents": [
+                "latest:CERTIFICATION_STARTED"
+            ],
+            "requirements": [
+                "process-evidence-artifact"
+            ],
+            "result": "PASS",
+            "scope": "project",
+            "sourceRevision": "803d001d6bac44dca4a3a8b577a2014dc5f2a4f8",
+            "status": "PASS",
+            "subject": "P5",
+            "supersedesCertificateId": null,
+            "testMethod": "Governed current-HEAD dependency freshness campaign",
+            "timestamp": "2026-09-20T12:27:43Z",
+            "verificationLevel": "HOST_TEST"
         }
     },
     "version": 1
