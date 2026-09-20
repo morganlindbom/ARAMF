@@ -351,25 +351,25 @@
             "verificationLevel": "HOST_TEST"
         },
         "S3": {
-            "certificateId": "cert-7321b05c-5564-4e32-b646-9432a2d34e29",
+            "certificateId": "cert-197415b6-10b8-4ee0-a224-0ed5adb1dd48",
             "certificateType": "STRUCTURE",
             "certificationStatus": "CERTIFIED",
             "context": {
-                "evidenceArtifact": "ARAMF_WORKER/certification/evidence/s3.1.2/iteration-2/s3-evidence.json",
-                "evidenceFingerprint": "cbd7cab7f05a50aea2ebdf7c48d4e74713bf5fb3bdc831f4c475b30adaec088a",
-                "sourceRevision": "8b187b244465ab073b01bf55f17f414d201c4999:S3:a60cc9d65925f4021f0b489defd0a0e7bca94d479fa104b4eab5c764e99f484d",
-                "structureVersion": "S3.1.2"
+                "evidenceArtifact": "ARAMF_WORKER/certification/evidence/s3.1.3/iteration-3/s3-evidence.json",
+                "evidenceFingerprint": "24254213d6b20a8366168038fb4c9bf0233d73837addd0898540958e692263e9",
+                "sourceRevision": "6bb6a61aae57f1db17ee5527a6d3a6aa1b538bf8:S3:e3c2fe18b1de0685517e9b6143a0c4b91653fd98c1a7f1ea458d89ac0ade3c41",
+                "structureVersion": "S3.1.3"
             },
             "evidenceComplete": true,
             "evidenceReferences": [
                 {
-                    "fingerprint": "cbd7cab7f05a50aea2ebdf7c48d4e74713bf5fb3bdc831f4c475b30adaec088a",
-                    "reference": "ARAMF_WORKER/certification/evidence/s3.1.2/iteration-2/s3-evidence.json",
+                    "fingerprint": "24254213d6b20a8366168038fb4c9bf0233d73837addd0898540958e692263e9",
+                    "reference": "ARAMF_WORKER/certification/evidence/s3.1.3/iteration-3/s3-evidence.json",
                     "type": "HOST_TEST",
                     "verified": true
                 }
             ],
-            "issuedAt": "2026-09-20T18:32:03Z",
+            "issuedAt": "2026-09-20T18:39:07Z",
             "relatedProjectMemoryEvents": [
                 "latest:CERTIFICATION_STARTED"
             ],
@@ -380,7 +380,7 @@
             "scope": "project",
             "status": "PASS",
             "subject": "S3",
-            "timestamp": "2026-09-20T18:32:03Z",
+            "timestamp": "2026-09-20T18:39:07Z",
             "verificationLevel": "HOST_TEST"
         }
     },

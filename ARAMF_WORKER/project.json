@@ -30,7 +30,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "b4def61f6f8bd0f335606556c5731704e683214284d9b6e372b5ab327100e1c3",
+    "configurationFingerprint": "a757b88ea4662f09b0af172137cc2ade29f2e6293802e4fae7e9327d0ce35456",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",
@@ -216,6 +216,13 @@
                 "iteration": 2,
                 "loop": 1,
                 "structure": 3
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 3,
+                "loop": 1,
+                "structure": 3
             }
         ]
     },
@@ -366,7 +373,7 @@
             "lifecycle": {
                 "certification": 1,
                 "done": 1,
-                "iteration": 2,
+                "iteration": 3,
                 "loop": 1,
                 "structure": 3
             },
@@ -382,6 +389,13 @@
                     "certification": 1,
                     "done": 1,
                     "iteration": 2,
+                    "loop": 1,
+                    "structure": 3
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 3,
                     "loop": 1,
                     "structure": 3
                 }

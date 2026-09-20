@@ -628,6 +628,13 @@
                 "iteration": 2,
                 "loop": 1,
                 "structure": 3
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 3,
+                "loop": 1,
+                "structure": 3
             }
         ]
     },
@@ -1125,7 +1132,7 @@
             "lifecycle": {
                 "certification": 1,
                 "done": 1,
-                "iteration": 2,
+                "iteration": 3,
                 "loop": 1,
                 "structure": 3
             },
@@ -1141,6 +1148,13 @@
                     "certification": 1,
                     "done": 1,
                     "iteration": 2,
+                    "loop": 1,
+                    "structure": 3
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 3,
                     "loop": 1,
                     "structure": 3
                 }
