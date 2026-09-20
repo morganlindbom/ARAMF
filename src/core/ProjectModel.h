@@ -13,6 +13,7 @@
 #include "ProcessVersion.h"
 #include "../structure/S1/ResponsibilityOwnership.h"
 #include "../structure/S2/PhysicalStructure.h"
+#include "../structure/S3/DependencyInterfaces.h"
 
 class ProjectPersistence;
 
@@ -423,6 +424,7 @@ public:
     ProcessVersionState processVersionState() const { return processVersionState_; }
     const S1::Configuration& responsibilityOwnership() const { return responsibilityOwnership_; }
     const S2::Configuration& physicalStructure() const { return physicalStructure_; }
+    const S3::Configuration& dependencyInterfaces() const { return dependencyInterfaces_; }
     QJsonObject runtimeOwnershipState() const { return runtimeOwnershipState_; }
     QJsonObject orchestrationState() const { return orchestrationState_; }
     QSet<QString> completedPageIds() const { return completedPageIds_; }
@@ -483,6 +485,11 @@ public:
     bool certifyS2Iteration(QString* error = nullptr);
     bool completeS2Iteration(QString* error = nullptr);
     bool reworkS2(QString* error = nullptr);
+    void setDependencyInterfaces(const S3::Configuration& value);
+    bool startS3Iteration(QString* error = nullptr);
+    bool certifyS3Iteration(QString* error = nullptr);
+    bool completeS3Iteration(QString* error = nullptr);
+    bool reworkS3(QString* error = nullptr);
 
     void beginUpdate();
     void endUpdate();
@@ -541,6 +548,7 @@ private:
     ProcessVersionState processVersionState_;
     S1::Configuration responsibilityOwnership_;
     S2::Configuration physicalStructure_;
+    S3::Configuration dependencyInterfaces_;
     QJsonObject runtimeOwnershipState_;
     QJsonObject orchestrationState_;
 };

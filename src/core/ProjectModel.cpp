@@ -1139,3 +1139,51 @@ bool ProjectModel::reworkS2(QString* error)
     modified_ = true;
     return true;
 }
+
+void ProjectModel::setDependencyInterfaces(const S3::Configuration& value)
+{
+    dependencyInterfaces_ = value;
+    modified_ = true;
+    emit modelChanged();
+}
+
+bool ProjectModel::startS3Iteration(QString* error)
+{
+    processVersionState_.hasNextStructure = true;
+    processVersionState_.nextStructure = dependencyInterfaces_.lifecycle;
+    if (!ProcessVersionLifecycle::startNextStructure(&processVersionState_, error)) return false;
+    dependencyInterfaces_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::certifyS3Iteration(QString* error)
+{
+    processVersionState_.hasActiveStructure = true;
+    processVersionState_.activeStructure = dependencyInterfaces_.lifecycle;
+    if (!ProcessVersionLifecycle::certifyCurrentStructureIteration(&processVersionState_, error)) return false;
+    dependencyInterfaces_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::completeS3Iteration(QString* error)
+{
+    processVersionState_.hasActiveStructure = true;
+    processVersionState_.activeStructure = dependencyInterfaces_.lifecycle;
+    if (!ProcessVersionLifecycle::completeActiveStructure(&processVersionState_, error)) return false;
+    dependencyInterfaces_.lifecycle = processVersionState_.structureHistory.last();
+    dependencyInterfaces_.lifecycleHistory.append(dependencyInterfaces_.lifecycle);
+    modified_ = true;
+    return true;
+}
+
+bool ProjectModel::reworkS3(QString* error)
+{
+    if (dependencyInterfaces_.lifecycleHistory.isEmpty()) { if (error) *error = QStringLiteral("S3 has no completed iteration to rework."); return false; }
+    processVersionState_.structureHistory = dependencyInterfaces_.lifecycleHistory;
+    if (!ProcessVersionLifecycle::reworkCompletedStructure(&processVersionState_, 3, error)) return false;
+    dependencyInterfaces_.lifecycle = processVersionState_.activeStructure;
+    modified_ = true;
+    return true;
+}
