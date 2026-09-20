@@ -36,7 +36,11 @@ second live project-status authority.
   semantic modularity assessments, deterministic decomposition proposals, and
   audit evidence are bound to the exact implementation commit. Proposals
   remain non-authoritative and do not create S1 responsibilities.
-- S6 Structural Evolution & Enforcement: not implemented.
+- S6 Structural Evolution & Enforcement: `S6.1.1.1.1`, certified and
+  complete. S6 provides deterministic AUDIT/WARN/ENFORCE policy evaluation,
+  explicit gate targets, exemptions, waivers, remediation planning, migration
+  planning, and non-mutating dry-run inspection. No automatic live-project
+  repair or migration executor is enabled.
 
 ## Current Architecture
 

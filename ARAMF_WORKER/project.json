@@ -30,7 +30,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "5ddfa3a2ae1993c8dea66a95d68b2d10668e79e2ae9197614231783af5c98d3e",
+    "configurationFingerprint": "af2376d3e9fbcf49c4e7c47db39b59eb931ed478ef8cff1e6ea5a326025820b7",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",
@@ -237,6 +237,13 @@
                 "iteration": 1,
                 "loop": 1,
                 "structure": 5
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 6
             }
         ]
     },
@@ -477,6 +484,42 @@
             "observations": [
             ],
             "schemaVersion": 1
+        },
+        "s6StructuralEvolutionEnforcement": {
+            "enforcementPolicies": [
+            ],
+            "exemptions": [
+            ],
+            "lifecycle": {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 6
+            },
+            "lifecycleHistory": [
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 6
+                }
+            ],
+            "metadata": {
+                "legacyBaseline": true
+            },
+            "migrationPlans": [
+            ],
+            "observations": [
+            ],
+            "remediationPlans": [
+            ],
+            "ruleBindings": [
+            ],
+            "schemaVersion": 1,
+            "waivers": [
+            ]
         }
     },
     "targetPlatforms": [

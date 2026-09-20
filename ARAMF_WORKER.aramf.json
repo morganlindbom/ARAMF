@@ -649,6 +649,13 @@
                 "iteration": 1,
                 "loop": 1,
                 "structure": 5
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 6
             }
         ]
     },
@@ -1236,6 +1243,42 @@
             "observations": [
             ],
             "schemaVersion": 1
+        },
+        "s6StructuralEvolutionEnforcement": {
+            "enforcementPolicies": [
+            ],
+            "exemptions": [
+            ],
+            "lifecycle": {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 6
+            },
+            "lifecycleHistory": [
+                {
+                    "certification": 1,
+                    "done": 1,
+                    "iteration": 1,
+                    "loop": 1,
+                    "structure": 6
+                }
+            ],
+            "metadata": {
+                "legacyBaseline": true
+            },
+            "migrationPlans": [
+            ],
+            "observations": [
+            ],
+            "remediationPlans": [
+            ],
+            "ruleBindings": [
+            ],
+            "schemaVersion": 1,
+            "waivers": [
+            ]
         }
     },
     "templateId": "",
