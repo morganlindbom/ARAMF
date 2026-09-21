@@ -1072,9 +1072,9 @@ Campaign Evidence:
 
 ## Latest Agent Task
 
-- Task: Certification freshness infrastructure Phase A
+- Task: Certification freshness infrastructure Phase A.1 correctness repair
 - Status: IMPLEMENTED; component revalidation and recertification intentionally not performed
-- Added canonical source/dependency manifest and read-only freshness evaluation services.
-- Added explicit future S6 dependency-bound certification seam.
-- Full CTest: PASS (12/12, including the new freshness suite).
+- Corrected source-manifest freshness, project-root handling, semantic contract projections, direct process dependencies, and transitive freshness propagation.
+- Closed the dependency-free S6 certification path; historical S6 evidence remains unchanged.
+- Full CTest: PASS (12/12), including freshness and S6 certification-path coverage.
 - Next: Phase B bottom-up freshness revalidation after review and commit.

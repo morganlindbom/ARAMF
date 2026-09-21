@@ -23,6 +23,58 @@ QString hashJson(const QJsonObject& value)
     return hashBytes(QJsonDocument(value).toJson(QJsonDocument::Compact));
 }
 
+QJsonValue semanticValue(const QJsonValue& value)
+{
+    if (value.isObject()) {
+        QJsonObject result;
+        for (const auto& key : value.toObject().keys()) {
+            const QString normalized = key.toLower();
+            if (normalized == QStringLiteral("lifecycle")
+                || normalized == QStringLiteral("lifecyclehistory")
+                || normalized == QStringLiteral("certificate")
+                || normalized == QStringLiteral("certificateid")
+                || normalized == QStringLiteral("evidence")
+                || normalized == QStringLiteral("evidencereferences")
+                || normalized == QStringLiteral("generatedat")
+                || normalized == QStringLiteral("issuedat")
+                || normalized == QStringLiteral("timestamp")
+                || normalized == QStringLiteral("freshness")
+                || normalized == QStringLiteral("certification")
+                || normalized == QStringLiteral("metadata")) continue;
+            result.insert(key, semanticValue(value.toObject().value(key)));
+        }
+        return result;
+    }
+    if (value.isArray()) {
+        QJsonArray result;
+        for (const auto& item : value.toArray()) result.append(semanticValue(item));
+        return result;
+    }
+    return value;
+}
+
+QJsonObject contractDescriptor(const QString& subject)
+{
+    const QJsonArray direct = QJsonArray::fromStringList(
+        subject == QStringLiteral("P1") ? QStringList{QStringLiteral("F1")} :
+        subject == QStringLiteral("P2") ? QStringList{QStringLiteral("P1")} :
+        subject == QStringLiteral("P3") ? QStringList{QStringLiteral("P1"), QStringLiteral("P2")} :
+        subject == QStringLiteral("P4") ? QStringList{QStringLiteral("P1")} :
+        subject == QStringLiteral("P5") ? QStringList{QStringLiteral("P1"), QStringLiteral("P4")} : QStringList{});
+    static const QMap<QString, QStringList> capabilities = {
+        {QStringLiteral("F1"), {QStringLiteral("memory-evidence-foundation"), QStringLiteral("append-only-evidence"), QStringLiteral("project-memory")}},
+        {QStringLiteral("P1"), {QStringLiteral("task-preflight"), QStringLiteral("task-contract"), QStringLiteral("postflight-evidence")}},
+        {QStringLiteral("P2"), {QStringLiteral("context-indexing"), QStringLiteral("scoped-routing"), QStringLiteral("handoff-coordination")}},
+        {QStringLiteral("P3"), {QStringLiteral("execution-orchestration"), QStringLiteral("task-state-transitions"), QStringLiteral("worker-coordination")}},
+        {QStringLiteral("P4"), {QStringLiteral("predictive-optimization"), QStringLiteral("evidence-ranking"), QStringLiteral("risk-prediction")}},
+        {QStringLiteral("P5"), {QStringLiteral("adaptive-routing"), QStringLiteral("route-governance"), QStringLiteral("route-health")}}
+    };
+    QJsonObject result{{QStringLiteral("contractVersion"), 2}, {QStringLiteral("subject"), subject},
+                       {QStringLiteral("directDependencies"), direct}};
+    result.insert(QStringLiteral("capabilities"), QJsonArray::fromStringList(capabilities.value(subject)));
+    return result;
+}
+
 QJsonObject sortedObject(const QJsonObject& input)
 {
     QJsonObject result;
@@ -89,33 +141,9 @@ QString currentGitRevision(QString* error)
 
 QString currentContractFingerprint(const QString& subject, const QString& root, QString* error)
 {
-    const QString projectFile = QDir(root).filePath(QStringLiteral("ARAMF_WORKER.aramf.json"));
-    const auto project = readJson(projectFile, error);
-    if (project.isEmpty() && error && !error->isEmpty()) return {};
-
-    const auto structure = project.value(QStringLiteral("structure")).toObject();
-    static const QMap<QString, QString> keys = {
-        {QStringLiteral("S1"), QStringLiteral("s1ResponsibilityOwnership")},
-        {QStringLiteral("S2"), QStringLiteral("s2PhysicalStructure")},
-        {QStringLiteral("S3"), QStringLiteral("s3DependencyInterfaces")},
-        {QStringLiteral("S4"), QStringLiteral("s4CompositionEncapsulation")},
-        {QStringLiteral("S5"), QStringLiteral("s5DecompositionModularity")},
-        {QStringLiteral("S6"), QStringLiteral("s6StructuralEvolutionEnforcement")}
-    };
-    if (keys.contains(subject)) {
-        if (!structure.contains(keys.value(subject))) return {};
-        return hashJson(structure.value(keys.value(subject)).toObject());
-    }
-
-    // F/P have no project-owned JSON contract section. Their compact,
-    // versioned dependency contract is intentionally separate from source
-    // and evidence fingerprints.
-    return hashJson(QJsonObject{{QStringLiteral("subject"), subject},
-                                {QStringLiteral("contractVersion"), 1},
-                                {QStringLiteral("dependencies"), QJsonArray::fromStringList(
-                                    CertificationFreshnessService::dependencyManifest(subject).toJson(false)
-                                        .value(QStringLiteral("directDependencies")).toArray().isEmpty()
-                                    ? QStringList{} : QStringList{subject})}});
+    QString value;
+    if (!CertificationContractManifestProvider::fingerprint(subject, root, &value, error)) return {};
+    return value;
 }
 
 QStringList filesFor(const QString& subject)
@@ -240,7 +268,8 @@ QJsonObject CertificationFreshnessResult::toJson() const
             {QStringLiteral("currentSourceFingerprint"), currentSourceFingerprint}, {QStringLiteral("certifiedContractFingerprint"), certifiedContractFingerprint},
             {QStringLiteral("currentContractFingerprint"), currentContractFingerprint}, {QStringLiteral("certifiedEvidenceFingerprint"), certifiedEvidenceFingerprint},
             {QStringLiteral("currentEvidenceFingerprint"), currentEvidenceFingerprint}, {QStringLiteral("dependencyManifestFingerprint"), dependencyManifestFingerprint},
-            {QStringLiteral("sourceFresh"), sourceFresh}, {QStringLiteral("contractFresh"), contractFresh},
+            {QStringLiteral("sourceFresh"), sourceFresh}, {QStringLiteral("sourceBindingComplete"), sourceBindingComplete},
+            {QStringLiteral("contractFresh"), contractFresh},
             {QStringLiteral("directDependencyFresh"), directDependencyFresh}, {QStringLiteral("transitiveDependencyFresh"), transitiveDependencyFresh},
             {QStringLiteral("evidenceFresh"), evidenceFresh}, {QStringLiteral("bindingComplete"), bindingComplete},
             {QStringLiteral("status"), certificationFreshnessStatusName(status)}, {QStringLiteral("reasons"), QJsonArray::fromStringList(reasons)},
@@ -261,8 +290,8 @@ CertificationDependencyManifest CertificationFreshnessService::dependencyManifes
         subject == QStringLiteral("P1") ? QStringList{QStringLiteral("F1")} :
         subject == QStringLiteral("P2") ? QStringList{QStringLiteral("P1")} :
         subject == QStringLiteral("P3") ? QStringList{QStringLiteral("P1"), QStringLiteral("P2")} :
-        subject == QStringLiteral("P4") ? QStringList{QStringLiteral("P1"), QStringLiteral("P2"), QStringLiteral("P3")} :
-        subject == QStringLiteral("P5") ? QStringList{QStringLiteral("P1"), QStringLiteral("P2"), QStringLiteral("P3"), QStringLiteral("P4")} : QStringList{};
+        subject == QStringLiteral("P4") ? QStringList{QStringLiteral("P1")} :
+        subject == QStringLiteral("P5") ? QStringList{QStringLiteral("P1"), QStringLiteral("P4")} : QStringList{};
     for (const auto& dependency : dependencies) {
         CertificationDependencyBinding binding;
         binding.subject = dependency;
@@ -301,6 +330,51 @@ CertificationSourceManifest CertificationSourceManifestProvider::manifest(const 
     return {subject, QStringLiteral("1"), filesFor(subject)};
 }
 
+bool CertificationContractManifestProvider::fingerprint(const QString& subject, const QString& projectRoot,
+                                                         QString* result, QString* error)
+{
+    if (error) error->clear();
+    const auto project = readJson(QDir(projectRoot).filePath(QStringLiteral("ARAMF_WORKER.aramf.json")), error);
+    if (project.isEmpty() && error && !error->isEmpty()) return false;
+    return fingerprintFromProjectJson(subject, project, result, error);
+}
+
+bool CertificationContractManifestProvider::fingerprintFromProjectJson(const QString& subject, const QJsonObject& project,
+                                                                        QString* result, QString* error)
+{
+    if (error) error->clear();
+    QJsonObject projection;
+    if (subject.startsWith(QLatin1Char('S'))) {
+        static const QMap<QString, QString> keys = {
+            {QStringLiteral("S1"), QStringLiteral("s1ResponsibilityOwnership")},
+            {QStringLiteral("S2"), QStringLiteral("s2PhysicalStructure")},
+            {QStringLiteral("S3"), QStringLiteral("s3DependencyInterfaces")},
+            {QStringLiteral("S4"), QStringLiteral("s4CompositionEncapsulation")},
+            {QStringLiteral("S5"), QStringLiteral("s5DecompositionModularity")},
+            {QStringLiteral("S6"), QStringLiteral("s6StructuralEvolutionEnforcement")}
+        };
+        if (!keys.contains(subject)) {
+            if (error) *error = QStringLiteral("Unknown Structure contract subject %1.").arg(subject);
+            return false;
+        }
+        const auto structure = project.value(QStringLiteral("structure")).toObject();
+        if (!structure.contains(keys.value(subject))) {
+            if (error) *error = QStringLiteral("Project has no semantic contract for %1.").arg(subject);
+            return false;
+        }
+        projection = semanticValue(structure.value(keys.value(subject))).toObject();
+        projection.insert(QStringLiteral("contractVersion"), 2);
+        projection.insert(QStringLiteral("subject"), subject);
+    } else if (subject == QStringLiteral("F1") || subject.startsWith(QLatin1Char('P'))) {
+        projection = contractDescriptor(subject);
+    } else {
+        if (error) *error = QStringLiteral("Unknown certification contract subject %1.").arg(subject);
+        return false;
+    }
+    if (result) *result = hashJson(projection);
+    return true;
+}
+
 CertificationFreshnessResult CertificationFreshnessService::evaluateSnapshot(
     const QString& subject, const QJsonObject& historical, const QString& currentSourceRevision,
     const QString& currentSourceFingerprint, const QString& currentContractFingerprint,
@@ -324,14 +398,18 @@ CertificationFreshnessResult CertificationFreshnessService::evaluateSnapshot(
         result.reasons.append(QStringLiteral("No historical certificate binding was supplied."));
         return result;
     }
-    result.sourceFresh = !result.certifiedSourceFingerprint.isEmpty()
-        ? result.certifiedSourceFingerprint == result.currentSourceFingerprint
-        : (!result.certifiedSourceRevision.isEmpty() && result.certifiedSourceRevision == result.currentSourceRevision);
+    result.sourceBindingComplete = !result.certifiedSourceFingerprint.isEmpty()
+        && !result.currentSourceFingerprint.isEmpty();
+    result.sourceFresh = result.sourceBindingComplete
+        && result.certifiedSourceFingerprint == result.currentSourceFingerprint;
     result.contractFresh = !result.certifiedContractFingerprint.isEmpty()
         ? result.certifiedContractFingerprint == result.currentContractFingerprint : true;
     result.evidenceFresh = !result.certifiedEvidenceFingerprint.isEmpty()
         ? result.certifiedEvidenceFingerprint == result.currentEvidenceFingerprint : false;
-    if (!result.sourceFresh) result.reasons.append(QStringLiteral("Certified source binding differs from the current source state."));
+    if (!result.sourceBindingComplete)
+        result.reasons.append(QStringLiteral("Comparable canonical source-manifest binding is unavailable; repository revision is provenance only."));
+    else if (!result.sourceFresh)
+        result.reasons.append(QStringLiteral("Certified source manifest differs from the current source manifest."));
     if (!result.contractFresh) result.reasons.append(QStringLiteral("Certified contract fingerprint differs from the current contract state."));
     if (!result.evidenceFresh) result.reasons.append(QStringLiteral("Persisted evidence bytes are not proven equal to the certified evidence fingerprint."));
 
@@ -358,12 +436,12 @@ CertificationFreshnessResult CertificationFreshnessService::evaluateSnapshot(
             result.reasons.append(QStringLiteral("Direct dependency contract for %1 differs from its certified binding.").arg(dependency.subject));
         }
         if (dependencyResult.status != CertificationFreshnessStatus::Fresh) {
-            directFresh = false;
-            if (dependencyResult.status == CertificationFreshnessStatus::TransitiveDependencyStale) {
-                transitiveFresh = false;
-                result.reasons.append(QStringLiteral("Direct dependency %1 is transitively stale.").arg(dependency.subject));
+            if (historicalBinding.isEmpty() || historicalBinding != dependencyResult.currentContractFingerprint) {
+                directFresh = false;
+                result.reasons.append(QStringLiteral("Direct dependency %1 is stale or its contract binding differs.").arg(dependency.subject));
             } else {
-                result.reasons.append(QStringLiteral("Direct dependency %1 is stale or indeterminate.").arg(dependency.subject));
+                transitiveFresh = false;
+                result.reasons.append(QStringLiteral("Direct dependency %1 is stale through its own dependency or source state.").arg(dependency.subject));
             }
         }
     }
@@ -373,6 +451,7 @@ CertificationFreshnessResult CertificationFreshnessService::evaluateSnapshot(
     else if (!transitiveFresh) result.status = CertificationFreshnessStatus::TransitiveDependencyStale;
     else if (!directFresh) result.status = CertificationFreshnessStatus::DependencyStale;
     else if (!result.evidenceFresh) result.status = CertificationFreshnessStatus::EvidenceStale;
+    else if (!result.sourceBindingComplete) result.status = CertificationFreshnessStatus::FreshnessIndeterminate;
     else if (!result.sourceFresh) result.status = CertificationFreshnessStatus::SourceStale;
     else if (!result.contractFresh) result.status = CertificationFreshnessStatus::SourceStale;
     else result.status = CertificationFreshnessStatus::Fresh;
@@ -404,7 +483,7 @@ CertificationFreshnessResult evaluateSubject(const QString& subject, const QStri
     if (evidence.isEmpty()) { visiting.remove(subject); return result; }
     QString sourceFingerprint;
     QString sourceError;
-    CertificationSourceManifestProvider::fingerprint(QDir::currentPath(), subject, &sourceFingerprint, &sourceError);
+    CertificationSourceManifestProvider::fingerprint(projectRoot, subject, &sourceFingerprint, &sourceError);
     QString contractError;
     const QString contractFingerprint = currentContractFingerprint(subject, projectRoot, &contractError);
     if (error && error->isEmpty() && !contractError.isEmpty() && subject.startsWith(QLatin1Char('S'))) *error = contractError;

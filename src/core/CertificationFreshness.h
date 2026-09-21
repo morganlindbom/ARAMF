@@ -63,6 +63,7 @@ struct CertificationFreshnessResult final {
     QString currentEvidenceFingerprint;
     QString dependencyManifestFingerprint;
     bool sourceFresh = false;
+    bool sourceBindingComplete = false;
     bool contractFresh = false;
     bool directDependencyFresh = false;
     bool transitiveDependencyFresh = false;
@@ -79,6 +80,14 @@ class CertificationSourceManifestProvider final {
 public:
     static CertificationSourceManifest manifest(const QString& subject);
     static bool fingerprint(const QString& projectRoot, const QString& subject,
+                            QString* result, QString* error = nullptr);
+};
+
+class CertificationContractManifestProvider final {
+public:
+    static bool fingerprintFromProjectJson(const QString& subject, const QJsonObject& project,
+                                           QString* result, QString* error = nullptr);
+    static bool fingerprint(const QString& subject, const QString& projectRoot,
                             QString* result, QString* error = nullptr);
 };
 
