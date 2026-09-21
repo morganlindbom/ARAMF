@@ -1072,12 +1072,12 @@ Campaign Evidence:
 
 ## Latest Agent Task
 
-- Task: Phase B.1 generic freshness revalidation infrastructure
-- Status: IMPLEMENTED; component revalidation and recertification intentionally not performed
-- Added append-only freshness revalidation evidence/current-state support without mutating F/S/P implementation lifecycle or historical certificates.
-- Added exact source/contract/dependency/evidence binding and direct-dependency freshness gating; isolated F1 revalidation fixture passes.
-- Added the isolated Phase B.1 revalidation driver with per-subject FRESH checkpoints.
-- Corrected revalidation lifecycle capture to derive completed F/S lifecycle identity from persisted canonical state.
-- Exact baseline `6e14e25ffbc3e8efb21012b8f02e0d0230510834` passed full CTest 13/13, update, configuration, and revalidation fixture checks.
-- F1 and S1-S6 now have append-only freshness revalidation proofs with exact evidence-byte verification and FRESH checkpoints; historical certificates/evidence and implementation lifecycles remain unchanged.
+- Task: Phase B.1 revalidation evidence integrity closeout
+- Status: COMPLETE; provenance correction applied and superseding F1/S1-S6 freshness proofs recorded.
+- `CertificationRevalidationService` now derives the authoritative implementation revision from the runtime repository HEAD and normalizes regression evidence to that same value.
+- Removed the Phase B.1 driver's hardcoded implementation revision; the driver now supplies semantic regression results only.
+- Corrected the optional live S6 diagnostic to distinguish historical incomplete binding from current freshness established by revalidation.
+- Infrastructure correction commit `5ec88fed51da851d1e9f4a32f442627ccefbd9f4` passed full CTest 13/13, update, configuration, and focused revalidation/freshness tests.
+- Superseding append-only revalidation proofs for F1 and S1-S6 bind source revision `5ec88fed51da851d1e9f4a32f442627ccefbd9f4`; all seven evaluate FRESH and exact evidence-byte hashes verify.
+- Historical certificates, historical evidence, and completed implementation lifecycles remain unchanged.
 - Next: Phase B.2 process freshness revalidation; no P1-P5 state was changed in B.1.
