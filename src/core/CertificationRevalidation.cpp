@@ -152,12 +152,12 @@ bool CertificationRevalidationService::latest(const QString& projectRoot, const 
     const QString subjectDirectory = QDir(projectRoot).filePath(
         AramfPaths::resolveWorkerRelativePath(AramfPaths::CertificationRevalidationDirectory + QLatin1Char('/') + subject));
     QDir directory(subjectDirectory);
-    const auto entries = directory.entryList(QStringList{QStringLiteral("*/revalidation.json")}, QDir::Files, QDir::Name);
+    const auto directories = directory.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name);
     QJsonObject latestRecord;
     QString latestTimestamp;
     QString latestId;
-    for (const auto& entry : entries) {
-        const auto record = readObject(directory.filePath(entry), error);
+    for (const auto& entry : directories) {
+        const auto record = readObject(directory.filePath(entry + QStringLiteral("/revalidation.json")), error);
         if (record.isEmpty()) return false;
         const QString timestamp = record.value(QStringLiteral("timestamp")).toString();
         const QString id = record.value(QStringLiteral("revalidationId")).toString();

@@ -46,6 +46,36 @@ int main(int argc, char** argv)
 {
     QCoreApplication app(argc, argv);
     Q_UNUSED(app);
+    if (app.arguments().contains(QStringLiteral("--phase-b1"))) {
+        const QString projectRoot = QDir::currentPath();
+        const QJsonObject regressionEvidence{
+            {QStringLiteral("status"), QStringLiteral("PASS")},
+            {QStringLiteral("campaign"), QStringLiteral("Phase B.1 exact committed baseline")},
+            {QStringLiteral("implementationRevision"), QStringLiteral("60ee7d14ec7675b9a5ad9f1484f747bbdf4846fc")},
+            {QStringLiteral("fullCTest"), QStringLiteral("13/13 PASS")},
+            {QStringLiteral("updateCampaign"), QStringLiteral("PASS")},
+            {QStringLiteral("configurationUpdate"), QStringLiteral("PASS")},
+            {QStringLiteral("memoryColdStart"), QStringLiteral("PASS")}};
+        bool chainOk = true;
+        for (const auto& subject : QStringList{QStringLiteral("F1"), QStringLiteral("S1"), QStringLiteral("S2"),
+                                               QStringLiteral("S3"), QStringLiteral("S4"), QStringLiteral("S5"), QStringLiteral("S6")}) {
+            CertificationRevalidationResult revalidation;
+            QString error;
+            if (!CertificationRevalidationService::revalidate(projectRoot, subject, regressionEvidence, &revalidation, &error)) {
+                std::cerr << "FAIL: " << subject.toStdString() << " revalidation: " << error.toStdString() << '\n';
+                chainOk = false;
+                break;
+            }
+            const auto evaluated = CertificationFreshnessService::evaluate(subject, projectRoot, &error);
+            if (!error.isEmpty() || evaluated.status != CertificationFreshnessStatus::Fresh) {
+                std::cerr << "FAIL: " << subject.toStdString() << " checkpoint: " << error.toStdString() << '\n';
+                chainOk = false;
+                break;
+            }
+            std::cout << subject.toStdString() << " FRESH " << revalidation.revalidationId.toStdString() << '\n';
+        }
+        return chainOk ? 0 : 1;
+    }
     bool ok = true;
     QTemporaryDir fixture;
     ok &= check(fixture.isValid(), "temporary revalidation fixture created");

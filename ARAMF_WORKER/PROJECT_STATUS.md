@@ -1076,5 +1076,6 @@ Campaign Evidence:
 - Status: IMPLEMENTED; component revalidation and recertification intentionally not performed
 - Added append-only freshness revalidation evidence/current-state support without mutating F/S/P implementation lifecycle or historical certificates.
 - Added exact source/contract/dependency/evidence binding and direct-dependency freshness gating; isolated F1 revalidation fixture passes.
-- Full baseline regression is pending after the infrastructure commit and before live F1/S1-S6 revalidation.
+- Added the isolated Phase B.1 revalidation driver with per-subject FRESH checkpoints.
+- Full baseline regression is pending after the driver correction and before live F1/S1-S6 revalidation.
 - Next: Phase B.1 exact-baseline regression, then bottom-up F1/S1-S6 revalidation only.
