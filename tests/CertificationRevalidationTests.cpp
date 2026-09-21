@@ -51,7 +51,7 @@ int main(int argc, char** argv)
         const QJsonObject regressionEvidence{
             {QStringLiteral("status"), QStringLiteral("PASS")},
             {QStringLiteral("campaign"), QStringLiteral("Phase B.1 exact committed baseline")},
-            {QStringLiteral("implementationRevision"), QStringLiteral("60ee7d14ec7675b9a5ad9f1484f747bbdf4846fc")},
+            {QStringLiteral("implementationRevision"), QStringLiteral("f2d4a1036304864528485dadfff0994573892f4e")},
             {QStringLiteral("fullCTest"), QStringLiteral("13/13 PASS")},
             {QStringLiteral("updateCampaign"), QStringLiteral("PASS")},
             {QStringLiteral("configurationUpdate"), QStringLiteral("PASS")},
