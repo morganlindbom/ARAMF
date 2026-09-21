@@ -1072,12 +1072,11 @@ Campaign Evidence:
 
 ## Latest Agent Task
 
-- Task: Phase B.1 revalidation evidence integrity closeout
-- Status: COMPLETE; provenance correction applied and superseding F1/S1-S6 freshness proofs recorded.
-- `CertificationRevalidationService` now derives the authoritative implementation revision from the runtime repository HEAD and normalizes regression evidence to that same value.
-- Removed the Phase B.1 driver's hardcoded implementation revision; the driver now supplies semantic regression results only.
-- Corrected the optional live S6 diagnostic to distinguish historical incomplete binding from current freshness established by revalidation.
-- Infrastructure correction commit `5ec88fed51da851d1e9f4a32f442627ccefbd9f4` passed full CTest 13/13, update, configuration, and focused revalidation/freshness tests.
-- Superseding append-only revalidation proofs for F1 and S1-S6 bind source revision `5ec88fed51da851d1e9f4a32f442627ccefbd9f4`; all seven evaluate FRESH and exact evidence-byte hashes verify.
-- Historical certificates, historical evidence, and completed implementation lifecycles remain unchanged.
-- Next: Phase B.2 process freshness revalidation; no P1-P5 state was changed in B.1.
+- Task: Phase B.2 P1-P5 process freshness revalidation
+- Status: COMPLETE; process freshness was revalidated without changing process semantics or lifecycle iterations.
+- Extended the generic revalidation service to support P1-P5 and derive their completed five-part lifecycle identities from canonical `processVersion.completedHistory`.
+- Added the reusable `--phase-b2` governed revalidation invocation; regression metadata contains semantic results only and runtime provenance remains service-owned.
+- Exact implementation baseline `3e1d2015bbc6dffac992dced4107e01fadd00a9b` passed full CTest 13/13, update, configuration, focused freshness, and revalidation checks.
+- Append-only freshness proofs for P1-P5 bind source revision `3e1d2015bbc6dffac992dced4107e01fadd00a9b`; all five evaluate FRESH and exact evidence-byte hashes verify.
+- F1/S1-S6 remained FRESH. Historical process certificates/evidence and completed process lifecycles remain unchanged.
+- Next: no Phase B.2 process freshness work remains; F2-F4, P6, and S7 are not started.
