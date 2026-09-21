@@ -153,6 +153,27 @@ QString completedLifecycleFromProject(const QString& root, const QString& subjec
         const int iteration = historicalEvidence.value(QStringLiteral("iteration")).toInt();
         if (!foundationVersion.isEmpty() && iteration > 0) return QStringLiteral("F1.1.%1.1.1").arg(iteration);
     }
+    if (subject.startsWith(QLatin1Char('P'))) {
+        bool ok = false;
+        const int process = subject.mid(1).toInt(&ok);
+        if (ok && process > 0) {
+            const auto history = project.value(QStringLiteral("processVersion")).toObject()
+                .value(QStringLiteral("completedHistory")).toArray();
+            int bestIteration = 0;
+            int bestLoop = 1;
+            for (const auto& value : history) {
+                const auto entry = value.toObject();
+                if (entry.value(QStringLiteral("process")).toInt() == process
+                    && entry.value(QStringLiteral("certification")).toInt() == 1
+                    && entry.value(QStringLiteral("done")).toInt() == 1
+                    && entry.value(QStringLiteral("iteration")).toInt() >= bestIteration) {
+                    bestIteration = entry.value(QStringLiteral("iteration")).toInt();
+                    bestLoop = entry.value(QStringLiteral("loop")).toInt(1);
+                }
+            }
+            if (bestIteration > 0) return QStringLiteral("%1.%2.%3.1.1").arg(subject).arg(bestLoop).arg(bestIteration);
+        }
+    }
     return historicalEvidence.value(QStringLiteral("lifecycle")).toString();
 }
 
@@ -171,7 +192,9 @@ bool isAllowedSubject(const QString& subject)
     return subject == QStringLiteral("F1") || subject == QStringLiteral("S1")
         || subject == QStringLiteral("S2") || subject == QStringLiteral("S3")
         || subject == QStringLiteral("S4") || subject == QStringLiteral("S5")
-        || subject == QStringLiteral("S6");
+        || subject == QStringLiteral("S6") || subject == QStringLiteral("P1")
+        || subject == QStringLiteral("P2") || subject == QStringLiteral("P3")
+        || subject == QStringLiteral("P4") || subject == QStringLiteral("P5");
 }
 }
 

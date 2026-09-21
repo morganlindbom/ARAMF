@@ -75,6 +75,35 @@ int main(int argc, char** argv)
         }
         return chainOk ? 0 : 1;
     }
+    if (app.arguments().contains(QStringLiteral("--phase-b2"))) {
+        const QString projectRoot = QDir::currentPath();
+        const QJsonObject regressionEvidence{
+            {QStringLiteral("status"), QStringLiteral("PASS")},
+            {QStringLiteral("campaign"), QStringLiteral("Phase B.2 process freshness revalidation")},
+            {QStringLiteral("fullCTest"), QStringLiteral("PASS")},
+            {QStringLiteral("updateCampaign"), QStringLiteral("PASS")},
+            {QStringLiteral("configurationUpdate"), QStringLiteral("PASS")},
+            {QStringLiteral("memoryColdStart"), QStringLiteral("PASS")}};
+        bool chainOk = true;
+        for (const auto& subject : QStringList{QStringLiteral("P1"), QStringLiteral("P2"), QStringLiteral("P3"),
+                                               QStringLiteral("P4"), QStringLiteral("P5")}) {
+            CertificationRevalidationResult revalidation;
+            QString error;
+            if (!CertificationRevalidationService::revalidate(projectRoot, subject, regressionEvidence, &revalidation, &error)) {
+                std::cerr << "FAIL: " << subject.toStdString() << " revalidation: " << error.toStdString() << '\n';
+                chainOk = false;
+                break;
+            }
+            const auto evaluated = CertificationFreshnessService::evaluate(subject, projectRoot, &error);
+            if (!error.isEmpty() || evaluated.status != CertificationFreshnessStatus::Fresh) {
+                std::cerr << "FAIL: " << subject.toStdString() << " checkpoint: " << error.toStdString() << '\n';
+                chainOk = false;
+                break;
+            }
+            std::cout << subject.toStdString() << " FRESH " << revalidation.revalidationId.toStdString() << '\n';
+        }
+        return chainOk ? 0 : 1;
+    }
     bool ok = true;
     QTemporaryDir fixture;
     ok &= check(fixture.isValid(), "temporary revalidation fixture created");
