@@ -1,4 +1,5 @@
 #include "core/CertificationFreshness.h"
+#include "core/CertificationRevalidation.h"
 
 #include <QCoreApplication>
 #include <QDir>
@@ -179,8 +180,12 @@ int main(int argc, char** argv)
         QString error;
         const auto liveS6 = CertificationFreshnessService::evaluate(QStringLiteral("S6"), QDir::currentPath(), &error);
         ok &= check(error.isEmpty(), "live freshness evaluation is read-only and parseable");
-        ok &= check(liveS6.status == CertificationFreshnessStatus::DependencyBindingIncomplete,
-                    "historical S6 without upstream bindings remains binding-incomplete");
+        QJsonObject currentRevalidation;
+        const bool hasCurrentRevalidation = CertificationRevalidationService::latest(QDir::currentPath(), QStringLiteral("S6"), &currentRevalidation);
+        ok &= check(hasCurrentRevalidation
+                        ? liveS6.status == CertificationFreshnessStatus::Fresh
+                        : liveS6.status == CertificationFreshnessStatus::DependencyBindingIncomplete,
+                    "S6 distinguishes historical incomplete binding from current revalidated freshness");
     }
     return ok ? 0 : 1;
 }

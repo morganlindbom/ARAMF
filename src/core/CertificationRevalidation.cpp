@@ -255,6 +255,10 @@ bool CertificationRevalidationService::revalidate(const QString& projectRoot, co
     const auto dependencyBindings = CertificationDependencyBindingProvider::currentBindings(subject, projectRoot, error);
     if (!manifest.directDependencies.isEmpty() && dependencyBindings.isEmpty()) return false;
 
+    QJsonObject normalizedRegressionEvidence = regressionEvidence;
+    normalizedRegressionEvidence.remove(QStringLiteral("implementationRevision"));
+    normalizedRegressionEvidence.remove(QStringLiteral("sourceRevision"));
+    normalizedRegressionEvidence.insert(QStringLiteral("implementationRevision"), sourceRevision);
     const QString revalidationId = QStringLiteral("reval-%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
     const QString timestamp = QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
     const QString historicalLifecycle = completedLifecycleFromProject(projectRoot, subject, historicalEvidence);
@@ -275,7 +279,7 @@ bool CertificationRevalidationService::revalidate(const QString& projectRoot, co
         {QStringLiteral("dependencyManifestFingerprint"), manifest.computedFingerprint()},
         {QStringLiteral("semanticChange"), false},
         {QStringLiteral("status"), QStringLiteral("FRESH")},
-        {QStringLiteral("regressionEvidence"), regressionEvidence},
+        {QStringLiteral("regressionEvidence"), normalizedRegressionEvidence},
         {QStringLiteral("provenance"), QJsonObject{{QStringLiteral("sourceBinding"), QStringLiteral("CertificationSourceManifestProvider")},
                                                     {QStringLiteral("contractBinding"), QStringLiteral("CertificationContractManifestProvider")},
                                                     {QStringLiteral("dependencyBinding"), QStringLiteral("CertificationDependencyBindingProvider")}}},

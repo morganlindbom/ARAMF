@@ -51,7 +51,6 @@ int main(int argc, char** argv)
         const QJsonObject regressionEvidence{
             {QStringLiteral("status"), QStringLiteral("PASS")},
             {QStringLiteral("campaign"), QStringLiteral("Phase B.1 exact committed baseline")},
-            {QStringLiteral("implementationRevision"), QStringLiteral("f2d4a1036304864528485dadfff0994573892f4e")},
             {QStringLiteral("fullCTest"), QStringLiteral("13/13 PASS")},
             {QStringLiteral("updateCampaign"), QStringLiteral("PASS")},
             {QStringLiteral("configurationUpdate"), QStringLiteral("PASS")},
@@ -128,6 +127,13 @@ int main(int argc, char** argv)
             &revalidation, &error), "F1 freshness revalidation succeeds on isolated fixture");
     ok &= check(error.isEmpty(), "fixture revalidation has no error");
     ok &= check(revalidation.status == QStringLiteral("FRESH"), "fixture revalidation status is FRESH");
+    ok &= check(revalidation.sourceRevision == QString::fromUtf8([&]() {
+        QProcess git;
+        git.setWorkingDirectory(projectRoot);
+        git.start(QStringLiteral("git"), {QStringLiteral("rev-parse"), QStringLiteral("HEAD")});
+        git.waitForFinished(10000);
+        return git.readAllStandardOutput();
+    }()).trimmed(), "revalidation source revision is runtime Git HEAD");
     ok &= check(revalidation.historicalLifecycle == QStringLiteral("F1.1.4.1.1"), "historical lifecycle is referenced, not changed");
     const auto evaluated = CertificationFreshnessService::evaluate(QStringLiteral("F1"), projectRoot, &error);
     ok &= check(evaluated.status == CertificationFreshnessStatus::Fresh, "revalidated fixture evaluates FRESH");
@@ -135,5 +141,10 @@ int main(int argc, char** argv)
     QFile evidence(QDir(projectRoot).filePath(revalidation.evidenceArtifact));
     ok &= check(evidence.open(QIODevice::ReadOnly), "revalidation evidence can be read");
     ok &= check(hashBytes(evidence.readAll()) == revalidation.evidenceFingerprint, "revalidation evidence fingerprint matches exact bytes");
+    evidence.seek(0);
+    const auto persistedEvidence = QJsonDocument::fromJson(evidence.readAll()).object();
+    ok &= check(persistedEvidence.value(QStringLiteral("regressionEvidence")).toObject()
+                    .value(QStringLiteral("implementationRevision")).toString() == revalidation.sourceRevision,
+                "caller implementation revision is replaced by canonical runtime revision");
     return ok ? 0 : 1;
 }
