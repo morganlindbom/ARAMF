@@ -1077,5 +1077,6 @@ Campaign Evidence:
 - Added append-only freshness revalidation evidence/current-state support without mutating F/S/P implementation lifecycle or historical certificates.
 - Added exact source/contract/dependency/evidence binding and direct-dependency freshness gating; isolated F1 revalidation fixture passes.
 - Added the isolated Phase B.1 revalidation driver with per-subject FRESH checkpoints.
-- Full baseline regression is pending after the driver correction and before live F1/S1-S6 revalidation.
+- Corrected revalidation lifecycle capture to derive completed F/S lifecycle identity from persisted canonical state.
+- Full baseline regression is pending after the lifecycle-capture correction and before the superseding live F1/S1-S6 chain.
 - Next: Phase B.1 exact-baseline regression, then bottom-up F1/S1-S6 revalidation only.

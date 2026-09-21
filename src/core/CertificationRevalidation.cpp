@@ -111,6 +111,51 @@ QJsonObject readHistoricalEvidence(const QString& root, const QJsonObject& certi
     return readObject(QDir(root).filePath(reference), error);
 }
 
+QString completedLifecycleFromProject(const QString& root, const QString& subject, const QJsonObject& historicalEvidence)
+{
+    QString readError;
+    const auto project = readObject(QDir(root).filePath(QStringLiteral("ARAMF_WORKER.aramf.json")), &readError);
+    if (subject.startsWith(QLatin1Char('S'))) {
+        static const QMap<QString, QString> keys = {
+            {QStringLiteral("S1"), QStringLiteral("s1ResponsibilityOwnership")},
+            {QStringLiteral("S2"), QStringLiteral("s2PhysicalStructure")},
+            {QStringLiteral("S3"), QStringLiteral("s3DependencyInterfaces")},
+            {QStringLiteral("S4"), QStringLiteral("s4CompositionEncapsulation")},
+            {QStringLiteral("S5"), QStringLiteral("s5DecompositionModularity")},
+            {QStringLiteral("S6"), QStringLiteral("s6StructuralEvolutionEnforcement")}};
+        const auto lifecycle = project.value(QStringLiteral("structure")).toObject()
+            .value(keys.value(subject)).toObject().value(QStringLiteral("lifecycle")).toObject();
+        if (!lifecycle.isEmpty()) {
+            return QStringLiteral("%1.%2.%3.%4.%5").arg(subject)
+                .arg(lifecycle.value(QStringLiteral("loop")).toInt())
+                .arg(lifecycle.value(QStringLiteral("iteration")).toInt())
+                .arg(lifecycle.value(QStringLiteral("certification")).toInt())
+                .arg(lifecycle.value(QStringLiteral("done")).toInt());
+        }
+    }
+    if (subject == QStringLiteral("F1")) {
+        const auto history = project.value(QStringLiteral("processVersion")).toObject()
+            .value(QStringLiteral("completedHistory")).toArray();
+        int bestIteration = 0;
+        int bestLoop = 1;
+        for (const auto& value : history) {
+            const auto entry = value.toObject();
+            if (entry.value(QStringLiteral("foundation")).toInt() == 1
+                && entry.value(QStringLiteral("certification")).toInt() == 1
+                && entry.value(QStringLiteral("done")).toInt() == 1
+                && entry.value(QStringLiteral("iteration")).toInt() >= bestIteration) {
+                bestIteration = entry.value(QStringLiteral("iteration")).toInt();
+                bestLoop = entry.value(QStringLiteral("loop")).toInt(1);
+            }
+        }
+        if (bestIteration > 0) return QStringLiteral("F1.%1.%2.1.1").arg(bestLoop).arg(bestIteration);
+        const QString foundationVersion = historicalEvidence.value(QStringLiteral("foundationVersion")).toString();
+        const int iteration = historicalEvidence.value(QStringLiteral("iteration")).toInt();
+        if (!foundationVersion.isEmpty() && iteration > 0) return QStringLiteral("F1.1.%1.1.1").arg(iteration);
+    }
+    return historicalEvidence.value(QStringLiteral("lifecycle")).toString();
+}
+
 QJsonObject bindingsForEvidence(const QJsonObject& bindings)
 {
     QJsonObject normalized = bindings;
@@ -212,13 +257,16 @@ bool CertificationRevalidationService::revalidate(const QString& projectRoot, co
 
     const QString revalidationId = QStringLiteral("reval-%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
     const QString timestamp = QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
-    const QString historicalLifecycle = historicalEvidence.value(QStringLiteral("lifecycle")).toString();
+    const QString historicalLifecycle = completedLifecycleFromProject(projectRoot, subject, historicalEvidence);
+    QJsonObject previousRevalidation;
+    CertificationRevalidationService::latest(projectRoot, subject, &previousRevalidation, nullptr);
     QJsonObject evidence{
         {QStringLiteral("schemaVersion"), 1},
         {QStringLiteral("revalidationType"), QStringLiteral("FRESHNESS_REVALIDATION")},
         {QStringLiteral("revalidationId"), revalidationId},
         {QStringLiteral("subject"), subject},
         {QStringLiteral("revalidationOfCertificateId"), certificate.value(QStringLiteral("certificateId"))},
+        {QStringLiteral("supersedesRevalidationId"), previousRevalidation.value(QStringLiteral("revalidationId"))},
         {QStringLiteral("historicalLifecycle"), historicalLifecycle},
         {QStringLiteral("sourceRevision"), sourceRevision},
         {QStringLiteral("sourceFingerprint"), sourceFingerprint},
@@ -252,6 +300,7 @@ bool CertificationRevalidationService::revalidate(const QString& projectRoot, co
         {QStringLiteral("revalidationId"), revalidationId},
         {QStringLiteral("subject"), subject},
         {QStringLiteral("revalidationOfCertificateId"), certificate.value(QStringLiteral("certificateId"))},
+        {QStringLiteral("supersedesRevalidationId"), previousRevalidation.value(QStringLiteral("revalidationId"))},
         {QStringLiteral("historicalLifecycle"), historicalLifecycle},
         {QStringLiteral("evidenceArtifact"), evidenceRelative},
         {QStringLiteral("evidenceFingerprint"), evidenceFingerprint},
