@@ -27,6 +27,8 @@ set(ARAMF_CORE_SOURCES
     src/core/CertificationService.cpp
     src/core/CertificationFreshness.h
     src/core/CertificationFreshness.cpp
+    src/core/CertificationRevalidation.h
+    src/core/CertificationRevalidation.cpp
     src/core/MemoryCommand.h
     src/core/MemoryCommand.cpp
     src/core/ImprovementBacklog.h
@@ -285,6 +287,8 @@ if(BUILD_TESTING)
         src/core/CertificationService.cpp
         src/core/CertificationFreshness.h
         src/core/CertificationFreshness.cpp
+        src/core/CertificationRevalidation.h
+        src/core/CertificationRevalidation.cpp
         src/core/MemoryCommand.h
         src/core/MemoryCommand.cpp
         src/core/ImprovementBacklog.h
@@ -370,10 +374,24 @@ if(BUILD_TESTING)
         tests/CertificationFreshnessTests.cpp
         src/core/CertificationFreshness.h
         src/core/CertificationFreshness.cpp
+        src/core/CertificationRevalidation.h
+        src/core/CertificationRevalidation.cpp
     )
     target_include_directories(aramf_freshness_tests PRIVATE src)
     target_link_libraries(aramf_freshness_tests PRIVATE Qt6::Core)
     add_test(NAME aramf_freshness_tests COMMAND aramf_freshness_tests)
+
+    add_executable(aramf_revalidation_tests
+        tests/CertificationRevalidationTests.cpp
+        src/core/AramfPaths.h
+        src/core/CertificationFreshness.h
+        src/core/CertificationFreshness.cpp
+        src/core/CertificationRevalidation.h
+        src/core/CertificationRevalidation.cpp
+    )
+    target_include_directories(aramf_revalidation_tests PRIVATE src)
+    target_link_libraries(aramf_revalidation_tests PRIVATE Qt6::Core)
+    add_test(NAME aramf_revalidation_tests COMMAND aramf_revalidation_tests)
 
     add_executable(aramf_workflow_tests
         tests/WorkflowNavigationTests.cpp

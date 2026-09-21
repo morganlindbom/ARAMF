@@ -50,6 +50,8 @@ inline const QString CertificationContract = QStringLiteral("ARAMF_WORKER/certif
 inline const QString Certificates = QStringLiteral("ARAMF_WORKER/certification/certificates.jsonl");
 inline const QString CurrentCertificationState = QStringLiteral("ARAMF_WORKER/certification/current-certification-state.json");
 inline const QString CertificationEvidenceDirectory = QStringLiteral("ARAMF_WORKER/certification/evidence");
+inline const QString CertificationRevalidationDirectory = QStringLiteral("ARAMF_WORKER/certification/revalidation");
+inline const QString CurrentFreshnessState = QStringLiteral("ARAMF_WORKER/certification/current-freshness-state.json");
 inline const QString F1EvidenceVersion = QStringLiteral("F1.1.4");
 
 // F1.1.4 evidence is immutable and scoped to one lifecycle iteration.  Keep

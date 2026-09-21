@@ -1072,9 +1072,9 @@ Campaign Evidence:
 
 ## Latest Agent Task
 
-- Task: Certification freshness infrastructure Phase A.2 semantic contract and dependency binding integrity repair
+- Task: Phase B.1 generic freshness revalidation infrastructure
 - Status: IMPLEMENTED; component revalidation and recertification intentionally not performed
-- Added subject-aware semantic contract projections, preserving behaviorally consumed metadata while excluding lifecycle/history state.
-- Added canonical dependency binding generation/verification, dependency-manifest fingerprinting, and stronger S6 future certification checks; historical S6 evidence remains unchanged.
-- Full CTest: PASS (12/12), including freshness, semantic projection, transitive binding, and S6 certification-path coverage.
-- Next: Phase B bottom-up freshness revalidation after review and commit.
+- Added append-only freshness revalidation evidence/current-state support without mutating F/S/P implementation lifecycle or historical certificates.
+- Added exact source/contract/dependency/evidence binding and direct-dependency freshness gating; isolated F1 revalidation fixture passes.
+- Full baseline regression is pending after the infrastructure commit and before live F1/S1-S6 revalidation.
+- Next: Phase B.1 exact-baseline regression, then bottom-up F1/S1-S6 revalidation only.

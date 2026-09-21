@@ -1,4 +1,5 @@
 #include "CertificationFreshness.h"
+#include "CertificationRevalidation.h"
 
 #include <QCryptographicHash>
 #include <QDir>
@@ -515,14 +516,19 @@ CertificationFreshnessResult evaluateSubject(const QString& subject, const QStri
         return result;
     }
     visiting.insert(subject);
-    const QJsonObject certificate = latestCertificate(projectRoot, subject, error);
-    if (certificate.isEmpty()) {
+    QJsonObject revalidation;
+    QString revalidationError;
+    const bool hasRevalidation = CertificationRevalidationService::latest(projectRoot, subject, &revalidation, &revalidationError);
+    const QJsonObject certificate = hasRevalidation ? QJsonObject{} : latestCertificate(projectRoot, subject, error);
+    if (!hasRevalidation && certificate.isEmpty()) {
         result.status = CertificationFreshnessStatus::NotCertified;
         result.reasons.append(QStringLiteral("No historical certificate exists for %1.").arg(subject));
         visiting.remove(subject);
         return result;
     }
-    const QString evidenceReference = evidencePathFromCertificate(certificate);
+    const QString evidenceReference = hasRevalidation
+        ? revalidation.value(QStringLiteral("evidenceArtifact")).toString()
+        : evidencePathFromCertificate(certificate);
     const QString evidenceFile = QDir(projectRoot).filePath(evidenceReference);
     const auto evidence = readJson(evidenceFile, error);
     if (evidence.isEmpty()) { visiting.remove(subject); return result; }
@@ -534,13 +540,19 @@ CertificationFreshnessResult evaluateSubject(const QString& subject, const QStri
     if (error && error->isEmpty() && !contractError.isEmpty() && subject.startsWith(QLatin1Char('S'))) *error = contractError;
     QString currentRevision = currentGitRevision(error);
     const QString historicalSourceRevision = evidence.value(QStringLiteral("sourceRevision")).toString();
-    auto historical = QJsonObject{
-        {QStringLiteral("certificateId"), certificate.value(QStringLiteral("certificateId"))},
-        {QStringLiteral("lifecycle"), evidence.value(QStringLiteral("lifecycle"))},
-        {QStringLiteral("sourceRevision"), historicalSourceRevision},
-        {QStringLiteral("sourceFingerprint"), evidence.value(QStringLiteral("sourceFingerprint"))},
-        {QStringLiteral("contractFingerprint"), evidence.value(QStringLiteral("contractFingerprint"))},
-        {QStringLiteral("evidenceFingerprint"), certificate.value(QStringLiteral("evidenceFingerprint"))}};
+    auto historical = hasRevalidation
+        ? QJsonObject{{QStringLiteral("certificateId"), revalidation.value(QStringLiteral("revalidationOfCertificateId"))},
+                      {QStringLiteral("lifecycle"), revalidation.value(QStringLiteral("historicalLifecycle"))},
+                      {QStringLiteral("sourceRevision"), revalidation.value(QStringLiteral("sourceRevision"))},
+                      {QStringLiteral("sourceFingerprint"), revalidation.value(QStringLiteral("sourceFingerprint"))},
+                      {QStringLiteral("contractFingerprint"), revalidation.value(QStringLiteral("contractFingerprint"))},
+                      {QStringLiteral("evidenceFingerprint"), revalidation.value(QStringLiteral("evidenceFingerprint"))}}
+        : QJsonObject{{QStringLiteral("certificateId"), certificate.value(QStringLiteral("certificateId"))},
+                      {QStringLiteral("lifecycle"), evidence.value(QStringLiteral("lifecycle"))},
+                      {QStringLiteral("sourceRevision"), historicalSourceRevision},
+                      {QStringLiteral("sourceFingerprint"), evidence.value(QStringLiteral("sourceFingerprint"))},
+                      {QStringLiteral("contractFingerprint"), evidence.value(QStringLiteral("contractFingerprint"))},
+                      {QStringLiteral("evidenceFingerprint"), certificate.value(QStringLiteral("evidenceFingerprint"))}};
     for (const auto& dependency : CertificationFreshnessService::dependencyManifest(subject).directDependencies) {
         const QString key = dependency.subject.toLower() + QStringLiteral("ContractFingerprint");
         if (evidence.contains(key)) historical.insert(key, evidence.value(key));
