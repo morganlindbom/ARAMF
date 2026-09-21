@@ -23,7 +23,31 @@ QString hashJson(const QJsonObject& value)
     return hashBytes(QJsonDocument(value).toJson(QJsonDocument::Compact));
 }
 
-QJsonValue semanticValue(const QJsonValue& value)
+QJsonObject semanticMetadata(const QString& subject, const QString& context, const QJsonObject& input)
+{
+    QJsonObject result;
+    QStringList keys;
+    if (subject == QStringLiteral("S3") && context == QStringLiteral("interfaces"))
+        keys = {QStringLiteral("authorizedResponsibilityIds")};
+    else if (subject == QStringLiteral("S3") && context == QStringLiteral("dependencies"))
+        keys = {QStringLiteral("allowSelf")};
+    else if (subject == QStringLiteral("S4") && context == QStringLiteral("compositionContracts"))
+        keys = {QStringLiteral("multiplicityReason")};
+    else if (subject == QStringLiteral("S4") && context == QStringLiteral("observations"))
+        keys = {QStringLiteral("directPrivateAccess"), QStringLiteral("privateAccess")};
+    else if (subject == QStringLiteral("S5") && context == QStringLiteral("assessments"))
+        keys = {QStringLiteral("unrelatedConcerns"), QStringLiteral("unrelatedStateDomains"),
+                QStringLiteral("unrelatedTestDomains"), QStringLiteral("relatedChangeReasons"),
+                QStringLiteral("fragmentationSignal"), QStringLiteral("independentMeaning"),
+                QStringLiteral("physicalBoundaryIds"), QStringLiteral("dependencyIds"),
+                QStringLiteral("interfaceIds"), QStringLiteral("compositionIds")};
+    else if (subject == QStringLiteral("S5") && context == QStringLiteral("candidateModules"))
+        keys = {QStringLiteral("authoritativeS1ResponsibilityId")};
+    for (const auto& key : keys) if (input.contains(key)) result.insert(key, input.value(key));
+    return result;
+}
+
+QJsonValue semanticValue(const QJsonValue& value, const QString& subject, const QString& context = {})
 {
     if (value.isObject()) {
         QJsonObject result;
@@ -40,14 +64,19 @@ QJsonValue semanticValue(const QJsonValue& value)
                 || normalized == QStringLiteral("timestamp")
                 || normalized == QStringLiteral("freshness")
                 || normalized == QStringLiteral("certification")
-                || normalized == QStringLiteral("metadata")) continue;
-            result.insert(key, semanticValue(value.toObject().value(key)));
+                || normalized == QStringLiteral("certification")) continue;
+            if (normalized == QStringLiteral("metadata")) {
+                const auto metadata = semanticMetadata(subject, context, value.toObject().value(key).toObject());
+                if (!metadata.isEmpty()) result.insert(key, metadata);
+                continue;
+            }
+            result.insert(key, semanticValue(value.toObject().value(key), subject, key));
         }
         return result;
     }
     if (value.isArray()) {
         QJsonArray result;
-        for (const auto& item : value.toArray()) result.append(semanticValue(item));
+        for (const auto& item : value.toArray()) result.append(semanticValue(item, subject, context));
         return result;
     }
     return value;
@@ -362,7 +391,7 @@ bool CertificationContractManifestProvider::fingerprintFromProjectJson(const QSt
             if (error) *error = QStringLiteral("Project has no semantic contract for %1.").arg(subject);
             return false;
         }
-        projection = semanticValue(structure.value(keys.value(subject))).toObject();
+        projection = semanticValue(structure.value(keys.value(subject)), subject).toObject();
         projection.insert(QStringLiteral("contractVersion"), 2);
         projection.insert(QStringLiteral("subject"), subject);
     } else if (subject == QStringLiteral("F1") || subject.startsWith(QLatin1Char('P'))) {
@@ -373,6 +402,22 @@ bool CertificationContractManifestProvider::fingerprintFromProjectJson(const QSt
     }
     if (result) *result = hashJson(projection);
     return true;
+}
+
+QJsonObject CertificationDependencyBindingProvider::currentBindings(const QString& subject, const QString& projectRoot,
+                                                                     QString* error)
+{
+    if (error) error->clear();
+    const auto manifest = CertificationFreshnessService::dependencyManifest(subject);
+    QJsonObject result;
+    for (const auto& dependency : manifest.directDependencies) {
+        QString fingerprint;
+        if (!CertificationContractManifestProvider::fingerprint(dependency.subject, projectRoot, &fingerprint, error)
+            || fingerprint.isEmpty()) return {};
+        result.insert(dependency.subject.toLower() + QStringLiteral("ContractFingerprint"), fingerprint);
+    }
+    result.insert(QStringLiteral("dependencyManifestFingerprint"), manifest.computedFingerprint());
+    return result;
 }
 
 CertificationFreshnessResult CertificationFreshnessService::evaluateSnapshot(

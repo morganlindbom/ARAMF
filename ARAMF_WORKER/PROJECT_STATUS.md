@@ -1072,9 +1072,9 @@ Campaign Evidence:
 
 ## Latest Agent Task
 
-- Task: Certification freshness infrastructure Phase A.1 correctness repair
+- Task: Certification freshness infrastructure Phase A.2 semantic contract and dependency binding integrity repair
 - Status: IMPLEMENTED; component revalidation and recertification intentionally not performed
-- Corrected source-manifest freshness, project-root handling, semantic contract projections, direct process dependencies, and transitive freshness propagation.
-- Closed the dependency-free S6 certification path; historical S6 evidence remains unchanged.
-- Full CTest: PASS (12/12), including freshness and S6 certification-path coverage.
+- Added subject-aware semantic contract projections, preserving behaviorally consumed metadata while excluding lifecycle/history state.
+- Added canonical dependency binding generation/verification, dependency-manifest fingerprinting, and stronger S6 future certification checks; historical S6 evidence remains unchanged.
+- Full CTest: PASS (12/12), including freshness, semantic projection, transitive binding, and S6 certification-path coverage.
 - Next: Phase B bottom-up freshness revalidation after review and commit.

@@ -1,4 +1,5 @@
 #include "structure/S6/S6CertificationService.h"
+#include "core/CertificationFreshness.h"
 #include "core/ProjectPersistence.h"
 #include "core/Services.h"
 #include <QCryptographicHash>
@@ -49,11 +50,14 @@ bool runS6CertificationForProject(const QString& root)
     const QString commit = QString::fromUtf8(git.readAllStandardOutput()).trimmed();
     QJsonObject issued;
     const QJsonObject tests{{"suite", "aramf_s6_tests"}, {"status", "PASS"}, {"passed", 1}, {"failed", 0}, {"regression", "CTest 11/11 PASS"}};
-    const QJsonObject dependencyBindings{{"s1ContractFingerprint", "fixture-s1"}, {"s2ContractFingerprint", "fixture-s2"},
-        {"s3ContractFingerprint", "fixture-s3"}, {"s4ContractFingerprint", "fixture-s4"}, {"s5ContractFingerprint", "fixture-s5"}};
+    QString bindingError;
+    const QJsonObject dependencyBindings = CertificationDependencyBindingProvider::currentBindings("S6", root, &bindingError);
+    if (dependencyBindings.isEmpty()) return false;
     QJsonObject rejected;
-    if (S6::CertificationServiceAdapter::certify(root, model.structuralEvolutionEnforcement(),
-            QStringLiteral("legacy"), tests, iteration, &rejected, &error)) return false;
+    QJsonObject invalidBindings{{"s1ContractFingerprint", "fixture-s1"}, {"s2ContractFingerprint", "fixture-s2"},
+        {"s3ContractFingerprint", "fixture-s3"}, {"s4ContractFingerprint", "fixture-s4"}, {"s5ContractFingerprint", "fixture-s5"}};
+    if (S6::CertificationServiceAdapter::certifyWithDependencies(root, model.structuralEvolutionEnforcement(),
+            QStringLiteral("invalid"), tests, iteration, invalidBindings, &rejected, &error)) return false;
     if (!S6::CertificationServiceAdapter::certifyWithDependencies(root, model.structuralEvolutionEnforcement(),
             QStringLiteral("%1:S6:%2").arg(commit, sourceFingerprint), tests, iteration, dependencyBindings, &issued, &error)) return false;
     if (issued.value("subject").toString() != "S6") return false;

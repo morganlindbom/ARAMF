@@ -91,6 +91,12 @@ public:
                             QString* result, QString* error = nullptr);
 };
 
+class CertificationDependencyBindingProvider final {
+public:
+    static QJsonObject currentBindings(const QString& subject, const QString& projectRoot,
+                                       QString* error = nullptr);
+};
+
 class CertificationFreshnessService final {
 public:
     static CertificationDependencyManifest dependencyManifest(const QString& subject);
