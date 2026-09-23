@@ -74,6 +74,11 @@ rules.ninja
 .env
 .env.*
 !.env.example
+# Private key and certificate-container material
+*.key
+*.pem
+*.p12
+*.pfx
 keystore.properties
 *.jks
 *.keystore
