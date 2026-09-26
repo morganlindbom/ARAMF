@@ -1,0 +1,114 @@
+{
+    "checks": [
+        {
+            "commandIdentity": "aramf_core_tests.exe::--f3-scope-integrity",
+            "exitCode": 0,
+            "fingerprint": "94440f730a888a388194196b91bb74b08cdcfce5dbd23fc42b8f58771d1a0858",
+            "lifecycle": "F3.1.1.0.0",
+            "name": "domain",
+            "namespace": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4",
+            "reference": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/domain.log",
+            "sourceRevision": "7c8ce5aa1d09c436523be6d54c511b4311ee280d",
+            "status": "PASS",
+            "timestamp": "2026-09-26T22:41:55.768Z"
+        },
+        {
+            "commandIdentity": "aramf_f3_independence.exe::D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "c3692ea6f8b236464118fb3a46f5d25bb83f3c552f10faba0e975a98fcf45d36",
+            "lifecycle": "F3.1.1.0.0",
+            "name": "independence",
+            "namespace": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4",
+            "reference": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/independence.log",
+            "sourceRevision": "7c8ce5aa1d09c436523be6d54c511b4311ee280d",
+            "status": "PASS",
+            "timestamp": "2026-09-26T22:41:55.812Z"
+        },
+        {
+            "commandIdentity": "aramf_core_tests.exe::--foundation-certification",
+            "exitCode": 0,
+            "fingerprint": "75079b9b290c6f8ea18d5dc03cc72fe48b04c8dab053592fd658d890a627a8d4",
+            "lifecycle": "F3.1.1.0.0",
+            "name": "certification",
+            "namespace": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4",
+            "reference": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/certification.log",
+            "sourceRevision": "7c8ce5aa1d09c436523be6d54c511b4311ee280d",
+            "status": "PASS",
+            "timestamp": "2026-09-26T22:42:04.686Z"
+        },
+        {
+            "commandIdentity": "aramf_core_tests.exe::--provenance-and-scope",
+            "exitCode": 0,
+            "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "lifecycle": "F3.1.1.0.0",
+            "name": "provenance-scope",
+            "namespace": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4",
+            "reference": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/provenance-scope.log",
+            "sourceRevision": "7c8ce5aa1d09c436523be6d54c511b4311ee280d",
+            "status": "PASS",
+            "timestamp": "2026-09-26T22:42:06.649Z"
+        },
+        {
+            "commandIdentity": "aramf_core_tests.exe::--foundation-namespace",
+            "exitCode": 0,
+            "fingerprint": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1",
+            "lifecycle": "F3.1.1.0.0",
+            "name": "namespace",
+            "namespace": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4",
+            "reference": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/namespace.log",
+            "sourceRevision": "7c8ce5aa1d09c436523be6d54c511b4311ee280d",
+            "status": "PASS",
+            "timestamp": "2026-09-26T22:42:06.736Z"
+        },
+        {
+            "commandIdentity": "aramf_core_tests.exe::--process-migration",
+            "exitCode": 0,
+            "fingerprint": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd",
+            "lifecycle": "F3.1.1.0.0",
+            "name": "migration",
+            "namespace": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4",
+            "reference": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/migration.log",
+            "sourceRevision": "7c8ce5aa1d09c436523be6d54c511b4311ee280d",
+            "status": "PASS",
+            "timestamp": "2026-09-26T22:42:06.782Z"
+        },
+        {
+            "commandIdentity": "aramf_core_tests.exe::--foundation-integration",
+            "exitCode": 0,
+            "fingerprint": "4031cdf4b5a44241d25f60bb2737fa7b67006ff83a214c32f0808d2da1badced",
+            "lifecycle": "F3.1.1.0.0",
+            "name": "integration",
+            "namespace": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4",
+            "reference": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/integration.log",
+            "sourceRevision": "7c8ce5aa1d09c436523be6d54c511b4311ee280d",
+            "status": "PASS",
+            "timestamp": "2026-09-26T22:42:09.796Z"
+        },
+        {
+            "commandIdentity": "ctest::--test-dir D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build --output-on-failure",
+            "exitCode": 0,
+            "fingerprint": "91a3b3e9fcc41a972c89c95840ef41db93550a43aecfefa80557cbf8931d73ac",
+            "lifecycle": "F3.1.1.0.0",
+            "name": "full-ctest",
+            "namespace": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4",
+            "reference": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/full-ctest.log",
+            "sourceRevision": "7c8ce5aa1d09c436523be6d54c511b4311ee280d",
+            "status": "PASS",
+            "timestamp": "2026-09-26T22:46:43.662Z"
+        }
+    ],
+    "contractFingerprint": "e2ac3f8ceb760a54fd4d3287ca97bc7b603890e5f7432b085ea085fe77e9d6e4",
+    "lifecycle": "F3.1.1.0.0",
+    "namespace": "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4",
+    "provenance": {
+        "actor": "tool",
+        "tool": "FoundationCertificationCampaign"
+    },
+    "schemaVersion": 1,
+    "sourceFingerprint": "8e26229e6100a2de377a717c667a62d4f0a7c11a223b9686d0e138d0edc67228",
+    "sourceRevision": "7c8ce5aa1d09c436523be6d54c511b4311ee280d",
+    "status": "PASS",
+    "subject": "F3",
+    "timestamp": "2026-09-26T22:46:43.676Z",
+    "verificationLevel": "HOST_TEST"
+}

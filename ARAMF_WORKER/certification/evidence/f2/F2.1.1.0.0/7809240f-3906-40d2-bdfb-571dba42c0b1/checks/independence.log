@@ -1,0 +1,32 @@
+PASS dedicated Foundation source directory exists and is nonempty
+PASS source readable
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no orchestration include
+PASS no hidden concrete coordinator
+PASS no peer source import
+PASS no peer source import
+PASS no peer source import
+PASS source readable
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no orchestration include
+PASS no hidden concrete coordinator
+PASS no peer source import
+PASS no peer source import
+PASS no peer source import
+PASS F2 standalone provenance
+PASS F2 rejects missing provenance
+PASS F2 rejects missing agent identity
+PASS F2 trust boundary
+PASS F2 persisted reload
+PASS F2 independent contract
+Fixture preserved: C:/Users/morga/AppData/Local/Temp/aramf_f2_independence-xntFFO

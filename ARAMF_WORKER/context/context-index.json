@@ -7,7 +7,7 @@
             "dependencies": [
                 "ARAMF_WORKER/memory/framework-knowledge.json"
             ],
-            "fingerprint": "b758f56e3d8c46ae3f6e6e5cfe8dba08670cbca8e1a56b5bcc3c095e6215337c",
+            "fingerprint": "35f7cec94411f8253eff8a0b6da534e9e523d16e07cff5c84a568736a1e9a028",
             "id": "097b5bdd4418619619c2",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/memory/framework-knowledge.json",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -75,7 +75,7 @@
             "dependencies": [
                 "ARAMF_WORKER/routing/task-routes.json"
             ],
-            "fingerprint": "ae766ae614d14d2718baaa85cdb1e1114677dc986c787c20fa8687a6ee7cccf5",
+            "fingerprint": "ec0abe5c74cd2a58cb0775d74679d17f29e3f9f4a462ad27e3fbb8fe8ca0f62d",
             "id": "18635c7cd22b919fd9fe",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/routing/task-routes.json",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -109,7 +109,7 @@
             "dependencies": [
                 "ARAMF_WORKER/routing/scope-routes.json"
             ],
-            "fingerprint": "c82b83bc062ff3e946a9f1a84fffe4ccd0ca11ac9dfb9cec97bf47eecd327031",
+            "fingerprint": "7cc557a9ae341c7b1f08325c07536770545a4639238079b390989c3c5db536f4",
             "id": "1bf5b61e779e42541cf5",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/routing/scope-routes.json",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -211,7 +211,7 @@
             "dependencies": [
                 "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8"
             ],
-            "fingerprint": "6864770ec5c1eb3eb0691a672569065f4d720763d1a8df77cec5b98ac4da5896",
+            "fingerprint": "9f22f5d37a50b7996604ada418aa7a0dd141d9af19896fc41f12a53db6d108f1",
             "id": "3e0aac4d24e266687153",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/CMakeLists.txt",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -228,7 +228,7 @@
             "dependencies": [
                 "ARAMF_WORKER/AGENTS.md"
             ],
-            "fingerprint": "3eaba53cd19875e30594cc03ab48d34d1750b058fc0b2eb4e5a6a77499eda4b2",
+            "fingerprint": "bcc96f289a1b631f3838db8e24c60780b24bdcf52535c9ca23b490f65ae8950e",
             "id": "4e31696dd258350fa701",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/AGENTS.md",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -245,7 +245,7 @@
             "dependencies": [
                 "ARAMF_WORKER/PROJECT_STATUS.md"
             ],
-            "fingerprint": "3795d83777c7e670e18edcd58d8e0cbd09ae0bf4776ce5a035d4982d91b91c8c",
+            "fingerprint": "7386e42fb6bc81ed044c2b0259f4ccd06e8eb6d9f8a0c2ca49c33f7f654b83db",
             "id": "5279bc546fb4c7b6194d",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/PROJECT_STATUS.md",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -262,7 +262,7 @@
             "dependencies": [
                 "ARAMF_WORKER/memory/decisions.md"
             ],
-            "fingerprint": "4996da125b3bffdf5743582aa9a5a092d5567270530e01e52ce169e8f52e666f",
+            "fingerprint": "b01221e55a56ed1ff83fb747f8eeb50fa651df6eaa79f85627185587cfadbafd",
             "id": "5af84d7b0624524c28b1",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/memory/decisions.md",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -330,7 +330,7 @@
             "dependencies": [
                 "ARAMF_WORKER/memory/current-state.md"
             ],
-            "fingerprint": "6d8dc10a424c7de5edbe72b2ca40ac44b47d59caa039fd4d04d8e2f3d3a82ad1",
+            "fingerprint": "bbcf3ab396a7845d5a915f391e530607a993f0265c9bd1d6f2d8d15d7300544d",
             "id": "a9be820da65a6b88c14e",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/memory/current-state.md",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -449,7 +449,7 @@
             "dependencies": [
                 "ARAMF_WORKER/worker-manifest.json"
             ],
-            "fingerprint": "04b2c076b3b9dfc2cc9983f406ca72417654ed526864e562c59a7186372b8479",
+            "fingerprint": "b8d4190a974330dfa7ad32e341746d49cf32275345122d35ed33f379a3c1c1b6",
             "id": "d337e707f92b78abc66f",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/worker-manifest.json",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -466,7 +466,7 @@
             "dependencies": [
                 "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8"
             ],
-            "fingerprint": "6864770ec5c1eb3eb0691a672569065f4d720763d1a8df77cec5b98ac4da5896",
+            "fingerprint": "9f22f5d37a50b7996604ada418aa7a0dd141d9af19896fc41f12a53db6d108f1",
             "id": "e8c9100501b1a532de18",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/CMakeLists.txt",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -514,7 +514,7 @@
             "version": 1
         }
     ],
-    "fingerprint": "e3607952421b32939f45660dd0857152f5b362c91e96c929155f38044d28c9f8",
+    "fingerprint": "3095c763392ac78ee2aaebfa2fda183402ea9b3041096ed7c600762581922689",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "schemaVersion": 1,
     "workerIdentity": "ARAMF_WORKER"

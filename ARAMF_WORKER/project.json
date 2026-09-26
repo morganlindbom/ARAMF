@@ -1,6 +1,9 @@
 {
     "_file": "project.json",
     "academic": {
+        "academicLanguages": [
+            "swedish"
+        ],
         "enabled": false,
         "projectTypes": [
         ],
@@ -30,7 +33,7 @@
         "protocol": "",
         "transport": ""
     },
-    "configurationFingerprint": "af2376d3e9fbcf49c4e7c47db39b59eb931ed478ef8cff1e6ea5a326025820b7",
+    "configurationFingerprint": "f2d76b546ec57cf5f858bdcb25ff07d4ce796a8ec2712decbcdd886fb375ab84",
     "context": "desktop-application",
     "environment": {
         "buildSystem": "cmake",
@@ -154,31 +157,30 @@
                 "iteration": 5,
                 "loop": 1,
                 "process": 5
-            }
-        ],
-        "foundationQueue": [
+            },
             {
-                "certification": 0,
-                "done": 0,
-                "foundation": 3,
-                "iteration": 0,
+                "certification": 1,
+                "done": 1,
+                "foundation": 2,
+                "iteration": 1,
                 "loop": 1
             },
             {
-                "certification": 0,
-                "done": 0,
+                "certification": 1,
+                "done": 1,
+                "foundation": 3,
+                "iteration": 1,
+                "loop": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
                 "foundation": 4,
-                "iteration": 0,
+                "iteration": 1,
                 "loop": 1
             }
         ],
-        "futureProcess": {
-            "certification": 0,
-            "done": 0,
-            "iteration": 0,
-            "loop": 1,
-            "process": 6
-        },
+        "foundationIntegrationValid": true,
         "legacyHistory": [
             "P0.1.1.1",
             "P1.1.1.1",
@@ -198,9 +200,9 @@
         "next": {
             "certification": 0,
             "done": 0,
-            "foundation": 2,
             "iteration": 0,
-            "loop": 1
+            "loop": 1,
+            "process": 6
         },
         "structureHistory": [
             {

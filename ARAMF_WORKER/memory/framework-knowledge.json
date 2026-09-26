@@ -612,6 +612,31 @@
             "status": "approved",
             "supersededBy": "",
             "title": "PVD mandatory GUI end-to-end certification"
+        },
+        {
+            "approvalSource": "",
+            "approvedAt": "",
+            "createdAt": "2026-09-26T22:26:49Z",
+            "evidence": [
+                "Foundation repair 2026-09-27: eight unchanged historical S1-S3 evidence artifacts match their original LF digest, not raw CRLF bytes. F1 legacy-reader regression accepts only original context-bound content and rejects changed payload, source mismatch and modern raw-byte mismatch. F1/F3 focused tests and live Foundation validation passed."
+            ],
+            "id": "fk-a9ae5726abd39d7f",
+            "lesson": "Hash the exact bytes persisted by the evidence writer. Historical text-mode artifacts may bind LF bytes while Windows stores CRLF. Handle an established legacy representation only through an explicit schema/source/context-bound compatibility check with tamper-negative tests; never rewrite historical evidence or silently weaken current raw-byte verification.",
+            "origin": "project",
+            "originProjectId": "",
+            "originalKnowledgeId": "",
+            "portable": true,
+            "promotedAt": "",
+            "reviewStatus": "more-evidence",
+            "scopes": [
+                "evidence",
+                "certification",
+                "persistence",
+                "windows"
+            ],
+            "status": "candidate",
+            "supersededBy": "",
+            "title": "Preserve evidence digest byte and serialization contracts"
         }
     ],
     "version": 1

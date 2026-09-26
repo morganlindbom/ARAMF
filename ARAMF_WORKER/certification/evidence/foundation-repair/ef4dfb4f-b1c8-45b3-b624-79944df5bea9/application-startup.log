@@ -1,0 +1,3 @@
+PASS ARAMF MainWindow initialized and responsive PID=12188
+PASS normal application shutdown
+QProcess: Destroyed while process ("D:\\ON DESCTOP\\HKR KURSER\\C++\\ARAMF2\\ARAMF\\build\\aramf.exe") is still running.

@@ -1,6 +1,6 @@
 {
     "_file": "verification-result.json",
-    "checkedAt": "2026-09-20T12:27:56Z",
+    "checkedAt": "2026-09-26T22:57:54Z",
     "checks": [
         {
             "details": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
@@ -261,13 +261,13 @@
             "status": "PASS"
         },
         {
-            "details": "Latest validation summary is structurally valid.",
+            "details": "latest-validation.json is stale and will be regenerated.",
             "id": "validation-summary-integrity",
             "name": "Latest validation summary integrity",
             "status": "PASS"
         }
     ],
-    "fingerprint": "880810e37dde4d5bc0e028c68b1899cf288cae98334b1f3ab24cecc8a3821761",
+    "fingerprint": "f2d76b546ec57cf5f858bdcb25ff07d4ce796a8ec2712decbcdd886fb375ab84",
     "overallStatus": "PASS",
     "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF"
 }

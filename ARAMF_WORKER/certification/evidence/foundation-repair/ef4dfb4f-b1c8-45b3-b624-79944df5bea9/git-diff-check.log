@@ -1,0 +1,13 @@
+warning: in the working copy of 'ARAMF_WORKER.aramf.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CMakeLists.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/CertificationFreshness.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/CertificationRevalidation.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/FoundationServices.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/FoundationServices.h', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/MemoryEvidenceFoundation.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/MemoryEvidenceFoundation.h', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/ProcessVersion.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/ProcessVersion.h', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/ProjectMemory.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/FoundationTests.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/ProjectMemoryTests.cpp', LF will be replaced by CRLF the next time Git touches it

@@ -1,0 +1,31 @@
+PASS dedicated Foundation source directory exists and is nonempty
+PASS source readable
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no orchestration include
+PASS no hidden concrete coordinator
+PASS no peer source import
+PASS no peer source import
+PASS no peer source import
+PASS source readable
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no peer include, type, construction, or service call
+PASS no orchestration include
+PASS no hidden concrete coordinator
+PASS no peer source import
+PASS no peer source import
+PASS no peer source import
+PASS F3 standalone validation
+PASS F3 rejects contradictory scopes
+PASS F3 rejects prefix sibling escape
+PASS F3 persisted reload
+PASS F3 independent contract
+Fixture preserved: C:/Users/morga/AppData/Local/Temp/aramf_f3_independence-nMASrT

@@ -81,7 +81,7 @@
         "validationEvidence": "VALIDATION_EVIDENCE",
         "workerManifest": "DERIVED"
     },
-    "generatedFromFingerprint": "af2376d3e9fbcf49c4e7c47db39b59eb931ed478ef8cff1e6ea5a326025820b7",
+    "generatedFromFingerprint": "f2d76b546ec57cf5f858bdcb25ff07d4ce796a8ec2712decbcdd886fb375ab84",
     "generationOptions": {
         "agentRules": true,
         "memory": true,

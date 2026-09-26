@@ -1,0 +1,125 @@
+{
+    "acceptedEvidence": [
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/acceptance-criteria.json",
+            "artifactFingerprint": "2e60b1a7e7cdbeb2d5e824d1db94fbc61178e196e6f44593522fcc0bf657b4da",
+            "check": "acceptance-criteria"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/affected-workflow-tests.json",
+            "artifactFingerprint": "ad6fd64876d104a9b0b1dc72bc0ac9008a79841290bf3c1d1fc4ecbc1970e4cd",
+            "check": "affected-workflow-tests"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/application-startup.json",
+            "artifactFingerprint": "909ba945f3ce3e56186725ac5525872bb6de9f3eef2d1d1c0cfaa723e2b58c7e",
+            "check": "application-startup"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/aramf-worker-migration.json",
+            "artifactFingerprint": "1f28ffe0101eef6903459ea7d92d942bf8e97cefddd7123926f4eea2a0099eae",
+            "check": "aramf-worker-migration"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/aramf_core_tests__--p3-execution.json",
+            "artifactFingerprint": "f9f40bfbf2ddd68fff31173bf2a53160ec36dc19c95f06fbe73f5e125713f7ab",
+            "check": "aramf_core_tests::--p3-execution"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/aramf_core_tests__--worker-tasks.json",
+            "artifactFingerprint": "880073933eff0ab881c4b583944786b9e3f870f51078b4ca87a4f40a4b0a0006",
+            "check": "aramf_core_tests::--worker-tasks"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/cold-start.json",
+            "artifactFingerprint": "28763849fa85f73d4286d12a0999aeae5c492ab68d01fa4ce2968ab1cca6926b",
+            "check": "cold-start"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/ctest.json",
+            "artifactFingerprint": "8bd21b182c9dedbb05b4605186a2952e9d8c9ba58ad027bf176d7d31c6c4d25c",
+            "check": "ctest"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/git-diff-check.json",
+            "artifactFingerprint": "7882e19502d2b6a0a5857e1611d10322bd6b4e998bfc6df2d4d3a46dd294a08d",
+            "check": "git-diff-check"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/impacted-validation.json",
+            "artifactFingerprint": "184ee9b51172efb34e2145787febdb27cec794a82abdbcb314bcc825228d679d",
+            "check": "impacted-validation"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/memory-consistency.json",
+            "artifactFingerprint": "a7262a0735f36763aba22c042097df270a9cc9a307b52cf8149b0aed6608185a",
+            "check": "memory-consistency"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/persistence-regression.json",
+            "artifactFingerprint": "ff648ed7f5a704ff784b917878d3ab1d9280943443c7ea493504b36d36bca27f",
+            "check": "persistence-regression"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/production-build.json",
+            "artifactFingerprint": "e001f7bdd99f4406f428e89347920cc455500550ba04d400956ab9a490cbc88d",
+            "check": "production-build"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/targeted-regression.json",
+            "artifactFingerprint": "ca3159ea628e15c1602855fe81cb6958f38a701955f5c82ba315fd554e8589e9",
+            "check": "targeted-regression"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/test_250.json",
+            "artifactFingerprint": "ef24d3fc319a3ae2b8619d9218ab1a877694dbe7cf116f1e49d99c0f1e8ee805",
+            "check": "test_250"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/test_550-automated.json",
+            "artifactFingerprint": "0ce1814240e8728fab9bc93f61dc1912b0f993b91ad2db1aa5980e8fc3f74f99",
+            "check": "test_550-automated"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/foundation-repair-5ffbdd48-3336-4407-8079-d672ece9185a/worker-topology.json",
+            "artifactFingerprint": "cf097accc1953535382330ec19f9e724742d09cdb427032606860d6858ddbd51",
+            "check": "worker-topology"
+        }
+    ],
+    "authority": "DERIVED",
+    "certificateId": null,
+    "certification": "CERTIFIED is issued only by the canonical CertificationService; physical evidence is never inferred.",
+    "completionState": "VERIFIED",
+    "contractId": "ac595e228eba20878392db355017fd1b3b4fe250832dfa3b6a0ca0bec2343436",
+    "errors": [
+    ],
+    "evidenceFingerprints": {
+        "acceptance-criteria": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "affected-workflow-tests": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "application-startup": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "aramf-worker-migration": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "aramf_core_tests::--p3-execution": "d0b420c4d438c4225f2de5707fa8310ea99e6e740d0de7a2e0dc934fc0e2e796",
+        "aramf_core_tests::--worker-tasks": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "cold-start": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "ctest": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "diff-boundary": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "git-diff-check": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "impacted-validation": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "memory-consistency": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "persistence-regression": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "production-build": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "targeted-regression": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "test_250": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "test_550-automated": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+        "worker-topology": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59"
+    },
+    "missingEvidence": [
+    ],
+    "modifiedFiles": [
+    ],
+    "resultFingerprint": "3676d98580efd5f596fdd593709fb65bd92046d1b23b51a292000b4ed3cc2a59",
+    "schemaVersion": 1,
+    "serviceChanges": [
+    ],
+    "status": "PASS"
+}

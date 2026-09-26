@@ -275,3 +275,36 @@ creating parallel lessons.
 - Superseded-By: none
 - Summary: Foundation certification strictly requires verified sourceRevision, complete 13-check physical evidence artifact, CertificationService PASS certificate issuance prior to lifecycle cert=1, and certified active state prior to completion (done=1).
 <!-- /ARAMF-DECISION -->
+
+## Decision Record: foundation-repair-cmake-authorization
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: foundation-repair-cmake-authorization
+- Topic: foundation-repair
+- Scope: project
+- Status: current
+- Superseded-By: none
+- Summary: User explicitly approved the requested narrow CMakeLists.txt build/test wiring and task governance extension with reply jap, gor det. Applies only to independent Foundation compilation and certification regression registration for this repair. Existing source-of-truth registration and unrelated protections remain unchanged; LICENSE excluded. This explicit current authority overrides the automatic NEVER_TOUCH classification only for that exact edit.
+<!-- /ARAMF-DECISION -->
+
+## Decision Record: independent-foundation-certification-boundary
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: independent-foundation-certification-boundary
+- Topic: foundations
+- Scope: project
+- Status: current
+- Superseded-By: none
+- Summary: Current user architecture supersedes Foundation-to-Foundation dependency declarations: F1 owns physical memory/evidence storage, F2 owns identity/provenance/trust predicates, F3 owns scope/isolation predicates, F4 owns lifecycle/certification semantics. ProjectMemory and FoundationProjectValidation are external project adapters; FoundationCertificationCampaign and FoundationIntegrationService are external governance. None is imported by a Foundation. Bootstrap order denotes governance evaluation order only, not runtime initialization. F2-F4 use their own domain tests plus independently linked tests and physically hashed evidence; existing F1 evidence/history is preserved. P6 requires all four independent completed certificates and external current integration acceptance.
+<!-- /ARAMF-DECISION -->
+
+## Decision Record: academic-separate-language-versions
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: academic-separate-language-versions
+- Topic: academic-language-output
+- Scope: project
+- Status: current
+- Superseded-By: none
+- Summary: Explicit user choice: Academic supports Swedish and English simultaneously as separate document versions, never a combined bilingual document. Saved language selections drive generation and freshness; legacy selections and custom source provenance are preserved.
+<!-- /ARAMF-DECISION -->

@@ -1,6 +1,9 @@
 {
     "_file": "selection-effects.json",
     "academic": {
+        "academicLanguages": [
+            "swedish"
+        ],
         "enabled": false,
         "projectTypes": [
         ]

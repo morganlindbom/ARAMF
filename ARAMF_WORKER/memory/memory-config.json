@@ -52,6 +52,7 @@
         "preserve-append-only"
     ],
     "maximumSizeBytes": 10737418240,
+    "requireControlPlane": true,
     "retentionLevel": "standard",
     "updateStrategy": "meaningful-task",
     "validationOptions": [

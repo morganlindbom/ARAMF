@@ -1,0 +1,41 @@
+Test project D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build
+      Start  1: aramf_core_tests
+ 1/18 Test  #1: aramf_core_tests .................   Passed  146.31 sec
+      Start  2: aramf_foundation_certification
+ 2/18 Test  #2: aramf_foundation_certification ...   Passed   11.13 sec
+      Start  3: aramf_f1_independence
+ 3/18 Test  #3: aramf_f1_independence ............   Passed    0.50 sec
+      Start  4: aramf_f2_independence
+ 4/18 Test  #4: aramf_f2_independence ............   Passed    0.05 sec
+      Start  5: aramf_f3_independence
+ 5/18 Test  #5: aramf_f3_independence ............   Passed    0.04 sec
+      Start  6: aramf_f4_independence
+ 6/18 Test  #6: aramf_f4_independence ............   Passed    0.06 sec
+      Start  7: aramf_freshness_tests
+ 7/18 Test  #7: aramf_freshness_tests ............   Passed    0.04 sec
+      Start  8: aramf_revalidation_tests
+ 8/18 Test  #8: aramf_revalidation_tests .........   Passed    0.65 sec
+      Start  9: aramf_workflow_tests
+ 9/18 Test  #9: aramf_workflow_tests .............   Passed    3.99 sec
+      Start 10: aramf_template_tests
+10/18 Test #10: aramf_template_tests .............   Passed  176.60 sec
+      Start 11: aramf_s1_tests
+11/18 Test #11: aramf_s1_tests ...................   Passed    0.04 sec
+      Start 12: aramf_s2_tests
+12/18 Test #12: aramf_s2_tests ...................   Passed    0.05 sec
+      Start 13: aramf_s3_tests
+13/18 Test #13: aramf_s3_tests ...................   Passed    0.04 sec
+      Start 14: aramf_s4_tests
+14/18 Test #14: aramf_s4_tests ...................   Passed    0.03 sec
+      Start 15: aramf_s5_tests
+15/18 Test #15: aramf_s5_tests ...................   Passed    0.03 sec
+      Start 16: aramf_s6_tests
+16/18 Test #16: aramf_s6_tests ...................   Passed    0.03 sec
+      Start 17: aramf_update_campaign
+17/18 Test #17: aramf_update_campaign ............   Passed    9.66 sec
+      Start 18: aramf_configuration_update
+18/18 Test #18: aramf_configuration_update .......   Passed    0.18 sec
+
+100% tests passed, 0 tests failed out of 18
+
+Total Test time (real) = 349.46 sec

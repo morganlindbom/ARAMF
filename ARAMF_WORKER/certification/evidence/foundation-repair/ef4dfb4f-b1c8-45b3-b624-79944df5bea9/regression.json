@@ -1,0 +1,2649 @@
+{
+    "checks": [
+        {
+            "arguments": [
+                "--build",
+                "build",
+                "--config",
+                "Debug",
+                "-j",
+                "4"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "71aa391ec7d7e291b419a7f40fba91919e14ac2394ab4e8b66ed126e267d70f6",
+            "name": "production-build",
+            "program": "cmake",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/production-build.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "--all-foundations"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "399879299c13bf53a6268e15a6661e707f995e29c71f9b85adbd63b0a7b0f89f",
+            "name": "all-foundations",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/all-foundations.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "--provenance-and-scope"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "name": "provenance-and-scope",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/provenance-and-scope.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "--foundation-namespace"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1",
+            "name": "foundation-namespace",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/foundation-namespace.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "--process-migration"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd",
+            "name": "process-migration",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/process-migration.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "--p1-governance"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "57c1c1cb913789572c0035d98805d701468ce6493ef4b08c1c287ebc061175ba",
+            "name": "p1-governance",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/p1-governance.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "--p2-context"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "35a16f7a1d8eb26eb75d77b15e8e10a30ceb71177cda5ef3e9456943eaa280b3",
+            "name": "p2-context",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/p2-context.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "--p3-execution"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "457df4301e4dac04087f6bd0d1d301b16bce56a57969203b90212da36e078569",
+            "name": "p3-execution",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/p3-execution.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "--p4-predictive"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "0f3cf3b72a215353c7da4730e2ada932a0f0c962e8a584e1050d4239c7c99645",
+            "name": "p4-predictive",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/p4-predictive.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "--p5-routing"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "6252025e76ac78dc4a3bc451f5a0d7d187b85293136a631f4ef48f7b8a4cb5a6",
+            "name": "p5-routing",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_core_tests.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/p5-routing.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "--test-dir",
+                "build",
+                "--output-on-failure"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "47e0588727b4d33c6bf15dfb3506d5d4393a2cf5651303f250feaf19852736e7",
+            "name": "ctest",
+            "program": "ctest",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/ctest.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/foundation-regression-ef4dfb4f-b1c8-45b3-b624-79944df5bea9",
+            "exitCode": 0,
+            "fingerprint": "42c0bae26706afe427274919a68ba031bb3499c7f266ca444cb885b844612d85",
+            "name": "test-250",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_campaign_runner.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/test-250.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/foundation-regression-ef4dfb4f-b1c8-45b3-b624-79944df5bea9",
+            "exitCode": 1,
+            "fingerprint": "ca0a011e291c5eb9f68294ea75fa386936371c4c94c8d84f9eff859bda8000e9",
+            "name": "test-550-automated",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf_release_validation_runner.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/test-550-automated.log",
+            "status": "FAIL"
+        },
+        {
+            "arguments": [
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/foundation-regression-ef4dfb4f-b1c8-45b3-b624-79944df5bea9",
+            "exitCode": 0,
+            "fingerprint": "5230cf38fb718dc673ca7266ded4437340999f3a34eedbf17e2d192c13fa190d",
+            "name": "application-startup",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/foundation-startup-probe.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/application-startup.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "memory",
+                "validate",
+                "--project",
+                "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "e00e3704f836b0e152dbdd42ca9a3f21ce75fcbf0e2fe39cd61d37fa0f6315bb",
+            "name": "memory-consistency",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/memory-consistency.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "memory",
+                "cold-start",
+                "--project",
+                "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "7651ac7c938b90eeadd10b797720a4d938a64e89347496acde26ed4f37611099",
+            "name": "cold-start",
+            "program": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/aramf.exe",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/cold-start.log",
+            "status": "PASS"
+        },
+        {
+            "arguments": [
+                "diff",
+                "--check"
+            ],
+            "cwd": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+            "exitCode": 0,
+            "fingerprint": "cc761ffac5a5c8ada740f60399a445eeed2baf350ba3f0e0342c0a1e73a5ec25",
+            "name": "git-diff-check",
+            "program": "git",
+            "reference": "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/git-diff-check.log",
+            "status": "PASS"
+        }
+    ],
+    "fixtures": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/foundation-regression-ef4dfb4f-b1c8-45b3-b624-79944df5bea9",
+    "freshnessBefore": {
+        "F1": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+            "certifiedEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+            "certifiedSourceFingerprint": "1b21d2dc3ac874198fe6a84fc0bff77753ba0f3debbf47efda7b66c6209af497",
+            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+            "contractFresh": true,
+            "currentContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+            "currentEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+            "currentSourceFingerprint": "eec72b042d97263bb8ade42b195fb5fd7fc5239381bd5afb25b28e4515508acf",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "0ea42f3d698ac071dddbd7e8f0ea996b8aa4bc0c9f0cbcaf43582528e4f39554",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-474a78ad-7f0d-4d48-9506-797e7846efef",
+            "historicalLifecycle": "F1.1.4.1.1",
+            "reasons": [
+                "Certified source manifest differs from the current source manifest."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": false,
+            "status": "SOURCE_STALE",
+            "subject": "F1",
+            "transitiveDependencyFresh": true
+        },
+        "F2": {
+            "bindingComplete": false,
+            "certifiedContractFingerprint": "",
+            "certifiedEvidenceFingerprint": "",
+            "certifiedSourceFingerprint": "",
+            "certifiedSourceRevision": "",
+            "contractFresh": false,
+            "currentContractFingerprint": "",
+            "currentEvidenceFingerprint": "",
+            "currentSourceFingerprint": "",
+            "currentSourceRevision": "",
+            "dependencyManifestFingerprint": "",
+            "directDependencyFresh": false,
+            "directDependencyResults": [
+            ],
+            "evidenceFresh": false,
+            "historicalCertificateId": "",
+            "historicalLifecycle": "",
+            "reasons": [
+                "No historical certificate exists for F2."
+            ],
+            "sourceBindingComplete": false,
+            "sourceFresh": false,
+            "status": "NOT_CERTIFIED",
+            "subject": "F2",
+            "transitiveDependencyFresh": false
+        },
+        "F3": {
+            "bindingComplete": false,
+            "certifiedContractFingerprint": "",
+            "certifiedEvidenceFingerprint": "",
+            "certifiedSourceFingerprint": "",
+            "certifiedSourceRevision": "",
+            "contractFresh": false,
+            "currentContractFingerprint": "",
+            "currentEvidenceFingerprint": "",
+            "currentSourceFingerprint": "",
+            "currentSourceRevision": "",
+            "dependencyManifestFingerprint": "",
+            "directDependencyFresh": false,
+            "directDependencyResults": [
+            ],
+            "evidenceFresh": false,
+            "historicalCertificateId": "",
+            "historicalLifecycle": "",
+            "reasons": [
+                "No historical certificate exists for F3."
+            ],
+            "sourceBindingComplete": false,
+            "sourceFresh": false,
+            "status": "NOT_CERTIFIED",
+            "subject": "F3",
+            "transitiveDependencyFresh": false
+        },
+        "F4": {
+            "bindingComplete": false,
+            "certifiedContractFingerprint": "",
+            "certifiedEvidenceFingerprint": "",
+            "certifiedSourceFingerprint": "",
+            "certifiedSourceRevision": "",
+            "contractFresh": false,
+            "currentContractFingerprint": "",
+            "currentEvidenceFingerprint": "",
+            "currentSourceFingerprint": "",
+            "currentSourceRevision": "",
+            "dependencyManifestFingerprint": "",
+            "directDependencyFresh": false,
+            "directDependencyResults": [
+            ],
+            "evidenceFresh": false,
+            "historicalCertificateId": "",
+            "historicalLifecycle": "",
+            "reasons": [
+                "No historical certificate exists for F4."
+            ],
+            "sourceBindingComplete": false,
+            "sourceFresh": false,
+            "status": "NOT_CERTIFIED",
+            "subject": "F4",
+            "transitiveDependencyFresh": false
+        },
+        "P1": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+            "certifiedEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+            "certifiedSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+            "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+            "contractFresh": true,
+            "currentContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+            "currentEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+            "currentSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "eaa2f59a037360532296644254ac1afd6b64dce5d87faaf1f401055ca58aa992",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                    "certifiedEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                    "certifiedSourceFingerprint": "1b21d2dc3ac874198fe6a84fc0bff77753ba0f3debbf47efda7b66c6209af497",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                    "currentEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                    "currentSourceFingerprint": "eec72b042d97263bb8ade42b195fb5fd7fc5239381bd5afb25b28e4515508acf",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "0ea42f3d698ac071dddbd7e8f0ea996b8aa4bc0c9f0cbcaf43582528e4f39554",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-474a78ad-7f0d-4d48-9506-797e7846efef",
+                    "historicalLifecycle": "F1.1.4.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "SOURCE_STALE",
+                    "subject": "F1",
+                    "transitiveDependencyFresh": true
+                }
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-823fefb3-0004-489e-b1c5-496bfcc6c254",
+            "historicalLifecycle": "P1.1.3.1.1",
+            "reasons": [
+                "Direct dependency F1 is stale through its own dependency or source state."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": true,
+            "status": "TRANSITIVE_DEPENDENCY_STALE",
+            "subject": "P1",
+            "transitiveDependencyFresh": false
+        },
+        "P2": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "ce0218c8aea13ce7f60319a76beeac4168011ad694ebd1601e94c7b836dccb81",
+            "certifiedEvidenceFingerprint": "54b6a353b2ff8a0b055d77f285f6c456fb6d656c44d15fb530f4a04952d1a545",
+            "certifiedSourceFingerprint": "d99b5bf465a45f6d95cd08b35714fc1eb277be998f9e9e3be87a986a2dce5fb3",
+            "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+            "contractFresh": true,
+            "currentContractFingerprint": "ce0218c8aea13ce7f60319a76beeac4168011ad694ebd1601e94c7b836dccb81",
+            "currentEvidenceFingerprint": "54b6a353b2ff8a0b055d77f285f6c456fb6d656c44d15fb530f4a04952d1a545",
+            "currentSourceFingerprint": "d99b5bf465a45f6d95cd08b35714fc1eb277be998f9e9e3be87a986a2dce5fb3",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "bcf26bbb44a31e080253b683cc6695c9203ab8a59ee5530c796b586a197d9a44",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                    "certifiedEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                    "certifiedSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                    "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                    "currentEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                    "currentSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "eaa2f59a037360532296644254ac1afd6b64dce5d87faaf1f401055ca58aa992",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                            "certifiedEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                            "certifiedSourceFingerprint": "1b21d2dc3ac874198fe6a84fc0bff77753ba0f3debbf47efda7b66c6209af497",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                            "currentEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                            "currentSourceFingerprint": "eec72b042d97263bb8ade42b195fb5fd7fc5239381bd5afb25b28e4515508acf",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "0ea42f3d698ac071dddbd7e8f0ea996b8aa4bc0c9f0cbcaf43582528e4f39554",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-474a78ad-7f0d-4d48-9506-797e7846efef",
+                            "historicalLifecycle": "F1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "F1",
+                            "transitiveDependencyFresh": true
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-823fefb3-0004-489e-b1c5-496bfcc6c254",
+                    "historicalLifecycle": "P1.1.3.1.1",
+                    "reasons": [
+                        "Direct dependency F1 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": true,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "P1",
+                    "transitiveDependencyFresh": false
+                }
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-1826c6e7-e7af-4ffb-8de2-938c120a0b2a",
+            "historicalLifecycle": "P2.1.2.1.1",
+            "reasons": [
+                "Direct dependency P1 is stale through its own dependency or source state."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": true,
+            "status": "TRANSITIVE_DEPENDENCY_STALE",
+            "subject": "P2",
+            "transitiveDependencyFresh": false
+        },
+        "P3": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "754ce7b5783ce7d5b0c170a317ac2b52e458827235c47d99221536080c9f0798",
+            "certifiedEvidenceFingerprint": "3a3a430f30a80d712207ccf9712881eacb781f19eee9308dd247c0138fdf2678",
+            "certifiedSourceFingerprint": "26b17597d93f6216a2b253bebb63bd2d473fe172150db4a1b3d1a2201f7c955d",
+            "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+            "contractFresh": true,
+            "currentContractFingerprint": "754ce7b5783ce7d5b0c170a317ac2b52e458827235c47d99221536080c9f0798",
+            "currentEvidenceFingerprint": "3a3a430f30a80d712207ccf9712881eacb781f19eee9308dd247c0138fdf2678",
+            "currentSourceFingerprint": "26b17597d93f6216a2b253bebb63bd2d473fe172150db4a1b3d1a2201f7c955d",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "ca389512e8abf7aa9d26a0a44b14da4e23b6ad73910e93a964ac727c774b53e5",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                    "certifiedEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                    "certifiedSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                    "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                    "currentEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                    "currentSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "eaa2f59a037360532296644254ac1afd6b64dce5d87faaf1f401055ca58aa992",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                            "certifiedEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                            "certifiedSourceFingerprint": "1b21d2dc3ac874198fe6a84fc0bff77753ba0f3debbf47efda7b66c6209af497",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                            "currentEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                            "currentSourceFingerprint": "eec72b042d97263bb8ade42b195fb5fd7fc5239381bd5afb25b28e4515508acf",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "0ea42f3d698ac071dddbd7e8f0ea996b8aa4bc0c9f0cbcaf43582528e4f39554",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-474a78ad-7f0d-4d48-9506-797e7846efef",
+                            "historicalLifecycle": "F1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "F1",
+                            "transitiveDependencyFresh": true
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-823fefb3-0004-489e-b1c5-496bfcc6c254",
+                    "historicalLifecycle": "P1.1.3.1.1",
+                    "reasons": [
+                        "Direct dependency F1 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": true,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "P1",
+                    "transitiveDependencyFresh": false
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "ce0218c8aea13ce7f60319a76beeac4168011ad694ebd1601e94c7b836dccb81",
+                    "certifiedEvidenceFingerprint": "54b6a353b2ff8a0b055d77f285f6c456fb6d656c44d15fb530f4a04952d1a545",
+                    "certifiedSourceFingerprint": "d99b5bf465a45f6d95cd08b35714fc1eb277be998f9e9e3be87a986a2dce5fb3",
+                    "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "ce0218c8aea13ce7f60319a76beeac4168011ad694ebd1601e94c7b836dccb81",
+                    "currentEvidenceFingerprint": "54b6a353b2ff8a0b055d77f285f6c456fb6d656c44d15fb530f4a04952d1a545",
+                    "currentSourceFingerprint": "d99b5bf465a45f6d95cd08b35714fc1eb277be998f9e9e3be87a986a2dce5fb3",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "bcf26bbb44a31e080253b683cc6695c9203ab8a59ee5530c796b586a197d9a44",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                            "certifiedEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                            "certifiedSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                            "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                            "currentEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                            "currentSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "eaa2f59a037360532296644254ac1afd6b64dce5d87faaf1f401055ca58aa992",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                                    "certifiedEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                                    "certifiedSourceFingerprint": "1b21d2dc3ac874198fe6a84fc0bff77753ba0f3debbf47efda7b66c6209af497",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                                    "currentEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                                    "currentSourceFingerprint": "eec72b042d97263bb8ade42b195fb5fd7fc5239381bd5afb25b28e4515508acf",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "0ea42f3d698ac071dddbd7e8f0ea996b8aa4bc0c9f0cbcaf43582528e4f39554",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-474a78ad-7f0d-4d48-9506-797e7846efef",
+                                    "historicalLifecycle": "F1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "F1",
+                                    "transitiveDependencyFresh": true
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-823fefb3-0004-489e-b1c5-496bfcc6c254",
+                            "historicalLifecycle": "P1.1.3.1.1",
+                            "reasons": [
+                                "Direct dependency F1 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": true,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "P1",
+                            "transitiveDependencyFresh": false
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-1826c6e7-e7af-4ffb-8de2-938c120a0b2a",
+                    "historicalLifecycle": "P2.1.2.1.1",
+                    "reasons": [
+                        "Direct dependency P1 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": true,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "P2",
+                    "transitiveDependencyFresh": false
+                }
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-677ad827-a1ab-4e0e-af82-308a7c71bab6",
+            "historicalLifecycle": "P3.1.5.1.1",
+            "reasons": [
+                "Direct dependency P1 is stale through its own dependency or source state.",
+                "Direct dependency P2 is stale through its own dependency or source state."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": true,
+            "status": "TRANSITIVE_DEPENDENCY_STALE",
+            "subject": "P3",
+            "transitiveDependencyFresh": false
+        },
+        "P4": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "7186d0e1753b79087a787dbc0b5b052f32da8578d462e9b73d4862a6b2b32d97",
+            "certifiedEvidenceFingerprint": "17aec21b6aef00cc6297035bd0abadecf72bf4fe43cc06a377b503dcae8bcb1f",
+            "certifiedSourceFingerprint": "e9457af87c9bc970a6ebf49903133cfc994bffa67bdbbe24f220deb9325c0930",
+            "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+            "contractFresh": true,
+            "currentContractFingerprint": "7186d0e1753b79087a787dbc0b5b052f32da8578d462e9b73d4862a6b2b32d97",
+            "currentEvidenceFingerprint": "17aec21b6aef00cc6297035bd0abadecf72bf4fe43cc06a377b503dcae8bcb1f",
+            "currentSourceFingerprint": "e9457af87c9bc970a6ebf49903133cfc994bffa67bdbbe24f220deb9325c0930",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "940f3a8a04a3e95a70140d5850ee50f6bf44885ddfea30eb9b697d706e660fab",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                    "certifiedEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                    "certifiedSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                    "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                    "currentEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                    "currentSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "eaa2f59a037360532296644254ac1afd6b64dce5d87faaf1f401055ca58aa992",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                            "certifiedEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                            "certifiedSourceFingerprint": "1b21d2dc3ac874198fe6a84fc0bff77753ba0f3debbf47efda7b66c6209af497",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                            "currentEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                            "currentSourceFingerprint": "eec72b042d97263bb8ade42b195fb5fd7fc5239381bd5afb25b28e4515508acf",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "0ea42f3d698ac071dddbd7e8f0ea996b8aa4bc0c9f0cbcaf43582528e4f39554",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-474a78ad-7f0d-4d48-9506-797e7846efef",
+                            "historicalLifecycle": "F1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "F1",
+                            "transitiveDependencyFresh": true
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-823fefb3-0004-489e-b1c5-496bfcc6c254",
+                    "historicalLifecycle": "P1.1.3.1.1",
+                    "reasons": [
+                        "Direct dependency F1 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": true,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "P1",
+                    "transitiveDependencyFresh": false
+                }
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-2b6052e6-bc54-447f-96a5-33de08f21b13",
+            "historicalLifecycle": "P4.1.5.1.1",
+            "reasons": [
+                "Direct dependency P1 is stale through its own dependency or source state."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": true,
+            "status": "TRANSITIVE_DEPENDENCY_STALE",
+            "subject": "P4",
+            "transitiveDependencyFresh": false
+        },
+        "P5": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "1ecbdc8461623ad45f5bd297778e1feac95a3a6213d03d1cf45834d8c7f132b8",
+            "certifiedEvidenceFingerprint": "b8d902f2d502679b46dfd5c83537dfd177df1eda3590b20f7bf0fbdc4267121c",
+            "certifiedSourceFingerprint": "d5b97a5c70ffd293942b86457e9f888af147f34800891186347944490a6962a5",
+            "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+            "contractFresh": true,
+            "currentContractFingerprint": "1ecbdc8461623ad45f5bd297778e1feac95a3a6213d03d1cf45834d8c7f132b8",
+            "currentEvidenceFingerprint": "b8d902f2d502679b46dfd5c83537dfd177df1eda3590b20f7bf0fbdc4267121c",
+            "currentSourceFingerprint": "d5b97a5c70ffd293942b86457e9f888af147f34800891186347944490a6962a5",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "37c448b6e86f7c5f931c0b4b78a4e59d2f67aa1d33080e6fdb9156044313100e",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                    "certifiedEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                    "certifiedSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                    "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                    "currentEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                    "currentSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "eaa2f59a037360532296644254ac1afd6b64dce5d87faaf1f401055ca58aa992",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                            "certifiedEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                            "certifiedSourceFingerprint": "1b21d2dc3ac874198fe6a84fc0bff77753ba0f3debbf47efda7b66c6209af497",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                            "currentEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                            "currentSourceFingerprint": "eec72b042d97263bb8ade42b195fb5fd7fc5239381bd5afb25b28e4515508acf",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "0ea42f3d698ac071dddbd7e8f0ea996b8aa4bc0c9f0cbcaf43582528e4f39554",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-474a78ad-7f0d-4d48-9506-797e7846efef",
+                            "historicalLifecycle": "F1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "F1",
+                            "transitiveDependencyFresh": true
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-823fefb3-0004-489e-b1c5-496bfcc6c254",
+                    "historicalLifecycle": "P1.1.3.1.1",
+                    "reasons": [
+                        "Direct dependency F1 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": true,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "P1",
+                    "transitiveDependencyFresh": false
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "7186d0e1753b79087a787dbc0b5b052f32da8578d462e9b73d4862a6b2b32d97",
+                    "certifiedEvidenceFingerprint": "17aec21b6aef00cc6297035bd0abadecf72bf4fe43cc06a377b503dcae8bcb1f",
+                    "certifiedSourceFingerprint": "e9457af87c9bc970a6ebf49903133cfc994bffa67bdbbe24f220deb9325c0930",
+                    "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "7186d0e1753b79087a787dbc0b5b052f32da8578d462e9b73d4862a6b2b32d97",
+                    "currentEvidenceFingerprint": "17aec21b6aef00cc6297035bd0abadecf72bf4fe43cc06a377b503dcae8bcb1f",
+                    "currentSourceFingerprint": "e9457af87c9bc970a6ebf49903133cfc994bffa67bdbbe24f220deb9325c0930",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "940f3a8a04a3e95a70140d5850ee50f6bf44885ddfea30eb9b697d706e660fab",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                            "certifiedEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                            "certifiedSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                            "certifiedSourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                            "currentEvidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+                            "currentSourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "eaa2f59a037360532296644254ac1afd6b64dce5d87faaf1f401055ca58aa992",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                                    "certifiedEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                                    "certifiedSourceFingerprint": "1b21d2dc3ac874198fe6a84fc0bff77753ba0f3debbf47efda7b66c6209af497",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                                    "currentEvidenceFingerprint": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4",
+                                    "currentSourceFingerprint": "eec72b042d97263bb8ade42b195fb5fd7fc5239381bd5afb25b28e4515508acf",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "0ea42f3d698ac071dddbd7e8f0ea996b8aa4bc0c9f0cbcaf43582528e4f39554",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-474a78ad-7f0d-4d48-9506-797e7846efef",
+                                    "historicalLifecycle": "F1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "F1",
+                                    "transitiveDependencyFresh": true
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-823fefb3-0004-489e-b1c5-496bfcc6c254",
+                            "historicalLifecycle": "P1.1.3.1.1",
+                            "reasons": [
+                                "Direct dependency F1 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": true,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "P1",
+                            "transitiveDependencyFresh": false
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-2b6052e6-bc54-447f-96a5-33de08f21b13",
+                    "historicalLifecycle": "P4.1.5.1.1",
+                    "reasons": [
+                        "Direct dependency P1 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": true,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "P4",
+                    "transitiveDependencyFresh": false
+                }
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-ca24b0d8-0226-45ee-afaa-00deff013395",
+            "historicalLifecycle": "P5.1.5.1.1",
+            "reasons": [
+                "Direct dependency P1 is stale through its own dependency or source state.",
+                "Direct dependency P4 is stale through its own dependency or source state."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": true,
+            "status": "TRANSITIVE_DEPENDENCY_STALE",
+            "subject": "P5",
+            "transitiveDependencyFresh": false
+        },
+        "S1": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+            "contractFresh": true,
+            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+            "historicalLifecycle": "S1.1.4.1.1",
+            "reasons": [
+                "Certified source manifest differs from the current source manifest."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": false,
+            "status": "SOURCE_STALE",
+            "subject": "S1",
+            "transitiveDependencyFresh": true
+        },
+        "S2": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+            "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+            "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+            "contractFresh": true,
+            "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+            "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+            "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                    "historicalLifecycle": "S1.1.4.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "SOURCE_STALE",
+                    "subject": "S1",
+                    "transitiveDependencyFresh": true
+                }
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+            "historicalLifecycle": "S2.1.2.1.1",
+            "reasons": [
+                "Certified source manifest differs from the current source manifest.",
+                "Direct dependency S1 is stale through its own dependency or source state."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": false,
+            "status": "TRANSITIVE_DEPENDENCY_STALE",
+            "subject": "S2",
+            "transitiveDependencyFresh": false
+        },
+        "S3": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+            "certifiedEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+            "certifiedSourceFingerprint": "2bb6f370145af47fb3b65f5ea295d1254d2375e2bf329aace6b25e4c011423b1",
+            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+            "contractFresh": true,
+            "currentContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+            "currentEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+            "currentSourceFingerprint": "fc797479a1d92b11e91ba050c152b25c538bc7f443ec7c4b90749a03ece75191",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "4d7a5d0184fd960b4de9d2108dea62bedfdaa923304fd6de439d95347148529f",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                    "historicalLifecycle": "S1.1.4.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "SOURCE_STALE",
+                    "subject": "S1",
+                    "transitiveDependencyFresh": true
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                    "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                    "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                    "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                    "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                            "historicalLifecycle": "S1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "S1",
+                            "transitiveDependencyFresh": true
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                    "historicalLifecycle": "S2.1.2.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest.",
+                        "Direct dependency S1 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "S2",
+                    "transitiveDependencyFresh": false
+                }
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-197415b6-10b8-4ee0-a224-0ed5adb1dd48",
+            "historicalLifecycle": "S3.1.3.1.1",
+            "reasons": [
+                "Certified source manifest differs from the current source manifest.",
+                "Direct dependency S1 is stale through its own dependency or source state.",
+                "Direct dependency S2 is stale through its own dependency or source state."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": false,
+            "status": "TRANSITIVE_DEPENDENCY_STALE",
+            "subject": "S3",
+            "transitiveDependencyFresh": false
+        },
+        "S4": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "0a8778997692cdcc7a6551ac502e1fd8f9b46a346ffc25fdd783fe32be56010a",
+            "certifiedEvidenceFingerprint": "5ed7380b65944680d929f9cdeaec249bfa73378644b0bef4b6acacd55e48577b",
+            "certifiedSourceFingerprint": "7fe8c801008c15963be52e67883bc314dffa864663d6d099b6e9b428809ead90",
+            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+            "contractFresh": true,
+            "currentContractFingerprint": "0a8778997692cdcc7a6551ac502e1fd8f9b46a346ffc25fdd783fe32be56010a",
+            "currentEvidenceFingerprint": "5ed7380b65944680d929f9cdeaec249bfa73378644b0bef4b6acacd55e48577b",
+            "currentSourceFingerprint": "62a2697efabb1130323bdf70c3ba71be550c5e4e1477a8293f6fd55835e39e47",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "4295025ece6ad71f6d16d548fb4c7a19dce79a4cf55caa2c91ca4e7369232b55",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                    "historicalLifecycle": "S1.1.4.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "SOURCE_STALE",
+                    "subject": "S1",
+                    "transitiveDependencyFresh": true
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                    "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                    "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                    "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                    "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                            "historicalLifecycle": "S1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "S1",
+                            "transitiveDependencyFresh": true
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                    "historicalLifecycle": "S2.1.2.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest.",
+                        "Direct dependency S1 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "S2",
+                    "transitiveDependencyFresh": false
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                    "certifiedEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                    "certifiedSourceFingerprint": "2bb6f370145af47fb3b65f5ea295d1254d2375e2bf329aace6b25e4c011423b1",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                    "currentEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                    "currentSourceFingerprint": "fc797479a1d92b11e91ba050c152b25c538bc7f443ec7c4b90749a03ece75191",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "4d7a5d0184fd960b4de9d2108dea62bedfdaa923304fd6de439d95347148529f",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                            "historicalLifecycle": "S1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "S1",
+                            "transitiveDependencyFresh": true
+                        },
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                    "historicalLifecycle": "S1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "S1",
+                                    "transitiveDependencyFresh": true
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                            "historicalLifecycle": "S2.1.2.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest.",
+                                "Direct dependency S1 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "S2",
+                            "transitiveDependencyFresh": false
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-197415b6-10b8-4ee0-a224-0ed5adb1dd48",
+                    "historicalLifecycle": "S3.1.3.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest.",
+                        "Direct dependency S1 is stale through its own dependency or source state.",
+                        "Direct dependency S2 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "S3",
+                    "transitiveDependencyFresh": false
+                }
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-d2109e58-e800-4ef9-8f93-ca7f62818065",
+            "historicalLifecycle": "S4.1.1.1.1",
+            "reasons": [
+                "Certified source manifest differs from the current source manifest.",
+                "Direct dependency S1 is stale through its own dependency or source state.",
+                "Direct dependency S2 is stale through its own dependency or source state.",
+                "Direct dependency S3 is stale through its own dependency or source state."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": false,
+            "status": "TRANSITIVE_DEPENDENCY_STALE",
+            "subject": "S4",
+            "transitiveDependencyFresh": false
+        },
+        "S5": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "9c5a90ad3772ce21d7c769e9e0647e983b41ea76dc592c628c72eb0c68aeb82a",
+            "certifiedEvidenceFingerprint": "79ccb68718771e4a6d61e7717c7035affe8a8d52112115870a5c16664c1dc456",
+            "certifiedSourceFingerprint": "136c3438166e4d66527dced2a12761891562b3db7bdb28afbc20a8d3ef96885e",
+            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+            "contractFresh": true,
+            "currentContractFingerprint": "9c5a90ad3772ce21d7c769e9e0647e983b41ea76dc592c628c72eb0c68aeb82a",
+            "currentEvidenceFingerprint": "79ccb68718771e4a6d61e7717c7035affe8a8d52112115870a5c16664c1dc456",
+            "currentSourceFingerprint": "4b2793f4649a836d6576baef492ba76078a3ddcb2c39a0fcf1f80b0bebb474d1",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "6ca69bd16454a77b76bd4ae4676143af33f0bfa3039ab60a2e0350b55baa96f8",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                    "historicalLifecycle": "S1.1.4.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "SOURCE_STALE",
+                    "subject": "S1",
+                    "transitiveDependencyFresh": true
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                    "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                    "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                    "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                    "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                            "historicalLifecycle": "S1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "S1",
+                            "transitiveDependencyFresh": true
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                    "historicalLifecycle": "S2.1.2.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest.",
+                        "Direct dependency S1 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "S2",
+                    "transitiveDependencyFresh": false
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                    "certifiedEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                    "certifiedSourceFingerprint": "2bb6f370145af47fb3b65f5ea295d1254d2375e2bf329aace6b25e4c011423b1",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                    "currentEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                    "currentSourceFingerprint": "fc797479a1d92b11e91ba050c152b25c538bc7f443ec7c4b90749a03ece75191",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "4d7a5d0184fd960b4de9d2108dea62bedfdaa923304fd6de439d95347148529f",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                            "historicalLifecycle": "S1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "S1",
+                            "transitiveDependencyFresh": true
+                        },
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                    "historicalLifecycle": "S1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "S1",
+                                    "transitiveDependencyFresh": true
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                            "historicalLifecycle": "S2.1.2.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest.",
+                                "Direct dependency S1 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "S2",
+                            "transitiveDependencyFresh": false
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-197415b6-10b8-4ee0-a224-0ed5adb1dd48",
+                    "historicalLifecycle": "S3.1.3.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest.",
+                        "Direct dependency S1 is stale through its own dependency or source state.",
+                        "Direct dependency S2 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "S3",
+                    "transitiveDependencyFresh": false
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "0a8778997692cdcc7a6551ac502e1fd8f9b46a346ffc25fdd783fe32be56010a",
+                    "certifiedEvidenceFingerprint": "5ed7380b65944680d929f9cdeaec249bfa73378644b0bef4b6acacd55e48577b",
+                    "certifiedSourceFingerprint": "7fe8c801008c15963be52e67883bc314dffa864663d6d099b6e9b428809ead90",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "0a8778997692cdcc7a6551ac502e1fd8f9b46a346ffc25fdd783fe32be56010a",
+                    "currentEvidenceFingerprint": "5ed7380b65944680d929f9cdeaec249bfa73378644b0bef4b6acacd55e48577b",
+                    "currentSourceFingerprint": "62a2697efabb1130323bdf70c3ba71be550c5e4e1477a8293f6fd55835e39e47",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "4295025ece6ad71f6d16d548fb4c7a19dce79a4cf55caa2c91ca4e7369232b55",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                            "historicalLifecycle": "S1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "S1",
+                            "transitiveDependencyFresh": true
+                        },
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                    "historicalLifecycle": "S1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "S1",
+                                    "transitiveDependencyFresh": true
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                            "historicalLifecycle": "S2.1.2.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest.",
+                                "Direct dependency S1 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "S2",
+                            "transitiveDependencyFresh": false
+                        },
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                            "certifiedEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                            "certifiedSourceFingerprint": "2bb6f370145af47fb3b65f5ea295d1254d2375e2bf329aace6b25e4c011423b1",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                            "currentEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                            "currentSourceFingerprint": "fc797479a1d92b11e91ba050c152b25c538bc7f443ec7c4b90749a03ece75191",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "4d7a5d0184fd960b4de9d2108dea62bedfdaa923304fd6de439d95347148529f",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                    "historicalLifecycle": "S1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "S1",
+                                    "transitiveDependencyFresh": true
+                                },
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                                    "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                                    "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                                    "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                                    "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                        {
+                                            "bindingComplete": true,
+                                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                            "contractFresh": true,
+                                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                            "directDependencyFresh": true,
+                                            "directDependencyResults": [
+                                            ],
+                                            "evidenceFresh": true,
+                                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                            "historicalLifecycle": "S1.1.4.1.1",
+                                            "reasons": [
+                                                "Certified source manifest differs from the current source manifest."
+                                            ],
+                                            "sourceBindingComplete": true,
+                                            "sourceFresh": false,
+                                            "status": "SOURCE_STALE",
+                                            "subject": "S1",
+                                            "transitiveDependencyFresh": true
+                                        }
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                                    "historicalLifecycle": "S2.1.2.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest.",
+                                        "Direct dependency S1 is stale through its own dependency or source state."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                                    "subject": "S2",
+                                    "transitiveDependencyFresh": false
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-197415b6-10b8-4ee0-a224-0ed5adb1dd48",
+                            "historicalLifecycle": "S3.1.3.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest.",
+                                "Direct dependency S1 is stale through its own dependency or source state.",
+                                "Direct dependency S2 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "S3",
+                            "transitiveDependencyFresh": false
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-d2109e58-e800-4ef9-8f93-ca7f62818065",
+                    "historicalLifecycle": "S4.1.1.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest.",
+                        "Direct dependency S1 is stale through its own dependency or source state.",
+                        "Direct dependency S2 is stale through its own dependency or source state.",
+                        "Direct dependency S3 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "S4",
+                    "transitiveDependencyFresh": false
+                }
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-b4f5f580-92c4-4132-a28d-a2996760163e",
+            "historicalLifecycle": "S5.1.1.1.1",
+            "reasons": [
+                "Certified source manifest differs from the current source manifest.",
+                "Direct dependency S1 is stale through its own dependency or source state.",
+                "Direct dependency S2 is stale through its own dependency or source state.",
+                "Direct dependency S3 is stale through its own dependency or source state.",
+                "Direct dependency S4 is stale through its own dependency or source state."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": false,
+            "status": "TRANSITIVE_DEPENDENCY_STALE",
+            "subject": "S5",
+            "transitiveDependencyFresh": false
+        },
+        "S6": {
+            "bindingComplete": true,
+            "certifiedContractFingerprint": "66c0a07f35f0caa4bf60d9060d80393cabaebff42a90bf21262fadbb0a1de14b",
+            "certifiedEvidenceFingerprint": "26f0e3ff112e7e86281536f3111cccad03aaa08d5702641f120f29ba8197fcf4",
+            "certifiedSourceFingerprint": "5e3e672f368c95b1a9b8eca5ba758ae3b877a1c2aac558b76ccbe07508fa81dc",
+            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+            "contractFresh": true,
+            "currentContractFingerprint": "66c0a07f35f0caa4bf60d9060d80393cabaebff42a90bf21262fadbb0a1de14b",
+            "currentEvidenceFingerprint": "26f0e3ff112e7e86281536f3111cccad03aaa08d5702641f120f29ba8197fcf4",
+            "currentSourceFingerprint": "8c0ce9fd152d8ad800c1b1aaf57a8ca59d89acde2ee4ca648106414c65a61528",
+            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+            "dependencyManifestFingerprint": "3097cdef116e6c9d8fd79dbfabb154ed47177c80d2a4138e6b2e112589355537",
+            "directDependencyFresh": true,
+            "directDependencyResults": [
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                    "historicalLifecycle": "S1.1.4.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "SOURCE_STALE",
+                    "subject": "S1",
+                    "transitiveDependencyFresh": true
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                    "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                    "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                    "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                    "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                            "historicalLifecycle": "S1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "S1",
+                            "transitiveDependencyFresh": true
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                    "historicalLifecycle": "S2.1.2.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest.",
+                        "Direct dependency S1 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "S2",
+                    "transitiveDependencyFresh": false
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                    "certifiedEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                    "certifiedSourceFingerprint": "2bb6f370145af47fb3b65f5ea295d1254d2375e2bf329aace6b25e4c011423b1",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                    "currentEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                    "currentSourceFingerprint": "fc797479a1d92b11e91ba050c152b25c538bc7f443ec7c4b90749a03ece75191",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "4d7a5d0184fd960b4de9d2108dea62bedfdaa923304fd6de439d95347148529f",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                            "historicalLifecycle": "S1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "S1",
+                            "transitiveDependencyFresh": true
+                        },
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                    "historicalLifecycle": "S1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "S1",
+                                    "transitiveDependencyFresh": true
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                            "historicalLifecycle": "S2.1.2.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest.",
+                                "Direct dependency S1 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "S2",
+                            "transitiveDependencyFresh": false
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-197415b6-10b8-4ee0-a224-0ed5adb1dd48",
+                    "historicalLifecycle": "S3.1.3.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest.",
+                        "Direct dependency S1 is stale through its own dependency or source state.",
+                        "Direct dependency S2 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "S3",
+                    "transitiveDependencyFresh": false
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "0a8778997692cdcc7a6551ac502e1fd8f9b46a346ffc25fdd783fe32be56010a",
+                    "certifiedEvidenceFingerprint": "5ed7380b65944680d929f9cdeaec249bfa73378644b0bef4b6acacd55e48577b",
+                    "certifiedSourceFingerprint": "7fe8c801008c15963be52e67883bc314dffa864663d6d099b6e9b428809ead90",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "0a8778997692cdcc7a6551ac502e1fd8f9b46a346ffc25fdd783fe32be56010a",
+                    "currentEvidenceFingerprint": "5ed7380b65944680d929f9cdeaec249bfa73378644b0bef4b6acacd55e48577b",
+                    "currentSourceFingerprint": "62a2697efabb1130323bdf70c3ba71be550c5e4e1477a8293f6fd55835e39e47",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "4295025ece6ad71f6d16d548fb4c7a19dce79a4cf55caa2c91ca4e7369232b55",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                            "historicalLifecycle": "S1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "S1",
+                            "transitiveDependencyFresh": true
+                        },
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                    "historicalLifecycle": "S1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "S1",
+                                    "transitiveDependencyFresh": true
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                            "historicalLifecycle": "S2.1.2.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest.",
+                                "Direct dependency S1 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "S2",
+                            "transitiveDependencyFresh": false
+                        },
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                            "certifiedEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                            "certifiedSourceFingerprint": "2bb6f370145af47fb3b65f5ea295d1254d2375e2bf329aace6b25e4c011423b1",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                            "currentEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                            "currentSourceFingerprint": "fc797479a1d92b11e91ba050c152b25c538bc7f443ec7c4b90749a03ece75191",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "4d7a5d0184fd960b4de9d2108dea62bedfdaa923304fd6de439d95347148529f",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                    "historicalLifecycle": "S1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "S1",
+                                    "transitiveDependencyFresh": true
+                                },
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                                    "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                                    "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                                    "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                                    "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                        {
+                                            "bindingComplete": true,
+                                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                            "contractFresh": true,
+                                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                            "directDependencyFresh": true,
+                                            "directDependencyResults": [
+                                            ],
+                                            "evidenceFresh": true,
+                                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                            "historicalLifecycle": "S1.1.4.1.1",
+                                            "reasons": [
+                                                "Certified source manifest differs from the current source manifest."
+                                            ],
+                                            "sourceBindingComplete": true,
+                                            "sourceFresh": false,
+                                            "status": "SOURCE_STALE",
+                                            "subject": "S1",
+                                            "transitiveDependencyFresh": true
+                                        }
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                                    "historicalLifecycle": "S2.1.2.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest.",
+                                        "Direct dependency S1 is stale through its own dependency or source state."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                                    "subject": "S2",
+                                    "transitiveDependencyFresh": false
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-197415b6-10b8-4ee0-a224-0ed5adb1dd48",
+                            "historicalLifecycle": "S3.1.3.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest.",
+                                "Direct dependency S1 is stale through its own dependency or source state.",
+                                "Direct dependency S2 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "S3",
+                            "transitiveDependencyFresh": false
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-d2109e58-e800-4ef9-8f93-ca7f62818065",
+                    "historicalLifecycle": "S4.1.1.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest.",
+                        "Direct dependency S1 is stale through its own dependency or source state.",
+                        "Direct dependency S2 is stale through its own dependency or source state.",
+                        "Direct dependency S3 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "S4",
+                    "transitiveDependencyFresh": false
+                },
+                {
+                    "bindingComplete": true,
+                    "certifiedContractFingerprint": "9c5a90ad3772ce21d7c769e9e0647e983b41ea76dc592c628c72eb0c68aeb82a",
+                    "certifiedEvidenceFingerprint": "79ccb68718771e4a6d61e7717c7035affe8a8d52112115870a5c16664c1dc456",
+                    "certifiedSourceFingerprint": "136c3438166e4d66527dced2a12761891562b3db7bdb28afbc20a8d3ef96885e",
+                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                    "contractFresh": true,
+                    "currentContractFingerprint": "9c5a90ad3772ce21d7c769e9e0647e983b41ea76dc592c628c72eb0c68aeb82a",
+                    "currentEvidenceFingerprint": "79ccb68718771e4a6d61e7717c7035affe8a8d52112115870a5c16664c1dc456",
+                    "currentSourceFingerprint": "4b2793f4649a836d6576baef492ba76078a3ddcb2c39a0fcf1f80b0bebb474d1",
+                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                    "dependencyManifestFingerprint": "6ca69bd16454a77b76bd4ae4676143af33f0bfa3039ab60a2e0350b55baa96f8",
+                    "directDependencyFresh": true,
+                    "directDependencyResults": [
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                            "historicalLifecycle": "S1.1.4.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "SOURCE_STALE",
+                            "subject": "S1",
+                            "transitiveDependencyFresh": true
+                        },
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                            "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                            "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                    "historicalLifecycle": "S1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "S1",
+                                    "transitiveDependencyFresh": true
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                            "historicalLifecycle": "S2.1.2.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest.",
+                                "Direct dependency S1 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "S2",
+                            "transitiveDependencyFresh": false
+                        },
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                            "certifiedEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                            "certifiedSourceFingerprint": "2bb6f370145af47fb3b65f5ea295d1254d2375e2bf329aace6b25e4c011423b1",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                            "currentEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                            "currentSourceFingerprint": "fc797479a1d92b11e91ba050c152b25c538bc7f443ec7c4b90749a03ece75191",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "4d7a5d0184fd960b4de9d2108dea62bedfdaa923304fd6de439d95347148529f",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                    "historicalLifecycle": "S1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "S1",
+                                    "transitiveDependencyFresh": true
+                                },
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                                    "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                                    "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                                    "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                                    "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                        {
+                                            "bindingComplete": true,
+                                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                            "contractFresh": true,
+                                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                            "directDependencyFresh": true,
+                                            "directDependencyResults": [
+                                            ],
+                                            "evidenceFresh": true,
+                                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                            "historicalLifecycle": "S1.1.4.1.1",
+                                            "reasons": [
+                                                "Certified source manifest differs from the current source manifest."
+                                            ],
+                                            "sourceBindingComplete": true,
+                                            "sourceFresh": false,
+                                            "status": "SOURCE_STALE",
+                                            "subject": "S1",
+                                            "transitiveDependencyFresh": true
+                                        }
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                                    "historicalLifecycle": "S2.1.2.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest.",
+                                        "Direct dependency S1 is stale through its own dependency or source state."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                                    "subject": "S2",
+                                    "transitiveDependencyFresh": false
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-197415b6-10b8-4ee0-a224-0ed5adb1dd48",
+                            "historicalLifecycle": "S3.1.3.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest.",
+                                "Direct dependency S1 is stale through its own dependency or source state.",
+                                "Direct dependency S2 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "S3",
+                            "transitiveDependencyFresh": false
+                        },
+                        {
+                            "bindingComplete": true,
+                            "certifiedContractFingerprint": "0a8778997692cdcc7a6551ac502e1fd8f9b46a346ffc25fdd783fe32be56010a",
+                            "certifiedEvidenceFingerprint": "5ed7380b65944680d929f9cdeaec249bfa73378644b0bef4b6acacd55e48577b",
+                            "certifiedSourceFingerprint": "7fe8c801008c15963be52e67883bc314dffa864663d6d099b6e9b428809ead90",
+                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                            "contractFresh": true,
+                            "currentContractFingerprint": "0a8778997692cdcc7a6551ac502e1fd8f9b46a346ffc25fdd783fe32be56010a",
+                            "currentEvidenceFingerprint": "5ed7380b65944680d929f9cdeaec249bfa73378644b0bef4b6acacd55e48577b",
+                            "currentSourceFingerprint": "62a2697efabb1130323bdf70c3ba71be550c5e4e1477a8293f6fd55835e39e47",
+                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                            "dependencyManifestFingerprint": "4295025ece6ad71f6d16d548fb4c7a19dce79a4cf55caa2c91ca4e7369232b55",
+                            "directDependencyFresh": true,
+                            "directDependencyResults": [
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                    "historicalLifecycle": "S1.1.4.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "SOURCE_STALE",
+                                    "subject": "S1",
+                                    "transitiveDependencyFresh": true
+                                },
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                                    "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                                    "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                                    "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                                    "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                        {
+                                            "bindingComplete": true,
+                                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                            "contractFresh": true,
+                                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                            "directDependencyFresh": true,
+                                            "directDependencyResults": [
+                                            ],
+                                            "evidenceFresh": true,
+                                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                            "historicalLifecycle": "S1.1.4.1.1",
+                                            "reasons": [
+                                                "Certified source manifest differs from the current source manifest."
+                                            ],
+                                            "sourceBindingComplete": true,
+                                            "sourceFresh": false,
+                                            "status": "SOURCE_STALE",
+                                            "subject": "S1",
+                                            "transitiveDependencyFresh": true
+                                        }
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                                    "historicalLifecycle": "S2.1.2.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest.",
+                                        "Direct dependency S1 is stale through its own dependency or source state."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                                    "subject": "S2",
+                                    "transitiveDependencyFresh": false
+                                },
+                                {
+                                    "bindingComplete": true,
+                                    "certifiedContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                                    "certifiedEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                                    "certifiedSourceFingerprint": "2bb6f370145af47fb3b65f5ea295d1254d2375e2bf329aace6b25e4c011423b1",
+                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                    "contractFresh": true,
+                                    "currentContractFingerprint": "72355289e599c6cf64157c1bc55151dc4f0883f27889dcd1cc73ed387c80c4f4",
+                                    "currentEvidenceFingerprint": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675",
+                                    "currentSourceFingerprint": "fc797479a1d92b11e91ba050c152b25c538bc7f443ec7c4b90749a03ece75191",
+                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                    "dependencyManifestFingerprint": "4d7a5d0184fd960b4de9d2108dea62bedfdaa923304fd6de439d95347148529f",
+                                    "directDependencyFresh": true,
+                                    "directDependencyResults": [
+                                        {
+                                            "bindingComplete": true,
+                                            "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                            "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                            "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                            "contractFresh": true,
+                                            "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                            "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                            "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                            "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                            "directDependencyFresh": true,
+                                            "directDependencyResults": [
+                                            ],
+                                            "evidenceFresh": true,
+                                            "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                            "historicalLifecycle": "S1.1.4.1.1",
+                                            "reasons": [
+                                                "Certified source manifest differs from the current source manifest."
+                                            ],
+                                            "sourceBindingComplete": true,
+                                            "sourceFresh": false,
+                                            "status": "SOURCE_STALE",
+                                            "subject": "S1",
+                                            "transitiveDependencyFresh": true
+                                        },
+                                        {
+                                            "bindingComplete": true,
+                                            "certifiedContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                                            "certifiedEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                                            "certifiedSourceFingerprint": "cfbb49734ff9721a8aabfd99be28ad5c5c21db77e27b392d911149faa6504bb0",
+                                            "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                            "contractFresh": true,
+                                            "currentContractFingerprint": "bcde80ad6ffa7973dbdcdf17af062b96db3d01282fcd1fa279c2b3a7a15d9057",
+                                            "currentEvidenceFingerprint": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d",
+                                            "currentSourceFingerprint": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+                                            "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                            "dependencyManifestFingerprint": "cb6ce27fbb02f5106512b4c4ea681a033f4be4fdc0f2fa8f542c0bd2fb4d35a7",
+                                            "directDependencyFresh": true,
+                                            "directDependencyResults": [
+                                                {
+                                                    "bindingComplete": true,
+                                                    "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                                    "certifiedEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                                    "certifiedSourceFingerprint": "0606b78832d0994235a2a124eefac545fea6502819d8a7c72952a2ab34662017",
+                                                    "certifiedSourceRevision": "5ec88fed51da851d1e9f4a32f442627ccefbd9f4",
+                                                    "contractFresh": true,
+                                                    "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+                                                    "currentEvidenceFingerprint": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3",
+                                                    "currentSourceFingerprint": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+                                                    "currentSourceRevision": "7a1cea9881333f11bc5e99787821c904a7cc43cb",
+                                                    "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+                                                    "directDependencyFresh": true,
+                                                    "directDependencyResults": [
+                                                    ],
+                                                    "evidenceFresh": true,
+                                                    "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+                                                    "historicalLifecycle": "S1.1.4.1.1",
+                                                    "reasons": [
+                                                        "Certified source manifest differs from the current source manifest."
+                                                    ],
+                                                    "sourceBindingComplete": true,
+                                                    "sourceFresh": false,
+                                                    "status": "SOURCE_STALE",
+                                                    "subject": "S1",
+                                                    "transitiveDependencyFresh": true
+                                                }
+                                            ],
+                                            "evidenceFresh": true,
+                                            "historicalCertificateId": "cert-5126d077-8507-4774-bf76-d29bb6cc23ac",
+                                            "historicalLifecycle": "S2.1.2.1.1",
+                                            "reasons": [
+                                                "Certified source manifest differs from the current source manifest.",
+                                                "Direct dependency S1 is stale through its own dependency or source state."
+                                            ],
+                                            "sourceBindingComplete": true,
+                                            "sourceFresh": false,
+                                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                                            "subject": "S2",
+                                            "transitiveDependencyFresh": false
+                                        }
+                                    ],
+                                    "evidenceFresh": true,
+                                    "historicalCertificateId": "cert-197415b6-10b8-4ee0-a224-0ed5adb1dd48",
+                                    "historicalLifecycle": "S3.1.3.1.1",
+                                    "reasons": [
+                                        "Certified source manifest differs from the current source manifest.",
+                                        "Direct dependency S1 is stale through its own dependency or source state.",
+                                        "Direct dependency S2 is stale through its own dependency or source state."
+                                    ],
+                                    "sourceBindingComplete": true,
+                                    "sourceFresh": false,
+                                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                                    "subject": "S3",
+                                    "transitiveDependencyFresh": false
+                                }
+                            ],
+                            "evidenceFresh": true,
+                            "historicalCertificateId": "cert-d2109e58-e800-4ef9-8f93-ca7f62818065",
+                            "historicalLifecycle": "S4.1.1.1.1",
+                            "reasons": [
+                                "Certified source manifest differs from the current source manifest.",
+                                "Direct dependency S1 is stale through its own dependency or source state.",
+                                "Direct dependency S2 is stale through its own dependency or source state.",
+                                "Direct dependency S3 is stale through its own dependency or source state."
+                            ],
+                            "sourceBindingComplete": true,
+                            "sourceFresh": false,
+                            "status": "TRANSITIVE_DEPENDENCY_STALE",
+                            "subject": "S4",
+                            "transitiveDependencyFresh": false
+                        }
+                    ],
+                    "evidenceFresh": true,
+                    "historicalCertificateId": "cert-b4f5f580-92c4-4132-a28d-a2996760163e",
+                    "historicalLifecycle": "S5.1.1.1.1",
+                    "reasons": [
+                        "Certified source manifest differs from the current source manifest.",
+                        "Direct dependency S1 is stale through its own dependency or source state.",
+                        "Direct dependency S2 is stale through its own dependency or source state.",
+                        "Direct dependency S3 is stale through its own dependency or source state.",
+                        "Direct dependency S4 is stale through its own dependency or source state."
+                    ],
+                    "sourceBindingComplete": true,
+                    "sourceFresh": false,
+                    "status": "TRANSITIVE_DEPENDENCY_STALE",
+                    "subject": "S5",
+                    "transitiveDependencyFresh": false
+                }
+            ],
+            "evidenceFresh": true,
+            "historicalCertificateId": "cert-0e2a0ff1-a38e-43ed-8c57-1360b9deb4b6",
+            "historicalLifecycle": "S6.1.1.1.1",
+            "reasons": [
+                "Certified source manifest differs from the current source manifest.",
+                "Direct dependency S1 is stale through its own dependency or source state.",
+                "Direct dependency S2 is stale through its own dependency or source state.",
+                "Direct dependency S3 is stale through its own dependency or source state.",
+                "Direct dependency S4 is stale through its own dependency or source state.",
+                "Direct dependency S5 is stale through its own dependency or source state."
+            ],
+            "sourceBindingComplete": true,
+            "sourceFresh": false,
+            "status": "TRANSITIVE_DEPENDENCY_STALE",
+            "subject": "S6",
+            "transitiveDependencyFresh": false
+        }
+    },
+    "sourceFingerprints": {
+        "F1": "eec72b042d97263bb8ade42b195fb5fd7fc5239381bd5afb25b28e4515508acf",
+        "F2": "48814a86d0446ff6e67aee866517c2e10633b8a7e59378efb7060c13f3aa62e5",
+        "F3": "85736ae2293d97c2d5fcdfa1854175bb1b9d17ea4ed07be5add946cf12f3b40e",
+        "F4": "aaf80ef98052a74e8229b1fe0251255715a549ba982fbdbc001a385b664aee1f",
+        "P1": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
+        "P2": "d99b5bf465a45f6d95cd08b35714fc1eb277be998f9e9e3be87a986a2dce5fb3",
+        "P3": "26b17597d93f6216a2b253bebb63bd2d473fe172150db4a1b3d1a2201f7c955d",
+        "P4": "e9457af87c9bc970a6ebf49903133cfc994bffa67bdbbe24f220deb9325c0930",
+        "P5": "d5b97a5c70ffd293942b86457e9f888af147f34800891186347944490a6962a5",
+        "S1": "bbe044677aca96e1bbd1beaafb0770965bd9e490f9452cb6c683d68891907d3f",
+        "S2": "7fead1df3f4d5cac51f077e7bec636a5e22b950a661d08485de474286ed7683a",
+        "S3": "fc797479a1d92b11e91ba050c152b25c538bc7f443ec7c4b90749a03ece75191",
+        "S4": "62a2697efabb1130323bdf70c3ba71be550c5e4e1477a8293f6fd55835e39e47",
+        "S5": "4b2793f4649a836d6576baef492ba76078a3ddcb2c39a0fcf1f80b0bebb474d1",
+        "S6": "8c0ce9fd152d8ad800c1b1aaf57a8ca59d89acde2ee4ca648106414c65a61528"
+    },
+    "status": "FAIL",
+    "timestamp": "2026-09-26T20:26:59.993Z"
+}

@@ -10,7 +10,7 @@
             "coldStartFresh": true,
             "ledgerIntact": true,
             "name": "Memory & Evidence Foundation",
-            "totalEvents": 333,
+            "totalEvents": 430,
             "valid": true
         },
         "F2": {
@@ -38,8 +38,8 @@
         }
     },
     "noCircularAuthority": true,
-    "overallFingerprint": "7d0cd3a08bf0484b9a27cae789f1cad14bfcad239ca0722d5f938edf5e28487d",
+    "overallFingerprint": "f069ff97ce81d0653f0e093ba0000e256fbc91ab508e1daee6f71844ca8a7944",
     "schemaVersion": 1,
-    "timestamp": "2026-09-18T15:25:23Z",
+    "timestamp": "2026-09-26T22:57:23Z",
     "valid": true
 }

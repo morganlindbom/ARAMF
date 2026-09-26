@@ -1,0 +1,45 @@
+{
+    "_file": "foundation-integration.json",
+    "acceptanceType": "DIAGNOSTIC_RESULT",
+    "authoritative": false,
+    "bootstrapOrderValid": true,
+    "diagnosticOnly": true,
+    "foundations": {
+        "F1": {
+            "certificatesIntact": true,
+            "coldStartFresh": true,
+            "ledgerIntact": true,
+            "name": "Memory & Evidence Foundation",
+            "totalEvents": 333,
+            "valid": true
+        },
+        "F2": {
+            "actorTaxonomyConsistent": true,
+            "adminOverrideValid": true,
+            "allProvenanceValid": true,
+            "name": "Identity, Provenance & Trust Foundation",
+            "trustBoundariesEnforced": true,
+            "valid": true
+        },
+        "F3": {
+            "canonicalScopeCount": 15,
+            "name": "Scope, State & Integrity Foundation",
+            "projectIsolationValid": true,
+            "scopeCombinationsLegal": true,
+            "scopeTaxonomyValid": true,
+            "valid": true
+        },
+        "F4": {
+            "certificationSemanticsValid": true,
+            "name": "Lifecycle & Certification Foundation",
+            "namespaceVersionCorrect": true,
+            "p6GatingCorrect": true,
+            "valid": true
+        }
+    },
+    "noCircularAuthority": true,
+    "overallFingerprint": "7d0cd3a08bf0484b9a27cae789f1cad14bfcad239ca0722d5f938edf5e28487d",
+    "schemaVersion": 1,
+    "timestamp": "2026-09-18T15:25:23Z",
+    "valid": true
+}

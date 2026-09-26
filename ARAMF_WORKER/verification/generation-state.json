@@ -5,7 +5,10 @@
         "academic": {
             "academicDeliverables": [
             ],
-            "academicLanguage": "",
+            "academicLanguage": "swedish",
+            "academicLanguages": [
+                "swedish"
+            ],
             "academicMode": "disabled",
             "academicRequirements": [
             ],
@@ -569,31 +572,30 @@
                     "iteration": 5,
                     "loop": 1,
                     "process": 5
-                }
-            ],
-            "foundationQueue": [
+                },
                 {
-                    "certification": 0,
-                    "done": 0,
-                    "foundation": 3,
-                    "iteration": 0,
+                    "certification": 1,
+                    "done": 1,
+                    "foundation": 2,
+                    "iteration": 1,
                     "loop": 1
                 },
                 {
-                    "certification": 0,
-                    "done": 0,
+                    "certification": 1,
+                    "done": 1,
+                    "foundation": 3,
+                    "iteration": 1,
+                    "loop": 1
+                },
+                {
+                    "certification": 1,
+                    "done": 1,
                     "foundation": 4,
-                    "iteration": 0,
+                    "iteration": 1,
                     "loop": 1
                 }
             ],
-            "futureProcess": {
-                "certification": 0,
-                "done": 0,
-                "iteration": 0,
-                "loop": 1,
-                "process": 6
-            },
+            "foundationIntegrationValid": true,
             "legacyHistory": [
                 "P0.1.1.1",
                 "P1.1.1.1",
@@ -613,9 +615,9 @@
             "next": {
                 "certification": 0,
                 "done": 0,
-                "foundation": 2,
                 "iteration": 0,
-                "loop": 1
+                "loop": 1,
+                "process": 6
             },
             "structureHistory": [
                 {
@@ -959,12 +961,50 @@
                         "tests"
                     ],
                     "files": [
-                        "src/core/WorkerTaskServices.cpp"
+                        "src/core/CertificationFreshness.cpp",
+                        "src/core/CertificationRevalidation.cpp",
+                        "src/core/DocumentTemplate.cpp",
+                        "src/core/DocumentTemplate.h",
+                        "src/core/FoundationCertificationCampaign.cpp",
+                        "src/core/FoundationCertificationCampaign.h",
+                        "src/core/FoundationProjectValidation.cpp",
+                        "src/core/FoundationProjectValidation.h",
+                        "src/core/FoundationServices.cpp",
+                        "src/core/FoundationServices.h",
+                        "src/core/MemoryEvidenceFoundation.cpp",
+                        "src/core/MemoryEvidenceFoundation.h",
+                        "src/core/ProcessVersion.cpp",
+                        "src/core/ProcessVersion.h",
+                        "src/core/ProjectMemory.cpp",
+                        "src/core/ProjectMemory.h",
+                        "src/core/ProjectModel.cpp",
+                        "src/core/ProjectModel.h",
+                        "src/core/ProjectPersistence.cpp",
+                        "src/core/Services.cpp",
+                        "src/core/TemplateValidation.cpp",
+                        "src/core/WorkerTaskServices.cpp",
+                        "src/foundations/F1/EvidenceStorage.cpp",
+                        "src/foundations/F1/EvidenceStorage.h",
+                        "src/foundations/F1/MemoryEvidenceFoundation.cpp",
+                        "src/foundations/F1/MemoryEvidenceFoundation.h",
+                        "src/foundations/F2/IdentityTrustFoundation.cpp",
+                        "src/foundations/F2/IdentityTrustFoundation.h",
+                        "src/foundations/F3/ScopeIntegrityFoundation.cpp",
+                        "src/foundations/F3/ScopeIntegrityFoundation.h",
+                        "src/foundations/F4/LifecycleCertificationFoundation.cpp",
+                        "src/foundations/F4/LifecycleCertificationFoundation.h",
+                        "src/foundations/F4/ProcessVersion.cpp",
+                        "src/foundations/F4/ProcessVersion.h",
+                        "src/ui/workflows/ai/autonomy/AiAutonomyPage.cpp",
+                        "src/ui/workflows/output/review/ReviewPage.cpp",
+                        "src/ui/workflows/project/academic/ProjectAcademicPage.cpp",
+                        "src/ui/workflows/project/academic/ProjectAcademicPage.h"
                     ],
                     "generatedArtifacts": [
                     ],
                     "riskTraits": [
-                        "governance"
+                        "governance",
+                        "persistence"
                     ],
                     "tests": [
                         "aramf_core_tests::--worker-tasks"
@@ -974,13 +1014,23 @@
                     "affects": [
                     ],
                     "files": [
+                        "test_250/runner/main.cpp",
+                        "test_550/runner/main.cpp",
+                        "tests/CertificationFreshnessTests.cpp",
+                        "tests/CertificationRevalidationTests.cpp",
+                        "tests/FoundationCertificationTests.cpp",
+                        "tests/FoundationIndependenceTests.cpp",
+                        "tests/FoundationTests.cpp",
                         "tests/P2ExecutionTests.cpp",
+                        "tests/ProjectMemoryTests.cpp",
+                        "tests/TemplateConfigurationTests.cpp",
                         "tests/WorkerTaskTests.cpp"
                     ],
                     "generatedArtifacts": [
                     ],
                     "riskTraits": [
-                        "governance"
+                        "governance",
+                        "persistence"
                     ],
                     "tests": [
                         "aramf_core_tests::--p3-execution",
@@ -1295,8 +1345,8 @@
         },
         "workerNameSuffix": ""
     },
-    "fingerprint": "af2376d3e9fbcf49c4e7c47db39b59eb931ed478ef8cff1e6ea5a326025820b7",
-    "generatedAt": "2026-09-20T20:19:05Z",
+    "fingerprint": "f2d76b546ec57cf5f858bdcb25ff07d4ce796a8ec2712decbcdd886fb375ab84",
+    "generatedAt": "2026-09-26T22:57:54Z",
     "memory": true,
     "platforms": true,
     "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",

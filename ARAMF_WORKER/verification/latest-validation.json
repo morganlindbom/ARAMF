@@ -260,7 +260,7 @@
             "status": "PASS"
         },
         {
-            "details": "Latest validation summary is structurally valid.",
+            "details": "latest-validation.json is stale and will be regenerated.",
             "id": "validation-summary-integrity",
             "name": "Latest validation summary integrity",
             "status": "PASS"
@@ -270,7 +270,7 @@
     "contextStaleCount": 0,
     "contextValid": true,
     "documentationRoutingValid": true,
-    "fingerprint": "880810e37dde4d5bc0e028c68b1899cf288cae98334b1f3ab24cecc8a3821761",
+    "fingerprint": "f2d76b546ec57cf5f858bdcb25ff07d4ce796a8ec2712decbcdd886fb375ab84",
     "instructionsReachable": true,
     "memoryConsistent": true,
     "overallStatus": "PASS",

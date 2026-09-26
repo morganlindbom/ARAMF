@@ -1,0 +1,105 @@
+PASS fixture Git revision
+PASS canonical order rejects F3 before F2
+PASS Foundation route rejects P6
+PASS F2 starts: Unsupported Foundation
+PASS F2 cannot complete uncertified
+PASS F2 accepts correctly bound fixture evidence: Completion requires a certified iteration
+PASS F2 rejects altered subject
+PASS F2 rejects altered lifecycle
+PASS F2 rejects altered sourceRevision
+PASS F2 rejects altered sourceFingerprint
+PASS F2 rejects altered contractFingerprint
+PASS F2 rejects altered namespace
+PASS F2 rejects altered status
+PASS F2 rejects altered schemaVersion
+PASS F2 rejects altered verificationLevel
+PASS F2 rejects altered timestamp
+PASS F2 rejects altered provenance
+PASS F2 rejects duplicate checks
+PASS F2 rejects missing check
+PASS F2 rejects altered check commandIdentity
+PASS F2 rejects altered check reference
+PASS F2 rejects altered check fingerprint
+PASS F2 rejects altered check status
+PASS F2 rejects altered check sourceRevision
+PASS F2 rejects altered check lifecycle
+PASS F2 rejects altered check namespace
+PASS F2 rejects altered check exitCode
+PASS F2 rejects altered check timestamp
+PASS F2 rejects altered physical evidence bytes
+PASS F2 rejects evidence outside namespace
+PASS F2 synthetic fixture certification: Evidence is outside the subject namespace
+PASS F2 durable certificate ID
+PASS F2 refuses completion after physical log corruption
+PASS F2 completes: Invalid, duplicate, missing, or altered verification check: certification
+PASS F2 cold reload
+PASS F2 persisted certificate is fresh
+PASS F3 starts: 
+PASS F3 cannot complete uncertified
+PASS F3 accepts correctly bound fixture evidence: Completion requires a certified iteration
+PASS F3 rejects altered subject
+PASS F3 rejects altered lifecycle
+PASS F3 rejects altered sourceRevision
+PASS F3 rejects altered sourceFingerprint
+PASS F3 rejects altered contractFingerprint
+PASS F3 rejects altered namespace
+PASS F3 rejects altered status
+PASS F3 rejects altered schemaVersion
+PASS F3 rejects altered verificationLevel
+PASS F3 rejects altered timestamp
+PASS F3 rejects altered provenance
+PASS F3 rejects duplicate checks
+PASS F3 rejects missing check
+PASS F3 rejects altered check commandIdentity
+PASS F3 rejects altered check reference
+PASS F3 rejects altered check fingerprint
+PASS F3 rejects altered check status
+PASS F3 rejects altered check sourceRevision
+PASS F3 rejects altered check lifecycle
+PASS F3 rejects altered check namespace
+PASS F3 rejects altered check exitCode
+PASS F3 rejects altered check timestamp
+PASS F3 rejects altered physical evidence bytes
+PASS F3 rejects evidence outside namespace
+PASS F3 synthetic fixture certification: Evidence is outside the subject namespace
+PASS F3 durable certificate ID
+PASS F3 refuses completion after physical log corruption
+PASS F3 completes: Invalid, duplicate, missing, or altered verification check: certification
+PASS F3 cold reload
+PASS F3 persisted certificate is fresh
+PASS F4 starts: 
+PASS F4 cannot complete uncertified
+PASS F4 accepts correctly bound fixture evidence: Completion requires a certified iteration
+PASS F4 rejects altered subject
+PASS F4 rejects altered lifecycle
+PASS F4 rejects altered sourceRevision
+PASS F4 rejects altered sourceFingerprint
+PASS F4 rejects altered contractFingerprint
+PASS F4 rejects altered namespace
+PASS F4 rejects altered status
+PASS F4 rejects altered schemaVersion
+PASS F4 rejects altered verificationLevel
+PASS F4 rejects altered timestamp
+PASS F4 rejects altered provenance
+PASS F4 rejects duplicate checks
+PASS F4 rejects missing check
+PASS F4 rejects altered check commandIdentity
+PASS F4 rejects altered check reference
+PASS F4 rejects altered check fingerprint
+PASS F4 rejects altered check status
+PASS F4 rejects altered check sourceRevision
+PASS F4 rejects altered check lifecycle
+PASS F4 rejects altered check namespace
+PASS F4 rejects altered check exitCode
+PASS F4 rejects altered check timestamp
+PASS F4 rejects altered physical evidence bytes
+PASS F4 rejects evidence outside namespace
+PASS F4 synthetic fixture certification: Evidence is outside the subject namespace
+PASS F4 durable certificate ID
+PASS F4 refuses completion after physical log corruption
+PASS F4 completes: Invalid, duplicate, missing, or altered verification check: certification
+PASS F4 cold reload
+PASS F4 persisted certificate is fresh
+PASS integration rejects missing F1/P1-P5 evidence despite completed lifecycle
+PASS P6 remains blocked in incomplete fixture
+Fixture preserved: C:/Users/morga/AppData/Local/Temp/aramf_core_tests-csyhTL
