@@ -4,6 +4,7 @@
 
 #include <QJsonArray>
 #include <QSet>
+#include <QUrl>
 #include <algorithm>
 #include <initializer_list>
 
@@ -194,20 +195,42 @@ QJsonObject manifest(bool thesisEnabled, const QString& thesisMode, const QStrin
                      const QString& reportMode, const QString& reportSourceId,
                      const QString& thesisLanguage, const QString& reportLanguage)
 {
+    return manifest(thesisEnabled, thesisMode, thesisSourceId, reportEnabled, reportMode, reportSourceId,
+                    QStringList{thesisLanguage}, QStringList{reportLanguage});
+}
+
+QJsonObject manifest(bool thesisEnabled, const QString& thesisMode, const QString& thesisSourceId,
+                     bool reportEnabled, const QString& reportMode, const QString& reportSourceId,
+                     const QStringList& thesisLanguages, const QStringList& reportLanguages)
+{
     QJsonArray documents;
     const auto append = [&](const DocumentTemplate& document, bool enabled, const QString& documentMode, const QString& selectedSource, const QString& language) {
         QJsonObject value{{QStringLiteral("documentType"), document.documentType}, {QStringLiteral("mode"), documentMode},
+                          {QStringLiteral("variantId"), document.documentType + QLatin1Char('-') + QString::fromLatin1(QUrl::toPercentEncoding(language))},
                           {QStringLiteral("enabled"), enabled},
                           {QStringLiteral("templateId"), documentMode == QStringLiteral("aramf-default") ? document.id : QString()},
                           {QStringLiteral("templateVersion"), documentMode == QStringLiteral("aramf-default") ? document.version : 0},
                           {QStringLiteral("language"), language}, {QStringLiteral("guidanceAvailable"), true}};
-        if (documentMode == QStringLiteral("aramf-default")) value.insert(QStringLiteral("sections"), toJson(document).value(QStringLiteral("sections")));
-        else value.insert(QStringLiteral("sourceId"), selectedSource);
+        if (documentMode == QStringLiteral("aramf-default")) {
+            auto sections = toJson(document).value(QStringLiteral("sections")).toArray();
+            // Retain the canonical bilingual reference, but expose an explicit
+            // authoring projection for this version. Never guess a translation.
+            if (language == QStringLiteral("sv") || language == QStringLiteral("en")) {
+                for (qsizetype index = 0; index < sections.size(); ++index) {
+                    auto section = sections[index].toObject();
+                    section.insert(QStringLiteral("localizedTitle"), section.value(QStringLiteral("title")).toObject().value(language));
+                    section.insert(QStringLiteral("localizedGuidance"), section.value(QStringLiteral("guidance")).toObject().value(language));
+                    sections[index] = section;
+                }
+            }
+            value.insert(QStringLiteral("sections"), sections);
+        } else value.insert(QStringLiteral("sourceId"), selectedSource);
         documents.append(value);
     };
-    append(thesis(), thesisEnabled, thesisMode, thesisSourceId, thesisLanguage);
-    append(report(), reportEnabled, reportMode, reportSourceId, reportLanguage);
-    return {{QStringLiteral("schemaVersion"), 1}, {QStringLiteral("documents"), documents}};
+    for (const auto& language : thesisLanguages) append(thesis(), thesisEnabled, thesisMode, thesisSourceId, language);
+    for (const auto& language : reportLanguages) append(report(), reportEnabled, reportMode, reportSourceId, language);
+    return {{QStringLiteral("schemaVersion"), 2}, {QStringLiteral("outputMode"), QStringLiteral("separate-language-versions")},
+            {QStringLiteral("documents"), documents}};
 }
 
 QList<DocumentSection> tableOfContents(const DocumentTemplate& document)

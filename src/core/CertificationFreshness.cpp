@@ -92,6 +92,9 @@ QJsonObject contractDescriptor(const QString& subject)
         subject == QStringLiteral("P4") ? QStringList{QStringLiteral("P1")} :
         subject == QStringLiteral("P5") ? QStringList{QStringLiteral("P1"), QStringLiteral("P4")} : QStringList{});
     static const QMap<QString, QStringList> capabilities = {
+        {QStringLiteral("F2"), {QStringLiteral("identity"), QStringLiteral("provenance"), QStringLiteral("trust-boundaries")}},
+        {QStringLiteral("F3"), {QStringLiteral("scope"), QStringLiteral("project-isolation"), QStringLiteral("state-integrity")}},
+        {QStringLiteral("F4"), {QStringLiteral("lifecycle"), QStringLiteral("certification-semantics"), QStringLiteral("namespace-migration")}},
         {QStringLiteral("F1"), {QStringLiteral("memory-evidence-foundation"), QStringLiteral("append-only-evidence"), QStringLiteral("project-memory")}},
         {QStringLiteral("P1"), {QStringLiteral("task-preflight"), QStringLiteral("task-contract"), QStringLiteral("postflight-evidence")}},
         {QStringLiteral("P2"), {QStringLiteral("context-indexing"), QStringLiteral("scoped-routing"), QStringLiteral("handoff-coordination")}},
@@ -158,9 +161,10 @@ QJsonObject latestCertificate(const QString& root, const QString& subject, QStri
     return latest;
 }
 
-QString currentGitRevision(QString* error)
+QString currentGitRevision(const QString& root, QString* error)
 {
     QProcess git;
+    git.setWorkingDirectory(root);
     git.start(QStringLiteral("git"), {QStringLiteral("rev-parse"), QStringLiteral("HEAD")});
     if (!git.waitForFinished(10000) || git.exitCode() != 0) {
         if (error) *error = QStringLiteral("Unable to resolve current Git revision.");
@@ -182,6 +186,8 @@ QStringList filesFor(const QString& subject)
         QStringLiteral("CMakeLists.txt"),
         QStringLiteral("src/core/ProcessVersion.h"),
         QStringLiteral("src/core/ProcessVersion.cpp"),
+        QStringLiteral("src/foundations/F4/ProcessVersion.h"),
+        QStringLiteral("src/foundations/F4/ProcessVersion.cpp"),
         QStringLiteral("src/core/ProjectModel.h"),
         QStringLiteral("src/core/ProjectModel.cpp"),
         QStringLiteral("src/core/ProjectPersistence.cpp"),
@@ -223,11 +229,32 @@ QStringList filesFor(const QString& subject)
         QStringLiteral("src/structure/S6/S6CertificationService.cpp"), QStringLiteral("tests/S6StructuralEvolutionEnforcementTests.cpp"),
         QStringLiteral("tests/S6CertificationTests.cpp")};
     if (subject == QStringLiteral("F1")) return {
+        QStringLiteral("CMakeLists.txt"),
+        QStringLiteral("src/foundations/F1/MemoryEvidenceFoundation.h"), QStringLiteral("src/foundations/F1/MemoryEvidenceFoundation.cpp"),
+        QStringLiteral("src/foundations/F1/EvidenceStorage.h"), QStringLiteral("src/foundations/F1/EvidenceStorage.cpp"),
+        QStringLiteral("tests/FoundationIndependenceTests.cpp"),
         QStringLiteral("src/core/MemoryEvidenceFoundation.h"), QStringLiteral("src/core/MemoryEvidenceFoundation.cpp"),
         QStringLiteral("src/core/FoundationServices.h"), QStringLiteral("src/core/FoundationServices.cpp"),
         QStringLiteral("src/core/CertificationService.h"), QStringLiteral("src/core/CertificationService.cpp"),
         QStringLiteral("src/core/ProjectMemory.h"), QStringLiteral("src/core/ProjectMemory.cpp"),
         QStringLiteral("tests/FoundationTests.cpp"), QStringLiteral("tests/ProjectMemoryTests.cpp")};
+    if (subject == QStringLiteral("F2") || subject == QStringLiteral("F3") || subject == QStringLiteral("F4")) {
+        const QString name = subject == QStringLiteral("F2") ? QStringLiteral("IdentityTrustFoundation")
+            : subject == QStringLiteral("F3") ? QStringLiteral("ScopeIntegrityFoundation") : QStringLiteral("LifecycleCertificationFoundation");
+        QStringList files{
+            QStringLiteral("CMakeLists.txt"),
+            QStringLiteral("src/foundations/%1/%2.h").arg(subject, name),
+            QStringLiteral("src/foundations/%1/%2.cpp").arg(subject, name),
+            QStringLiteral("src/core/FoundationCertificationCampaign.h"), QStringLiteral("src/core/FoundationCertificationCampaign.cpp"),
+            QStringLiteral("src/core/FoundationProjectValidation.h"), QStringLiteral("src/core/FoundationProjectValidation.cpp"),
+            QStringLiteral("src/core/FoundationServices.h"), QStringLiteral("src/core/FoundationServices.cpp"),
+            QStringLiteral("src/core/CertificationFreshness.cpp"), QStringLiteral("src/core/CertificationService.cpp"),
+            QStringLiteral("tests/FoundationTests.cpp"), QStringLiteral("tests/FoundationIndependenceTests.cpp"),
+            QStringLiteral("tests/FoundationCertificationTests.cpp")};
+        if (subject == QStringLiteral("F4")) files += QStringList{
+            QStringLiteral("src/foundations/F4/ProcessVersion.h"), QStringLiteral("src/foundations/F4/ProcessVersion.cpp")};
+        return files;
+    }
     if (subject == QStringLiteral("P1")) return {QStringLiteral("src/core/WorkerTaskServices.h"), QStringLiteral("src/core/WorkerTaskServices.cpp"), QStringLiteral("tests/WorkerTaskTests.cpp"), QStringLiteral("tests/P2ExecutionTests.cpp")};
     if (subject == QStringLiteral("P2")) return {QStringLiteral("src/core/ContextCoordinationService.h"), QStringLiteral("src/core/ContextCoordinationService.cpp"), QStringLiteral("src/core/WorkerContextResolver.h"), QStringLiteral("src/core/WorkerContextResolver.cpp"), QStringLiteral("tests/ContextCoordinationTests.cpp")};
     if (subject == QStringLiteral("P3")) return {QStringLiteral("src/core/ExecutionOrchestrator.h"), QStringLiteral("src/core/ExecutionOrchestrator.cpp"), QStringLiteral("tests/P2ExecutionTests.cpp")};
@@ -395,7 +422,7 @@ bool CertificationContractManifestProvider::fingerprintFromProjectJson(const QSt
         projection = semanticValue(structure.value(keys.value(subject)), subject).toObject();
         projection.insert(QStringLiteral("contractVersion"), 2);
         projection.insert(QStringLiteral("subject"), subject);
-    } else if (subject == QStringLiteral("F1") || subject.startsWith(QLatin1Char('P'))) {
+    } else if (QStringList{"F1", "F2", "F3", "F4"}.contains(subject) || subject.startsWith(QLatin1Char('P'))) {
         projection = contractDescriptor(subject);
     } else {
         if (error) *error = QStringLiteral("Unknown certification contract subject %1.").arg(subject);
@@ -538,7 +565,7 @@ CertificationFreshnessResult evaluateSubject(const QString& subject, const QStri
     QString contractError;
     const QString contractFingerprint = currentContractFingerprint(subject, projectRoot, &contractError);
     if (error && error->isEmpty() && !contractError.isEmpty() && subject.startsWith(QLatin1Char('S'))) *error = contractError;
-    QString currentRevision = currentGitRevision(error);
+    QString currentRevision = currentGitRevision(projectRoot, error);
     const QString historicalSourceRevision = evidence.value(QStringLiteral("sourceRevision")).toString();
     auto historical = hasRevalidation
         ? QJsonObject{{QStringLiteral("certificateId"), revalidation.value(QStringLiteral("revalidationOfCertificateId"))},

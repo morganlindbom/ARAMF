@@ -283,6 +283,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     academicObject.insert(QStringLiteral("examiner"), academic.examiner);
     academicObject.insert(QStringLiteral("citationStyle"), academic.citationStyle);
     academicObject.insert(QStringLiteral("academicLanguage"), academic.academicLanguage);
+    academicObject.insert(QStringLiteral("academicLanguages"), toJsonArray(academic.academicLanguages));
     academicObject.insert(QStringLiteral("academicRequirements"), toJsonArray(academic.academicRequirements));
     academicObject.insert(QStringLiteral("academicDeliverables"), toJsonArray(academic.academicDeliverables));
     const auto documentJson = [](const AcademicConfiguration::DocumentationConfiguration& document) {
@@ -577,6 +578,34 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
         };
         academic.thesisDocumentation = readDocument(QStringLiteral("thesisDocumentation"));
         academic.reportDocumentation = readDocument(QStringLiteral("reportDocumentation"));
+        if (academicObject.contains(QStringLiteral("academicLanguages"))) {
+            const auto languages = academicObject.value(QStringLiteral("academicLanguages"));
+            if (!languages.isArray()) {
+                if (error) *error = QStringLiteral("academic.academicLanguages must be an array.");
+                return false;
+            }
+            for (const auto& language : languages.toArray()) {
+                if (!language.isString() || language.toString().trimmed().isEmpty()) {
+                    if (error) *error = QStringLiteral("Academic languages must be non-empty strings.");
+                    return false;
+                }
+            }
+            academic.academicLanguages = fromJsonArray(languages);
+        } else if (!academic.academicLanguage.isEmpty()) {
+            academic.academicLanguages = {academic.academicLanguage};
+        } else {
+            // Old files without a UI language retain their document choices.
+            academic.academicLanguages.clear();
+            for (const auto& key : {QStringLiteral("thesisDocumentation"), QStringLiteral("reportDocumentation")}) {
+                const auto document = academicObject.value(key).toObject();
+                const QString language = document.value(QStringLiteral("language")).toString();
+                if (document.value(QStringLiteral("enabled")).toBool() && !language.isEmpty())
+                    academic.academicLanguages << language;
+            }
+            if (academic.academicLanguages.isEmpty()) academic.academicLanguages = {QStringLiteral("swedish")};
+        }
+        academic.academicLanguages.removeDuplicates();
+        academic.academicLanguage = academic.academicLanguages.value(0);
         // Projects written before projectTypes existed encoded academic intent
         // in academicMode and/or the document enable flags. Preserve all of
         // that intent during the one-way normalization into the multi-select.

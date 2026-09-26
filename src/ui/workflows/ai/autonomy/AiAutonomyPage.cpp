@@ -41,6 +41,7 @@ void AiAutonomyPage::persist()
     auto value = model_->aiConfiguration();
     value.permissions.clear();
     for (auto* group : groups_) value.permissions << group->selectedIds();
+    for (auto* group : highRiskGroups_) value.permissions << group->selectedIds();
     model_->setAiConfiguration(value);
     updateSelectAllText();
 }

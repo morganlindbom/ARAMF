@@ -262,9 +262,9 @@ void ReviewPage::refreshFromModel()
             for (const auto& resource : resources) if (resource.enabled && resource.role == role) ++candidates;
             if (candidates > 1) details += QStringLiteral("; validation=ambiguous-resource");
         }
-        return QObject::tr("  %1: %2; mode=%3; template=%4; id=%5; version=%6; language=%7; sections=%8; %9\n")
+        return QObject::tr("  %1: %2; mode=%3; template=%4; id=%5; version=%6; separate language versions=%7; sections=%8; %9\n")
             .arg(label, state, document.templateMode, source, builtInSelected ? (document.templateId.isEmpty() ? builtIn.id : document.templateId) : QObject::tr("external-resource"),
-                 builtInSelected ? QString::number(document.templateVersion > 0 ? document.templateVersion : builtIn.version) : QObject::tr("external"), document.language,
+                 builtInSelected ? QString::number(document.templateVersion > 0 ? document.templateVersion : builtIn.version) : QObject::tr("external"), model_->academicConfiguration().documentLanguages().join(QStringLiteral(", ")),
                  document.templateMode == QStringLiteral("source") ? QObject::tr("external") : QString::number(builtIn.sections.size()), details);
     };
     const auto academic = model_->academicConfiguration();

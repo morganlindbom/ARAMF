@@ -1,11 +1,11 @@
 // FoundationServices.cpp
-// Implementation of the F1-F4 Foundation services.
-// These are thin coordination layers that integrate existing ARAMF core services
-// under the canonical foundation responsibility model.
-// Bootstrap order: F1 loads → F2 validates trust → F3 validates integrity → F4 reconstructs lifecycle.
+// External governance and certification coordination for independent Foundations.
+// No Foundation implementation imports or depends on this coordinator.
+// Governance evaluates F1/F2/F3/F4 reports; this is not a runtime bootstrap dependency.
 // No circular authority chains. No upward dependencies on Process layer.
 
 #include "FoundationServices.h"
+#include "FoundationCertificationCampaign.h"
 #include "AramfPaths.h"
 #include "ProjectMemory.h"
 #include "ProjectMemoryCompaction.h"
@@ -110,648 +110,6 @@ bool isVersionedF1Evidence(const F1CertificationEvidence& evidence)
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// F2: Identity, Provenance & Trust Foundation
-// ═══════════════════════════════════════════════════════════════════════════════
-
-F2TrustReport IdentityTrustFoundation::validate(const QString& projectRoot, QString* error)
-{
-    F2TrustReport report;
-    ProjectMemory memory;
-
-    // 1. Validate provenance across all events
-    const auto memReport = memory.validate(projectRoot, error, false);
-    report.fullReport.insert(QStringLiteral("memoryValidation"), memReport);
-
-    const auto checks = memReport.value(QStringLiteral("checks")).toArray();
-    for (const auto& v : checks) {
-        const auto obj = v.toObject();
-        if (obj.value(QStringLiteral("name")).toString() == QStringLiteral("event-provenance-valid")) {
-            report.allProvenanceValid =
-                obj.value(QStringLiteral("status")).toString() == QStringLiteral("PASS");
-            if (!report.allProvenanceValid)
-                report.errors.append(QStringLiteral("F2: Event provenance validation failed"));
-        }
-    }
-
-    // 2. Actor taxonomy consistency check
-    const QString eventLogPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
-    const auto events = readJsonlEvents(eventLogPath);
-
-    const auto validActors = actorTaxonomy();
-    QSet<QString> seenActors;
-    report.actorTaxonomyConsistent = true;
-
-    // Read legacy cutoff from manifest
-    const QString manifestPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/memory/memory-manifest.json"));
-    const auto manifest = readJsonFile(manifestPath);
-    const int legacyCutoff = manifest.value(QStringLiteral("legacyProvenanceCutoffSequence")).toInt(0);
-
-    for (const auto& ev : events) {
-        const int seq = ev.value(QStringLiteral("sequenceNumber")).toInt(0);
-        const auto prov = ev.value(QStringLiteral("provenance")).toObject();
-        const auto actor = prov.value(QStringLiteral("actor")).toString();
-
-        if (seq <= legacyCutoff && actor.isEmpty()) {
-            report.legacyExemptEvents++;
-            continue;
-        }
-
-        if (!actor.isEmpty()) {
-            seenActors.insert(actor);
-            report.eventsWithProvenance++;
-            if (!validActors.contains(actor)) {
-                report.actorTaxonomyConsistent = false;
-                report.errors.append(QStringLiteral("F2: Unknown actor '%1' in event seq %2")
-                    .arg(actor).arg(seq));
-            }
-        } else {
-            report.eventsWithoutProvenance++;
-        }
-    }
-    report.recognizedActors = seenActors.values();
-    report.recognizedActors.sort();
-
-    // 3. Trust boundary enforcement - verify admin override events have correct provenance & identity
-    report.trustBoundariesEnforced = true;
-    report.adminOverrideValid = true;
-    for (const auto& ev : events) {
-        if (ev.value(QStringLiteral("eventType")).toString() == QStringLiteral("ADMIN_OVERRIDE")) {
-            const auto prov = ev.value(QStringLiteral("provenance")).toObject();
-            const QString actor = prov.value(QStringLiteral("actor")).toString();
-            if (actor != QStringLiteral("human")) {
-                report.trustBoundariesEnforced = false;
-                report.adminOverrideValid = false;
-                report.errors.append(QStringLiteral("F2: ADMIN_OVERRIDE event has non-human actor '%1'").arg(actor));
-            }
-            const QString instruction = ev.value(QStringLiteral("instruction")).toString();
-            if (!instruction.isEmpty() && !isVerifiedAdministrativeOverride(instruction)) {
-                report.adminOverrideValid = false;
-                report.errors.append(QStringLiteral("F2: ADMIN_OVERRIDE event has invalid instruction identity"));
-            }
-            const QString action = ev.value(QStringLiteral("requestedAction")).toString();
-            if (containsDestructivePattern(action) || containsDestructivePattern(instruction)) {
-                report.trustBoundariesEnforced = false;
-                report.errors.append(QStringLiteral("F2: Prohibited destructive action in ADMIN_OVERRIDE event"));
-            }
-        }
-    }
-
-    report.valid = report.allProvenanceValid && report.actorTaxonomyConsistent
-                && report.trustBoundariesEnforced && report.adminOverrideValid;
-    return report;
-}
-
-QStringList IdentityTrustFoundation::actorTaxonomy()
-{
-    return {
-        QStringLiteral("human"),
-        QStringLiteral("user"),
-        QStringLiteral("agent"),
-        QStringLiteral("autonomous-agent"),
-        QStringLiteral("tool"),
-        QStringLiteral("runtime"),
-        QStringLiteral("system")
-    };
-}
-
-bool IdentityTrustFoundation::isValidActor(const QString& actor)
-{
-    return actorTaxonomy().contains(actor.toLower().trimmed());
-}
-
-bool IdentityTrustFoundation::validateProvenance(const QJsonObject& provenance, QString* error)
-{
-    return ProjectMemory::validateProvenanceObject(provenance, error);
-}
-
-bool IdentityTrustFoundation::isVerifiedAdministrativeOverride(const QString& instruction)
-{
-    const QString normalized = instruction.simplified();
-    return normalized.contains(QStringLiteral("Admin Morgan Lindbom"), Qt::CaseSensitive)
-        && normalized.contains(QStringLiteral("override"), Qt::CaseInsensitive);
-}
-
-bool IdentityTrustFoundation::containsDestructivePattern(const QString& text)
-{
-    static const QStringList patterns = {
-        QStringLiteral("rmdir /s /q"),
-        QStringLiteral("rd /s /q"),
-        QStringLiteral("rm -rf"),
-        QStringLiteral("Remove-Item -Recurse"),
-        QStringLiteral("Remove-Item -r"),
-        QStringLiteral("del /s /q"),
-        QStringLiteral("git reset --hard"),
-        QStringLiteral("git clean")
-    };
-    for (const auto& p : patterns) {
-        if (text.contains(p, Qt::CaseInsensitive)) return true;
-    }
-    return false;
-}
-
-bool IdentityTrustFoundation::respectsTrustBoundary(const QString& instruction,
-                                                     const QString& requestedAction,
-                                                     QString* error)
-{
-    // Trust boundary: admin overrides must come from verified admin identity
-    if (!isVerifiedAdministrativeOverride(instruction)) {
-        if (error) *error = QStringLiteral("F2: Instruction does not pass administrative verification (exact Admin Morgan Lindbom identity and override intent required)");
-        return false;
-    }
-
-    // Block dangerous shell operations regardless of admin status
-    if (containsDestructivePattern(requestedAction) || containsDestructivePattern(instruction)) {
-        if (error) *error = QStringLiteral("F2: Recursive deletion blocked by trust boundary");
-        return false;
-    }
-
-    return true;
-}
-
-QJsonObject IdentityTrustFoundation::contract()
-{
-    return QJsonObject{
-        {QStringLiteral("foundation"), QStringLiteral("F2")},
-        {QStringLiteral("name"), QStringLiteral("Identity, Provenance & Trust Foundation")},
-        {QStringLiteral("responsibility"),
-            QStringLiteral("Establishes who/what produced evidence and whether attribution is trustworthy")},
-        {QStringLiteral("owns"), QJsonArray{
-            QStringLiteral("actor-identity-taxonomy"),
-            QStringLiteral("provenance-validation"),
-            QStringLiteral("trust-boundary-enforcement"),
-            QStringLiteral("admin-override-verification")
-        }},
-        {QStringLiteral("bootstrapOrder"), 2},
-        {QStringLiteral("dependsOn"), QJsonArray{QStringLiteral("F1")}},
-        {QStringLiteral("requiredBy"), QJsonArray{QStringLiteral("F3"), QStringLiteral("F4")}}
-    };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// F3: Scope, State & Integrity Foundation
-// ═══════════════════════════════════════════════════════════════════════════════
-
-QSet<QString> ScopeIntegrityFoundation::baseReservedScopes()
-{
-    return {
-        QStringLiteral("all"),
-        QStringLiteral("history"),
-        QStringLiteral("project"),
-        QStringLiteral("global"),
-        QStringLiteral("project+global"),
-        QStringLiteral("build-system"),
-        QStringLiteral("ci-cd"),
-        QStringLiteral("configuration"),
-        QStringLiteral("documentation"),
-        QStringLiteral("entire-project"),
-        QStringLiteral("generated-files"),
-        QStringLiteral("resources"),
-        QStringLiteral("source-code"),
-        QStringLiteral("tests"),
-        QStringLiteral("ui-ux")
-    };
-}
-
-QStringList ScopeIntegrityFoundation::canonicalScopes()
-{
-    auto list = baseReservedScopes().values();
-    list.sort();
-    return list;
-}
-
-QSet<QString> ScopeIntegrityFoundation::effectiveCanonicalScopeRegistry(const QString& projectRoot)
-{
-    auto registry = baseReservedScopes();
-    const QString routesPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/routing/scope-routes.json"));
-    QFile f(routesPath);
-    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        const auto doc = QJsonDocument::fromJson(f.readAll());
-        if (doc.isObject()) {
-            const auto arr = doc.object().value(QStringLiteral("scopes")).toArray();
-            for (const auto& item : arr) {
-                const QString id = item.toObject().value(QStringLiteral("id")).toString().trimmed();
-                if (!id.isEmpty()) registry.insert(id);
-            }
-        }
-    }
-    return registry;
-}
-
-bool ScopeIntegrityFoundation::validateProjectIsolation(const QString& projectRoot, QString* error)
-{
-    // 1. Verify project identity binding in project.json
-    const QString projectJsonPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/project.json"));
-    const auto projectJson = readJsonFile(projectJsonPath);
-    QString projId = projectJson.value(QStringLiteral("projectId")).toString().trimmed();
-    if (projId.isEmpty()) {
-        projId = projectJson.value(QStringLiteral("id")).toString().trimmed();
-    }
-    if (projId.isEmpty()) {
-        projId = projectJson.value(QStringLiteral("name")).toString().trimmed();
-    }
-    if (projId.isEmpty() && projectJson.contains(QStringLiteral("processVersion"))) {
-        projId = QStringLiteral("fixture-project");
-    }
-    if (projId.isEmpty()) {
-        if (error) *error = QStringLiteral("F3: Missing projectId in project.json");
-        return false;
-    }
-
-    // 2. Scan event log for foreign path leakage or root escapes
-    const QString eventLogPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
-    const auto events = readJsonlEvents(eventLogPath);
-    const QString cleanRoot = QDir::cleanPath(projectRoot);
-
-    for (const auto& ev : events) {
-        const auto filesArr = ev.value(QStringLiteral("affectedFiles")).toArray();
-        for (const auto& item : filesArr) {
-            const QString filePath = item.toString().trimmed();
-            if (filePath.isEmpty()) continue;
-
-            // Reject directory traversal escaping the project root
-            if (filePath.contains(QStringLiteral(".."))) {
-                QString resolved = QDir::cleanPath(QDir(cleanRoot).filePath(filePath));
-                if (!resolved.startsWith(cleanRoot)) {
-                    if (error) *error = QStringLiteral("F3: Foreign path escape detected: '%1'").arg(filePath);
-                    return false;
-                }
-            }
-
-            // Reject foreign absolute paths not within project root
-            if (QDir::isAbsolutePath(filePath)) {
-                QString cleanFile = QDir::cleanPath(filePath);
-                if (!cleanFile.startsWith(cleanRoot, Qt::CaseInsensitive)) {
-                    if (error) *error = QStringLiteral("F3: Foreign absolute path detected: '%1'").arg(filePath);
-                    return false;
-                }
-            }
-        }
-    }
-
-    return true;
-}
-
-F3IntegrityReport ScopeIntegrityFoundation::validate(const QString& projectRoot,
-                                                      const ProjectModel* model,
-                                                      QString* error)
-{
-    F3IntegrityReport report;
-    ProjectMemory memory;
-
-    // 1. Scope taxonomy validation via memory validation
-    const auto memReport = memory.validate(projectRoot, error, false);
-    report.fullReport.insert(QStringLiteral("memoryValidation"), memReport);
-
-    const auto checks = memReport.value(QStringLiteral("checks")).toArray();
-    for (const auto& v : checks) {
-        const auto obj = v.toObject();
-        if (obj.value(QStringLiteral("name")).toString() == QStringLiteral("persisted-scope-validity")) {
-            report.scopeTaxonomyValid =
-                obj.value(QStringLiteral("status")).toString() == QStringLiteral("PASS");
-            if (!report.scopeTaxonomyValid)
-                report.errors.append(QStringLiteral("F3: Persisted scope validity failed"));
-        }
-    }
-
-    // 2. Count canonical and dynamic scopes
-    const auto canonical = canonicalScopes();
-    report.canonicalScopeCount = canonical.size();
-
-    // Load dynamic scopes from scope-routes.json
-    const QString routesPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/routing/scope-routes.json"));
-    const auto routesDoc = readJsonFile(routesPath);
-    const auto scopeArray = routesDoc.value(QStringLiteral("scopes")).toArray();
-    int dynamicCount = 0;
-    for (const auto& s : scopeArray) {
-        const auto id = s.toObject().value(QStringLiteral("id")).toString();
-        if (!canonical.contains(id)) dynamicCount++;
-    }
-    report.dynamicScopeCount = dynamicCount;
-
-    // 3. Scope combination legality - verify all events have legal scope combinations
-    report.scopeCombinationsLegal = true;
-    const QString eventLogPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/memory/event-log.jsonl"));
-    const auto events = readJsonlEvents(eventLogPath);
-    for (const auto& ev : events) {
-        const auto scopesVal = ev.value(QStringLiteral("scopes"));
-        if (scopesVal.isArray()) {
-            QStringList scopes;
-            for (const auto& s : scopesVal.toArray())
-                scopes.append(s.toString());
-            QString combErr;
-            if (!ProjectMemory::validateScopeCombinations(scopes, &combErr)) {
-                report.scopeCombinationsLegal = false;
-                report.errors.append(QStringLiteral("F3: Illegal scope combination in event: %1").arg(combErr));
-                break;
-            }
-        }
-    }
-
-    // 4. Cross-scope file validation
-    report.crossScopeFilesValid = true;
-    for (const auto& ev : events) {
-        const auto scope = ev.value(QStringLiteral("scope")).toString();
-        const auto filesArr = ev.value(QStringLiteral("affectedFiles")).toArray();
-        if (!scope.isEmpty() && !filesArr.isEmpty()) {
-            QStringList files;
-            for (const auto& f : filesArr)
-                files.append(f.toString());
-            QString csErr;
-            if (!ProjectMemory::validateCrossScopeFiles(scope, files, &csErr)) {
-                report.crossScopeFilesValid = false;
-                report.errors.append(QStringLiteral("F3: Cross-scope file violation: %1").arg(csErr));
-                break;
-            }
-        }
-    }
-
-    // 5. Project state integrity - check consistency of processVersion state
-    report.projectStateIntegral = true;
-    const QString projectJsonPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/project.json"));
-    const auto projectJson = readJsonFile(projectJsonPath);
-    if (projectJson.contains(QStringLiteral("processVersion"))) {
-        ProcessVersionState pvState;
-        QString pvErr;
-        if (!processVersionStateFromJson(projectJson.value(QStringLiteral("processVersion")), &pvState, &pvErr)) {
-            report.projectStateIntegral = false;
-            report.errors.append(QStringLiteral("F3: Process version state parse error: %1").arg(pvErr));
-        } else {
-            QString stateErr;
-            if (!pvState.isValid(&stateErr)) {
-                report.projectStateIntegral = false;
-                report.errors.append(QStringLiteral("F3: Process version state invalid: %1").arg(stateErr));
-            }
-        }
-    }
-
-    // 6. Project isolation boundary validation (NO upward dependency on P-layer routing)
-    QString isolErr;
-    report.projectIsolationValid = validateProjectIsolation(projectRoot, &isolErr);
-    if (!report.projectIsolationValid) {
-        report.errors.append(isolErr);
-    }
-
-    report.valid = report.scopeTaxonomyValid && report.scopeCombinationsLegal
-                && report.crossScopeFilesValid && report.projectStateIntegral
-                && report.projectIsolationValid;
-
-    return report;
-}
-
-bool ScopeIntegrityFoundation::validateScopeSet(const QStringList& scopes, QString* error)
-{
-    return ProjectMemory::validateScopeCombinations(scopes, error);
-}
-
-bool ScopeIntegrityFoundation::validateScopeFiles(const QString& scope,
-                                                     const QStringList& files,
-                                                     QString* error)
-{
-    return ProjectMemory::validateCrossScopeFiles(scope, files, error);
-}
-
-QJsonObject ScopeIntegrityFoundation::contract()
-{
-    return QJsonObject{
-        {QStringLiteral("foundation"), QStringLiteral("F3")},
-        {QStringLiteral("name"), QStringLiteral("Scope, State & Integrity Foundation")},
-        {QStringLiteral("responsibility"),
-            QStringLiteral("Establishes whether state/scope relationships are legal and integral")},
-        {QStringLiteral("owns"), QJsonArray{
-            QStringLiteral("scope-taxonomy"),
-            QStringLiteral("scope-combination-rules"),
-            QStringLiteral("cross-scope-file-validation"),
-            QStringLiteral("project-state-integrity"),
-            QStringLiteral("project-isolation-boundary")
-        }},
-        {QStringLiteral("bootstrapOrder"), 3},
-        {QStringLiteral("dependsOn"), QJsonArray{QStringLiteral("F1"), QStringLiteral("F2")}},
-        {QStringLiteral("requiredBy"), QJsonArray{QStringLiteral("F4")}}
-    };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// F4: Lifecycle & Certification Foundation
-// ═══════════════════════════════════════════════════════════════════════════════
-
-F4LifecycleReport LifecycleCertificationFoundation::validate(const QString& projectRoot, QString* error)
-{
-    F4LifecycleReport report;
-
-    // Load processVersion state from project.json
-    const QString projectJsonPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/project.json"));
-    const auto projectJson = readJsonFile(projectJsonPath);
-
-    if (!projectJson.contains(QStringLiteral("processVersion"))) {
-        report.errors.append(QStringLiteral("F4: No processVersion in project.json"));
-        return report;
-    }
-
-    ProcessVersionState pvState;
-    QString parseErr;
-    if (!processVersionStateFromJson(projectJson.value(QStringLiteral("processVersion")), &pvState, &parseErr)) {
-        report.errors.append(QStringLiteral("F4: Cannot parse processVersion: %1").arg(parseErr));
-        return report;
-    }
-
-    // 1. Namespace version
-    report.namespaceVersionCorrect = pvState.namespaceVersion == static_cast<int>(ProcessNamespace::CanonicalV2);
-    if (!report.namespaceVersionCorrect)
-        report.errors.append(QStringLiteral("F4: Namespace version is not Canonical V2"));
-
-    // 2. Process history validity - all completed entries must have cert=1, done=1, iteration >= 1
-    report.processHistoryValid = true;
-    report.completedProcesses = 0;
-    report.completedFoundations = 0;
-    for (const auto& pv : pvState.completedHistory) {
-        if (pv.certification != 1 || pv.done != 1 || pv.iteration < 1) {
-            report.processHistoryValid = false;
-            report.errors.append(QStringLiteral("F4: Completed entry %1 has cert=%2 done=%3 iteration=%4")
-                .arg(pv.identifier()).arg(pv.certification).arg(pv.done).arg(pv.iteration));
-        }
-        if (pv.isProcess()) report.completedProcesses++;
-        if (pv.isFoundation()) report.completedFoundations++;
-    }
-
-    // 3. Active state validity
-    report.activeStateValid = true;
-    if (pvState.hasActiveProcess) {
-        if (pvState.activeProcess.done != 0) {
-            report.activeStateValid = false;
-            report.errors.append(QStringLiteral("F4: Active process has done=1 but is still active"));
-        }
-        if (pvState.activeProcess.iteration < 1) {
-            report.activeStateValid = false;
-            report.errors.append(QStringLiteral("F4: Active process has iteration < 1"));
-        }
-    }
-
-    // 4. Next state validity
-    report.nextStateValid = true;
-    if (pvState.hasNextProcess) {
-        if (pvState.nextProcess.iteration != 0) {
-            report.nextStateValid = false;
-            report.errors.append(QStringLiteral("F4: Next process has non-zero iteration"));
-        }
-        if (pvState.nextProcess.certification != 0 || pvState.nextProcess.done != 0) {
-            report.nextStateValid = false;
-            report.errors.append(QStringLiteral("F4: Next process already certified/done before starting"));
-        }
-    }
-
-    // 5. Foundation queue validity
-    report.foundationQueueValid = true;
-    for (const auto& fq : pvState.foundationQueue) {
-        if (!fq.isFoundation()) {
-            report.foundationQueueValid = false;
-            report.errors.append(QStringLiteral("F4: Non-foundation entry in foundation queue"));
-            break;
-        }
-    }
-
-    // 6. P6 gating correctness
-    report.p6GatingCorrect = true;
-    QString p6Reason;
-    bool p6Eligible = pvState.isP6Eligible(&p6Reason);
-    // P6 should NOT be eligible unless all foundations are complete and integration valid
-    if (p6Eligible && !pvState.allFoundationsComplete()) {
-        report.p6GatingCorrect = false;
-        report.errors.append(QStringLiteral("F4: P6 eligible but foundations incomplete"));
-    }
-    if (p6Eligible && !pvState.foundationIntegrationValid) {
-        report.p6GatingCorrect = false;
-        report.errors.append(QStringLiteral("F4: P6 eligible but foundationIntegrationValid is false"));
-    }
-
-    // 7. Certification semantics: completed entries must be cert=1, done=1, iteration >= 1;
-    // done=1 requires cert=1; done=1 requires iteration >= 1.
-    report.certificationSemanticsValid = true;
-    for (const auto& pv : pvState.completedHistory) {
-        if (pv.certification != 1 || pv.done != 1 || pv.iteration < 1) {
-            report.certificationSemanticsValid = false;
-            report.errors.append(QStringLiteral("F4: %1 violates certification semantics").arg(pv.identifier()));
-        }
-    }
-    if (pvState.hasActiveProcess && pvState.activeProcess.done == 1 && pvState.activeProcess.certification != 1) {
-        report.certificationSemanticsValid = false;
-        report.errors.append(QStringLiteral("F4: Active process marked done=1 without certification=1"));
-    }
-
-    // Also validate through CertificationService
-    CertificationService certService;
-    const auto certState = certService.currentState(projectRoot, error);
-    report.fullReport.insert(QStringLiteral("certificationState"), certState);
-
-    report.valid = report.processHistoryValid && report.activeStateValid
-                && report.nextStateValid && report.foundationQueueValid
-                && report.p6GatingCorrect && report.certificationSemanticsValid
-                && report.namespaceVersionCorrect;
-
-    return report;
-}
-
-QJsonObject LifecycleCertificationFoundation::lifecycleSummary(const QString& projectRoot, QString* error)
-{
-    QJsonObject summary;
-
-    const QString projectJsonPath = QDir(projectRoot).filePath(
-        QStringLiteral("ARAMF_WORKER/project.json"));
-    const auto projectJson = readJsonFile(projectJsonPath);
-
-    ProcessVersionState pvState;
-    processVersionStateFromJson(projectJson.value(QStringLiteral("processVersion")), &pvState, error);
-
-    summary.insert(QStringLiteral("namespaceVersion"), pvState.namespaceVersion);
-    summary.insert(QStringLiteral("completedCount"), pvState.completedHistory.size());
-
-    QJsonArray completedIds;
-    for (const auto& id : pvState.completedIdentifiers())
-        completedIds.append(id);
-    summary.insert(QStringLiteral("completedIdentifiers"), completedIds);
-
-    summary.insert(QStringLiteral("hasActive"), pvState.hasActiveProcess);
-    if (pvState.hasActiveProcess)
-        summary.insert(QStringLiteral("active"), pvState.activeIdentifier());
-
-    summary.insert(QStringLiteral("hasNext"), pvState.hasNextProcess);
-    if (pvState.hasNextProcess)
-        summary.insert(QStringLiteral("next"), pvState.nextIdentifier());
-
-    QJsonArray remaining;
-    for (const auto& fq : pvState.remainingFoundationQueue())
-        remaining.append(fq.identifier());
-    summary.insert(QStringLiteral("remainingFoundations"), remaining);
-
-    summary.insert(QStringLiteral("allFoundationsComplete"), pvState.allFoundationsComplete());
-    summary.insert(QStringLiteral("foundationIntegrationValid"), pvState.foundationIntegrationValid);
-
-    QString p6Reason;
-    summary.insert(QStringLiteral("p6Eligible"), pvState.isP6Eligible(&p6Reason));
-    summary.insert(QStringLiteral("p6Reason"), p6Reason);
-
-    summary.insert(QStringLiteral("foundation"), QStringLiteral("F4"));
-    summary.insert(QStringLiteral("name"), QStringLiteral("Lifecycle & Certification Foundation"));
-
-    return summary;
-}
-
-bool LifecycleCertificationFoundation::validateCertificationSemantics(
-    const QJsonObject& state, QString* error)
-{
-    const int cert = state.value(QStringLiteral("certification")).toInt(0);
-    const int done = state.value(QStringLiteral("done")).toInt(0);
-    const int iteration = state.value(QStringLiteral("iteration")).toInt(0);
-
-    // Done requires certification (cannot complete uncertified)
-    if (done == 1 && cert != 1) {
-        if (error) *error = QStringLiteral("F4: Done requires certification=1 (cannot complete uncertified)");
-        return false;
-    }
-
-    // Done requires at least one iteration
-    if (done == 1 && iteration < 1) {
-        if (error) *error = QStringLiteral("F4: Done requires at least one iteration (iteration >= 1)");
-        return false;
-    }
-
-    // cert=1 with done=0 is valid for an active certified iteration awaiting completion
-    // cert=0 with done=0 is valid for an in-progress iteration
-    // cert=1 with done=1 is valid for a completed certified iteration
-    return true;
-}
-
-QJsonObject LifecycleCertificationFoundation::contract()
-{
-    return QJsonObject{
-        {QStringLiteral("foundation"), QStringLiteral("F4")},
-        {QStringLiteral("name"), QStringLiteral("Lifecycle & Certification Foundation")},
-        {QStringLiteral("responsibility"),
-            QStringLiteral("Establishes lifecycle and certification meaning")},
-        {QStringLiteral("owns"), QJsonArray{
-            QStringLiteral("process-lifecycle-state-machine"),
-            QStringLiteral("foundation-lifecycle-state-machine"),
-            QStringLiteral("certification-semantics"),
-            QStringLiteral("p6-gating"),
-            QStringLiteral("namespace-versioning")
-        }},
-        {QStringLiteral("bootstrapOrder"), 4},
-        {QStringLiteral("dependsOn"), QJsonArray{
-            QStringLiteral("F1"), QStringLiteral("F2"), QStringLiteral("F3")
-        }},
-        {QStringLiteral("requiredBy"), QJsonArray{QStringLiteral("P6")}}
-    };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
 // Cross-Foundation Integration Service
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -762,34 +120,33 @@ FoundationIntegrationReport FoundationIntegrationService::validate(
     report.acceptanceType = QStringLiteral("DIAGNOSTIC_RESULT");
     report.diagnosticOnly = true;
 
-    // Execute in strict bootstrap order: F1 → F2 → F3 → F4
-    // Each foundation depends on its predecessors but not on successors.
+    // External governance evaluation order only; all Foundations operate independently.
 
     // F1: Memory & Evidence (no dependencies)
     report.f1 = MemoryEvidenceFoundation::validate(projectRoot, error);
     if (!report.f1.valid) {
-        report.errors.append(QStringLiteral("Integration: F1 failed - cannot proceed to F2"));
+        report.errors.append(QStringLiteral("Integration: F1 physical evidence validation failed"));
     }
 
-    // F2: Identity, Provenance & Trust (depends on F1)
-    report.f2 = IdentityTrustFoundation::validate(projectRoot, error);
+    // External governance supplies records to the independent F2 validator.
+    report.f2 = FoundationProjectValidation::validateF2(projectRoot, error);
     if (!report.f2.valid) {
         report.errors.append(QStringLiteral("Integration: F2 failed - trust layer compromised"));
     }
 
-    // F3: Scope, State & Integrity (depends on F1, F2)
-    report.f3 = ScopeIntegrityFoundation::validate(projectRoot, model, error);
+    // External governance supplies scope/state records to independent F3.
+    report.f3 = FoundationProjectValidation::validateF3(projectRoot, model, error);
     if (!report.f3.valid) {
         report.errors.append(QStringLiteral("Integration: F3 failed - integrity layer compromised"));
     }
 
-    // F4: Lifecycle & Certification (depends on F1, F2, F3)
+    // F4 independently validates its persisted lifecycle.
     report.f4 = LifecycleCertificationFoundation::validate(projectRoot, error);
     if (!report.f4.valid) {
         report.errors.append(QStringLiteral("Integration: F4 failed - lifecycle layer invalid"));
     }
 
-    // Bootstrap order verification
+    // Historical field name: governance validation order, not initialization dependencies.
     report.bootstrapOrderValid = verifyBootstrapOrder(error);
 
     // No circular authority check: verify each foundation contract's dependsOn
@@ -804,30 +161,10 @@ FoundationIntegrationReport FoundationIntegrationService::validate(
         report.noCircularAuthority = false;
         report.errors.append(QStringLiteral("Integration: F1 must not depend on other foundations"));
     }
-    // F2 depends only on F1
-    const auto f2Deps = f2c.value(QStringLiteral("dependsOn")).toArray();
-    for (const auto& d : f2Deps) {
-        if (d.toString() != QStringLiteral("F1")) {
+    for (const auto& contract : {f2c, f3c, f4c}) {
+        if (!contract.value(QStringLiteral("dependsOn")).toArray().isEmpty()) {
             report.noCircularAuthority = false;
-            report.errors.append(QStringLiteral("Integration: F2 has unexpected dependency: %1").arg(d.toString()));
-        }
-    }
-    // F3 depends only on F1 and F2
-    const auto f3Deps = f3c.value(QStringLiteral("dependsOn")).toArray();
-    for (const auto& d : f3Deps) {
-        const auto dep = d.toString();
-        if (dep != QStringLiteral("F1") && dep != QStringLiteral("F2")) {
-            report.noCircularAuthority = false;
-            report.errors.append(QStringLiteral("Integration: F3 has unexpected dependency: %1").arg(dep));
-        }
-    }
-    // F4 depends only on F1, F2, and F3
-    const auto f4Deps = f4c.value(QStringLiteral("dependsOn")).toArray();
-    for (const auto& d : f4Deps) {
-        const auto dep = d.toString();
-        if (dep != QStringLiteral("F1") && dep != QStringLiteral("F2") && dep != QStringLiteral("F3")) {
-            report.noCircularAuthority = false;
-            report.errors.append(QStringLiteral("Integration: F4 has unexpected dependency: %1").arg(dep));
+            report.errors.append(QStringLiteral("Integration: direct Foundation dependency is prohibited"));
         }
     }
 
@@ -945,7 +282,7 @@ bool FoundationIntegrationService::verifyBootstrapOrder(QString* error)
     const auto f3 = ScopeIntegrityFoundation::contract();
     const auto f4 = LifecycleCertificationFoundation::contract();
 
-    // Verify bootstrap order numbers are 1, 2, 3, 4
+    // Legacy field: stable governance evaluation order, not initialization coupling.
     if (f1.value(QStringLiteral("bootstrapOrder")).toInt() != 1
         || f2.value(QStringLiteral("bootstrapOrder")).toInt() != 2
         || f3.value(QStringLiteral("bootstrapOrder")).toInt() != 3
@@ -993,15 +330,15 @@ QJsonObject FoundationIntegrationService::dependencyMatrix()
             }},
             {QStringLiteral("F2"), QJsonObject{
                 {QStringLiteral("name"), QStringLiteral("Identity, Provenance & Trust Foundation")},
-                {QStringLiteral("dependsOn"), QJsonArray{QStringLiteral("F1")}}
+                {QStringLiteral("dependsOn"), QJsonArray{}}
             }},
             {QStringLiteral("F3"), QJsonObject{
                 {QStringLiteral("name"), QStringLiteral("Scope, State & Integrity Foundation")},
-                {QStringLiteral("dependsOn"), QJsonArray{QStringLiteral("F1"), QStringLiteral("F2")}}
+                {QStringLiteral("dependsOn"), QJsonArray{}}
             }},
             {QStringLiteral("F4"), QJsonObject{
                 {QStringLiteral("name"), QStringLiteral("Lifecycle & Certification Foundation")},
-                {QStringLiteral("dependsOn"), QJsonArray{QStringLiteral("F1"), QStringLiteral("F2"), QStringLiteral("F3")}}
+                {QStringLiteral("dependsOn"), QJsonArray{}}
             }}
         }}
     };
@@ -2457,6 +1794,24 @@ int runFoundationCommand(const QStringList& arguments, QTextStream& output, QTex
         }
     }
 
+    if ((foundation != "F1" && QStringList{"start", "certify", "complete", "verify"}.contains(subcommand))
+        || QStringList{"freshness", "accept-integration", "p6-eligibility"}.contains(subcommand)) {
+        QString detail;
+        QJsonObject result;
+        bool pass = false;
+        if (subcommand == "start") pass = FoundationCertificationCampaign::start(projectRoot, projectFile, foundation, &detail);
+        else if (subcommand == "verify") pass = FoundationCertificationCampaign::verify(projectRoot, projectFile, foundation, sourceRevision, &result, &detail);
+        else if (subcommand == "certify") pass = FoundationCertificationCampaign::certify(projectRoot, projectFile, foundation, sourceRevision, evidencePath, &result, &detail);
+        else if (subcommand == "complete") pass = FoundationCertificationCampaign::complete(projectRoot, projectFile, foundation, &detail);
+        else if (subcommand == "accept-integration") pass = FoundationCertificationCampaign::acceptIntegration(projectRoot, projectFile, &result, &detail);
+        else if (subcommand == "p6-eligibility") pass = FoundationCertificationCampaign::eligible(projectRoot, projectFile, &detail);
+        else { result = FoundationCertificationCampaign::freshness(projectRoot); pass = true; }
+        output << QJsonDocument(result).toJson(QJsonDocument::Indented);
+        output << "Result: " << (pass ? "PASS" : "FAIL") << "\n";
+        if (!pass) error << detail << "\n";
+        return pass ? 0 : 1;
+    }
+
     if (subcommand.isEmpty() || subcommand == QStringLiteral("status")) {
         const auto pvSummary = LifecycleCertificationFoundation::lifecycleSummary(projectRoot);
         const auto completed = pvSummary.value(QStringLiteral("completedIdentifiers")).toArray();
@@ -2473,8 +1828,10 @@ int runFoundationCommand(const QStringList& arguments, QTextStream& output, QTex
         output << "F2 (Identity, Provenance & Trust): " << (isFoundationCertified(2) ? "Certified" : "Ready (Pre-Certification)") << "\n";
         output << "F3 (Scope, State & Integrity): " << (isFoundationCertified(3) ? "Certified" : "Ready (Pre-Certification)") << "\n";
         output << "F4 (Lifecycle & Certification): " << (isFoundationCertified(4) ? "Certified" : "Ready (Pre-Certification)") << "\n";
-        output << "P6 Gating: " << (pvSummary.value(QStringLiteral("p6Eligible")).toBool() ? "ELIGIBLE" : "BLOCKED") << "\n";
-        output << "P6 Reason: " << pvSummary.value(QStringLiteral("p6Reason")).toString() << "\n";
+        QString entryReason;
+        const bool eligible = FoundationCertificationCampaign::eligible(projectRoot, projectFile, &entryReason);
+        output << "P6 Gating: " << (eligible ? "UNBLOCKED" : "BLOCKED") << "\n";
+        output << "P6 Reason: " << entryReason << "\n";
         return 0;
     }
 

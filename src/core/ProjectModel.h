@@ -66,7 +66,10 @@ struct AcademicConfiguration {
     QString supervisor;
     QString examiner;
     QString citationStyle;
-    QString academicLanguage;
+    // The scalar is a compatibility mirror of the first selected language.
+    QString academicLanguage = QStringLiteral("swedish");
+    QStringList academicLanguages{QStringLiteral("swedish")};
+    QStringList documentLanguages() const;
     QStringList academicRequirements;
     QStringList academicDeliverables;
     // Thesis and Report are independent document products.  The resource

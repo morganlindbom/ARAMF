@@ -33,6 +33,9 @@ QStringList validate(const DocumentTemplate& document);
 QList<DocumentSection> tableOfContents(const DocumentTemplate& document);
 QJsonObject toJson(const DocumentTemplate& document);
 QJsonObject manifest(bool thesisEnabled, const QString& thesisMode, const QString& thesisSourceId,
+                     bool reportEnabled, const QString& reportMode, const QString& reportSourceId,
+                     const QStringList& thesisLanguages, const QStringList& reportLanguages);
+QJsonObject manifest(bool thesisEnabled, const QString& thesisMode, const QString& thesisSourceId,
                      bool reportEnabled,
                      const QString& reportMode, const QString& reportSourceId,
                      const QString& thesisLanguage = QStringLiteral("sv"),

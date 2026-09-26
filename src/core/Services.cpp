@@ -151,7 +151,7 @@ QJsonObject projectConfiguration(const ProjectModel& model, const QString& finge
         {QStringLiteral("languages"), toJsonArray(capabilities.languages)}, {QStringLiteral("frameworks"), toJsonArray(capabilities.frameworks)},
         {QStringLiteral("tools"), toJsonArray(capabilities.developmentTools)}, {QStringLiteral("targetPlatforms"), toJsonArray(capabilities.targetPlatforms)},
         {QStringLiteral("hardware"), toJsonArray(capabilities.hardwareTargets)}, {QStringLiteral("architectures"), toJsonArray(capabilities.targetArchitectures)},
-        {QStringLiteral("academic"), QJsonObject{{QStringLiteral("enabled"), academic.enabled}, {QStringLiteral("projectTypes"), toJsonArray(academic.projectTypes)}, {QStringLiteral("thesis"), academic.thesisDocumentation.enabled}, {QStringLiteral("report"), academic.reportDocumentation.enabled}}},
+        {QStringLiteral("academic"), QJsonObject{{QStringLiteral("enabled"), academic.enabled}, {QStringLiteral("projectTypes"), toJsonArray(academic.projectTypes)}, {QStringLiteral("academicLanguages"), toJsonArray(academic.academicLanguages)}, {QStringLiteral("thesis"), academic.thesisDocumentation.enabled}, {QStringLiteral("report"), academic.reportDocumentation.enabled}}},
         {QStringLiteral("ai"), QJsonObject{{QStringLiteral("primaryAgent"), ai.primaryAgent}, {QStringLiteral("additionalAgents"), toJsonArray(ai.additionalAgents)}}},
         {QStringLiteral("communication"), QJsonObject{{QStringLiteral("enabled"), communication.enabled}, {QStringLiteral("transport"), communication.transport}, {QStringLiteral("protocol"), communication.protocol}}},
         {QStringLiteral("structure"), QJsonObject{{QStringLiteral("s1ResponsibilityOwnership"), S1::toJson(model.responsibilityOwnership())}, {QStringLiteral("s2PhysicalStructure"), S2::toJson(model.physicalStructure())}, {QStringLiteral("s3DependencyInterfaces"), S3::toJson(model.dependencyInterfaces())}, {QStringLiteral("s4CompositionEncapsulation"), S4::toJson(model.compositionEncapsulation())}, {QStringLiteral("s5DecompositionModularity"), S5::toJson(model.decompositionModularity())}, {QStringLiteral("s6StructuralEvolutionEnforcement"), S6::toJson(model.structuralEvolutionEnforcement())}}},
@@ -366,6 +366,7 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
     value.insert(QStringLiteral("communication"), QJsonObject{{QStringLiteral("enabled"), communication.enabled}, {QStringLiteral("sourceTarget"), communication.sourceTarget}, {QStringLiteral("destinationTarget"), communication.destinationTarget}, {QStringLiteral("transport"), communication.transport}, {QStringLiteral("protocol"), communication.protocol}, {QStringLiteral("protocolVersion"), communication.protocolVersion}});
     value.insert(QStringLiteral("processVersion"), processVersionStateToJson(model.processVersionState()));
     value.insert(QStringLiteral("workerNameSuffix"), model.workerNameSuffix());
+    value.insert(QStringLiteral("academic"), ProjectPersistence().configuration(model).value(QStringLiteral("academic")));
     return QString::fromLatin1(QCryptographicHash::hash(
         QJsonDocument(value).toJson(QJsonDocument::Compact), QCryptographicHash::Sha256).toHex());
 }
@@ -519,6 +520,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         canonicalAgent += QStringLiteral("\n## Documentation Template Routing\n\n")
             + QStringLiteral("Academic project types are independently selected: ")
             + (academic.projectTypes.isEmpty() ? QStringLiteral("none") : academic.projectTypes.join(QStringLiteral(", "))) + QStringLiteral(". Do not treat them as mutually exclusive.\n")
+            + QStringLiteral("Selected document languages: %1. Produce a separate version of each enabled document in each selected language; do not combine languages into one bilingual document. Follow the variantId and language of each entry in the documentation manifest.\n").arg(academic.documentLanguages().join(QStringLiteral(", ")))
             + documentLine(QStringLiteral("Thesis"), academic.thesisDocumentation, QStringLiteral("aramf-thesis-instruction"))
             + documentLine(QStringLiteral("Report"), academic.reportDocumentation, QStringLiteral("aramf-report-instruction"))
             + QStringLiteral("Thesis never uses the Report instruction; Report never uses the Thesis instruction. Custom template structure remains custom and external instructions retain their governed authority.\n")
@@ -990,7 +992,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
 
     if (options.generateMemory) {
         ProjectMemory memory;
-        if (!memory.initializeMemory(projectRoot, &model, &error)) return fail(QStringLiteral("Project Memory"), error);
+        if (!memory.initializeMemory(projectRoot, &model, &error, options.generateAgentRules)) return fail(QStringLiteral("Project Memory"), error);
         addGeneratedFiles(result, {AramfPaths::MemoryConfiguration, AramfPaths::Manifest,
                                    AramfPaths::EventLog, AramfPaths::CurrentState,
                                    AramfPaths::ColdStartValidation, AramfPaths::ConsistencyValidation,
@@ -1019,7 +1021,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             {QStringLiteral("hardware"), toJsonArray(capabilities.hardwareTargets)}, {QStringLiteral("primaryAiAgent"), ai.primaryAgent},
             {QStringLiteral("resources"), model.resources().size()}, {QStringLiteral("rules"), toJsonArray(model.ruleConfiguration().activeCategories)},
             {QStringLiteral("memoryMaximumSizeBytes"), model.memoryConfiguration().maximumSizeBytes},
-            {QStringLiteral("academic"), QJsonObject{{QStringLiteral("enabled"), model.academicConfiguration().enabled}, {QStringLiteral("projectTypes"), toJsonArray(model.academicConfiguration().projectTypes)}}},
+            {QStringLiteral("academic"), QJsonObject{{QStringLiteral("enabled"), model.academicConfiguration().enabled}, {QStringLiteral("projectTypes"), toJsonArray(model.academicConfiguration().projectTypes)}, {QStringLiteral("academicLanguages"), toJsonArray(model.academicConfiguration().academicLanguages)}}},
             {QStringLiteral("thesisDocumentation"), QJsonObject{{QStringLiteral("enabled"), model.academicConfiguration().thesisDocumentation.enabled}, {QStringLiteral("templateMode"), model.academicConfiguration().thesisDocumentation.templateMode}, {QStringLiteral("templateSourceId"), model.academicConfiguration().thesisDocumentation.templateSourceId}}},
             {QStringLiteral("reportDocumentation"), QJsonObject{{QStringLiteral("enabled"), model.academicConfiguration().reportDocumentation.enabled}, {QStringLiteral("templateMode"), model.academicConfiguration().reportDocumentation.templateMode}, {QStringLiteral("templateSourceId"), model.academicConfiguration().reportDocumentation.templateSourceId}}}};
         if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::Provenance)), provenance, &error)
@@ -1055,7 +1057,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             academic.thesisDocumentation.enabled, academic.thesisDocumentation.templateMode, academic.thesisDocumentation.templateSourceId,
             academic.reportDocumentation.enabled,
             academic.reportDocumentation.templateMode, academic.reportDocumentation.templateSourceId,
-            academic.thesisDocumentation.language, academic.reportDocumentation.language);
+            academic.documentLanguages(), academic.documentLanguages());
         QJsonArray documents = documentationManifest.value(QStringLiteral("documents")).toArray();
         const auto enrichDocument = [&](QJsonObject document, const AcademicConfiguration::DocumentationConfiguration& configuration, const QString& role, const DocumentInstruction& instruction) {
             document.insert(QStringLiteral("instructionId"), instruction.id);
@@ -1091,8 +1093,12 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
             }
             return document;
         };
-        documents[0] = enrichDocument(documents[0].toObject(), academic.thesisDocumentation, QStringLiteral("thesis-template"), DocumentInstructions::thesis());
-        documents[1] = enrichDocument(documents[1].toObject(), academic.reportDocumentation, QStringLiteral("report-template"), DocumentInstructions::report());
+        for (qsizetype index = 0; index < documents.size(); ++index) {
+            const auto document = documents[index].toObject();
+            documents[index] = document.value(QStringLiteral("documentType")).toString() == QStringLiteral("thesis")
+                ? enrichDocument(document, academic.thesisDocumentation, QStringLiteral("thesis-template"), DocumentInstructions::thesis())
+                : enrichDocument(document, academic.reportDocumentation, QStringLiteral("report-template"), DocumentInstructions::report());
+        }
         documentationManifest.insert(QStringLiteral("documents"), documents);
         const QString documentationPath = QStringLiteral("ARAMF_WORKER/documentation/documentation-manifest.json");
         if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(documentationPath)), documentationManifest, &error))

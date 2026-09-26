@@ -89,6 +89,10 @@ int main(int argc, char** argv)
     QCoreApplication app(argc, argv);
     QTemporaryDir globalData;
     FrameworkKnowledgeService::setGlobalLibraryPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")));
+    if (app.arguments().contains(QStringLiteral("--foundation-certification"))) {
+        extern bool runFoundationCertificationTests();
+        return runFoundationCertificationTests() ? 0 : 1;
+    }
     if (app.arguments().contains(QStringLiteral("--worker-tasks")) || app.arguments().contains(QStringLiteral("--p1-governance"))) return runWorkerTaskTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--context-coordination")) || app.arguments().contains(QStringLiteral("--p2-context"))) return runContextCoordinationTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--p2-execution")) || app.arguments().contains(QStringLiteral("--p3-execution"))) return runP2ExecutionTests() ? 0 : 1;
@@ -1587,6 +1591,49 @@ int main(int argc, char** argv)
                   "stale verification must block finalization");
 
     GenerationOptions noProducts;
+    // The selected output set, not file-existence heuristics, controls cold
+    // start requirements. Keep fixtures and negative evidence intact.
+    QTemporaryDir selectiveMemoryProject;
+    selectiveMemoryProject.setAutoRemove(false);
+    ProjectModel selectiveMemoryModel;
+    selectiveMemoryModel.setProjectName(QStringLiteral("Selective memory cold start"));
+    selectiveMemoryModel.setProjectPath(selectiveMemoryProject.path());
+    auto selectiveMemoryConfig = selectiveMemoryModel.memoryConfiguration();
+    selectiveMemoryConfig.validationOptions << QStringLiteral("cold-start-validation");
+    selectiveMemoryConfig.validationOptions.removeDuplicates();
+    selectiveMemoryModel.setMemoryConfiguration(selectiveMemoryConfig);
+    auto selectiveOptions = selectiveMemoryModel.generationOptions();
+    selectiveOptions.generateAgentRules = false;
+    selectiveOptions.generateMemory = true;
+    selectiveMemoryModel.setGenerationOptions(selectiveOptions);
+    const auto selectiveMemoryGenerated = generationServices.generate(selectiveMemoryModel, selectiveOptions);
+    if (!selectiveMemoryGenerated.success) std::cerr << selectiveMemoryGenerated.error.toStdString() << '\n';
+    ok &= require(selectiveMemoryGenerated.success, "memory-only output with cold-start validation must generate");
+    ok &= require(!QFile::exists(selectiveMemoryProject.filePath("ARAMF_WORKER/AGENTS.md")), "excluded agent rules must not be generated implicitly");
+    ProjectMemory reloadedSelectiveMemory;
+    ok &= require(reloadedSelectiveMemory.validateColdStart(selectiveMemoryProject.path(), &error).value("status") == "PASS"
+                      && reloadedSelectiveMemory.validate(selectiveMemoryProject.path(), &error).value("status") == "PASS",
+                  "fresh service must rediscover selective cold-start policy and validate persisted memory");
+    ok &= require(verificationServices.verify(selectiveMemoryModel, selectiveOptions).overallStatus == VerificationStatus::Pass,
+                  "selective memory Verify must use the chosen product set");
+    ok &= require(finalizationServices.finalize(selectiveMemoryModel, selectiveOptions).success,
+                  "selective memory Finalize must not introduce an unselected agent-rules precondition");
+    selectiveOptions.generateAgentRules = true;
+    selectiveMemoryModel.setGenerationOptions(selectiveOptions);
+    ok &= require(generationServices.generate(selectiveMemoryModel, selectiveOptions).success,
+                  "enabling agent rules upgrades the durable cold-start policy");
+    const QString requiredAgent = selectiveMemoryProject.filePath("ARAMF_WORKER/AGENTS.md");
+    const QString preservedAgent = selectiveMemoryProject.filePath("ARAMF_WORKER/AGENTS.preserved-for-negative-test.md");
+    ok &= require(QFile::rename(requiredAgent, preservedAgent), "preserve required agent file for missing-file negative test");
+    ok &= require(reloadedSelectiveMemory.validateColdStart(selectiveMemoryProject.path(), &error).value("status") == "FAIL",
+                  "missing selected agent rules must still fail cold start");
+    ok &= require(!reloadedSelectiveMemory.initializeMemory(selectiveMemoryProject.path(), &selectiveMemoryModel, &error),
+                  "memory reinitialization must not downgrade existing full-control-plane requirements");
+    ok &= require(QFile::rename(preservedAgent, requiredAgent), "restore preserved required agent file");
+    ok &= require(reloadedSelectiveMemory.refreshDerivedState(selectiveMemoryProject.path(), &error)
+                      && reloadedSelectiveMemory.validate(selectiveMemoryProject.path(), &error).value("status") == "PASS",
+                  "restored full control plane validates without policy bypass");
+
     noProducts.generateAgentRules = false;
     noProducts.generateRouting = false;
     noProducts.generatePlatforms = false;

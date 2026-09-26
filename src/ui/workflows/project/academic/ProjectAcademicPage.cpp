@@ -82,15 +82,12 @@ ProjectAcademicPage::ProjectAcademicPage(ProjectModel* model, QWidget* parent)
     citationLayout->addWidget(citationCustom_);
     standardsLayout->addRow(tr("Citation Style"), citationLayout);
 
-    academicLanguage_ = new QComboBox(standards);
-    addComboOptions(academicLanguage_, EnvironmentCatalog::academicLanguages());
-    languageCustom_ = new QLineEdit(standards);
-    languageCustom_->setPlaceholderText(tr("Custom academic language"));
-    languageCustom_->setVisible(false);
-    auto* languageLayout = new QVBoxLayout;
-    languageLayout->addWidget(academicLanguage_);
-    languageLayout->addWidget(languageCustom_);
-    standardsLayout->addRow(tr("Academic Language"), languageLayout);
+    academicLanguages_ = new CapabilityCheckGroup(tr("Academic Languages"), EnvironmentCatalog::academicLanguages(), 3, standards);
+    academicLanguages_->setObjectName(QStringLiteral("academicLanguages"));
+    standardsLayout->addRow(academicLanguages_);
+    auto* languageHint = new QLabel(tr("Select one or more languages. Each selected document gets a separate version in each language."), standards);
+    languageHint->setWordWrap(true);
+    standardsLayout->addRow(languageHint);
     detailsLayout->addWidget(standards);
 
     requirements_ = new CapabilityCheckGroup(
@@ -109,11 +106,11 @@ ProjectAcademicPage::ProjectAcademicPage(ProjectModel* model, QWidget* parent)
     connect(researchMethods_, &CapabilityCheckGroup::selectionChanged, this, [this] { persist(); });
     connect(requirements_, &CapabilityCheckGroup::selectionChanged, this, [this] { persist(); });
     connect(deliverables_, &CapabilityCheckGroup::selectionChanged, this, [this] { persist(); });
-    for (auto* field : {institution_, programme_, supervisor_, examiner_, citationCustom_, languageCustom_}) {
+    for (auto* field : {institution_, programme_, supervisor_, examiner_, citationCustom_}) {
         connect(field, &QLineEdit::textChanged, this, [this] { persist(); });
     }
     connect(citationStyle_, &QComboBox::currentIndexChanged, this, [this] { persist(); });
-    connect(academicLanguage_, &QComboBox::currentIndexChanged, this, [this] { persist(); });
+    connect(academicLanguages_, &CapabilityCheckGroup::selectionChanged, this, [this] { persist(); });
     connect(model_, &ProjectModel::modelChanged, this, &ProjectAcademicPage::refresh);
     refresh();
 }
@@ -158,7 +155,8 @@ void ProjectAcademicPage::persist()
     value.supervisor = supervisor_->text();
     value.examiner = examiner_->text();
     value.citationStyle = comboValue(citationStyle_, citationCustom_);
-    value.academicLanguage = comboValue(academicLanguage_, languageCustom_);
+    value.academicLanguages = academicLanguages_->selectedIds();
+    value.academicLanguage = value.academicLanguages.value(0);
     value.academicRequirements = requirements_->selectedIds();
     value.academicDeliverables = deliverables_->selectedIds();
     value.thesisDocumentation.enabled = value.projectTypes.contains(QStringLiteral("thesis-project"));
@@ -179,6 +177,8 @@ void ProjectAcademicPage::updateVisibility()
 
 void ProjectAcademicPage::refresh()
 {
+    const QSignalBlocker institutionBlocker(institution_), programmeBlocker(programme_),
+        supervisorBlocker(supervisor_), examinerBlocker(examiner_);
     const auto value = model_->academicConfiguration();
     projectTypes_->setSelectedIds(value.projectTypes);
     setComboValue(thesisLevel_, thesisLevelCustom_, value.thesisLevel);
@@ -189,7 +189,7 @@ void ProjectAcademicPage::refresh()
     supervisor_->setText(value.supervisor);
     examiner_->setText(value.examiner);
     setComboValue(citationStyle_, citationCustom_, value.citationStyle);
-    setComboValue(academicLanguage_, languageCustom_, value.academicLanguage);
+    academicLanguages_->setSelectedIds(value.academicLanguages);
     requirements_->setSelectedIds(value.academicRequirements);
     deliverables_->setSelectedIds(value.academicDeliverables);
     updateVisibility();

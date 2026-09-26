@@ -37,8 +37,7 @@ private:
     QLineEdit* examiner_ = nullptr;
     QComboBox* citationStyle_ = nullptr;
     QLineEdit* citationCustom_ = nullptr;
-    QComboBox* academicLanguage_ = nullptr;
-    QLineEdit* languageCustom_ = nullptr;
+    CapabilityCheckGroup* academicLanguages_ = nullptr;
     CapabilityCheckGroup* requirements_ = nullptr;
     CapabilityCheckGroup* deliverables_ = nullptr;
 };

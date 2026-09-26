@@ -15,6 +15,7 @@
 #include "core/ProjectPersistence.h"
 #include "core/FrameworkKnowledge.h"
 #include "core/AramfPaths.h"
+#include <QCryptographicHash>
 
 #include <QCoreApplication>
 #include <QDir>
@@ -812,6 +813,36 @@ bool runF1MemoryEvidenceTests(const QString& selfRepoPath = QString())
         }
     }
 
+    // Historical text writers bind LF JSON before Windows text-mode expansion.
+    // Compatibility is format-bound and must never accept changed content or
+    // loosen current raw-byte evidence contracts.
+    for (int variant = 0; variant < 4; ++variant) {
+        TestFixture fx;
+        fx.tempDir.setAutoRemove(false);
+        const QString reference = "ARAMF_WORKER/certification/legacy-text.json";
+        const QString revision = "historical-source-revision";
+        const QByteArray original = QJsonDocument(QJsonObject{{"schemaVersion",1},{"sourceRevision",revision},{"result","PASS"}}).toJson();
+        const QString fingerprint = QString::fromLatin1(QCryptographicHash::hash(original,QCryptographicHash::Sha256).toHex());
+        QByteArray persisted = original;
+        persisted.replace("\n","\r\n");
+        if (variant == 1) persisted.replace("PASS","FAIL");
+        const QString artifact = QDir(fx.path()).filePath(reference);
+        QDir().mkpath(QFileInfo(artifact).path());
+        QFile evidenceFile(artifact);
+        ok &= require(evidenceFile.open(QIODevice::WriteOnly) && evidenceFile.write(persisted) == persisted.size(), "F1 legacy text fixture persists");
+        evidenceFile.close();
+        QJsonObject certificate{{"certificateId","cert-legacy-text"},{"subject","legacy-evidence"},
+            {"context",QJsonObject{{"sourceRevision",variant == 3 ? QString("wrong-revision") : revision},{"evidenceArtifact",reference},{"evidenceFingerprint",fingerprint}}},
+            {"evidenceReferences",QJsonArray{QJsonObject{{"reference",reference},{"fingerprint",fingerprint}}}}};
+        if (variant == 2) certificate.insert("sourceRevision",revision);
+        QFile ledger(QDir(fx.path()).filePath("ARAMF_WORKER/certification/certificates.jsonl"));
+        ok &= require(ledger.open(QIODevice::WriteOnly), "F1 legacy certificate fixture opens");
+        ledger.write(QJsonDocument(certificate).toJson(QJsonDocument::Compact)+"\n");
+        ledger.close();
+        ok &= require(MemoryEvidenceFoundation::validate(fx.path()).certificatesIntact == (variant == 0),
+                      "F1 accepts original legacy LF digest only; rejects tampering, source mismatch, and modern raw-byte mismatch");
+    }
+
     // F1-023: Current certification state resolves certificates under subjects
     {
         TestFixture fx;
@@ -1113,7 +1144,7 @@ bool runF1CertificationTests()
             ok &= require(!certOk, QString("F1-CERT-004: certifyF1 rejects foundation %1").arg(wrongFoundation).toUtf8().constData());
         }
 
-        // Also test CLI rejects --foundation F2
+        // F2 routing exists, but cannot consume an active F1 lifecycle/evidence.
         QString cliOut, cliErr;
         QTextStream outStr(&cliOut), errStr(&cliErr);
         int cliRes = runFoundationCommand({QStringLiteral("foundation"), QStringLiteral("certify"),
@@ -1121,14 +1152,14 @@ bool runF1CertificationTests()
                                            QStringLiteral("--foundation"), QStringLiteral("F2"),
                                            QStringLiteral("--source-revision"), fx.gitSha},
                                           outStr, errStr);
-        ok &= require(cliRes != 0, "F1-CERT-004: CLI certify rejects --foundation F2");
+        ok &= require(cliRes != 0, "F1-CERT-004: CLI rejects F2 certification from active F1");
 
         cliOut.clear(); cliErr.clear();
         int cliCompRes = runFoundationCommand({QStringLiteral("foundation"), QStringLiteral("complete"),
                                                QStringLiteral("--project"), fx.path(),
                                                QStringLiteral("--foundation"), QStringLiteral("F2")},
                                               outStr, errStr);
-        ok &= require(cliCompRes != 0, "F1-CERT-004: CLI complete rejects --foundation F2");
+        ok &= require(cliCompRes != 0, "F1-CERT-004: CLI rejects F2 completion from active F1");
     }
 
     // F1-CERT-005: Wrong lifecycle position is rejected
@@ -2109,8 +2140,8 @@ bool runF2IdentityTrustTests()
         ok &= require(contract.value(QStringLiteral("bootstrapOrder")).toInt() == 2,
                        "F2-001: Bootstrap order is 2");
         const auto deps = contract.value(QStringLiteral("dependsOn")).toArray();
-        ok &= require(deps.size() == 1 && deps[0].toString() == QStringLiteral("F1"),
-                       "F2-001: F2 depends only on F1");
+        ok &= require(deps.isEmpty(),
+                       "F2-001: canonical independence prohibits Foundation dependencies");
     }
 
     // F2-002: Actor taxonomy includes all recognized actors
@@ -2129,7 +2160,7 @@ bool runF2IdentityTrustTests()
         TestFixture fx;
         ok &= require(fx.valid, "F2-003: Fixture initializes");
         fx.recordTask(QStringLiteral("F2 provenance test"));
-        const auto report = IdentityTrustFoundation::validate(fx.path());
+        const auto report = FoundationProjectValidation::validateF2(fx.path());
         ok &= require(report.valid, "F2-003: F2 validation passes with valid provenance");
         ok &= require(report.allProvenanceValid, "F2-003: All provenance valid");
         ok &= require(report.actorTaxonomyConsistent, "F2-003: Actor taxonomy consistent");
@@ -2195,7 +2226,7 @@ bool runF2IdentityTrustTests()
         ok &= require(fx.valid, "F2-009: Fixture initializes");
         fx.recordTask(QStringLiteral("F2 count test 1"));
         fx.recordTask(QStringLiteral("F2 count test 2"));
-        const auto report = IdentityTrustFoundation::validate(fx.path());
+        const auto report = FoundationProjectValidation::validateF2(fx.path());
         ok &= require(report.eventsWithProvenance >= 4,
                        "F2-009: At least 4 events with provenance (2 starts + 2 completes)");
     }
@@ -2205,7 +2236,7 @@ bool runF2IdentityTrustTests()
         TestFixture fx;
         ok &= require(fx.valid, "F2-010: Fixture initializes");
         fx.recordTask(QStringLiteral("F2 actor tracking"));
-        const auto report = IdentityTrustFoundation::validate(fx.path());
+        const auto report = FoundationProjectValidation::validateF2(fx.path());
         ok &= require(!report.recognizedActors.isEmpty(),
                        "F2-010: Recognized actors are reported");
     }
@@ -2255,6 +2286,22 @@ bool runF2IdentityTrustTests()
 
 bool runF3ScopeIntegrityTests()
 {
+    {
+        TestFixture fx;
+        fx.tempDir.setAutoRemove(false);
+        const QJsonObject fields{{"scope","Administrative rule description, not a routing partition"},
+            {"provenance",QJsonObject{{"actor","human"},{"agentId","none"},{"tool","foundation-test"}}},
+            {"affectedFiles",QJsonArray{"src/example.cpp"}}};
+        QString error;
+        const bool stored = fx.memory.appendEvent(fx.path(), "ADMIN_OVERRIDE", "Historical administrative schema", fields, &error);
+        if (!require(stored && FoundationProjectValidation::validateF3(fx.path()).valid,
+                     "F3 external adapter distinguishes administrative scope descriptions")) return false;
+        auto invalid = fields;
+        invalid.insert("scopes",QJsonArray{"project","global"});
+        if (!require(fx.memory.appendEvent(fx.path(), "ADMIN_OVERRIDE_VALIDATION", "Invalid structured scope", invalid, &error)
+                         && !FoundationProjectValidation::validateF3(fx.path()).valid,
+                     "F3 still rejects contradictory structured scopes on administrative records")) return false;
+    }
     bool ok = true;
     std::cerr << "=== F3: Scope, State & Integrity Foundation Tests ===\n";
 
@@ -2279,7 +2326,7 @@ bool runF3ScopeIntegrityTests()
     {
         TestFixture fx;
         ok &= require(fx.valid, "F3-003: Fixture initializes");
-        const auto report = ScopeIntegrityFoundation::validate(fx.path(), &fx.model);
+        const auto report = FoundationProjectValidation::validateF3(fx.path(), &fx.model);
         ok &= require(report.valid, "F3-003: F3 validation passes on fresh fixture");
         ok &= require(report.scopeTaxonomyValid, "F3-003: Scope taxonomy valid");
         ok &= require(report.projectIsolationValid, "F3-003: Project isolation valid");
@@ -2327,7 +2374,7 @@ bool runF3ScopeIntegrityTests()
         pvState.hasNextProcess = true;
         pvState.nextProcess = ProcessVersion(ProcessKind::Foundation, 1, 1, 0, 0, 0);
         fx.writeProcessVersion(pvState);
-        const auto report = ScopeIntegrityFoundation::validate(fx.path(), &fx.model);
+        const auto report = FoundationProjectValidation::validateF3(fx.path(), &fx.model);
         ok &= require(report.projectStateIntegral, "F3-008: Valid processVersion passes integrity");
     }
 
@@ -2335,7 +2382,7 @@ bool runF3ScopeIntegrityTests()
     {
         TestFixture fx;
         ok &= require(fx.valid, "F3-009: Fixture initializes");
-        const auto report = ScopeIntegrityFoundation::validate(fx.path(), &fx.model);
+        const auto report = FoundationProjectValidation::validateF3(fx.path(), &fx.model);
         ok &= require(report.canonicalScopeCount == 15, "F3-009: 15 canonical scopes reported");
     }
 
@@ -2344,7 +2391,7 @@ bool runF3ScopeIntegrityTests()
         TestFixture fx;
         ok &= require(fx.valid, "F3-010: Fixture initializes");
         QString err;
-        bool isoOk = ScopeIntegrityFoundation::validateProjectIsolation(fx.path(), &err);
+        bool isoOk = FoundationProjectValidation::validateProjectIsolation(fx.path(), &err);
         ok &= require(isoOk, "F3-010: Project isolation passes on valid fixture");
     }
 
@@ -2377,7 +2424,7 @@ bool runF3ScopeIntegrityTests()
             logFile.close();
         }
         QString err;
-        bool isoOk = ScopeIntegrityFoundation::validateProjectIsolation(fx.path(), &err);
+        bool isoOk = FoundationProjectValidation::validateProjectIsolation(fx.path(), &err);
         ok &= require(!isoOk, "F3-012: Foreign path escape rejected by project isolation");
     }
 
@@ -2402,7 +2449,7 @@ bool runF4LifecycleCertificationTests()
         ok &= require(contract.value(QStringLiteral("bootstrapOrder")).toInt() == 4,
                        "F4-001: Bootstrap order is 4");
         const auto deps = contract.value(QStringLiteral("dependsOn")).toArray();
-        ok &= require(deps.size() == 3, "F4-001: F4 depends on F1, F2, F3");
+        ok &= require(deps.isEmpty(), "F4-001: canonical independence prohibits Foundation dependencies");
     }
 
     // F4-002: Validate passes with correct processVersion state
@@ -2637,7 +2684,7 @@ bool runFoundationIntegrationTests()
         // F4 depends on F1, F2, F3
         const auto f4Deps = contracts.value(QStringLiteral("F4")).toObject()
             .value(QStringLiteral("dependsOn")).toArray();
-        ok &= require(f4Deps.size() == 3, "INT-F-003: F4 depends on 3 foundations");
+        ok &= require(f4Deps.isEmpty(), "INT-F-003: F4 has no Foundation implementation dependencies");
     }
 
     // INT-F-004: F1 failure propagates to integration report
@@ -2702,7 +2749,7 @@ bool runFoundationIntegrationTests()
         ok &= require(f1Summary.value(QStringLiteral("totalEvents")).toInt() >= 2,
                        "INT-F-006: F1 sees recorded events");
         // F2 should validate the provenance on those events
-        const auto f2Report = IdentityTrustFoundation::validate(fx.path());
+        const auto f2Report = FoundationProjectValidation::validateF2(fx.path());
         ok &= require(f2Report.allProvenanceValid, "INT-F-006: F2 validates provenance of F1 events");
     }
 
@@ -2719,7 +2766,7 @@ bool runFoundationIntegrationTests()
             QJsonObject{{QStringLiteral("task"), QStringLiteral("Scoped task")},
                         {QStringLiteral("scope"), QStringLiteral("source-code")},
                         {QStringLiteral("provenance"), prov}}, nullptr, nullptr);
-        const auto f3Report = ScopeIntegrityFoundation::validate(fx.path(), &fx.model);
+        const auto f3Report = FoundationProjectValidation::validateF3(fx.path(), &fx.model);
         ok &= require(f3Report.scopeTaxonomyValid, "INT-F-007: F3 validates scope of F1 events");
     }
 
@@ -2931,10 +2978,10 @@ bool runFoundationIntegrationTests()
         ok &= require(f1.valid, "XPROC-002: Process B verifies F1 evidence integrity");
         ok &= require(f1.ledgerIntact, "XPROC-002: Process B confirms ledger intact");
 
-        const auto f2 = IdentityTrustFoundation::validate(fx.path());
+        const auto f2 = FoundationProjectValidation::validateF2(fx.path());
         ok &= require(f2.valid, "XPROC-002: Process B verifies F2 provenance and actor identity");
 
-        const auto f3 = ScopeIntegrityFoundation::validate(fx.path(), &fx.model);
+        const auto f3 = FoundationProjectValidation::validateF3(fx.path(), &fx.model);
         ok &= require(f3.valid, "XPROC-002: Process B verifies F3 scope integrity");
 
         const auto f4 = LifecycleCertificationFoundation::validate(fx.path());
@@ -2999,6 +3046,15 @@ bool runFoundationIntegrationTests()
         const auto matrix = FoundationIntegrationService::dependencyMatrix();
         ok &= require(matrix.contains("processes"), "DEP-MAT-001: Matrix contains processes");
         ok &= require(matrix.contains("foundations"), "DEP-MAT-001: Matrix contains foundations");
+        const auto foundations = matrix.value("foundations").toObject();
+        const auto contracts = FoundationIntegrationService::allContracts();
+        for (const auto& id : {"F1", "F2", "F3", "F4"}) {
+            const auto entry = foundations.value(id).toObject();
+            ok &= require(entry.contains("dependsOn") && entry.value("dependsOn").toArray().isEmpty(),
+                          "DEP-MAT-001: Foundation matrix declares no direct peer dependencies");
+            ok &= require(entry.value("dependsOn") == contracts.value(id).toObject().value("dependsOn"),
+                          "DEP-MAT-001: Matrix agrees with independent Foundation contracts");
+        }
         const auto procs = matrix.value("processes").toObject();
         ok &= require(procs.contains("P1") && procs.contains("P6"), "DEP-MAT-001: P1 and P6 present in matrix");
         const auto p6 = procs.value("P6").toObject();

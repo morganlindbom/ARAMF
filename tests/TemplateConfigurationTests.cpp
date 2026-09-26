@@ -17,6 +17,7 @@
 #include "ui/workflows/project/languages/ProjectLanguagesPage.h"
 #include "ui/workflows/project/frameworks/ProjectFrameworksPage.h"
 #include "ui/workflows/project/academic/ProjectAcademicPage.h"
+#include "ui/workflows/ai/autonomy/AiAutonomyPage.h"
 #include "ui/mainwindow/MainWindow.h"
 #include "ui/shared/FooterProgressDisplay.h"
 #include "ui/workflow/WorkflowWidget.h"
@@ -90,6 +91,66 @@ int main(int argc, char** argv)
     FinalizationServices finalization;
     AgentEntryPointService entryPoints;
     ProjectMemory memory;
+    // Explicit high-risk choices are configuration only: never execute them.
+    // Bulk selection must not grant these permissions implicitly.
+    {
+        ProjectModel permissionModel;
+        QString permissionError;
+        check(manager.applyTemplate(&permissionModel, "cpp-command-line", &permissionError), "permission fixture template");
+        permissionModel.setProjectPath(fixture.filePath("permission-project"));
+        permissionModel.setProjectFilePath(fixture.filePath("permission-project.aramf.json"));
+        auto ai = permissionModel.aiConfiguration();
+        ai.permissions.clear();
+        permissionModel.setAiConfiguration(ai);
+        AiAutonomyPage permissionPage(&permissionModel);
+        QGroupBox* highRisk = nullptr;
+        for (auto* group : permissionPage.findChildren<QGroupBox*>())
+            if (group->title() == "High-Risk Actions") highRisk = group;
+        auto* bulk = permissionPage.findChild<QPushButton*>();
+        check(highRisk && bulk, "permission controls exist");
+        if (highRisk && bulk) {
+            const auto boxes = highRisk->findChildren<QCheckBox*>();
+            check(!boxes.isEmpty(), "high-risk catalog is nonempty");
+            bulk->click();
+            for (auto* box : boxes)
+                check(!box->isChecked() && !permissionModel.aiConfiguration().permissions.contains(box->property("capabilityId").toString()), "Select All does not grant high-risk permission");
+            bulk->click();
+            for (auto* box : boxes) {
+                box->click();
+                check(permissionModel.aiConfiguration().permissions.contains(box->property("capabilityId").toString()), "explicit high-risk choice reaches model");
+            }
+            bulk->click();
+            for (auto* box : boxes)
+                check(box->isChecked() && permissionModel.aiConfiguration().permissions.contains(box->property("capabilityId").toString()), "Select All preserves explicitly chosen high-risk permission");
+            const auto expected = permissionModel.aiConfiguration().permissions;
+            check(persistence.save(permissionModel, permissionModel.projectFilePath(), &permissionError), "save explicit permissions: " + permissionError);
+            ProjectModel reopened;
+            check(persistence.load(&reopened, permissionModel.projectFilePath(), &permissionError)
+                      && reopened.aiConfiguration().permissions == expected, "explicit permissions survive disk reload");
+            AiAutonomyPage reopenedPage(&reopened);
+            for (auto* box : reopenedPage.findChildren<QCheckBox*>())
+                check(box->isChecked() == expected.contains(box->property("capabilityId").toString()), "reopened permission controls match saved choices");
+            const auto generated = generation.generate(reopened, reopened.generationOptions());
+            check(generated.success, "generate explicit permission policy: " + generated.error);
+            QFile generatedState(QDir(reopened.projectPath()).filePath("ARAMF_WORKER/verification/generation-state.json"));
+            check(generatedState.open(QIODevice::ReadOnly), "generated permission state exists");
+            const auto policy = QJsonDocument::fromJson(generatedState.readAll()).object().value("canonicalState").toObject().value("ai").toObject();
+            check(list(policy.value("permissions")) == expected, "generation binds exact saved permissions");
+            const auto grantedFingerprint = projectConfigurationFingerprint(reopened, reopened.generationOptions());
+            auto revoked = reopened.aiConfiguration();
+            revoked.permissions.removeAll(boxes.first()->property("capabilityId").toString());
+            reopened.setAiConfiguration(revoked);
+            check(projectConfigurationFingerprint(reopened, reopened.generationOptions()) != grantedFingerprint,
+                  "revoking an explicit high-risk permission invalidates prior generation binding");
+            bulk->click();
+            check(permissionModel.aiConfiguration().permissions.isEmpty(), "Clear All revokes normal and high-risk permissions");
+            for (auto* box : boxes) check(!box->isChecked(), "Clear All resets high-risk controls");
+        }
+    }
+    if (app.arguments().contains("--permission-choices")) {
+        QTextStream(stdout) << "Permission checks: " << checks << ", failures: " << failures << "\nEvidence: " << fixture.path() << '\n';
+        return failures ? 1 : 0;
+    }
     ProductVersion productVersion;
     ComponentVersion componentVersion;
     check(ProductVersion::parse(QStringLiteral("0.0.0"), &productVersion)
@@ -1273,6 +1334,132 @@ int main(int argc, char** argv)
     check(hasExactText(QStringLiteral("Enabled")) == 0, "Academic UI has no redundant Enabled checkbox");
     check(hasExactText(QStringLiteral("Thesis Project")) == 0 && hasExactText(QStringLiteral("Report Project")) == 0, "Academic UI hides internal project-type labels");
     academicPage.close();
+
+    // Exercise the visible language controls, disk reload, and the actual
+    // generator. Selection persistence alone does not prove consumption.
+    ProjectModel languageModel;
+    check(manager.applyTemplate(&languageModel, QStringLiteral("bachelor-thesis")), "language fixture initializes");
+    languageModel.setProjectPath(fixture.filePath("academic-language-project"));
+    languageModel.setProjectName(QStringLiteral("Separate language versions"));
+    ProjectAcademicPage languagePage(&languageModel);
+    languagePage.show();
+    QApplication::processEvents();
+    auto* languageGroup = languagePage.findChild<QGroupBox*>(QStringLiteral("academicLanguages"));
+    QCheckBox* english = nullptr;
+    QCheckBox* swedish = nullptr;
+    for (auto* box : languageGroup ? languageGroup->findChildren<QCheckBox*>() : QList<QCheckBox*>{}) {
+        if (box->property("capabilityId").toString() == QStringLiteral("english")) english = box;
+        if (box->property("capabilityId").toString() == QStringLiteral("swedish")) swedish = box;
+    }
+    check(english && swedish, "Academic exposes independent English and Swedish checkboxes");
+    if (english && swedish) {
+        if (!english->isChecked()) english->click();
+        if (!swedish->isChecked()) swedish->click();
+        check(languageModel.academicConfiguration().academicLanguages == QStringList({"english", "swedish"}), "GUI permits English and Swedish simultaneously");
+        swedish->click();
+        check(languageModel.academicConfiguration().documentLanguages() == QStringList{"en"}
+                  && languageModel.academicConfiguration().thesisDocumentation.language == "en", "English-only selection reaches document configuration");
+        swedish->click();
+    }
+    for (auto* box : languagePage.findChildren<QCheckBox*>())
+        if (box->property("capabilityId").toString() == QStringLiteral("report-project") && !box->isChecked()) box->click();
+    const auto selectedLanguages = languageModel.academicConfiguration().academicLanguages;
+    const QString languageFile = fixture.filePath("academic-languages.aramf.json");
+    QString languageError;
+    check(persistence.save(languageModel, languageFile, &languageError), "Save language selections: " + languageError);
+    ProjectModel languageReloaded;
+    check(persistence.load(&languageReloaded, languageFile, &languageError), "Load language selections: " + languageError);
+    check(languageReloaded.academicConfiguration().academicLanguages == selectedLanguages
+              && persistence.configuration(languageReloaded) == persistence.configuration(languageModel), "language configuration round-trips exactly");
+    ProjectAcademicPage reopenedLanguagePage(&languageReloaded);
+    auto* reopenedLanguages = reopenedLanguagePage.findChild<QGroupBox*>(QStringLiteral("academicLanguages"));
+    int checkedLanguages = 0;
+    if (reopenedLanguages) for (auto* box : reopenedLanguages->findChildren<QCheckBox*>()) if (box->isChecked()) ++checkedLanguages;
+    check(checkedLanguages == 2, "reopened Academic page restores both language checkboxes");
+    auto readLanguageManifest = [&]() {
+        QFile file(QDir(languageModel.projectPath()).filePath("ARAMF_WORKER/documentation/documentation-manifest.json"));
+        check(file.open(QIODevice::ReadOnly), "language manifest exists on disk");
+        return QJsonDocument::fromJson(file.readAll()).object();
+    };
+    auto languageGeneration = generation.generate(languageReloaded, languageReloaded.generationOptions());
+    check(languageGeneration.success, "generate separate language versions: " + languageGeneration.error);
+    const auto languageManifest = readLanguageManifest();
+    check(languageManifest.value("schemaVersion").toInt() == 2
+              && languageManifest.value("outputMode").toString() == "separate-language-versions", "manifest declares separate-version semantics");
+    QSet<QString> variants;
+    for (const auto& entry : languageManifest.value("documents").toArray()) {
+        const auto document = entry.toObject();
+        const auto type = document.value("documentType").toString();
+        variants.insert(document.value("variantId").toString());
+        check(document.value("enabled").toBool() && QStringList{"en", "sv"}.contains(document.value("language").toString())
+                  && document.value("instructionId").toString() == "aramf-" + type + "-instruction", "each variant has its selected language and domain-specific instruction");
+        for (const auto& sectionValue : document.value("sections").toArray()) {
+            const auto section = sectionValue.toObject();
+            const auto language = document.value("language").toString();
+            check(!section.value("localizedTitle").toString().isEmpty()
+                      && section.value("localizedTitle") == section.value("title").toObject().value(language)
+                      && section.value("localizedGuidance") == section.value("guidance").toObject().value(language), "variant headings and guidance follow the selected language");
+        }
+    }
+    check(variants == QSet<QString>{"thesis-en", "thesis-sv", "report-en", "report-sv"}, "both documents have distinct Swedish and English variants");
+    QFile languageRules(QDir(languageModel.projectPath()).filePath("ARAMF_WORKER/AGENTS.md"));
+    check(languageRules.open(QIODevice::ReadOnly) && languageRules.readAll().contains("do not combine languages into one bilingual document"), "generated rules require separate versions");
+    languageRules.close(); // Release the Windows handle before atomic regeneration.
+    const auto dualFingerprint = projectConfigurationFingerprint(languageReloaded, languageReloaded.generationOptions());
+    auto singleLanguage = languageReloaded.academicConfiguration();
+    singleLanguage.academicLanguages = {QStringLiteral("english")};
+    languageReloaded.setAcademicConfiguration(singleLanguage);
+    check(projectConfigurationFingerprint(languageReloaded, languageReloaded.generationOptions()) != dualFingerprint, "language changes stale generated configuration evidence");
+    languageGeneration = generation.generate(languageReloaded, languageReloaded.generationOptions());
+    check(languageGeneration.success, "generate English-only versions: " + languageGeneration.error);
+    const auto englishDocuments = readLanguageManifest().value("documents").toArray();
+    check(englishDocuments.size() == 2 && englishDocuments.first().toObject().value("language").toString() == "en"
+              && englishDocuments.last().toObject().value("language").toString() == "en", "English-only output never silently reverts to Swedish");
+    auto emptyLanguages = languageReloaded.academicConfiguration();
+    emptyLanguages.academicLanguages.clear();
+    languageReloaded.setAcademicConfiguration(emptyLanguages);
+    check(!generation.generate(languageReloaded, languageReloaded.generationOptions()).success, "enabled documentation without a language is rejected");
+    check(persistence.fromJson(&languageReloaded, persistence.toJson(languageModel)), "restore both languages");
+    customResource.location = markdown.fileName();
+    languageReloaded.setResources({customResource});
+    auto customLanguages = languageReloaded.academicConfiguration();
+    customLanguages.thesisDocumentation.templateMode = "source";
+    customLanguages.thesisDocumentation.templateSourceId = customResource.id;
+    languageReloaded.setAcademicConfiguration(customLanguages);
+    languageGeneration = generation.generate(languageReloaded, languageReloaded.generationOptions());
+    check(languageGeneration.success, "generate language variants from custom source: " + languageGeneration.error);
+    for (const auto& entry : readLanguageManifest().value("documents").toArray()) {
+        const auto document = entry.toObject();
+        if (document.value("documentType").toString() != "thesis") continue;
+        check(document.value("sourceId").toString() == customResource.id
+                  && document.value("contentHash").toString() == inspectedMarkdown.contentHash
+                  && !document.contains("sections"), "both custom Thesis variants preserve source provenance without injecting default structure");
+    }
+    check(DocumentTemplateInspector::inspect(customResource).contentHash == inspectedMarkdown.contentHash, "language generation leaves the original custom source untouched");
+    auto legacyLanguageJson = persistence.toJson(languageModel);
+    auto legacyLanguage = legacyLanguageJson.value("academic").toObject();
+    legacyLanguage.remove("academicLanguages");
+    legacyLanguage.insert("academicLanguage", "english");
+    legacyLanguageJson.insert("academic", legacyLanguage);
+    ProjectModel migratedLanguage;
+    check(persistence.fromJson(&migratedLanguage, legacyLanguageJson)
+              && migratedLanguage.academicConfiguration().documentLanguages() == QStringList{"en"}, "legacy English selection migrates despite old Swedish document defaults");
+    legacyLanguage.remove("academicLanguage");
+    auto oldThesis = legacyLanguage.value("thesisDocumentation").toObject();
+    oldThesis.insert("language", "en");
+    legacyLanguage.insert("thesisDocumentation", oldThesis);
+    legacyLanguageJson.insert("academic", legacyLanguage);
+    check(persistence.fromJson(&migratedLanguage, legacyLanguageJson)
+              && migratedLanguage.academicConfiguration().documentLanguages().contains("en"), "legacy document language survives when UI language is absent");
+    auto disabledReport = languageModel.academicConfiguration();
+    disabledReport.projectTypes.removeAll("report-project");
+    disabledReport.reportDocumentation.enabled = false;
+    languageModel.setAcademicConfiguration(disabledReport);
+    const auto disabledManifest = DocumentTemplates::manifest(true, "aramf-default", {}, false, "aramf-default", {},
+        languageModel.academicConfiguration().documentLanguages(), languageModel.academicConfiguration().documentLanguages());
+    for (const auto& entry : disabledManifest.value("documents").toArray())
+        if (entry.toObject().value("documentType").toString() == "report") check(!entry.toObject().value("enabled").toBool(), "disabled Report has no active language variants");
+    languagePage.close();
 
     audit.insert("validation", QJsonObject{{"checks", checks}, {"failures", failures}, {"catalogFingerprint", TemplateValidation::catalogFingerprint()}});
     saveJson(fixture.filePath("template-audit.json"), audit);

@@ -64,6 +64,7 @@ QMap<QString, QList<EnvironmentOption>> TemplateValidation::catalogs()
         {"academic.academicMode", choices({"disabled", "academic-assignment", "research-project", "thesis", "custom", "thesis-project", "report-project", "other-custom"})}, {"academic.projectTypes", academicModes()}, {"academic.thesisLevel", thesisLevels()},
         {"academic.thesisApproaches", thesisApproaches()}, {"academic.researchMethods", researchMethods()},
         {"academic.citationStyle", citationStyles()}, {"academic.academicLanguage", academicLanguages()},
+        {"academic.academicLanguages", academicLanguages()},
         {"academic.academicRequirements", academicRequirements()}, {"academic.academicDeliverables", academicDeliverables()},
         {"ai.primaryAgent", aiOptions(AiCatalog::agents()) + choices({"none"})},
         {"ai.additionalAgents", aiOptions(AiCatalog::agents())}, {"ai.responsibilities", aiOptions(AiCatalog::responsibilities())},
@@ -119,7 +120,9 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
         QSet<QString> allowed, selected;
         for (const auto& option : catalog) allowed.insert(option.second);
         for (const auto& id : strings(value)) {
-            if (!allowed.contains(id)) errors << "Unavailable option: " + path + '/' + id;
+            const bool customLanguage = (path == QStringLiteral("academic.academicLanguages") || path == QStringLiteral("academic.academicLanguage"))
+                && id.startsWith(QStringLiteral("custom:")) && !id.mid(7).trimmed().isEmpty();
+            if (!allowed.contains(id) && !customLanguage) errors << "Unavailable option: " + path + '/' + id;
             if (selected.contains(id)) errors << "Duplicate option: " + path + '/' + id;
             selected.insert(id);
         }
@@ -136,6 +139,13 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
     auto has = [&](const QString& path, const QString& id) { return strings(at(config, path)).contains(id); };
     auto require = [&](bool condition, const QString& reason) { if (!condition) errors << reason; };
     const auto resources = config.value(QStringLiteral("resources")).toArray();
+    const auto academic = config.value(QStringLiteral("academic")).toObject();
+    if (academic.value(QStringLiteral("thesisDocumentation")).toObject().value(QStringLiteral("enabled")).toBool()
+        || academic.value(QStringLiteral("reportDocumentation")).toObject().value(QStringLiteral("enabled")).toBool()) {
+        const auto languages = strings(academic.value(QStringLiteral("academicLanguages")));
+        require(!languages.isEmpty(), QStringLiteral("Select at least one academic language for documentation"));
+        require(!languages.contains(QStringLiteral("custom")), QStringLiteral("Specify the custom academic language"));
+    }
     const auto validateDocument = [&](const QString& label, const QString& key, const QString& role) {
         const auto document = config.value(QStringLiteral("academic")).toObject().value(key).toObject();
         const bool enabled = document.value(QStringLiteral("enabled")).toBool(false);

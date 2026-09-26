@@ -337,9 +337,29 @@ void ProjectModel::setDevelopmentCapabilities(const DevelopmentCapabilities& val
     notifyChanged();
 }
 
+QStringList AcademicConfiguration::documentLanguages() const
+{
+    QStringList result;
+    for (const auto& language : academicLanguages) {
+        result << (language == QStringLiteral("swedish") ? QStringLiteral("sv")
+            : language == QStringLiteral("english") ? QStringLiteral("en") : language);
+    }
+    return result;
+}
+
 void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
 {
     AcademicConfiguration next = value;
+    // Preserve callers that still set only the legacy scalar. Explicit list
+    // changes (including clearing it) are authoritative.
+    if (next.academicLanguages == academic_.academicLanguages && next.academicLanguage != academic_.academicLanguage)
+        next.academicLanguages = next.academicLanguage.isEmpty() ? QStringList{} : QStringList{next.academicLanguage};
+    for (auto& language : next.academicLanguages) {
+        if (language == QStringLiteral("sv")) language = QStringLiteral("swedish");
+        else if (language == QStringLiteral("en")) language = QStringLiteral("english");
+    }
+    next.academicLanguages.removeDuplicates();
+    next.academicLanguage = next.academicLanguages.value(0);
     if (next.projectTypes.isEmpty() && !value.academicMode.isEmpty() && value.academicMode != QStringLiteral("disabled")) {
         const QString legacy = value.academicMode.startsWith(QStringLiteral("custom:")) ? QStringLiteral("other-custom") : value.academicMode == QStringLiteral("thesis") ? QStringLiteral("thesis-project") : value.academicMode;
         next.projectTypes << legacy;
@@ -374,6 +394,8 @@ void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
     };
     normalize(next.thesisDocumentation, QStringLiteral("aramf-default-thesis"));
     normalize(next.reportDocumentation, QStringLiteral("aramf-default-report"));
+    next.thesisDocumentation.language = next.documentLanguages().value(0);
+    next.reportDocumentation.language = next.documentLanguages().value(0);
     const auto resolveSource = [this](AcademicConfiguration::DocumentationConfiguration& document, const QString& role) {
         if (!document.enabled || !document.templateSourceId.isEmpty()) return;
         QList<const ProjectResource*> candidates;
@@ -403,7 +425,8 @@ void ProjectModel::setAcademicConfiguration(const AcademicConfiguration& value)
         && academic_.supervisor == value.supervisor
         && academic_.examiner == value.examiner
         && academic_.citationStyle == value.citationStyle
-        && academic_.academicLanguage == value.academicLanguage
+        && academic_.academicLanguage == next.academicLanguage
+        && academic_.academicLanguages == next.academicLanguages
         && academic_.academicRequirements == value.academicRequirements
         && academic_.academicDeliverables == next.academicDeliverables
         && academic_.thesisDocumentation.enabled == next.thesisDocumentation.enabled

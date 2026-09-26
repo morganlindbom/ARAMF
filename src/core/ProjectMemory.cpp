@@ -5,7 +5,10 @@
 #include "AramfPaths.h"
 #include "ControlPlaneMigration.h"
 #include "FrameworkKnowledge.h"
-#include "FoundationServices.h"
+#include "../foundations/F1/EvidenceStorage.h"
+#include "../foundations/F2/IdentityTrustFoundation.h"
+#include "../foundations/F3/ScopeIntegrityFoundation.h"
+// ProjectMemory coordinates domain services; F1 does not depend on this facade.
 #include "ProjectModel.h"
 #include "ValidationRouting.h"
 
@@ -491,7 +494,8 @@ bool ProjectMemory::initialize(const QString& projectRoot, const ProjectModel* m
     return false;
 }
 
-bool ProjectMemory::initializeMemory(const QString& projectRoot, const ProjectModel* model, QString* error)
+bool ProjectMemory::initializeMemory(const QString& projectRoot, const ProjectModel* model, QString* error,
+                                     std::optional<bool> requireControlPlane)
 {
     if (projectRoot.trimmed().isEmpty()) {
         if (error) *error = QStringLiteral("Project path is empty.");
@@ -502,8 +506,15 @@ bool ProjectMemory::initializeMemory(const QString& projectRoot, const ProjectMo
         if (error) *error = preparation.error;
         return false;
     }
+    // A first standalone memory bootstrap does not imply agent-file output.
+    // Existing policy is durable: missing required files cannot downgrade it.
+    const bool existingPolicy = QFileInfo::exists(absolutePath(projectRoot, AramfPaths::MemoryConfiguration));
+    const bool controlPlaneRequired = requireControlPlane.value_or(existingPolicy
+        ? EvidenceStorage::requiresControlPlane(projectRoot)
+        : QFileInfo::exists(absolutePath(projectRoot, AramfPaths::AgentInstructions))
+            && QFileInfo::exists(absolutePath(projectRoot, AramfPaths::ProjectStatus)));
     if (!ensureMemoryDirectories(projectRoot, error)
-        || !writeMemoryFiles(projectRoot, model, error)) {
+        || !writeMemoryFiles(projectRoot, model, error, controlPlaneRequired)) {
         return false;
     }
     FrameworkKnowledgeService knowledge;
@@ -518,9 +529,7 @@ bool ProjectMemory::initializeMemory(const QString& projectRoot, const ProjectMo
     }
 
     if (!generateCurrentState(projectRoot, error)) return false;
-    const bool controlPlaneReady = QFileInfo::exists(absolutePath(projectRoot, AramfPaths::AgentInstructions))
-        && QFileInfo::exists(absolutePath(projectRoot, AramfPaths::ProjectStatus));
-    if (!generateColdStartValidation(projectRoot, error, controlPlaneReady)) return false;
+    if (!generateColdStartValidation(projectRoot, error, controlPlaneRequired)) return false;
     const QJsonObject report = validate(projectRoot, error);
     if (report.value(QStringLiteral("status")).toString() == QStringLiteral("PASS")) return true;
     if (error && error->isEmpty()) {
@@ -544,15 +553,6 @@ bool ProjectMemory::appendEvent(const QString& projectRoot,
     const QByteArray serializedEvent = QJsonDocument(fields).toJson(QJsonDocument::Compact);
     if (!withinConfiguredLimit(projectRoot, serializedEvent.size() + 1, error)) return false;
 
-    const QString manifestPath = absolutePath(projectRoot, AramfPaths::Manifest);
-    QJsonObject manifest = readJsonObject(manifestPath, error);
-    if (manifest.isEmpty() && QFile::exists(manifestPath)) {
-        return false;
-    }
-
-    const qint64 sequence = manifest.value(QStringLiteral("nextSequenceNumber")).toVariant().toLongLong() > 0
-                                 ? manifest.value(QStringLiteral("nextSequenceNumber")).toVariant().toLongLong()
-                                 : 1;
     QJsonObject prov;
     if (fields.contains(QStringLiteral("provenance")) && fields.value(QStringLiteral("provenance")).isObject()) {
         prov = fields.value(QStringLiteral("provenance")).toObject();
@@ -573,39 +573,13 @@ bool ProjectMemory::appendEvent(const QString& projectRoot,
     QJsonObject event = fields;
     event.insert(QStringLiteral("eventId"), QStringLiteral("event-%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces)));
     event.insert(QStringLiteral("eventType"), eventType);
-    event.insert(QStringLiteral("sequenceNumber"), sequence);
     event.insert(QStringLiteral("timestamp"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
     event.insert(QStringLiteral("task"), task);
     if (!prov.isEmpty()) {
         event.insert(QStringLiteral("provenance"), prov);
     }
 
-    QFile eventFile(absolutePath(projectRoot, AramfPaths::EventLog));
-    if (!eventFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        if (error) {
-            *error = eventFile.errorString();
-        }
-        return false;
-    }
-    eventFile.write(QJsonDocument(event).toJson(QJsonDocument::Compact));
-    eventFile.write("\n");
-    eventFile.close();
-
-    manifest.insert(QStringLiteral("_file"), QStringLiteral("memory-manifest.json"));
-    manifest.insert(QStringLiteral("memoryVersion"), QStringLiteral("3"));
-    manifest.insert(QStringLiteral("nextSequenceNumber"), sequence + 1);
-    manifest.insert(QStringLiteral("eventCount"), manifest.value(QStringLiteral("eventCount")).toInt() + 1);
-    manifest.insert(QStringLiteral("latestEventId"), event.value(QStringLiteral("eventId")));
-    if (!writeJsonFile(manifestPath, manifest, error)) {
-        return false;
-    }
-
-    QJsonObject metrics = readJsonObject(absolutePath(projectRoot, AramfPaths::Metrics), nullptr);
-    metrics.insert(QStringLiteral("totalEventsCreated"), metrics.value(QStringLiteral("totalEventsCreated")).toInt() + 1);
-    metrics.insert(QStringLiteral("activeEvents"), manifest.value(QStringLiteral("eventCount")));
-    writeJsonFile(absolutePath(projectRoot, AramfPaths::Metrics), metrics, nullptr);
-
-    return generateCurrentState(projectRoot, error);
+    return EvidenceStorage().appendEvidence(projectRoot, event, error);
 }
 
 bool ProjectMemory::isVerifiedAdministrativeOverride(const QString& instruction) const
@@ -869,34 +843,8 @@ QJsonObject ProjectMemory::normalizeProvenance(const QJsonObject& fields)
 
 bool ProjectMemory::validateProvenanceObject(const QJsonObject& prov, QString* error)
 {
-    if (prov.isEmpty()) {
-        if (error) *error = QStringLiteral("Missing required provenance.");
-        return false;
-    }
-    const QString actor = prov.value(QStringLiteral("actor")).toString().trimmed();
-    if (actor.isEmpty()) {
-        if (error) *error = QStringLiteral("Provenance is missing required actor.");
-        return false;
-    }
-    const QString lowerActor = actor.toLower();
-    if (!IdentityTrustFoundation::isValidActor(lowerActor)) {
-        if (error) *error = QStringLiteral("Provenance has invalid actor '%1'.").arg(actor);
-        return false;
-    }
-    const QString agentId = prov.value(QStringLiteral("agentId")).toString().trimmed();
-    if ((lowerActor == QStringLiteral("agent") || lowerActor == QStringLiteral("autonomous-agent") || lowerActor == QStringLiteral("system"))
-        && agentId.isEmpty()) {
-        if (error) *error = QStringLiteral("Provenance is missing required agentId for actor '%1'.").arg(actor);
-        return false;
-    }
-    const QString tool = prov.value(QStringLiteral("tool")).toString().trimmed();
-    if (tool.isEmpty()) {
-        if (error) *error = QStringLiteral("Provenance is missing required tool.");
-        return false;
-    }
-    return true;
+    return IdentityTrustFoundation::validateProvenance(prov, error);
 }
-
 static bool isValidScopeSlug(const QString& s)
 {
     if (s.isEmpty() || s.size() > 64) return false;
@@ -948,165 +896,16 @@ bool ProjectMemory::isScopeValidForCategory(RecordScopeCategory category, const 
 
 bool ProjectMemory::validateScopeCombinations(const QStringList& scopes, QString* error)
 {
-    if (scopes.size() <= 1) return true;
-
-    QSet<QString> seen;
-    for (const auto& s : scopes) {
-        const QString trimmed = s.trimmed();
-        if (trimmed.isEmpty()) {
-            if (error) *error = QStringLiteral("Empty scope entry in scope list.");
-            return false;
-        }
-        if (seen.contains(trimmed)) {
-            if (error) *error = QStringLiteral("Duplicate scope '%1' in scope list.").arg(trimmed);
-            return false;
-        }
-        seen.insert(trimmed);
-    }
-
-    if (seen.contains(QStringLiteral("project")) && seen.contains(QStringLiteral("global"))) {
-        if (error) *error = QStringLiteral("Contradictory scope combination: 'project' and 'global' cannot be combined as separate items; use compound 'project+global'.");
-        return false;
-    }
-
-    const bool hasUniversalAll = seen.contains(QStringLiteral("all")) || seen.contains(QStringLiteral("entire-project"));
-    if (hasUniversalAll) {
-        for (const auto& item : seen) {
-            if (item != QStringLiteral("all") && item != QStringLiteral("entire-project")
-                && item != QStringLiteral("project") && item != QStringLiteral("project+global") && item != QStringLiteral("history")) {
-                if (error) *error = QStringLiteral("Contradictory scope combination: universal scope '%1' cannot be combined with specific partition '%2'.")
-                    .arg(seen.contains(QStringLiteral("all")) ? QStringLiteral("all") : QStringLiteral("entire-project"), item);
-                return false;
-            }
-        }
-    }
-
-    if (seen.contains(QStringLiteral("history"))) {
-        for (const auto& item : seen) {
-            if (item != QStringLiteral("history") && item != QStringLiteral("all")) {
-                if (error) *error = QStringLiteral("Contradictory scope combination: 'history' archive scope cannot be combined with active partition '%1'.").arg(item);
-                return false;
-            }
-        }
-    }
-
-    return true;
+    return ScopeIntegrityFoundation::validateScopeSet(scopes, error);
 }
-
 bool ProjectMemory::validateCrossScopeFiles(const QString& scope, const QStringList& files, QString* error)
 {
-    return validateCrossScopeFiles(QStringList{scope}, files, error);
+    return ScopeIntegrityFoundation::validateScopeFiles(scope, files, error);
 }
-
 bool ProjectMemory::validateCrossScopeFiles(const QStringList& scopes, const QStringList& files, QString* error)
 {
-    if (files.isEmpty()) return true;
-
-    for (const auto& s : scopes) {
-        const QString trimmed = s.trimmed();
-        if (trimmed == QStringLiteral("all")
-            || trimmed == QStringLiteral("entire-project")
-            || trimmed == QStringLiteral("project")
-            || trimmed == QStringLiteral("project+global")
-            || trimmed == QStringLiteral("global")
-            || trimmed == QStringLiteral("history")) {
-            return true;
-        }
-    }
-
-    auto fileMatchesScope = [](const QString& scope, const QString& file) -> bool {
-        const QString normalized = file.trimmed().replace(QLatin1Char('\\'), QLatin1Char('/'));
-        const QString lower = normalized.toLower();
-
-        if (scope == QStringLiteral("tests")) {
-            return lower.startsWith(QStringLiteral("tests/"))
-                || lower.startsWith(QStringLiteral("test/"))
-                || lower.contains(QStringLiteral("test"))
-                || lower.endsWith(QStringLiteral("_test.cpp"))
-                || lower.endsWith(QStringLiteral("_tests.cpp"));
-        }
-        if (scope == QStringLiteral("documentation")) {
-            return lower.endsWith(QStringLiteral(".md"))
-                || lower.endsWith(QStringLiteral(".txt"))
-                || lower.endsWith(QStringLiteral(".rst"))
-                || lower.startsWith(QStringLiteral("docs/"))
-                || lower.startsWith(QStringLiteral("doc/"))
-                || lower.startsWith(QStringLiteral("documentation/"));
-        }
-        if (scope == QStringLiteral("build-system")) {
-            return lower.endsWith(QStringLiteral("cmakelists.txt"))
-                || lower.endsWith(QStringLiteral(".cmake"))
-                || lower.endsWith(QStringLiteral("makefile"))
-                || lower.endsWith(QStringLiteral("build.gradle"))
-                || lower.endsWith(QStringLiteral("pom.xml"))
-                || lower.endsWith(QStringLiteral(".ninja"))
-                || lower.contains(QStringLiteral("cmake"));
-        }
-        if (scope == QStringLiteral("ui-ux")) {
-            return lower.startsWith(QStringLiteral("src/ui/"))
-                || lower.startsWith(QStringLiteral("ui/"))
-                || lower.endsWith(QStringLiteral(".ui"))
-                || lower.endsWith(QStringLiteral(".qml"));
-        }
-        if (scope == QStringLiteral("source-code")) {
-            if (lower.startsWith(QStringLiteral("tests/")) || lower.startsWith(QStringLiteral("test/"))) {
-                return false;
-            }
-            return lower.startsWith(QStringLiteral("src/"))
-                || lower.startsWith(QStringLiteral("app/src/"))
-                || lower.endsWith(QStringLiteral(".cpp"))
-                || lower.endsWith(QStringLiteral(".h"))
-                || lower.endsWith(QStringLiteral(".hpp"))
-                || lower.endsWith(QStringLiteral(".kt"))
-                || lower.endsWith(QStringLiteral(".java"));
-        }
-        if (scope == QStringLiteral("ci-cd")) {
-            return lower.startsWith(QStringLiteral(".github/"))
-                || lower.startsWith(QStringLiteral(".gitlab/"))
-                || lower.contains(QStringLiteral("jenkins"))
-                || lower.contains(QStringLiteral("workflow"));
-        }
-        if (scope == QStringLiteral("configuration")) {
-            return lower.endsWith(QStringLiteral(".json"))
-                || lower.endsWith(QStringLiteral(".yaml"))
-                || lower.endsWith(QStringLiteral(".yml"))
-                || lower.endsWith(QStringLiteral(".ini"))
-                || lower.contains(QStringLiteral("config"));
-        }
-        if (scope == QStringLiteral("resources")) {
-            return lower.startsWith(QStringLiteral("resources/"))
-                || lower.startsWith(QStringLiteral("res/"))
-                || lower.endsWith(QStringLiteral(".qrc"))
-                || lower.contains(QStringLiteral("resource"));
-        }
-        if (scope == QStringLiteral("generated-files")) {
-            return lower.contains(QStringLiteral("generated"))
-                || lower.contains(QStringLiteral("autogen"))
-                || lower.contains(QStringLiteral("moc_"));
-        }
-        return true;
-    };
-
-    for (const auto& file : files) {
-        bool matchedAny = false;
-        for (const auto& s : scopes) {
-            if (fileMatchesScope(s.trimmed(), file)) {
-                matchedAny = true;
-                break;
-            }
-        }
-        if (!matchedAny) {
-            if (error) {
-                *error = QStringLiteral("Cross-scope file violation: file '%1' does not match declared scope(s) '%2'.")
-                    .arg(file, scopes.join(QStringLiteral(", ")));
-            }
-            return false;
-        }
-    }
-
-    return true;
+    return ScopeIntegrityFoundation::validateScopeFiles(scopes, files, error);
 }
-
 bool ProjectMemory::recordDecision(const QString& projectRoot,
                                    const QString& decisionId,
                                    const QString& topic,
@@ -2112,8 +1911,10 @@ QJsonObject ProjectMemory::validate(const QString& projectRoot, QString* error, 
     if (validationOptions.contains(QStringLiteral("cold-start-validation"))) {
         const QString coldPath = absolutePath(projectRoot, AramfPaths::ColdStartValidation);
         const QJsonObject cold = readJsonObject(coldPath, nullptr);
-        const QString currentFingerprint = coldStartFingerprint(projectRoot, coldStartPaths(projectRoot, true));
+        const bool requireControlPlane = EvidenceStorage::requiresControlPlane(projectRoot);
+        const QString currentFingerprint = coldStartFingerprint(projectRoot, coldStartPaths(projectRoot, requireControlPlane));
         addCheck(QStringLiteral("cold-start-fresh"), cold.value(QStringLiteral("status")).toString() == QStringLiteral("PASS")
+                     && cold.value(QStringLiteral("requireControlPlane")).toBool(true) == requireControlPlane
                      && cold.value(QStringLiteral("fingerprint")).toString() == currentFingerprint,
                  QStringLiteral("Persisted cold-start validation is missing, failed, or stale."));
     }
@@ -2214,11 +2015,12 @@ bool ProjectMemory::ensureMemoryDirectories(const QString& projectRoot, QString*
     return true;
 }
 
-bool ProjectMemory::writeMemoryFiles(const QString& projectRoot, const ProjectModel* model, QString* error) const
+bool ProjectMemory::writeMemoryFiles(const QString& projectRoot, const ProjectModel* model, QString* error, bool requireControlPlane) const
 {
     const MemoryConfiguration memory = model ? model->memoryConfiguration() : MemoryConfiguration{};
     const auto operations = supportedRecordOperations();
     QJsonObject memoryConfiguration{
+        {QStringLiteral("requireControlPlane"), requireControlPlane},
         {QStringLiteral("writerMode"), memory.writerMode},
         {QStringLiteral("captureCategories"), stringListToJson(memory.captureCategories)},
         {QStringLiteral("historyOptions"), stringListToJson(memory.historyOptions)},
@@ -2453,168 +2255,21 @@ bool ProjectMemory::writeInitialFiles(const QString& projectRoot, const ProjectM
 
 bool ProjectMemory::generateCurrentState(const QString& projectRoot, QString* error) const
 {
-    /**Regenerate the compact current-state snapshot from durable events.
-
-    The snapshot is derived data and may be overwritten; PROJECT_STATUS.md remains the human/agent-maintained live project summary.
-    */
-    QString eventError;
-    const QList<QJsonObject> events = readEvents(absolutePath(projectRoot, AramfPaths::EventLog), &eventError);
-    if (!eventError.isEmpty()) {
-        if (error) {
-            *error = eventError;
-        }
-        return false;
-    }
-
-    qint64 durableSequence = 0;
-    qint64 productionSequence = 0;
-    QString latestProductionEvent;
-    for (const QJsonObject& event : events) {
-        const qint64 sequence = event.value(QStringLiteral("sequenceNumber")).toVariant().toLongLong();
-        durableSequence = qMax(durableSequence, sequence);
-        if (!isControlPlaneEvent(event.value(QStringLiteral("eventType")).toString()) && sequence >= productionSequence) {
-            productionSequence = sequence;
-            latestProductionEvent = event.value(QStringLiteral("eventId")).toString();
-        }
-    }
-
-    const QByteArray content = QStringLiteral(
-        "<!-- current-state.md -->\n\n"
-        "# Current Project State\n\n"
-        "## Latest Durable Sequence\n\n"
-        "%1\n\n"
-        "## Latest Production Development Event\n\n"
-        "%2\n\n"
-        "## Latest Production Sequence\n\n"
-        "%3\n")
-                                   .arg(durableSequence)
-                                   .arg(latestProductionEvent)
-                                   .arg(productionSequence)
-                                   .toUtf8();
-    return writeTextFile(absolutePath(projectRoot, AramfPaths::CurrentState), content, error);
+    return EvidenceStorage().generateCurrentState(projectRoot, error);
 }
-
-bool ProjectMemory::generateColdStartValidation(const QString& projectRoot, QString* error, bool requireControlPlane) const
+bool ProjectMemory::generateColdStartValidation(const QString& projectRoot, QString* error, std::optional<bool> requireControlPlane) const
 {
-    const QStringList mandatory = coldStartPaths(projectRoot, requireControlPlane);
-    QJsonArray checks;
-    QJsonArray errors;
-    auto addCheck = [&checks, &errors](const QString& name, bool pass, const QString& message) {
-        checks.append(QJsonObject {
-            {QStringLiteral("name"), name},
-            {QStringLiteral("status"), pass ? QStringLiteral("PASS") : QStringLiteral("FAIL")},
-            {QStringLiteral("message"), message}
-        });
-        if (!pass) errors.append(message);
-    };
-    for (const QString& relativePath : mandatory) {
-        QFile file(absolutePath(projectRoot, relativePath));
-        const bool exists = file.exists() && file.open(QIODevice::ReadOnly);
-        checks.append(QJsonObject {
-            {QStringLiteral("name"), relativePath},
-            {QStringLiteral("status"), exists ? QStringLiteral("PASS") : QStringLiteral("FAIL")}
-        });
-        if (!exists) {
-            errors.append(QStringLiteral("Missing %1").arg(relativePath));
-        }
-    }
-
-    QString eventError;
-    const auto recoveredEvents = events(projectRoot, &eventError);
-    const bool eventsRecovered = QFile::exists(absolutePath(projectRoot, AramfPaths::EventLog)) && eventError.isEmpty();
-    QString decisionError;
-    const auto recoveredDecisions = decisions(projectRoot, true, &decisionError);
-    const bool decisionsRecovered = QFile::exists(absolutePath(projectRoot, AramfPaths::Decisions)) && decisionError.isEmpty();
-    QString checkpointError;
-    const auto recoveredCheckpoints = checkpoints(projectRoot, &checkpointError);
-    const bool checkpointsRecovered = QFile::exists(absolutePath(projectRoot, AramfPaths::Checkpoints)) && checkpointError.isEmpty();
-
-    const QJsonObject config = readJsonObject(absolutePath(projectRoot, AramfPaths::MemoryConfiguration), nullptr);
-    const QJsonObject contract = readJsonObject(absolutePath(projectRoot, AramfPaths::MemoryContract), nullptr);
-    const bool recordingEnabled = projectMemoryRecordingEnabled(config);
-    QFile agentFile(absolutePath(projectRoot, AramfPaths::AgentInstructions));
-    QString agentText;
-    if (agentFile.open(QIODevice::ReadOnly | QIODevice::Text)) agentText = QString::fromUtf8(agentFile.readAll());
-    const bool contractDiscoverable = !recordingEnabled || !requireControlPlane
-        || (agentText.contains(QStringLiteral("memory/memory-contract.json"))
-            && agentText.contains(QStringLiteral("append-only"))
-            && (agentText.contains(QStringLiteral("narrow mutation"))
-                || agentText.contains(QStringLiteral("narrowest valid mutation"))));
-    if (!contractDiscoverable) errors.append(QStringLiteral("Memory contract is not discoverable from AGENTS.md."));
-
-    const QSet<QString> supportedOperations {
-        QStringLiteral("task-start"), QStringLiteral("task-complete"), QStringLiteral("build-result"),
-        QStringLiteral("test-result"), QStringLiteral("validation-result")};
-    const QJsonArray contractOperations = contract.value(QStringLiteral("supportedOperations")).toArray();
-    QSet<QString> configuredOptions;
-    for (const auto& option : config.value(QStringLiteral("maintenanceOptions")).toArray()) {
-        configuredOptions.insert(option.toString());
-    }
-    const bool contractConfigConsistent = !recordingEnabled || (!contract.isEmpty()
-        && ((configuredOptions.contains(QStringLiteral("record-task-completion")) && contractOperations.contains(QStringLiteral("task-complete")))
-            || !configuredOptions.contains(QStringLiteral("record-task-completion")))
-        && ((!configuredOptions.contains(QStringLiteral("record-build-results")))
-            || contractOperations.contains(QStringLiteral("build-result")))
-        && ((!configuredOptions.contains(QStringLiteral("record-test-results")))
-            || contractOperations.contains(QStringLiteral("test-result")))
-        && ((!configuredOptions.contains(QStringLiteral("record-validation")))
-            || contractOperations.contains(QStringLiteral("validation-result")))
-        && supportedOperations.contains(QStringLiteral("task-start"))
-        && (!configuredOptions.contains(QStringLiteral("record-checkpoints"))
-            || contract.value(QStringLiteral("checkpointOperation")).toObject().value(QStringLiteral("deliberate")).toBool()));
-    if (!contractConfigConsistent) errors.append(QStringLiteral("Memory configuration and contract disagree."));
-
-    addCheck(QStringLiteral("event-log-semantic-recovery"), eventsRecovered,
-             eventsRecovered ? QStringLiteral("Event log parsed through ProjectMemory read API.") : eventError);
-    addCheck(QStringLiteral("decisions-semantic-recovery"), decisionsRecovered,
-             decisionsRecovered ? QStringLiteral("Durable decisions parsed through ProjectMemory read API.") : decisionError);
-    addCheck(QStringLiteral("checkpoints-semantic-recovery"), checkpointsRecovered,
-             checkpointsRecovered ? QStringLiteral("Checkpoints parsed through ProjectMemory read API.") : checkpointError);
-
-    const qint64 maximumEventSequence = [&recoveredEvents] {
-        qint64 maximum = 0;
-        for (const auto& event : recoveredEvents) maximum = qMax(maximum, event.value(QStringLiteral("sequenceNumber")).toVariant().toLongLong());
-        return maximum;
-    }();
-    const qint64 manifestSequence = readJsonObject(absolutePath(projectRoot, AramfPaths::Manifest), nullptr)
-                                        .value(QStringLiteral("nextSequenceNumber")).toVariant().toLongLong();
-    addCheck(QStringLiteral("manifest-event-recovery"),
-             eventsRecovered && manifestSequence == maximumEventSequence + 1,
-             QStringLiteral("Manifest sequence does not agree with recovered event history."));
-    addCheck(QStringLiteral("current-decisions-recovery"),
-             decisionsRecovered && std::all_of(recoveredDecisions.cbegin(), recoveredDecisions.cend(), [](const QJsonObject& decision) {
-                 const QString status = decision.value(QStringLiteral("status")).toString();
-                 return status == QStringLiteral("current") || status == QStringLiteral("superseded") || status == QStringLiteral("historical");
-             }),
-             QStringLiteral("Current decision state could not be reconstructed."));
-    addCheck(QStringLiteral("latest-checkpoint-recovery"),
-             checkpointsRecovered && (recoveredCheckpoints.isEmpty() || !recoveredCheckpoints.last().value(QStringLiteral("id")).toString().isEmpty()),
-             QStringLiteral("Latest checkpoint could not be recovered."));
-
-    QJsonObject report {
-        {QStringLiteral("status"), errors.isEmpty() ? QStringLiteral("PASS") : QStringLiteral("FAIL")},
-        {QStringLiteral("checkedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
-        {QStringLiteral("fingerprint"), coldStartFingerprint(projectRoot, mandatory)},
-        {QStringLiteral("checks"), checks},
-        {QStringLiteral("errors"), errors},
-        {QStringLiteral("warnings"), QJsonArray {}},
-        {QStringLiteral("recordingEnabled"), recordingEnabled},
-        {QStringLiteral("contractConfigConsistent"), contractConfigConsistent}
-    };
-    return writeJsonFile(absolutePath(projectRoot, AramfPaths::ColdStartValidation), report, error);
+    return EvidenceStorage().generateColdStartValidation(projectRoot, error,
+        requireControlPlane.value_or(EvidenceStorage::requiresControlPlane(projectRoot)));
 }
-
 QJsonObject ProjectMemory::validateColdStart(const QString& projectRoot, QString* error) const
 {
-    if (!generateColdStartValidation(projectRoot, error)) return {};
-    return readJsonObject(absolutePath(projectRoot, AramfPaths::ColdStartValidation), error);
+    return EvidenceStorage().validateColdStart(projectRoot, error);
 }
-
 bool ProjectMemory::refreshDerivedState(const QString& projectRoot, QString* error) const
 {
-    return generateCurrentState(projectRoot, error) && generateColdStartValidation(projectRoot, error);
+    return EvidenceStorage().refreshDerivedState(projectRoot, error);
 }
-
 bool ProjectMemory::refreshMemoryContract(const QString& projectRoot, QString* error) const
 {
     const QString path = absolutePath(projectRoot, AramfPaths::MemoryContract);

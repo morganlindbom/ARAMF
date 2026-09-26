@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
+#include <optional>
 
 class ProjectModel;
 
@@ -18,7 +19,8 @@ public:
     explicit ProjectMemory(QObject* parent = nullptr);
 
     bool initialize(const QString& projectRoot, const ProjectModel* model, QString* error = nullptr);
-    bool initializeMemory(const QString& projectRoot, const ProjectModel* model, QString* error = nullptr);
+    bool initializeMemory(const QString& projectRoot, const ProjectModel* model, QString* error = nullptr,
+                          std::optional<bool> requireControlPlane = std::nullopt);
     bool appendEvent(const QString& projectRoot,
                      const QString& eventType,
                      const QString& task,
@@ -126,9 +128,9 @@ private:
     bool ensureDirectories(const QString& projectRoot, QString* error) const;
     bool ensureMemoryDirectories(const QString& projectRoot, QString* error) const;
     bool writeInitialFiles(const QString& projectRoot, const ProjectModel* model, QString* error) const;
-    bool writeMemoryFiles(const QString& projectRoot, const ProjectModel* model, QString* error) const;
+    bool writeMemoryFiles(const QString& projectRoot, const ProjectModel* model, QString* error, bool requireControlPlane = true) const;
     bool generateCurrentState(const QString& projectRoot, QString* error) const;
-    bool generateColdStartValidation(const QString& projectRoot, QString* error, bool requireControlPlane = true) const;
+    bool generateColdStartValidation(const QString& projectRoot, QString* error, std::optional<bool> requireControlPlane = std::nullopt) const;
     bool writeValidationReport(const QString& projectRoot, const QJsonObject& report, QString* error) const;
     qint64 managedMemoryUsage(const QString& projectRoot) const;
     bool withinConfiguredLimit(const QString& projectRoot, qint64 additionalBytes, QString* error);

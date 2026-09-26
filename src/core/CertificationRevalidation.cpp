@@ -189,7 +189,8 @@ QJsonObject bindingsForEvidence(const QJsonObject& bindings)
 
 bool isAllowedSubject(const QString& subject)
 {
-    return subject == QStringLiteral("F1") || subject == QStringLiteral("S1")
+    return subject == QStringLiteral("F1") || subject == QStringLiteral("F2")
+        || subject == QStringLiteral("F3") || subject == QStringLiteral("F4") || subject == QStringLiteral("S1")
         || subject == QStringLiteral("S2") || subject == QStringLiteral("S3")
         || subject == QStringLiteral("S4") || subject == QStringLiteral("S5")
         || subject == QStringLiteral("S6") || subject == QStringLiteral("P1")

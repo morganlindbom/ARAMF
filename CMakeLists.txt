@@ -13,6 +13,22 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
+# Independent Foundation source sets: each standalone test links one domain only.
+set(ARAMF_F1_SOURCES
+    src/foundations/F1/MemoryEvidenceFoundation.cpp
+    src/foundations/F1/EvidenceStorage.cpp)
+set(ARAMF_F2_SOURCES src/foundations/F2/IdentityTrustFoundation.cpp)
+set(ARAMF_F3_SOURCES src/foundations/F3/ScopeIntegrityFoundation.cpp)
+set(ARAMF_F4_SOURCES
+    src/foundations/F4/LifecycleCertificationFoundation.cpp
+    src/foundations/F4/ProcessVersion.cpp)
+set(ARAMF_FOUNDATION_ORCHESTRATION
+    ${ARAMF_F2_SOURCES}
+    ${ARAMF_F3_SOURCES}
+    src/foundations/F4/LifecycleCertificationFoundation.cpp
+    src/core/FoundationProjectValidation.cpp
+    src/core/FoundationCertificationCampaign.cpp)
+
 set(ARAMF_CORE_SOURCES
     src/core/AramfPaths.h
     src/core/GitIgnoreService.h
@@ -47,7 +63,7 @@ set(ARAMF_CORE_SOURCES
     src/core/ProjectPersistence.cpp
     src/core/ProjectSchema.h
     src/core/ProcessVersion.h
-    src/core/ProcessVersion.cpp
+    src/foundations/F4/ProcessVersion.cpp
     src/core/ConfigurationUpdateService.h
     src/core/ConfigurationUpdateService.cpp
     src/core/RuntimeOwnershipService.h
@@ -94,9 +110,10 @@ set(ARAMF_CORE_SOURCES
     src/core/AdaptiveRoutingService.h
     src/core/AdaptiveRoutingService.cpp
     src/core/MemoryEvidenceFoundation.h
-    src/core/MemoryEvidenceFoundation.cpp
+    ${ARAMF_F1_SOURCES}
     src/core/FoundationServices.h
     src/core/FoundationServices.cpp
+        ${ARAMF_FOUNDATION_ORCHESTRATION}
     src/structure/S1/ResponsibilityOwnership.h
     src/structure/S1/ResponsibilityOwnership.cpp
     src/structure/S1/S1CertificationService.h
@@ -222,6 +239,15 @@ target_link_libraries(aramf PRIVATE Qt6::Core Qt6::Widgets)
 
 include(CTest)
 if(BUILD_TESTING)
+    find_package(Qt6 REQUIRED COMPONENTS Test)
+    # Required certification campaigns use the same current production sources.
+    add_executable(aramf_campaign_runner test_250/runner/main.cpp ${ARAMF_CORE_SOURCES})
+    target_include_directories(aramf_campaign_runner PRIVATE src)
+    target_link_libraries(aramf_campaign_runner PRIVATE Qt6::Core)
+    add_executable(aramf_release_validation_runner
+        test_550/runner/main.cpp ${ARAMF_CORE_SOURCES} ${ARAMF_UI_SOURCES})
+    target_include_directories(aramf_release_validation_runner PRIVATE src)
+    target_link_libraries(aramf_release_validation_runner PRIVATE Qt6::Core Qt6::Widgets Qt6::Test)
     add_executable(aramf_core_tests
         tests/ProjectMemoryTests.cpp
         tests/WorkerTaskTests.cpp
@@ -230,6 +256,7 @@ if(BUILD_TESTING)
         tests/ProcessNamespaceMigrationTests.cpp
         tests/FoundationNamespaceTests.cpp
         tests/FoundationTests.cpp
+        tests/FoundationCertificationTests.cpp
         tests/S1CertificationTests.cpp
         tests/S2CertificationTests.cpp
         tests/S3CertificationTests.cpp
@@ -237,9 +264,10 @@ if(BUILD_TESTING)
         tests/S5CertificationTests.cpp
         tests/S6CertificationTests.cpp
         src/core/MemoryEvidenceFoundation.h
-        src/core/MemoryEvidenceFoundation.cpp
+        ${ARAMF_F1_SOURCES}
         src/core/FoundationServices.h
         src/core/FoundationServices.cpp
+        ${ARAMF_FOUNDATION_ORCHESTRATION}
         src/structure/S1/ResponsibilityOwnership.h
         src/structure/S1/ResponsibilityOwnership.cpp
         src/structure/S1/S1CertificationService.h
@@ -345,7 +373,7 @@ if(BUILD_TESTING)
         src/structure/S6/S6CertificationService.h
         src/structure/S6/S6CertificationService.cpp
         src/core/ProcessVersion.h
-        src/core/ProcessVersion.cpp
+        src/foundations/F4/ProcessVersion.cpp
         src/core/WorkflowPageMetadata.h
         src/core/WorkflowPageMetadata.cpp
         src/core/ComponentVersion.h
@@ -369,6 +397,16 @@ if(BUILD_TESTING)
     target_link_libraries(aramf_core_tests PRIVATE Qt6::Core)
     add_dependencies(aramf_core_tests aramf)
     add_test(NAME aramf_core_tests COMMAND aramf_core_tests)
+    add_test(NAME aramf_foundation_certification COMMAND aramf_core_tests --foundation-certification)
+    foreach(number RANGE 1 4)
+        add_executable(aramf_f${number}_independence
+            tests/FoundationIndependenceTests.cpp ${ARAMF_F${number}_SOURCES})
+        target_compile_definitions(aramf_f${number}_independence PRIVATE FOUNDATION_NUMBER=${number})
+        target_include_directories(aramf_f${number}_independence PRIVATE src src/core)
+        target_link_libraries(aramf_f${number}_independence PRIVATE Qt6::Core)
+        add_test(NAME aramf_f${number}_independence
+            COMMAND aramf_f${number}_independence "${CMAKE_CURRENT_SOURCE_DIR}")
+    endforeach()
 
     add_executable(aramf_freshness_tests
         tests/CertificationFreshnessTests.cpp
@@ -417,7 +455,7 @@ if(BUILD_TESTING)
         src/structure/S6/StructuralEvolutionEnforcement.h
         src/structure/S6/StructuralEvolutionEnforcement.cpp
         src/core/ProcessVersion.h
-        src/core/ProcessVersion.cpp
+        src/foundations/F4/ProcessVersion.cpp
         src/core/WorkflowPageMetadata.h
         src/core/WorkflowPageMetadata.cpp
         src/core/ComponentVersion.h
@@ -425,9 +463,10 @@ if(BUILD_TESTING)
         src/core/ProjectMemory.h
         src/core/ProjectMemory.cpp
         src/core/MemoryEvidenceFoundation.h
-        src/core/MemoryEvidenceFoundation.cpp
+        ${ARAMF_F1_SOURCES}
         src/core/FoundationServices.h
         src/core/FoundationServices.cpp
+        ${ARAMF_FOUNDATION_ORCHESTRATION}
         src/core/ProjectMemoryCompaction.h
         src/core/ProjectMemoryCompaction.cpp
         src/core/CertificationService.h
@@ -499,6 +538,8 @@ if(BUILD_TESTING)
         src/ui/workflows/project/overview/ProjectOverviewPage.h
         src/ui/workflows/project/overview/ProjectOverviewPage.cpp
     )
+    target_sources(aramf_workflow_tests PRIVATE
+        src/core/CertificationFreshness.cpp src/core/CertificationRevalidation.cpp)
     target_include_directories(aramf_workflow_tests PRIVATE src)
     target_link_libraries(aramf_workflow_tests PRIVATE Qt6::Core Qt6::Widgets)
     add_test(NAME aramf_workflow_tests COMMAND aramf_workflow_tests)
@@ -515,7 +556,7 @@ if(BUILD_TESTING)
     add_executable(aramf_s1_tests
         tests/S1ResponsibilityTests.cpp
         src/core/ProcessVersion.h
-        src/core/ProcessVersion.cpp
+        src/foundations/F4/ProcessVersion.cpp
         src/structure/S1/ResponsibilityOwnership.h
         src/structure/S1/ResponsibilityOwnership.cpp
     )
@@ -526,7 +567,7 @@ if(BUILD_TESTING)
     add_executable(aramf_s2_tests
         tests/S2PhysicalStructureTests.cpp
         src/core/ProcessVersion.h
-        src/core/ProcessVersion.cpp
+        src/foundations/F4/ProcessVersion.cpp
         src/structure/S1/ResponsibilityOwnership.h
         src/structure/S1/ResponsibilityOwnership.cpp
         src/structure/S2/PhysicalStructure.h
@@ -539,7 +580,7 @@ if(BUILD_TESTING)
     add_executable(aramf_s3_tests
         tests/S3DependencyInterfacesTests.cpp
         src/core/ProcessVersion.h
-        src/core/ProcessVersion.cpp
+        src/foundations/F4/ProcessVersion.cpp
         src/structure/S1/ResponsibilityOwnership.h
         src/structure/S1/ResponsibilityOwnership.cpp
         src/structure/S2/PhysicalStructure.h
@@ -554,7 +595,7 @@ if(BUILD_TESTING)
     add_executable(aramf_s4_tests
         tests/S4CompositionEncapsulationTests.cpp
         src/core/ProcessVersion.h
-        src/core/ProcessVersion.cpp
+        src/foundations/F4/ProcessVersion.cpp
         src/structure/S1/ResponsibilityOwnership.h
         src/structure/S1/ResponsibilityOwnership.cpp
         src/structure/S2/PhysicalStructure.h
@@ -571,7 +612,7 @@ if(BUILD_TESTING)
     add_executable(aramf_s5_tests
         tests/S5DecompositionModularityTests.cpp
         src/core/ProcessVersion.h
-        src/core/ProcessVersion.cpp
+        src/foundations/F4/ProcessVersion.cpp
         src/structure/S1/ResponsibilityOwnership.h
         src/structure/S1/ResponsibilityOwnership.cpp
         src/structure/S2/PhysicalStructure.h
@@ -590,7 +631,7 @@ if(BUILD_TESTING)
     add_executable(aramf_s6_tests
         tests/S6StructuralEvolutionEnforcementTests.cpp
         src/core/ProcessVersion.h
-        src/core/ProcessVersion.cpp
+        src/foundations/F4/ProcessVersion.cpp
         src/structure/S6/StructuralEvolutionEnforcement.h
         src/structure/S6/StructuralEvolutionEnforcement.cpp
     )
@@ -619,7 +660,7 @@ if(BUILD_TESTING)
 endif()
 
 # Task policy is shared by every consumer of the existing core services.
-foreach(ARAMF_TASK_TARGET aramf aramf_core_tests aramf_template_tests aramf_update_campaign_runner aramf_configuration_update_tests)
+foreach(ARAMF_TASK_TARGET aramf aramf_core_tests aramf_template_tests aramf_update_campaign_runner aramf_configuration_update_tests aramf_campaign_runner aramf_release_validation_runner)
     if(TARGET ${ARAMF_TASK_TARGET})
         target_sources(${ARAMF_TASK_TARGET} PRIVATE src/core/WorkerTaskServices.h src/core/WorkerTaskServices.cpp)
     endif()
