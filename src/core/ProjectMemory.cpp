@@ -579,6 +579,43 @@ bool ProjectMemory::initializeMemory(const QString& projectRoot, const ProjectMo
     return false;
 }
 
+bool ProjectMemory::updateExistingConfiguration(const QString& projectRoot, const ProjectModel& model,
+                                                 QString* error, bool requireControlPlane)
+{
+    const QString root = QFileInfo(projectRoot).canonicalFilePath();
+    const QString workerName = AramfPaths::workerDirectoryName(model.workerNameSuffix());
+    const QString workerPath = QDir(root).filePath(workerName);
+    const QString memoryPath = QDir(workerPath).filePath("memory");
+    if (root.isEmpty() || root != QFileInfo(model.projectPath()).canonicalFilePath()
+        || workerName != AramfPaths::runtimeWorkerDirectoryName()
+        || QFileInfo(workerPath).isSymLink()
+        || QFileInfo(workerPath).canonicalFilePath() != workerPath
+        || QFileInfo(memoryPath).canonicalFilePath() != memoryPath) {
+        if (error) *error = QStringLiteral("Memory update requires the selected existing project/worker.");
+        return false;
+    }
+    const auto manifest = readJsonObject(absolutePath(root, AramfPaths::WorkerManifest), error);
+    if (manifest.value("projectId").toString() != model.projectId()
+        || manifest.value("workerIdentity").toString() != workerName) {
+        if (error) *error = QStringLiteral("Memory update worker identity does not match the project.");
+        return false;
+    }
+    // No missing history/configuration is reconstructed by an in-place update.
+    for (const auto& relative : {AramfPaths::MemoryConfiguration, AramfPaths::MemoryContract,
+                                AramfPaths::Manifest, AramfPaths::EventLog}) {
+        const QFileInfo file(absolutePath(root, relative));
+        if (!file.isFile() || file.isSymLink()) {
+            if (error) *error = QStringLiteral("Existing memory state is required: %1").arg(relative);
+            return false;
+        }
+    }
+    QList<FileSnapshot> snapshots;
+    if (!snapshotFiles(root, {AramfPaths::MemoryConfiguration, AramfPaths::MemoryContract}, &snapshots, error)) return false;
+    if (writeMemoryConfiguration(root, &model, error, requireControlPlane)) return true;
+    restoreSnapshots(snapshots, error);
+    return false;
+}
+
 bool ProjectMemory::appendEvent(const QString& projectRoot,
                                 const QString& eventType,
                                 const QString& task,
@@ -2075,7 +2112,7 @@ bool ProjectMemory::ensureMemoryDirectories(const QString& projectRoot, QString*
     return true;
 }
 
-bool ProjectMemory::writeMemoryFiles(const QString& projectRoot, const ProjectModel* model, QString* error, bool requireControlPlane) const
+bool ProjectMemory::writeMemoryConfiguration(const QString& projectRoot, const ProjectModel* model, QString* error, bool requireControlPlane) const
 {
     const MemoryConfiguration memory = model ? model->memoryConfiguration() : MemoryConfiguration{};
     const auto operations = supportedRecordOperations();
@@ -2140,9 +2177,26 @@ bool ProjectMemory::writeMemoryFiles(const QString& projectRoot, const ProjectMo
             {QStringLiteral("crossFileConsistency"), QStringLiteral("When an operation updates event-log, metrics, current-state, manifest, validation state, or PROJECT_STATUS, read and validate all affected files together and report partial failure honestly.")}
         }}
     };
-    const QList<QPair<QString, QJsonObject>> defaults {
+    const QList<QPair<QString, QJsonObject>> outputs {
         {AramfPaths::MemoryConfiguration, memoryConfiguration},
-        {AramfPaths::MemoryContract, contract},
+        {AramfPaths::MemoryContract, contract}};
+    for (const auto& output : outputs) {
+        const auto path = absolutePath(projectRoot, output.first);
+        if (!writeJsonFile(path, output.second, error)) return false;
+        auto actual = readJsonObject(path, error);
+        actual.remove("_file");
+        if (actual != output.second) {
+            if (error) *error = QStringLiteral("Memory configuration readback mismatch: %1").arg(path);
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ProjectMemory::writeMemoryFiles(const QString& projectRoot, const ProjectModel* model, QString* error, bool requireControlPlane) const
+{
+    if (!writeMemoryConfiguration(projectRoot, model, error, requireControlPlane)) return false;
+    const QList<QPair<QString, QJsonObject>> defaults {
         {AramfPaths::FrameworkKnowledge, QJsonObject {
             {QStringLiteral("version"), 1},
             {QStringLiteral("authority"), QJsonArray {
@@ -2161,9 +2215,7 @@ bool ProjectMemory::writeMemoryFiles(const QString& projectRoot, const ProjectMo
         {AramfPaths::EventIdIntegrityExceptions, QJsonObject {{QStringLiteral("_file"), QStringLiteral("event-id-integrity-exceptions.json")}, {QStringLiteral("policy"), QStringLiteral("Acknowledged immutable legacy anomalies only; new duplicates fail validation." )}, {QStringLiteral("exceptions"), QJsonArray {}}}}
     };
     for (const auto& [relativePath, object] : defaults) {
-        const bool preserveExisting = relativePath != AramfPaths::MemoryConfiguration
-            && relativePath != AramfPaths::MemoryContract;
-        if (!writeJsonFile(absolutePath(projectRoot, relativePath), object, error, preserveExisting)) return false;
+        if (!writeJsonFile(absolutePath(projectRoot, relativePath), object, error, true)) return false;
     }
     QFile compactionHistory(absolutePath(projectRoot, AramfPaths::CompactionHistory));
     if (!compactionHistory.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {

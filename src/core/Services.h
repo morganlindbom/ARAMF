@@ -138,6 +138,15 @@ public:
                                             const GenerationOptions& options) const;
     // Pure expected outputs from the same writers used by Generate/Repair.
     static QJsonObject derivedTaskArtifacts(const ProjectModel& model, const GenerationOptions& options);
+    // ConfigurationUpdateService owns the transaction. This route reuses the
+    // canonical product writers without creating/migrating a worker instance.
+    GenerationResult regenerateConfiguration(const ProjectModel& model,
+                                               const GenerationOptions& options) const;
+    static QStringList configurationUpdateFiles(const ProjectModel& model,
+                                                const GenerationOptions& options);
+private:
+    GenerationResult generateProducts(const ProjectModel& model,
+                                     const GenerationOptions& options, bool updateExisting) const;
 };
 
 class VerificationServices final : public QObject

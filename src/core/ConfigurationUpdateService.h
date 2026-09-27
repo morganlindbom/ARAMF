@@ -7,6 +7,10 @@ struct ConfigurationUpdateResult {
     bool success = false;
     bool noChange = false;
     bool removalBlocked = false;
+    bool configurationSaved = false;
+    bool derivedSynchronized = false;
+    bool verified = false;
+    bool rolledBack = false;
     QString error;
     QJsonObject plan;
 };
@@ -19,4 +23,6 @@ public:
     ConfigurationUpdateResult validate(const ProjectModel& model) const;
     ConfigurationUpdateResult apply(const ProjectModel& model, const QString& validationFingerprint = {}) const;
     static QJsonObject canonicalState(const ProjectModel& model);
+private:
+    ConfigurationUpdateResult analyze(const ProjectModel& model, bool persistPlan) const;
 };

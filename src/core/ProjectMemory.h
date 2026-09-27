@@ -21,6 +21,11 @@ public:
     bool initialize(const QString& projectRoot, const ProjectModel* model, QString* error = nullptr);
     bool initializeMemory(const QString& projectRoot, const ProjectModel* model, QString* error = nullptr,
                           std::optional<bool> requireControlPlane = std::nullopt);
+    // Existing-worker configuration producer only. Never bootstraps, migrates,
+    // seeds knowledge or appends history. The generation coordinator refreshes
+    // derived validation after all selected products have been regenerated.
+    bool updateExistingConfiguration(const QString& projectRoot, const ProjectModel& model,
+                                     QString* error = nullptr, bool requireControlPlane = true);
     bool appendEvent(const QString& projectRoot,
                      const QString& eventType,
                      const QString& task,
@@ -129,6 +134,8 @@ private:
     bool ensureMemoryDirectories(const QString& projectRoot, QString* error) const;
     bool writeInitialFiles(const QString& projectRoot, const ProjectModel* model, QString* error) const;
     bool writeMemoryFiles(const QString& projectRoot, const ProjectModel* model, QString* error, bool requireControlPlane = true) const;
+    bool writeMemoryConfiguration(const QString& projectRoot, const ProjectModel* model,
+                                  QString* error, bool requireControlPlane) const;
     bool generateCurrentState(const QString& projectRoot, QString* error) const;
     bool generateColdStartValidation(const QString& projectRoot, QString* error, std::optional<bool> requireControlPlane = std::nullopt) const;
     bool writeValidationReport(const QString& projectRoot, const QJsonObject& report, QString* error) const;

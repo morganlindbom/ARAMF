@@ -390,6 +390,50 @@ GenerationServices::GenerationServices(QObject* parent)
 GenerationResult GenerationServices::generate(const ProjectModel& model,
                                                const GenerationOptions& options) const
 {
+    return generateProducts(model, options, false);
+}
+
+GenerationResult GenerationServices::regenerateConfiguration(const ProjectModel& model,
+                                                              const GenerationOptions& options) const
+{
+    return generateProducts(model, options, true);
+}
+
+QStringList GenerationServices::configurationUpdateFiles(const ProjectModel& model,
+                                                         const GenerationOptions& options)
+{
+    // Complete potential write set, including delegated producers and current
+    // verification. Missing targets are snapshotted as absent before execution.
+    WorkerNameScope scope(model.workerNameSuffix());
+    QStringList paths{AramfPaths::ProjectConfiguration, AramfPaths::WorkerManifest,
+        "ARAMF_WORKER/verification/generation-state.json", AramfPaths::LatestValidation,
+        "ARAMF_WORKER/verification/verification-result.json", AramfPaths::ContextIndex,
+        AramfPaths::CompressedContext, AramfPaths::ContextFreshness, AramfPaths::AgentAdapters,
+        AramfPaths::TaskDag};
+    paths << AramfPaths::runtimeWorkerDirectoryName() + '/' + AramfPaths::runtimeWorkerDirectoryName() + ".json";
+    if (options.generateAgentRules) paths << AramfPaths::AgentInstructions << AramfPaths::GeneratedRules
+        << AramfPaths::ProjectStatus << "ARAMF_WORKER/documentation/documentation-manifest.json";
+    if (options.generateRouting) paths << AramfPaths::TaskRoutes << AramfPaths::ScopeRoutes
+        << AramfPaths::ValidationPolicy << "ARAMF_WORKER/routing/README.md";
+    if (options.generatePlatforms) paths << "ARAMF_WORKER/platforms/platform-metadata.json"
+        << AramfPaths::AndroidEffectiveConfig << "ARAMF_WORKER/communication/communication-contract.json"
+        << "ARAMF_WORKER/communication/multi-target-build.json" << "ARAMF_WORKER/hardware/hardware-resources.json";
+    if (options.generateResources) paths << AramfPaths::ResourceManifest;
+    if (options.generateProvenance) paths << AramfPaths::Provenance << AramfPaths::SelectionEffects;
+    if (options.generateMemory) paths << AramfPaths::MemoryConfiguration << AramfPaths::MemoryContract
+        << AramfPaths::CurrentState << AramfPaths::ColdStartValidation
+        << AramfPaths::ConsistencyValidation;
+    if (model.certificationConfiguration().enabled) paths << AramfPaths::CertificationContract
+        << AramfPaths::Certificates << AramfPaths::CurrentCertificationState << AramfPaths::ProjectStatus;
+    for (auto& path : paths) path = AramfPaths::resolveWorkerRelativePath(path);
+    paths.removeDuplicates();
+    return paths;
+}
+
+GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
+                                                       const GenerationOptions& options,
+                                                       bool updateExisting) const
+{
     WorkerNameScope workerNameScope(model.workerNameSuffix());
     GenerationResult result;
     const auto configurationErrors = TemplateValidation::readiness(model);
@@ -410,18 +454,29 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         return result;
     }
     const QString workerSuffix = AramfPaths::normalizeWorkerNameSuffix(model.workerNameSuffix());
-    if (!workerSuffix.isEmpty()
+    if (!updateExisting && !workerSuffix.isEmpty()
         && QDir(projectRoot).exists(AramfPaths::workerDirectoryName(workerSuffix))) {
         result.error = QStringLiteral("Generation stopped: worker directory already exists: %1")
             .arg(QDir(projectRoot).filePath(AramfPaths::workerDirectoryName(workerSuffix)));
         return result;
     }
-    const auto preparation = prepareControlPlane(projectRoot);
-    if (!preparation.success) {
-        result.error = QStringLiteral("Generation failed: %1").arg(preparation.error);
-        return result;
+    if (updateExisting) {
+        QJsonObject manifest;
+        QString error;
+        if (!readJson(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::WorkerManifest)), &manifest, &error)
+            || manifest.value("projectId").toString() != model.projectId()
+            || manifest.value("workerIdentity").toString() != AramfPaths::runtimeWorkerDirectoryName()) {
+            result.error = QStringLiteral("Configuration regeneration requires the selected existing worker identity.");
+            return result;
+        }
+    } else {
+        const auto preparation = prepareControlPlane(projectRoot);
+        if (!preparation.success) {
+            result.error = QStringLiteral("Generation failed: %1").arg(preparation.error);
+            return result;
+        }
+        result.warnings.append(preparation.warnings);
     }
-    result.warnings.append(preparation.warnings);
 
     const QList<QPair<bool, QString>> productOrder{
         {options.generateAgentRules, QStringLiteral("Agent rules")},
@@ -657,11 +712,16 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         }
         const QString p1Context = p1ContextSection();
         canonicalAgent += p1Context;
-        if (!writeTextFile(QDir(projectRoot).filePath(QStringLiteral("AGENTS.md")), rootAgent.toUtf8(), &error, true)) {
+        if (!updateExisting && !writeTextFile(QDir(projectRoot).filePath(QStringLiteral("AGENTS.md")), rootAgent.toUtf8(), &error, true)) {
             return fail(QStringLiteral("Agent rules"), error);
         }
         const QString agentInstructionsPath = QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::AgentInstructions));
-        if (options.generateMemory) {
+        if (updateExisting) {
+            // This is the generated instruction artifact, not custom/ or the
+            // user-owned root bootstrap. Refresh configuration-dependent text
+            // (resources, documentation, capabilities) from its sole producer.
+            if (!writeTextFile(agentInstructionsPath, canonicalAgent.toUtf8(), &error)) return fail(QStringLiteral("Agent rules"), error);
+        } else if (options.generateMemory) {
             const int memoryBegin = canonicalAgent.indexOf(QStringLiteral("<!-- ARAMF-MEMORY-BEGIN -->"));
             const QString memorySection = memoryBegin >= 0 ? canonicalAgent.mid(memoryBegin) : QString();
             const int taskBegin = canonicalAgent.indexOf(QStringLiteral("<!-- ARAMF-TASK-GOVERNANCE-BEGIN -->"));
@@ -754,9 +814,11 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         addGeneratedFiles(result, {AramfPaths::ProjectConfiguration});
     }
 
-    const auto gitIgnore = GitIgnoreService().ensureProjectGitIgnore(projectRoot);
-    if (!gitIgnore.success) return fail(QStringLiteral("Project privacy (.gitignore)"), gitIgnore.error);
-    if (gitIgnore.changed) result.generatedFiles.append(QStringLiteral(".gitignore"));
+    if (!updateExisting) {
+        const auto gitIgnore = GitIgnoreService().ensureProjectGitIgnore(projectRoot);
+        if (!gitIgnore.success) return fail(QStringLiteral("Project privacy (.gitignore)"), gitIgnore.error);
+        if (gitIgnore.changed) result.generatedFiles.append(QStringLiteral(".gitignore"));
+    }
 
     if (options.generateRouting) {
         const auto rules = model.ruleConfiguration();
@@ -992,7 +1054,10 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
 
     if (options.generateMemory) {
         ProjectMemory memory;
-        if (!memory.initializeMemory(projectRoot, &model, &error, options.generateAgentRules)) return fail(QStringLiteral("Project Memory"), error);
+        const bool memoryReady = updateExisting
+            ? memory.updateExistingConfiguration(projectRoot, model, &error, options.generateAgentRules)
+            : memory.initializeMemory(projectRoot, &model, &error, options.generateAgentRules);
+        if (!memoryReady) return fail(QStringLiteral("Project Memory"), error);
         addGeneratedFiles(result, {AramfPaths::MemoryConfiguration, AramfPaths::Manifest,
                                    AramfPaths::EventLog, AramfPaths::CurrentState,
                                    AramfPaths::ColdStartValidation, AramfPaths::ConsistencyValidation,
@@ -1142,7 +1207,7 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
     if (!writeJsonFile(identityPath, identity, &error))
         return fail(QStringLiteral("Worker identity"), error);
     result.generatedFiles.append(resolvedWorkerName + QStringLiteral("/") + resolvedWorkerName + QStringLiteral(".json"));
-    const QJsonObject generationState{
+    QJsonObject generationState{
         {QStringLiteral("fingerprint"), result.fingerprint},
         {QStringLiteral("canonicalState"), [&] { auto state = ProjectPersistence().toJson(model); state.remove(QStringLiteral("projectPath")); state.remove(QStringLiteral("projectFilePath")); state.remove(QStringLiteral("workflowProgress")); return state; }()},
         {QStringLiteral("projectRoot"), projectRoot},
@@ -1150,6 +1215,25 @@ GenerationResult GenerationServices::generate(const ProjectModel& model,
         {QStringLiteral("agentRules"), options.generateAgentRules}, {QStringLiteral("routing"), options.generateRouting},
         {QStringLiteral("platforms"), options.generatePlatforms}, {QStringLiteral("resources"), options.generateResources},
         {QStringLiteral("memory"), options.generateMemory}, {QStringLiteral("provenance"), options.generateProvenance}};
+    if (updateExisting) {
+        QJsonObject hashes;
+        // Bind the products actually emitted by the canonical writers. Mutable
+        // verification/memory state is validated by its own canonical service.
+        const QString workerPrefix = AramfPaths::runtimeWorkerDirectoryName() + '/';
+        for (const auto& relative : result.generatedFiles) {
+            if (!relative.startsWith(workerPrefix) || relative.startsWith(workerPrefix + "memory/")
+                || relative.startsWith(workerPrefix + "certification/")
+                || relative.startsWith(workerPrefix + "context/")
+                || relative.startsWith(workerPrefix + "verification/")
+                || relative == workerPrefix + "PROJECT_STATUS.md") continue;
+            QFile artifact(QDir(projectRoot).filePath(relative));
+            if (!artifact.open(QIODevice::ReadOnly)) return fail(QStringLiteral("Configuration readback"), artifact.errorString());
+            const auto bytes = artifact.readAll();
+            if (artifact.error() != QFileDevice::NoError) return fail(QStringLiteral("Configuration readback"), artifact.errorString());
+            hashes.insert(relative, QString::fromLatin1(QCryptographicHash::hash(bytes, QCryptographicHash::Sha256).toHex()));
+        }
+        generationState.insert("configurationArtifactHashes", hashes);
+    }
     const QString generationStatePath = AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/generation-state.json"));
     if (!writeJsonFile(QDir(projectRoot).filePath(generationStatePath), generationState, &error)) return fail(QStringLiteral("Generation state"), error);
     addGeneratedFiles(result, {generationStatePath});
@@ -1426,6 +1510,23 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     QJsonObject state; QString stateError;
     const bool stateReadable = readJson(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/generation-state.json"))), &state, &stateError);
     const bool current = stateReadable && state.value(QStringLiteral("fingerprint")).toString() == result.fingerprint;
+    if (state.contains("configurationArtifactHashes")) {
+        const auto hashes = state.value("configurationArtifactHashes").toObject();
+        bool matches = !hashes.isEmpty();
+        const QString prefix = AramfPaths::runtimeWorkerDirectoryName() + '/';
+        for (auto it = hashes.begin(); it != hashes.end(); ++it) {
+            const auto relative = QDir::cleanPath(it.key());
+            if (relative != it.key() || !relative.startsWith(prefix) || QDir::isAbsolutePath(relative)) { matches = false; continue; }
+            QFile artifact(QDir(root).filePath(relative));
+            if (!artifact.open(QIODevice::ReadOnly)) { matches = false; continue; }
+            const auto bytes = artifact.readAll();
+            matches &= artifact.error() == QFileDevice::NoError
+                && QString::fromLatin1(QCryptographicHash::hash(bytes, QCryptographicHash::Sha256).toHex()) == it.value().toString();
+        }
+        addCheck(result, QStringLiteral("configuration-artifact-readback"), QStringLiteral("Configuration product byte bindings"),
+                 matches ? VerificationStatus::Pass : VerificationStatus::Fail,
+                 matches ? QStringLiteral("Canonical configuration products match generation readback.") : QStringLiteral("Configuration products differ from generated state."));
+    }
     addCheck(result, QStringLiteral("freshness"), QStringLiteral("Generated configuration is current"),
              current ? VerificationStatus::Pass : VerificationStatus::Warning,
              current ? QStringLiteral("Fingerprint matches ProjectModel.") : QStringLiteral("Generated output is stale; run Generate again."));

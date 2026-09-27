@@ -697,7 +697,7 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
     preserve("compiler", currentEnvironment.compiler);
     preserve("buildSystem", currentEnvironment.buildSystem);
     preserve("packageManager", currentEnvironment.packageManager);
-    for (const auto& key : {"projectId", "projectName", "projectPath", "projectFilePath"}) root.insert(key, previous.value(key));
+    for (const auto& key : {"projectId", "projectName", "projectPath", "projectFilePath", "workerNameSuffix"}) root.insert(key, previous.value(key));
     if (!selected.first().userDefined) root.insert("resources", previous.value("resources"));
     root.insert("projectId", previous.value("projectId"));
     root.insert("projectName", previous.value("projectName"));
@@ -743,7 +743,7 @@ bool TemplateManager::saveCustomTemplate(const ProjectModel& model, const QStrin
     // identity and full Generate readiness are deliberately excluded.
     for (const auto& key : {QStringLiteral("projectId"), QStringLiteral("projectName"),
                             QStringLiteral("projectPath"), QStringLiteral("projectFilePath"),
-                            QStringLiteral("templateId"), QStringLiteral("templateState")})
+                            QStringLiteral("workerNameSuffix"), QStringLiteral("templateId"), QStringLiteral("templateState")})
         savedConfiguration.remove(key);
     if (savedConfiguration.isEmpty() || model.templateModules().isEmpty()) {
         if (error) *error = "Select at least one project module before saving a template.";

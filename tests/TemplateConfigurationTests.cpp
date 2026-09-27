@@ -119,6 +119,27 @@ void identityRegression(TemplateManager& manager, ProjectPersistence& persistenc
     reverse.setWorkerNameSuffix("HVD_COMPONENTS");
     reverse.setProjectName("HVD Components");
     check(reverse.workerNameSuffix() == "HVD_COMPONENTS" && reverse.projectName() == "HVD Components", "worker then project preserves both names");
+    const QString reverseId = reverse.projectId();
+    check(manager.applyTemplate(&reverse, "cmake-library"), "named worker initial template applies");
+    check(manager.applyTemplate(&reverse, "qt-desktop-application"), "named worker replacement template applies");
+    check(reverse.workerNameSuffix() == "HVD_COMPONENTS" && reverse.projectName() == "HVD Components"
+              && reverse.projectId() == reverseId, "template replacement preserves all project and worker identities");
+    QString namedTemplateId, namedTemplateError;
+    TemplateManager namedLibrary(nullptr, fixture.filePath("named-worker-templates.json"));
+    check(namedLibrary.saveCustomTemplate(reverse, "Named worker reusable template", &namedTemplateId, &namedTemplateError), "save named project as reusable template");
+    TemplateManager namedRestart(nullptr, namedLibrary.libraryPath());
+    bool savedNamedTemplate = false;
+    for (const auto& entry : readIdentityJson(namedLibrary.libraryPath()).value("templates").toArray()) {
+        if (entry.toObject().value("id") != namedTemplateId) continue;
+        savedNamedTemplate = true;
+        check(!entry.toObject().value("configuration").toObject().contains("workerNameSuffix"), "persisted reusable template excludes worker instance identity");
+    }
+    check(savedNamedTemplate && namedRestart.definition(namedTemplateId).configuration.value("workerNameSuffix").toString().isEmpty(), "reloaded template has no source worker suffix");
+    ProjectModel namedTarget;
+    namedTarget.setWorkerNameSuffix("NEW_TARGET"); namedTarget.setProjectName("New target");
+    const QString namedTargetId = namedTarget.projectId();
+    check(namedRestart.applyTemplate(&namedTarget, namedTemplateId, &namedTemplateError), "apply named project's reusable template");
+    check(namedTarget.workerNameSuffix() == "NEW_TARGET" && namedTarget.projectId() == namedTargetId && namedTarget.projectName() == "New target", "template never imports another project's worker identity");
     auto legacy = persistence.toJson(reverse);
     legacy.insert("projectName", "ARAMF_WORKER_HVD_COMPONENTS");
     ProjectModel restored;

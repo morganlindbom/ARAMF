@@ -32,8 +32,8 @@ UpdateConfigurationPage::UpdateConfigurationPage(ProjectModel* model, ProjectSet
     layout->addWidget(result_);
     connect(validateButton, &QPushButton::clicked, this, &UpdateConfigurationPage::validate);
     connect(updateButton_, &QPushButton::clicked, this, [this] {
-        QString error;
-        if (!setup_->saveForGeneration(&error)) { result_->setPlainText(tr("Update: NOT RUN\nSave failed: %1").arg(error)); return; }
+        // One transaction owns save, canonical regeneration, readback and
+        // rollback. Never persist the proposed model separately in the UI.
         const auto update = ConfigurationUpdateService().apply(*model_, validatedFingerprint_);
         result_->setPlainText(update.success
             ? tr("Validation: PASS\nUpdate: PASS\n\nUpdated complete ARAMF configuration.\nValidation and verification passed.\nGenerated baseline updated.\nExisting files were preserved; no files were deleted.")
