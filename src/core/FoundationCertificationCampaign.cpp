@@ -2,6 +2,7 @@
 #include "FoundationServices.h"
 #include "CertificationService.h"
 #include "CertificationFreshness.h"
+#include "CertificationRevalidation.h"
 #include "ProjectModel.h"
 #include "ProjectPersistence.h"
 #include <QCoreApplication>
@@ -153,9 +154,26 @@ bool certificateValid(const QString& root, const QString& subject, QJsonObject* 
         return fail(error, subject + " has no complete PASS certificate");
     if (CertificationFreshnessService::evaluate(subject, root).status != CertificationFreshnessStatus::Fresh)
         return fail(error, subject + " certificate is not FRESH");
-    if (supported(subject) && !FoundationCertificationCampaign::validateEvidence(
-            root, subject, value.value("lifecycle").toString(), value.value("sourceRevision").toString(),
-            value.value("evidenceArtifact").toString(), nullptr, error)) return false;
+    if (supported(subject)) {
+        QJsonObject revalidation;
+        QString revalidationError;
+        if (CertificationRevalidationService::latest(root, subject, &revalidation, &revalidationError)) {
+            const QString evidencePath = revalidation.value("evidenceArtifact").toString();
+            const auto current = object(resolve(root, evidencePath));
+            if (revalidation.value("subject") != subject || revalidation.value("revalidationOfCertificateId") != value.value("certificateId")
+                || revalidation.value("status") != "FRESH" || current.value("status") != "FRESH"
+                || sha(read(resolve(root, evidencePath))) != revalidation.value("evidenceFingerprint"))
+                return fail(error, "Revalidation does not bind the historical certificate and current evidence");
+            for (const auto& field : QStringList{"subject", "revalidationId", "revalidationOfCertificateId", "sourceRevision", "sourceFingerprint", "contractFingerprint"})
+                if (current.value(field) != revalidation.value(field)) return fail(error, "Revalidation binding mismatch: " + field);
+            if (!source(root, subject, revalidation.value("sourceRevision").toString(), error)
+                || !FoundationCertificationCampaign::validateHistorical(root, subject, current.value("historicalSourceSnapshot").toObject(), error)) return false;
+        } else {
+            if (!revalidationError.isEmpty()) return fail(error, revalidationError);
+            if (!FoundationCertificationCampaign::validateEvidence(root, subject, value.value("lifecycle").toString(),
+                    value.value("sourceRevision").toString(), value.value("evidenceArtifact").toString(), nullptr, error)) return false;
+        }
+    }
     if (certificate) *certificate = value;
     return true;
 }
@@ -217,35 +235,45 @@ bool FoundationCertificationCampaign::verify(const QString& root, const QString&
     if (!CertificationSourceManifestProvider::fingerprint(root, subject, &finalSource, error)) return false;
     pass &= sourceFingerprint == finalSource && domainValid(root, subject, error);
     QJsonObject evidence{{"schemaVersion", 1}, {"subject", subject}, {"lifecycle", lifecycle.identifier()},
+        {"sourceSnapshot", sourceSnapshot(root, subject, revision, error)},
         {"namespace", ns}, {"sourceRevision", revision}, {"sourceFingerprint", sourceFingerprint},
         {"contractFingerprint", contractFingerprint}, {"verificationLevel", "HOST_TEST"},
         {"status", pass ? "PASS" : "FAIL"}, {"checks", checks},
         {"provenance", QJsonObject{{"actor", "tool"}, {"tool", "FoundationCertificationCampaign"}}},
         {"timestamp", QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs)}};
     const QString artifact = ns + "/evidence.json";
+    if (evidence.value("sourceSnapshot").toObject().isEmpty()) { pass = false; evidence.insert("status", "FAIL"); }
     if (!writeNew(resolve(root, artifact), QJsonDocument(evidence).toJson(), error)) return false;
     if (result) *result = {{"artifact", artifact}, {"status", evidence.value("status")}};
     return pass || fail(error, "Foundation verification failed; immutable attempt evidence preserved at " + artifact);
 }
 
-bool FoundationCertificationCampaign::validateEvidence(const QString& root, const QString& subject,
-    const QString& lifecycle, const QString& revision, const QString& artifact, QJsonObject* result, QString* error)
+static bool validateArtifact(const QString& root, const QString& subject,
+    const QString& lifecycle, const QString& revision, const QString& artifact, QJsonObject* result, QString* error,
+    bool historical)
 {
     using namespace foundation_campaign;
     if (error) error->clear();
-    if (!supported(subject) || !source(root, subject, revision, error)) return false;
+    if (!supported(subject) || (!historical && !source(root, subject, revision, error))) return false;
     const QString absolute = QFileInfo(resolve(root, artifact)).canonicalFilePath();
     const QString base = QFileInfo(resolve(root, "ARAMF_WORKER/certification/evidence/" + subject.toLower())).canonicalFilePath();
     if (base.isEmpty() || absolute.isEmpty() || !absolute.startsWith(base + "/"))
         return fail(error, "Evidence is outside the subject namespace");
     const auto evidence = object(absolute);
+    if (!historical && evidence.contains("sourceSnapshot")
+        && evidence.value("sourceSnapshot").toObject() != FoundationCertificationCampaign::sourceSnapshot(root, subject, revision, error))
+        return fail(error, "Source witness differs from current committed source");
     const auto provenance = evidence.value("provenance").toObject();
     if (evidence.value("schemaVersion").toInt() != 1 || evidence.value("verificationLevel") != "HOST_TEST"
         || provenance.value("actor") != "tool" || provenance.value("tool") != "FoundationCertificationCampaign"
         || !QDateTime::fromString(evidence.value("timestamp").toString(), Qt::ISODateWithMs).isValid())
         return fail(error, "Missing evidence schema, verification level, timestamp, or producer provenance");
     QString sourceFingerprint, contractFingerprint;
-    if (!CertificationSourceManifestProvider::fingerprint(root, subject, &sourceFingerprint, error)
+    if (historical) {
+        sourceFingerprint = evidence.value("sourceFingerprint").toString();
+        contractFingerprint = evidence.value("contractFingerprint").toString();
+        if (sourceFingerprint.size() != 64 || contractFingerprint.size() != 64) return fail(error, "Incomplete historical fingerprints");
+    } else if (!CertificationSourceManifestProvider::fingerprint(root, subject, &sourceFingerprint, error)
         || !CertificationContractManifestProvider::fingerprint(subject, root, &contractFingerprint, error)) return false;
     const QString ns = evidence.value("namespace").toString();
     const QString expectedPrefix = "ARAMF_WORKER/certification/evidence/" + subject.toLower() + "/" + lifecycle + "/";
@@ -279,6 +307,51 @@ bool FoundationCertificationCampaign::validateEvidence(const QString& root, cons
     }
     if (result) *result = evidence;
     return true;
+}
+
+bool FoundationCertificationCampaign::validateEvidence(const QString& root, const QString& subject,
+    const QString& lifecycle, const QString& revision, const QString& artifact, QJsonObject* result, QString* error)
+{
+    return validateArtifact(root, subject, lifecycle, revision, artifact, result, error, false);
+}
+
+bool FoundationCertificationCampaign::validateCurrentSource(const QString& root, const QString& subject, const QString& revision, QString* error)
+{
+    return foundation_campaign::source(root, subject, revision, error);
+}
+
+QJsonObject FoundationCertificationCampaign::sourceSnapshot(const QString& root, const QString& subject, const QString& revision, QString* error)
+{
+    using namespace foundation_campaign;
+    if (!source(root, subject, revision, error)) return {};
+    QJsonArray files;
+    for (const auto& path : CertificationSourceManifestProvider::manifest(subject).files)
+        files.append(QJsonObject{{"path", path}, {"bytesBase64", QString::fromLatin1(read(resolve(root, path)).toBase64())}});
+    QString fingerprint;
+    if (!CertificationSourceManifestProvider::fingerprint(root, subject, &fingerprint, error)) return {};
+    return {{"sourceRevision", revision}, {"sourceFingerprint", fingerprint}, {"files", files}};
+}
+
+bool FoundationCertificationCampaign::validateHistorical(const QString& root, const QString& subject,
+    const QJsonObject& suppliedSnapshot, QString* error)
+{
+    using namespace foundation_campaign;
+    if (error) error->clear();
+    QJsonObject certificate;
+    if (!supported(subject) || !CertificationService().latestForSubject(root, subject, &certificate, error)) return false;
+    const QString artifact = certificate.value("evidenceArtifact").toString();
+    const QString revision = certificate.value("sourceRevision").toString();
+    if (certificate.value("result") != "PASS" || certificate.value("certificationStatus") != "CERTIFIED"
+        || !certificate.value("evidenceComplete").toBool() || artifact.isEmpty()
+        || sha(read(resolve(root, artifact))) != certificate.value("evidenceFingerprint")
+        || revision.size() != 40 || git(root, {"rev-parse", revision + "^{commit}"}) != revision)
+        return fail(error, "Invalid immutable historical certificate/evidence/revision binding");
+    QJsonObject evidence;
+    if (!validateArtifact(root, subject, certificate.value("lifecycle").toString(), revision, artifact, &evidence, error, true)) return false;
+    // New issuances contain their source witness. Legacy issuances may acquire
+    // an append-only witness through revalidation, but only an exact match to
+    // the original sealed source fingerprint can establish that bridge.
+    return CertificationRevalidationService::validateHistoricalSource(root, certificate, suppliedSnapshot, error);
 }
 
 bool FoundationCertificationCampaign::certify(const QString& root, const QString& file, const QString& subject,

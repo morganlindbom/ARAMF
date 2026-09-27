@@ -14,6 +14,7 @@ struct WorkerTaskRequest {
     QStringList definitionOfDone;
     bool history = false;
     bool destructive = false;
+    QJsonArray relocations; // Explicit oldPath/newPath pairs; never inferred.
     QJsonObject toJson() const;
     static WorkerTaskRequest fromJson(const QJsonObject& value);
 };

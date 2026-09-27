@@ -21,6 +21,10 @@ struct CertificationRevalidationResult final {
 
 class CertificationRevalidationService final {
 public:
+    static bool validateHistoricalSource(const QString& projectRoot, const QJsonObject& certificate,
+                                         const QJsonObject& snapshot, QString* error = nullptr);
+    static bool validateCurrentSource(const QString& projectRoot, const QString& subject,
+                                     const QString& revision, QString* error = nullptr);
     static bool revalidate(const QString& projectRoot,
                            const QString& subject,
                            const QJsonObject& regressionEvidence,

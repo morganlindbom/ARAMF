@@ -466,6 +466,49 @@ bool runWorkerTaskTests()
     const QByteArray manifest = bytes(manifestPath);
     check(write(QDir(project.path()).filePath("ARAMF_WORKER/duplicate/worker-manifest.json"), manifest), "duplicate manifest fixture");
     check(hasCode(WorkerTaskServices::prepare(model, ui), "CANONICAL_OWNER_DUPLICATE"), "parallel state blocked");
+    for (const auto& scenario : QStringList{"exact", "delete", "fake", "ambiguous", "unauthorized", "escape", "existing"}) {
+        QTemporaryDir relocationFixture; relocationFixture.setAutoRemove(false);
+        const QString relocationRoot = relocationFixture.path() + "/project";
+        QDir().mkpath(relocationRoot);
+        ProjectModel relocated; relocated.setProjectPath(relocationRoot);
+        relocated.setAiConfiguration(ai);
+        auto relocationRules = relocated.ruleConfiguration();
+        relocationRules.projectScopes = {"source-code"};
+        relocationRules.scopeMetadata = {{"source-code", QJsonObject{{"files", QJsonArray{"src/old.cpp", "src/new.cpp", "src/other.cpp"}},
+            {"tests", QJsonArray{"relocation-tests"}}, {"riskTraits", QJsonArray{}}, {"affects", QJsonArray{}}, {"generatedArtifacts", QJsonArray{}}}}};
+        relocated.setRuleConfiguration(relocationRules);
+        check(write(relocationRoot + "/src/old.cpp", "original governed content\n"), "relocation fixture original");
+        const auto runGit = [&](const QStringList& arguments) {
+            QProcess process; process.setWorkingDirectory(relocationRoot); process.start("git", arguments);
+            return process.waitForFinished(30000) && process.exitCode() == 0;
+        };
+        check(runGit({"init"}) && runGit({"add", "src/old.cpp"})
+            && runGit({"-c", "user.name=Relocation Test", "-c", "user.email=relocation@example.invalid", "-c", "commit.gpgsign=false", "commit", "-m", "isolated relocation baseline"}), "relocation committed baseline");
+        generate(relocated);
+        WorkerTaskRequest move;
+        move.goal = "Relocate the exact governed source"; move.type = "coding"; move.scopes = {"source-code"};
+        move.files = {"src/old.cpp", "src/new.cpp", "src/other.cpp"}; move.definitionOfDone = {"Byte identity and scoped authorization"};
+        if (scenario != "unauthorized") move.relocations = {QJsonObject{{"oldPath", "src/old.cpp"}, {"newPath", "src/new.cpp"}}};
+        if (scenario == "ambiguous") move.relocations.append(QJsonObject{{"oldPath", "src/old.cpp"}, {"newPath", "src/other.cpp"}});
+        if (scenario == "escape") move.relocations = {QJsonObject{{"oldPath", "src/old.cpp"}, {"newPath", "../escape.cpp"}}};
+        if (scenario == "existing") write(relocationRoot + "/src/new.cpp", "original governed content\n");
+        const auto prepared = WorkerTaskServices::prepare(relocated, move);
+        if (scenario == "ambiguous" || scenario == "escape" || scenario == "existing") {
+            check(!ready(prepared) && hasCode(prepared, "RELOCATION_UNPROVEN"), "reject " + scenario + " relocation at preflight");
+            continue;
+        }
+        check(ready(prepared), "relocation preflight " + scenario);
+        const QString target = scenario == "delete" ? relocationFixture.path() + "/preserved-outside-project.cpp" : relocationRoot + "/src/new.cpp";
+        check(QFile::rename(relocationRoot + "/src/old.cpp", target), "isolated fixture move, never delete content");
+        if (scenario == "fake") write(target, "unrelated replacement\n");
+        const auto observed = WorkerTaskServices::postflight(relocated, prepared);
+        if (scenario == "exact") {
+            check(observed.value("status") == "PASS" && observed.value("relocations").toArray().size() == 1,
+                  "authorized exact relocation accepted with audit record");
+            check(observed.value("completionState") != "VERIFIED", "relocation alone cannot replace required test evidence");
+            check(observed.value("relocations").toArray().first().toObject().value("contractId") == prepared.value("contractId"), "relocation bound to task identity");
+        } else check(observed.value("status") == "FAIL" && hasCode(observed, "FORBIDDEN_FILE_MODIFICATION"), "reject " + scenario + " as unauthorized deletion");
+    }
     std::cout << "WORKER-TASK checks=" << checks << " failed=" << failed << " matrix=" << matrix.size() << '\n';
     return failed == 0;
 }

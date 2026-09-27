@@ -152,7 +152,8 @@ int main(int argc, char** argv)
     CertificationRevalidationResult revalidation;
     QString error;
     ok &= check(CertificationRevalidationService::revalidate(projectRoot, QStringLiteral("F1"),
-            QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}, {QStringLiteral("suite"), QStringLiteral("fixture")}},
+            QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}, {QStringLiteral("suite"), QStringLiteral("fixture")},
+                        {QStringLiteral("semanticChange"), true}},
             &revalidation, &error), "F1 freshness revalidation succeeds on isolated fixture");
     ok &= check(error.isEmpty(), "fixture revalidation has no error");
     ok &= check(revalidation.status == QStringLiteral("FRESH"), "fixture revalidation status is FRESH");
@@ -172,6 +173,11 @@ int main(int argc, char** argv)
     ok &= check(hashBytes(evidence.readAll()) == revalidation.evidenceFingerprint, "revalidation evidence fingerprint matches exact bytes");
     evidence.seek(0);
     const auto persistedEvidence = QJsonDocument::fromJson(evidence.readAll()).object();
+    QJsonObject persistedRecord;
+    ok &= check(CertificationRevalidationService::latest(projectRoot, QStringLiteral("F1"), &persistedRecord, &error)
+                    && persistedRecord.value(QStringLiteral("semanticChange")).toBool()
+                    && persistedEvidence.value(QStringLiteral("semanticChange")).toBool(),
+                "semantic governance change is recorded honestly in evidence and revalidation");
     ok &= check(persistedEvidence.value(QStringLiteral("regressionEvidence")).toObject()
                     .value(QStringLiteral("implementationRevision")).toString() == revalidation.sourceRevision,
                 "caller implementation revision is replaced by canonical runtime revision");

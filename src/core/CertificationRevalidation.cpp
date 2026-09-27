@@ -13,6 +13,7 @@
 #include <QJsonParseError>
 #include <QProcess>
 #include <QSaveFile>
+#include <QSet>
 #include <QUuid>
 
 namespace {
@@ -133,14 +134,14 @@ QString completedLifecycleFromProject(const QString& root, const QString& subjec
                 .arg(lifecycle.value(QStringLiteral("done")).toInt());
         }
     }
-    if (subject == QStringLiteral("F1")) {
+    if (QStringList{"F1", "F2", "F3", "F4"}.contains(subject)) {
         const auto history = project.value(QStringLiteral("processVersion")).toObject()
             .value(QStringLiteral("completedHistory")).toArray();
         int bestIteration = 0;
         int bestLoop = 1;
         for (const auto& value : history) {
             const auto entry = value.toObject();
-            if (entry.value(QStringLiteral("foundation")).toInt() == 1
+            if (entry.value(QStringLiteral("foundation")).toInt() == subject.mid(1).toInt()
                 && entry.value(QStringLiteral("certification")).toInt() == 1
                 && entry.value(QStringLiteral("done")).toInt() == 1
                 && entry.value(QStringLiteral("iteration")).toInt() >= bestIteration) {
@@ -148,10 +149,11 @@ QString completedLifecycleFromProject(const QString& root, const QString& subjec
                 bestLoop = entry.value(QStringLiteral("loop")).toInt(1);
             }
         }
-        if (bestIteration > 0) return QStringLiteral("F1.%1.%2.1.1").arg(bestLoop).arg(bestIteration);
+        if (bestIteration > 0) return QStringLiteral("%1.%2.%3.1.1").arg(subject).arg(bestLoop).arg(bestIteration);
         const QString foundationVersion = historicalEvidence.value(QStringLiteral("foundationVersion")).toString();
         const int iteration = historicalEvidence.value(QStringLiteral("iteration")).toInt();
-        if (!foundationVersion.isEmpty() && iteration > 0) return QStringLiteral("F1.1.%1.1.1").arg(iteration);
+        if (subject == QStringLiteral("F1") && !foundationVersion.isEmpty() && iteration > 0)
+            return QStringLiteral("F1.1.%1.1.1").arg(iteration);
     }
     if (subject.startsWith(QLatin1Char('P'))) {
         bool ok = false;
@@ -240,6 +242,72 @@ bool CertificationRevalidationService::latest(const QString& projectRoot, const 
     return !latestRecord.isEmpty();
 }
 
+bool CertificationRevalidationService::validateCurrentSource(const QString& root, const QString& subject,
+                                                             const QString& revision, QString* error)
+{
+    const auto run = [&](const QStringList& arguments, QByteArray* output = nullptr) {
+        QProcess process; process.setWorkingDirectory(root); process.start("git", arguments);
+        if (!process.waitForFinished(30000) || process.exitStatus() != QProcess::NormalExit || process.exitCode()) return false;
+        if (output) *output = process.readAllStandardOutput(); return true;
+    };
+    QByteArray resolved, tracked;
+    const auto files = CertificationSourceManifestProvider::manifest(subject).files;
+    bool valid = revision.size() == 40 && !files.isEmpty() && run({"rev-parse", revision + "^{commit}"}, &resolved)
+        && QString::fromUtf8(resolved).trimmed() == revision
+        && run(QStringList{"ls-tree", "-r", "--name-only", revision, "--"} + files, &tracked);
+    for (const auto& file : files) valid &= QString::fromUtf8(tracked).split('\n').contains(file);
+    valid &= run(QStringList{"diff", "--quiet", revision, "--"} + files);
+    if (!valid && error) *error = "Current source manifest is not bound to an unchanged committed implementation.";
+    return valid;
+}
+
+bool CertificationRevalidationService::validateHistoricalSource(const QString& root, const QJsonObject& certificate,
+                                                                const QJsonObject& suppliedSnapshot, QString* error)
+{
+    const auto fail = [&](const QString& message) { if (error) *error = message; return false; };
+    const auto read = [&](const QString& path) { QFile file(QDir(root).filePath(path)); return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{}; };
+    const auto git = [&](const QStringList& arguments, QByteArray* output) {
+        QProcess process; process.setWorkingDirectory(root); process.start("git", arguments);
+        if (!process.waitForFinished(30000) || process.exitStatus() != QProcess::NormalExit || process.exitCode()) return false;
+        *output = process.readAllStandardOutput(); return true;
+    };
+    const QString artifact = certificate.value("evidenceArtifact").toString(), revision = certificate.value("sourceRevision").toString();
+    const auto bytes = read(artifact); const auto evidence = QJsonDocument::fromJson(bytes).object();
+    QByteArray resolved, tree;
+    if (artifact.isEmpty() || certificate.value("result") != "PASS" || certificate.value("certificationStatus") != "CERTIFIED"
+        || !certificate.value("evidenceComplete").toBool() || hashBytes(bytes) != certificate.value("evidenceFingerprint")
+        || revision.size() != 40 || !git({"rev-parse", revision + "^{commit}"}, &resolved)
+        || QString::fromUtf8(resolved).trimmed() != revision || evidence.value("sourceRevision") != revision
+        || !git({"ls-tree", "-r", "--name-only", revision}, &tree)) return fail("Historical certificate/evidence/revision binding is invalid.");
+    const auto snapshot = evidence.contains("sourceSnapshot") ? evidence.value("sourceSnapshot").toObject() : suppliedSnapshot;
+    if (snapshot.value("sourceRevision") != revision || snapshot.value("sourceFingerprint") != evidence.value("sourceFingerprint")
+        || snapshot.value("files").toArray().isEmpty()) return fail("Missing historical source witness.");
+    const auto tracked = QString::fromUtf8(tree).split('\n'); QSet<QString> paths; QByteArray material;
+    for (const auto& value : snapshot.value("files").toArray()) {
+        const auto file = value.toObject(); const QString path = file.value("path").toString();
+        const QByteArray encoded = file.value("bytesBase64").toString().toLatin1(), data = QByteArray::fromBase64(encoded);
+        if (path.isEmpty() || path.contains(':') || path.contains('\\') || path.contains(QChar(0)) || QDir::isAbsolutePath(path)
+            || QDir::cleanPath(path) != path || path.startsWith("../") || !tracked.contains(path) || paths.contains(path)
+            || data.toBase64() != encoded) return fail("Invalid or duplicate historical source path.");
+        QByteArray committed; if (!git({"show", revision + ':' + path}, &committed)) return fail("Missing historical source blob.");
+        auto normalized = data; normalized.replace("\r\n", "\n"); committed.replace("\r\n", "\n");
+        if (normalized != committed) return fail("Historical source differs from its Git revision: " + path);
+        paths.insert(path); material.append(path.toUtf8()); material.append('\0'); material.append(data); material.append('\0');
+    }
+    if (hashBytes(material) != evidence.value("sourceFingerprint")) return fail("Historical witness differs from sealed source fingerprint.");
+    for (const auto& value : evidence.value("checks").toArray()) {
+        const auto check = value.toObject();
+        const QString reference = check.value("reference").toString();
+        const QString canonical = QFileInfo(QDir(root).filePath(reference)).canonicalFilePath();
+        const QString boundary = QFileInfo(QDir(root).filePath(QFileInfo(artifact).path())).canonicalFilePath();
+        if (boundary.isEmpty() || canonical.isEmpty() || !canonical.startsWith(boundary + '/')
+            || check.value("sourceRevision") != revision || check.value("lifecycle") != evidence.value("lifecycle")
+            || check.value("status") != "PASS" || check.value("exitCode").toInt(-1) != 0
+            || hashBytes(read(reference)) != check.value("fingerprint")) return fail("Historical check evidence is missing or altered.");
+    }
+    return true;
+}
+
 bool CertificationRevalidationService::revalidate(const QString& projectRoot, const QString& subject,
                                                   const QJsonObject& regressionEvidence,
                                                   CertificationRevalidationResult* result, QString* error)
@@ -271,6 +339,26 @@ bool CertificationRevalidationService::revalidate(const QString& projectRoot, co
 
     QString sourceRevision;
     if (!gitRevision(projectRoot, &sourceRevision, error)) return false;
+    QJsonObject historicalSourceSnapshot;
+    if (QStringList{"F2", "F3", "F4"}.contains(subject)) {
+        historicalSourceSnapshot = historicalEvidence.value("sourceSnapshot").toObject();
+        if (historicalSourceSnapshot.isEmpty()) historicalSourceSnapshot = regressionEvidence.value("historicalSourceSnapshot").toObject();
+        if (historicalSourceSnapshot.isEmpty()) {
+            QJsonObject previous;
+            if (latest(projectRoot, subject, &previous, error)) {
+                const QString reference = previous.value("evidenceArtifact").toString();
+                QFile previousBytes(QDir(projectRoot).filePath(reference));
+                if (!previousBytes.open(QIODevice::ReadOnly)
+                    || hashBytes(previousBytes.readAll()) != previous.value("evidenceFingerprint").toString()) {
+                    if (error) *error = "Previous revalidation evidence is missing or altered.";
+                    return false;
+                }
+                historicalSourceSnapshot = readObject(QDir(projectRoot).filePath(reference), error).value("historicalSourceSnapshot").toObject();
+            }
+        }
+        if (!validateHistoricalSource(projectRoot, certificate, historicalSourceSnapshot, error)
+            || !validateCurrentSource(projectRoot, subject, sourceRevision, error)) return false;
+    }
     QString sourceFingerprint;
     if (!CertificationSourceManifestProvider::fingerprint(projectRoot, subject, &sourceFingerprint, error)) return false;
     QString contractFingerprint;
@@ -282,6 +370,7 @@ bool CertificationRevalidationService::revalidate(const QString& projectRoot, co
     QJsonObject normalizedRegressionEvidence = regressionEvidence;
     normalizedRegressionEvidence.remove(QStringLiteral("implementationRevision"));
     normalizedRegressionEvidence.remove(QStringLiteral("sourceRevision"));
+    normalizedRegressionEvidence.remove(QStringLiteral("historicalSourceSnapshot"));
     normalizedRegressionEvidence.insert(QStringLiteral("implementationRevision"), sourceRevision);
     const QString revalidationId = QStringLiteral("reval-%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
     const QString timestamp = QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
@@ -301,13 +390,14 @@ bool CertificationRevalidationService::revalidate(const QString& projectRoot, co
         {QStringLiteral("contractFingerprint"), contractFingerprint},
         {QStringLiteral("contractProjectionVersion"), 2},
         {QStringLiteral("dependencyManifestFingerprint"), manifest.computedFingerprint()},
-        {QStringLiteral("semanticChange"), false},
+        {QStringLiteral("semanticChange"), regressionEvidence.value(QStringLiteral("semanticChange")).toBool()},
         {QStringLiteral("status"), QStringLiteral("FRESH")},
         {QStringLiteral("regressionEvidence"), normalizedRegressionEvidence},
         {QStringLiteral("provenance"), QJsonObject{{QStringLiteral("sourceBinding"), QStringLiteral("CertificationSourceManifestProvider")},
                                                     {QStringLiteral("contractBinding"), QStringLiteral("CertificationContractManifestProvider")},
                                                     {QStringLiteral("dependencyBinding"), QStringLiteral("CertificationDependencyBindingProvider")}}},
         {QStringLiteral("timestamp"), timestamp}};
+    if (!historicalSourceSnapshot.isEmpty()) evidence.insert("historicalSourceSnapshot", historicalSourceSnapshot);
     const auto normalizedBindings = bindingsForEvidence(dependencyBindings);
     for (auto it = normalizedBindings.begin(); it != normalizedBindings.end(); ++it) evidence.insert(it.key(), it.value());
     const QByteArray evidenceBytes = QJsonDocument(evidence).toJson(QJsonDocument::Compact) + '\n';
@@ -338,7 +428,7 @@ bool CertificationRevalidationService::revalidate(const QString& projectRoot, co
         {QStringLiteral("contractProjectionVersion"), 2},
         {QStringLiteral("dependencyManifestFingerprint"), manifest.computedFingerprint()},
         {QStringLiteral("dependencyBindings"), dependencyBindings},
-        {QStringLiteral("semanticChange"), false},
+        {QStringLiteral("semanticChange"), regressionEvidence.value(QStringLiteral("semanticChange")).toBool()},
         {QStringLiteral("status"), QStringLiteral("FRESH")},
         {QStringLiteral("timestamp"), timestamp},
         {QStringLiteral("provenance"), QStringLiteral("agent-direct")}};

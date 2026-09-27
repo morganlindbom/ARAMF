@@ -2,6 +2,7 @@
 #include "core/FoundationServices.h"
 #include "core/CertificationFreshness.h"
 #include "core/CertificationService.h"
+#include "core/CertificationRevalidation.h"
 #include "core/ProjectMemory.h"
 #include "core/ProjectPersistence.h"
 #include "core/ProjectModel.h"
@@ -31,6 +32,10 @@ bool write(const QString& path, const QByteArray& bytes)
 QString digest(const QByteArray& bytes)
 {
     return QString::fromLatin1(QCryptographicHash::hash(bytes, QCryptographicHash::Sha256).toHex());
+}
+QByteArray readBytes(const QString& path)
+{
+    QFile file(path); return file.open(QIODevice::ReadOnly) ? file.readAll() : QByteArray{};
 }
 QString git(const QString& root, const QStringList& args)
 {
@@ -76,6 +81,115 @@ QJsonObject fixtureEvidence(const QString& root, const QString& subject, const Q
         {"provenance", QJsonObject{{"actor", "tool"}, {"tool", "FoundationCertificationCampaign"}}},
         {"subject", subject}, {"lifecycle", lifecycle}, {"namespace", ns}, {"sourceRevision", revision},
         {"sourceFingerprint", source}, {"contractFingerprint", contract}, {"status", "PASS"}, {"checks", checks}};
+}
+
+bool relocatedBindingFixture()
+{
+    // Synthetic issuance in an isolated repository models a historical layout.
+    // It is not production certification evidence and executes no live move.
+    QTemporaryDir fixture; fixture.setAutoRemove(false);
+    const QString root = fixture.path(), config = "ARAMF_WORKER.aramf.json";
+    const QString oldPath = "src/legacy/IdentityTrustFoundation.cpp";
+    const QString newPath = "src/foundations/F2/IdentityTrustFoundation.cpp";
+    const QStringList subjects{"F1", "F2", "F3", "F4", "P1", "P2", "P3", "P4", "P5"};
+    QSet<QString> files;
+    for (const auto& subject : subjects) for (const auto& path : CertificationSourceManifestProvider::manifest(subject).files) files.insert(path);
+    const QString repository = QDir(QCoreApplication::applicationDirPath()).absoluteFilePath("..");
+    for (const auto& path : files) if (!write(root + '/' + path, readBytes(repository + '/' + path))) return false;
+    QDir().mkpath(root + "/src/legacy");
+    if (!QFile::rename(root + '/' + newPath, root + '/' + oldPath)) return false;
+    git(root, {"init"}); git(root, {"add", "src", "tests", "CMakeLists.txt"});
+    git(root, {"-c", "user.name=Historical Test", "-c", "user.email=history@example.invalid", "-c", "commit.gpgsign=false", "commit", "-m", "historical source layout"});
+    const QString historicalRevision = git(root, {"rev-parse", "HEAD"});
+    QString error; bool ok = require(historicalRevision.size() == 40, "historical fixture revision exists");
+    ProjectModel model; model.setProjectPath(root);
+    auto state = ProcessVersionState::currentCanonicalState();
+    for (int i = 0; i < 4; ++i) {
+        ok &= ProcessVersionLifecycle::startNextProcess(&state, &error);
+        ok &= ProcessVersionLifecycle::certifyCurrentIteration(&state, &error);
+        ok &= ProcessVersionLifecycle::completeActiveProcess(&state, &error);
+    }
+    auto project = ProjectPersistence().toJson(model); project.insert("processVersion", processVersionStateToJson(state));
+    ok &= ProjectPersistence().fromJson(&model, project, &error) && ProjectPersistence().save(model, root + '/' + config, &error)
+        && ProjectMemory().initialize(root, &model, &error) && FoundationCertificationService::synchronizeProjectJson(root, model, &error);
+    if (!require(ok, "historical integration fixture initializes: " + error)) return false;
+    QString f2Artifact;
+    QJsonObject legacySourceSnapshot;
+    for (const auto& subject : subjects) {
+        const bool foundation = QStringList{"F2", "F3", "F4"}.contains(subject);
+        const QString lifecycle = subject + ".1.1.0.0";
+        QString fingerprint, contract;
+        CertificationSourceManifestProvider::fingerprint(root, subject, &fingerprint);
+        CertificationContractManifestProvider::fingerprint(subject, root, &contract);
+        QJsonObject evidence = foundation ? fixtureEvidence(root, subject, historicalRevision)
+            : QJsonObject{{"schemaVersion", 1}, {"status", "PASS"}, {"subject", subject}, {"lifecycle", subject + ".1.1.1.1"},
+                {"sourceRevision", historicalRevision}, {"sourceFingerprint", fingerprint}, {"contractFingerprint", contract}};
+        if (subject == "F2") {
+            QJsonArray snapshotFiles; QByteArray material;
+            for (const auto& currentPath : CertificationSourceManifestProvider::manifest(subject).files) {
+                const QString path = currentPath == newPath ? oldPath : currentPath;
+                const auto data = readBytes(root + '/' + path);
+                snapshotFiles.append(QJsonObject{{"path", path}, {"bytesBase64", QString::fromLatin1(data.toBase64())}});
+                material.append(path.toUtf8()); material.append('\0'); material.append(data); material.append('\0');
+            }
+            evidence.insert("sourceFingerprint", digest(material));
+            legacySourceSnapshot = {{"sourceRevision", historicalRevision}, {"sourceFingerprint", digest(material)}, {"files", snapshotFiles}};
+        } else if (foundation) evidence.insert("sourceSnapshot", FoundationCertificationCampaign::sourceSnapshot(root, subject, historicalRevision, &error));
+        const auto bindings = CertificationDependencyBindingProvider::currentBindings(subject, root, &error);
+        for (auto it = bindings.begin(); it != bindings.end(); ++it) evidence.insert(it.key(), it.value());
+        const QString artifact = foundation ? evidence.value("namespace").toString() + "/evidence.json"
+            : "ARAMF_WORKER/certification/evidence/integration-fixture/" + subject + ".json";
+        if (subject == "F2") f2Artifact = artifact;
+        const auto bytes = QJsonDocument(evidence).toJson(); ok &= write(root + '/' + artifact, bytes);
+        const QJsonObject context{{"sourceRevision", historicalRevision}, {"evidenceArtifact", artifact}, {"evidenceFingerprint", digest(bytes)}, {"lifecycle", lifecycle}};
+        QJsonObject started, certificate; CertificationService service;
+        ok &= service.start(root, subject, foundation ? "FOUNDATION" : "HOST_TEST", "project", "HOST_TEST", {"fixture"}, context, &started, &error);
+        for (auto it = context.begin(); it != context.end(); ++it) started.insert(it.key(), it.value());
+        ok &= service.issue(root, started, "PASS", {QJsonObject{{"reference", artifact}, {"fingerprint", digest(bytes)}, {"verified", true}, {"type", "HOST_TEST"}}}, &certificate, &error);
+        if (!require(ok, subject + " synthetic historical certificate: " + error)) return false;
+    }
+    const auto ledger = readBytes(root + "/ARAMF_WORKER/certification/certificates.jsonl");
+    const auto originalEvidence = readBytes(root + '/' + f2Artifact);
+    ok &= require(!FoundationCertificationCampaign::validateHistorical(root, "F2", {}, &error), "legacy historical validation rejects missing source witness");
+    auto alteredSnapshot = legacySourceSnapshot;
+    alteredSnapshot.insert("sourceRevision", QString(40, '0'));
+    ok &= require(!FoundationCertificationCampaign::validateHistorical(root, "F2", alteredSnapshot, &error), "historical validation rejects incorrect witness revision");
+    alteredSnapshot = legacySourceSnapshot;
+    auto alteredFiles = alteredSnapshot.value("files").toArray();
+    auto alteredFile = alteredFiles[0].toObject(); alteredFile.insert("bytesBase64", "dGFtcGVyZWQ="); alteredFiles[0] = alteredFile;
+    alteredSnapshot.insert("files", alteredFiles);
+    ok &= require(!FoundationCertificationCampaign::validateHistorical(root, "F2", alteredSnapshot, &error), "historical validation rejects replaced source content");
+    ok &= require(FoundationCertificationCampaign::validateHistorical(root, "F2", legacySourceSnapshot, &error), "historical source paths validate in historical revision: " + error);
+    ok &= require(QFile::rename(root + '/' + oldPath, root + '/' + newPath), "isolated byte-identical source relocation");
+    git(root, {"add", "src"});
+    git(root, {"-c", "user.name=Historical Test", "-c", "user.email=history@example.invalid", "-c", "commit.gpgsign=false", "commit", "-m", "isolated source relocation"});
+    ok &= require(!git(root, {"ls-tree", "-r", "--name-only", historicalRevision}).split('\n').contains(newPath), "new path did not exist in historical revision");
+    ok &= require(CertificationFreshnessService::evaluate("F2", root).status == CertificationFreshnessStatus::SourceStale, "relocation legitimately stales F2");
+    QJsonObject integration;
+    ok &= require(!FoundationCertificationCampaign::acceptIntegration(root, config, &integration, &error), "integration rejects stale relocated source");
+    CertificationRevalidationResult revalidated;
+    ok &= require(!CertificationRevalidationService::revalidate(root, "F2", {{"status", "PASS"}}, &revalidated, &error), "legacy revalidation rejects absent continuity evidence");
+    ok &= require(!CertificationRevalidationService::validateCurrentSource(root, "F2", historicalRevision, &error), "current binding rejects obsolete implementation revision");
+    ok &= require(CertificationRevalidationService::revalidate(root, "F2", {{"status", "PASS"}, {"fixture", "synthetic relocation verifier"},
+        {"historicalSourceSnapshot", legacySourceSnapshot}}, &revalidated, &error), "current source revalidation after relocation: " + error);
+    ok &= require(FoundationCertificationCampaign::validateHistorical(root, "F2", legacySourceSnapshot, &error), "historical certificate still validates without current old path");
+    ok &= require(FoundationCertificationCampaign::acceptIntegration(root, config, &integration, &error), "integration accepts historical/current binding chain: " + error);
+    ok &= require(FoundationCertificationCampaign::eligible(root, config, &error), "P6 eligibility uses current revalidated binding: " + error);
+    const auto sourceBytes = readBytes(root + '/' + newPath);
+    write(root + '/' + newPath, sourceBytes + "\n// unvalidated change\n");
+    ok &= require(!FoundationCertificationCampaign::eligible(root, config, &error), "revalidated source tampering rejected");
+    write(root + '/' + newPath, sourceBytes);
+    write(root + '/' + f2Artifact, originalEvidence + " ");
+    ok &= require(!FoundationCertificationCampaign::eligible(root, config, &error), "historical evidence tampering rejected after revalidation");
+    write(root + '/' + f2Artifact, originalEvidence);
+    const auto currentEvidence = readBytes(root + '/' + revalidated.evidenceArtifact);
+    write(root + '/' + revalidated.evidenceArtifact, currentEvidence + " ");
+    ok &= require(!FoundationCertificationCampaign::eligible(root, config, &error), "revalidation evidence tampering rejected");
+    write(root + '/' + revalidated.evidenceArtifact, currentEvidence);
+    ok &= require(FoundationCertificationCampaign::eligible(root, config, &error), "restored isolated fixture bindings validate");
+    ok &= require(readBytes(root + "/ARAMF_WORKER/certification/certificates.jsonl") == ledger
+        && readBytes(root + '/' + f2Artifact) == originalEvidence, "historical certificate ledger and evidence remain byte-identical");
+    return ok;
 }
 }
 
@@ -185,5 +299,5 @@ bool runFoundationCertificationTests()
                   "integration rejects missing F1/P1-P5 evidence despite completed lifecycle");
     ok &= require(!FoundationCertificationCampaign::eligible(root, file, &error), "P6 remains blocked in incomplete fixture");
     QTextStream(stdout) << "Fixture preserved: " << root << Qt::endl;
-    return ok;
+    return relocatedBindingFixture() && ok;
 }

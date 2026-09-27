@@ -115,6 +115,28 @@ bool git(const QString& projectRoot, const QStringList& arguments, QByteArray* o
     *output = process.readAllStandardOutput();
     return true;
 }
+bool relocationPath(const ProjectModel& model, const QString& path)
+{
+    if (!safePath(root(model), path) || path.startsWith(worker(model) + '/', Qt::CaseInsensitive)) return false;
+    QFileInfo part(pathFor(model, path));
+    while (part.absoluteFilePath() != root(model) && part.absoluteFilePath() != part.absolutePath()) {
+        if (part.isSymLink()) return false;
+        part.setFile(part.absolutePath());
+    }
+    return true;
+}
+bool committedContent(const ProjectModel& model, const QString& revision, const QString& path, const QString& hash)
+{
+    QByteArray resolved, original;
+    if (revision.size() != 40 || hash.size() != 64 || !relocationPath(model, path)
+        || !git(root(model), {"rev-parse", revision + "^{commit}"}, &resolved)
+        || QString::fromUtf8(resolved).trimmed() != revision
+        || !git(root(model), {"show", revision + ':' + path}, &original)) return false;
+    // Git may store LF while the checked-out, byte-bound baseline uses CRLF.
+    // The destination must still match the exact physical baseline hash.
+    auto crlf = original; crlf.replace("\r\n", "\n"); crlf.replace("\n", "\r\n");
+    return digest(original) == hash || digest(crlf) == hash;
+}
 // Task evidence files are excluded to avoid a checksum depending on itself.
 // In Git projects ignored build products are excluded, but Worker state is
 // always observed even when the generated Worker is intentionally ignored.
@@ -295,13 +317,15 @@ void validateCanonical(const ProjectModel& model, QJsonArray& errors)
 
 QJsonObject WorkerTaskRequest::toJson() const
 {
-    return {{"goal", goal}, {"type", type}, {"scopes", array(scopes)}, {"files", array(files)},
+    QJsonObject result{{"goal", goal}, {"type", type}, {"scopes", array(scopes)}, {"files", array(files)},
         {"definitionOfDone", array(definitionOfDone)}, {"history", history}, {"destructive", destructive}};
+    if (!relocations.isEmpty()) result.insert("relocations", relocations);
+    return result;
 }
 WorkerTaskRequest WorkerTaskRequest::fromJson(const QJsonObject& value)
 {
     return {value.value("goal").toString(), value.value("type").toString(), strings(value.value("scopes")),
-        strings(value.value("files")), strings(value.value("definitionOfDone")), value.value("history").toBool(), value.value("destructive").toBool()};
+        strings(value.value("files")), strings(value.value("definitionOfDone")), value.value("history").toBool(), value.value("destructive").toBool(), value.value("relocations").toArray()};
 }
 
 QJsonObject ChangeImpactResolver::resolve(const ProjectModel& model, const WorkerTaskRequest& task)
@@ -498,6 +522,28 @@ QJsonObject WorkerTaskServices::prepare(const ProjectModel& model, const WorkerT
         "Do not grant permissions to unmapped files or override canonical authority."};
     for (const auto& scope : strings(impact.value("unrelatedScopes"))) constraints << QStringLiteral("Do not modify unrelated scope: %1").arg(scope);
     const auto baseline = snapshot(model, errors);
+    QJsonArray relocations;
+    QSet<QString> endpoints;
+    QByteArray revisionBytes;
+    if (!task.relocations.isEmpty()) git(root(model), {"rev-parse", "HEAD^{commit}"}, &revisionBytes);
+    const QString revision = QString::fromUtf8(revisionBytes).trimmed();
+    for (const auto& value : task.relocations) {
+        const auto pair = value.toObject();
+        const QString oldPath = pair.value("oldPath").toString(), newPath = pair.value("newPath").toString();
+        const QString oldKey = oldPath.toCaseFolded(), newKey = newPath.toCaseFolded();
+        const QString hash = baseline.value(oldPath).toString();
+        const QFileInfo destination(pathFor(model, newPath));
+        if (!permitted.contains(oldPath) || !permitted.contains(newPath)
+            || !relocationPath(model, newPath) || !committedContent(model, revision, oldPath, hash)
+            || !QFileInfo(pathFor(model, oldPath)).isFile() || destination.exists() || destination.isSymLink()
+            || oldKey == newKey || endpoints.contains(oldKey) || endpoints.contains(newKey)) {
+            issue(errors, "RELOCATION_UNPROVEN", "Relocation requires unique authorized paths, an absent destination and unchanged committed source content.", oldPath);
+            continue;
+        }
+        endpoints.insert(oldKey); endpoints.insert(newKey);
+        relocations.append(QJsonObject{{"oldPath", oldPath}, {"newPath", newPath},
+            {"contentFingerprint", hash}, {"sourceRevision", revision}});
+    }
     QJsonObject historyLengths;
     for (const QString& relative : {QStringLiteral("memory/event-log.jsonl"), QStringLiteral("certification/certificates.jsonl")})
         historyLengths.insert(workerPath(model, relative), static_cast<double>(QFileInfo(pathFor(model, workerPath(model, relative))).size()));
@@ -511,6 +557,7 @@ QJsonObject WorkerTaskServices::prepare(const ProjectModel& model, const WorkerT
         {"validation", tests}, {"requiredEvidence", tests.value("completionChecks")}, {"evidenceDependencies", evidenceDependencies}, {"taskDependencies", array(taskDependencies)},
         {"baseline", baseline}, {"historyLengths", historyLengths},
         {"preflight", QJsonObject{{"status", state(errors)}, {"errors", errors}}}, {"completionState", "NOT_STARTED"}};
+    if (!task.relocations.isEmpty()) contract.insert("authorizedRelocations", relocations);
     contract.insert("contractId", fingerprint(contract));
     return contract;
 }
@@ -535,6 +582,37 @@ QJsonObject WorkerTaskServices::postflight(const ProjectModel& model, const QJso
     validateCanonical(model, errors);
     const auto current = snapshot(model, errors);
     const auto before = contract.value("baseline").toObject();
+    QSet<QString> relocatedSources, relocationEndpoints;
+    QJsonArray observedRelocations;
+    const auto requested = contract.value("request").toObject().value("relocations").toArray();
+    const auto authorized = contract.value("authorizedRelocations").toArray();
+    if (requested.size() != authorized.size()) issue(errors, "RELOCATION_UNPROVEN", "Incomplete relocation authorization.");
+    for (const auto& value : authorized) {
+        const auto relocation = value.toObject();
+        const QString oldPath = relocation.value("oldPath").toString(), newPath = relocation.value("newPath").toString();
+        const QString hash = relocation.value("contentFingerprint").toString();
+        bool declared = false;
+        for (const auto& pair : requested)
+            declared |= pair.toObject().value("oldPath") == oldPath && pair.toObject().value("newPath") == newPath;
+        const auto allowed = strings(authoritative.value("permittedFiles"));
+        const QString oldKey = oldPath.toCaseFolded(), newKey = newPath.toCaseFolded();
+        const bool valid = declared && allowed.contains(oldPath) && allowed.contains(newPath)
+            && relocationPath(model, newPath)
+            && committedContent(model, relocation.value("sourceRevision").toString(), oldPath, hash)
+            && before.value(oldPath) == hash && before.value(newPath).toString("MISSING") == "MISSING"
+            && oldKey != newKey && !relocationEndpoints.contains(oldKey) && !relocationEndpoints.contains(newKey);
+        relocationEndpoints.insert(oldKey); relocationEndpoints.insert(newKey);
+        if (valid && current.value(oldPath) == hash && current.value(newPath).toString("MISSING") == "MISSING") continue;
+        if (!valid || QFileInfo::exists(pathFor(model, oldPath)) || QFileInfo(pathFor(model, oldPath)).isSymLink()
+            || !QFileInfo(pathFor(model, newPath)).isFile() || current.value(newPath) != hash) {
+            issue(errors, "RELOCATION_UNPROVEN", "Relocation content, repository binding, ownership or unique destination continuity failed.", oldPath);
+            continue;
+        }
+        relocatedSources.insert(oldPath);
+        auto observed = relocation; observed.insert("operation", "RELOCATE");
+        observed.insert("contractId", contract.value("contractId")); observed.insert("authorization", contract.value("binding"));
+        observedRelocations.append(observed);
+    }
     // Evidence is about implementation/source state. Canonical validation and
     // recorder outputs are checked below but cannot make evidence self-stale.
     const auto dependencyHash = [&](const QJsonValue& paths) {
@@ -625,7 +703,7 @@ QJsonObject WorkerTaskServices::postflight(const ProjectModel& model, const QJso
         if (ownership.value("owner").toString() == "generated" || ownership.value("owner").toString() == "validation")
             issue(errors, requestedGeneration ? "GENERATED_CONTENT_MISMATCH" : "UNEXPECTED_SERVICE_REGENERATION", "Derived change is undeclared or does not match its canonical producer.", path);
         if (!strings(contract.value("permittedFiles")).contains(path)) issue(errors, "TASK_SCOPE_VIOLATION", "Observed modification outside the exact permitted file set.", path);
-        if (!current.contains(path) || current.value(path).toString() == "MISSING") issue(errors, "FORBIDDEN_FILE_MODIFICATION", "Deletion was not authorized by this task.", path);
+        if ((!current.contains(path) || current.value(path).toString() == "MISSING") && !relocatedSources.contains(path)) issue(errors, "FORBIDDEN_FILE_MODIFICATION", "Deletion was not authorized by this task.", path);
         if (path.startsWith("external:") || ownership.value("owner").toString() != "user" || strings(ownership.value("actions")).contains("NEVER_TOUCH"))
             issue(errors, "FORBIDDEN_FILE_MODIFICATION", "A protected owner/source was modified.", path);
     }
@@ -664,7 +742,7 @@ QJsonObject WorkerTaskServices::postflight(const ProjectModel& model, const QJso
     const bool softwareComplete = !evidenceFailure && (missing.isEmpty() || missing == QStringList{"physical-certification"});
     QString completion = !safe ? "BLOCKED" : softwareComplete ? (certified ? "CERTIFIED" : "VERIFIED") : modified.isEmpty() ? "IN_PROGRESS" : "IMPLEMENTED_UNVERIFIED";
     if (!missing.isEmpty()) issue(errors, "REQUIRED_EVIDENCE_MISSING", "Required evidence has not been verified: " + missing.join(", "), {}, "WARNING");
-    return {{"schemaVersion", 1}, {"authority", "DERIVED"}, {"contractId", contract.value("contractId")},
+    return {{"schemaVersion", 1}, {"authority", "DERIVED"}, {"contractId", contract.value("contractId")}, {"relocations", observedRelocations},
         {"resultFingerprint", resultFingerprint}, {"evidenceFingerprints", evidenceFingerprints}, {"modifiedFiles", array(modified)}, {"serviceChanges", serviceChanges}, {"status", safe && !evidenceFailure ? "PASS" : "FAIL"},
         {"completionState", completion}, {"missingEvidence", array(missing)}, {"acceptedEvidence", accepted}, {"errors", errors}, {"certificateId", certified ? certificate.value("certificateId") : QJsonValue{}},
         {"certification", "CERTIFIED is issued only by the canonical CertificationService; physical evidence is never inferred."}};
