@@ -1,0 +1,21 @@
+{
+    "arguments": [
+        "--build",
+        "build",
+        "--target",
+        "aramf_campaign_runner",
+        "aramf_release_validation_runner",
+        "-j",
+        "3"
+    ],
+    "check": "campaign-target-build",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "cwd": ".",
+    "data": "WzEvOF0gQXV0b21hdGljIE1PQyBhbmQgVUlDIGZvciB0YXJnZXQgYXJhbWZfY2FtcGFpZ25fcnVubmVyDQpbMi83XSBBdXRvbWF0aWMgTU9DIGFuZCBVSUMgZm9yIHRhcmdldCBhcmFtZl9yZWxlYXNlX3ZhbGlkYXRpb25fcnVubmVyDQpbMy82XSBCdWlsZGluZyBDWFggb2JqZWN0IENNYWtlRmlsZXMvYXJhbWZfY2FtcGFpZ25fcnVubmVyLmRpci9zcmMvY29yZS9Qcm9qZWN0TWVtb3J5LmNwcC5vYmoNCls0LzZdIEJ1aWxkaW5nIENYWCBvYmplY3QgQ01ha2VGaWxlcy9hcmFtZl9yZWxlYXNlX3ZhbGlkYXRpb25fcnVubmVyLmRpci9zcmMvY29yZS9Qcm9qZWN0TWVtb3J5LmNwcC5vYmoNCls1LzZdIExpbmtpbmcgQ1hYIGV4ZWN1dGFibGUgYXJhbWZfY2FtcGFpZ25fcnVubmVyLmV4ZQ0KWzYvNl0gTGlua2luZyBDWFggZXhlY3V0YWJsZSBhcmFtZl9yZWxlYXNlX3ZhbGlkYXRpb25fcnVubmVyLmV4ZQ0K",
+    "encoding": "base64",
+    "exitCode": 0,
+    "program": "cmake",
+    "rawSha256": "e8de9ec0b3506acf8d4acb98b5e15b341216fb39d28e068b03f513882ce6bd23",
+    "status": "PASS",
+    "timestamp": "2026-09-27T10:07:09Z"
+}

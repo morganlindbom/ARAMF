@@ -1,0 +1,8 @@
+{
+    "check": "production-build",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "dependencyFingerprint": "54140513cb57d7d2ce74e564d670c680892cecc07073ab7fe0856529d98f764b",
+    "observedResult": "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/clean-full-build.json",
+    "observedResultSHA256": "7f79f9a0e2f4a1c36e5ce2d2baee0f7cdcae3e26054658a21ed1433821596eee",
+    "status": "PASS"
+}

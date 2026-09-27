@@ -1,0 +1,20 @@
+{
+    "arguments": [
+        "--build",
+        "build",
+        "--target",
+        "aramf_core_tests",
+        "-j",
+        "4"
+    ],
+    "check": "incremental-relink",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "cwd": ".",
+    "data": "WzEvMV0gTGlua2luZyBDWFggZXhlY3V0YWJsZSBhcmFtZl9jb3JlX3Rlc3RzLmV4ZTsgRGVwbG95aW5nIFF0IHJ1bnRpbWUgZmlsZXMgZm9yIGFyYW1mX2NvcmVfdGVzdHM7IERlcGxveWluZyBsaWJnY2Nfc19zZWgtMS5kbGwgZm9yIGFyYW1mX2NvcmVfdGVzdHM7IERlcGxveWluZyBsaWJzdGRjKystNi5kbGwgZm9yIGFyYW1mX2NvcmVfdGVzdHM7IERlcGxveWluZyBsaWJ3aW5wdGhyZWFkLTEuZGxsIGZvciBhcmFtZl9jb3JlX3Rlc3RzOyBEZXBsb3lpbmcgbGliYXRvbWljLTEuZGxsIGZvciBhcmFtZl9jb3JlX3Rlc3RzDQpXYXJuaW5nOiBUcmFuc2xhdGlvbnMgd2lsbCBub3QgYmUgYXZhaWxhYmxlIGR1ZSB0byB0aGUgZm9sbG93aW5nIGVycm9yLg0KQ2Fubm90IG9wZW4gQzovbXN5czY0L3VjcnQ2NC9zaGFyZS9xdDYvdHJhbnNsYXRpb25zL2NhdGFsb2dzLmpzb24NCkFkZGluZyBsb2NhbCBkZXBlbmRlbmN5RDovT04gREVTQ1RPUC9IS1IgS1VSU0VSL0MrKy9BUkFNRjIvQVJBTUYvYnVpbGQvbGliZ2NjX3Nfc2VoLTEuZGxsDQpBZGRpbmcgbG9jYWwgZGVwZW5kZW5jeUQ6L09OIERFU0NUT1AvSEtSIEtVUlNFUi9DKysvQVJBTUYyL0FSQU1GL2J1aWxkL2xpYndpbnB0aHJlYWQtMS5kbGwNCkFkZGluZyBsb2NhbCBkZXBlbmRlbmN5RDovT04gREVTQ1RPUC9IS1IgS1VSU0VSL0MrKy9BUkFNRjIvQVJBTUYvYnVpbGQvbGlic3RkYysrLTYuZGxsDQpEOlxPTiBERVNDVE9QXEhLUiBLVVJTRVJcQysrXEFSQU1GMlxBUkFNRlxidWlsZFxhcmFtZl9jb3JlX3Rlc3RzLmV4ZSA2NCBiaXQsIHJlbGVhc2UgZXhlY3V0YWJsZQ0KRGlyZWN0IGRlcGVuZGVuY2llczogUXQ2Q29yZQ0KQWxsIGRlcGVuZGVuY2llcyAgIDogUXQ2Q29yZQ0KVG8gYmUgZGVwbG95ZWQgICAgIDogUXQ2Q29yZQ0KUXQ2Q29yZS5kbGwgaXMgdXAgdG8gZGF0ZS4NCg==",
+    "encoding": "base64",
+    "exitCode": 0,
+    "program": "cmake",
+    "rawSha256": "1683aef733e619d97e19f599d0f957e57ca8d5c6d7d50a0904befcd363d2737d",
+    "status": "PASS",
+    "timestamp": "2026-09-27T10:01:13Z"
+}

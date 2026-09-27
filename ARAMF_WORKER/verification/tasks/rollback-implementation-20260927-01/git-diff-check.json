@@ -1,0 +1,16 @@
+{
+    "arguments": [
+        "diff",
+        "--check"
+    ],
+    "check": "git-diff-check",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "cwd": ".",
+    "data": "d2FybmluZzogaW4gdGhlIHdvcmtpbmcgY29weSBvZiAnQVJBTUZfV09SS0VSLmFyYW1mLmpzb24nLCBMRiB3aWxsIGJlIHJlcGxhY2VkIGJ5IENSTEYgdGhlIG5leHQgdGltZSBHaXQgdG91Y2hlcyBpdAp3YXJuaW5nOiBpbiB0aGUgd29ya2luZyBjb3B5IG9mICdzcmMvY29yZS9Db25maWd1cmF0aW9uVXBkYXRlU2VydmljZS5jcHAnLCBMRiB3aWxsIGJlIHJlcGxhY2VkIGJ5IENSTEYgdGhlIG5leHQgdGltZSBHaXQgdG91Y2hlcyBpdAp3YXJuaW5nOiBpbiB0aGUgd29ya2luZyBjb3B5IG9mICdzcmMvY29yZS9Qcm9qZWN0TWVtb3J5LmNwcCcsIExGIHdpbGwgYmUgcmVwbGFjZWQgYnkgQ1JMRiB0aGUgbmV4dCB0aW1lIEdpdCB0b3VjaGVzIGl0Cndhcm5pbmc6IGluIHRoZSB3b3JraW5nIGNvcHkgb2YgJ3NyYy9jb3JlL1RlbXBsYXRlTWFuYWdlci5jcHAnLCBMRiB3aWxsIGJlIHJlcGxhY2VkIGJ5IENSTEYgdGhlIG5leHQgdGltZSBHaXQgdG91Y2hlcyBpdAp3YXJuaW5nOiBpbiB0aGUgd29ya2luZyBjb3B5IG9mICd0ZXN0cy9Db25maWd1cmF0aW9uVXBkYXRlVGVzdHMuY3BwJywgTEYgd2lsbCBiZSByZXBsYWNlZCBieSBDUkxGIHRoZSBuZXh0IHRpbWUgR2l0IHRvdWNoZXMgaXQKd2FybmluZzogaW4gdGhlIHdvcmtpbmcgY29weSBvZiAndGVzdHMvUHJvamVjdE1lbW9yeVRlc3RzLmNwcCcsIExGIHdpbGwgYmUgcmVwbGFjZWQgYnkgQ1JMRiB0aGUgbmV4dCB0aW1lIEdpdCB0b3VjaGVzIGl0Cndhcm5pbmc6IGluIHRoZSB3b3JraW5nIGNvcHkgb2YgJ3Rlc3RzL1RlbXBsYXRlQ29uZmlndXJhdGlvblRlc3RzLmNwcCcsIExGIHdpbGwgYmUgcmVwbGFjZWQgYnkgQ1JMRiB0aGUgbmV4dCB0aW1lIEdpdCB0b3VjaGVzIGl0Cg==",
+    "encoding": "base64",
+    "exitCode": 0,
+    "program": "git",
+    "rawSha256": "df766e0e86a6800dbac4f5d78060df709f544e9daf725a45c35086c27b16b1fd",
+    "status": "PASS",
+    "timestamp": "2026-09-27T10:17:33Z"
+}

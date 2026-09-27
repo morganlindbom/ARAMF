@@ -1,0 +1,15 @@
+{
+    "arguments": [
+        "--provenance-and-scope"
+    ],
+    "check": "provenance-scope",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "cwd": ".",
+    "data": "",
+    "encoding": "base64",
+    "exitCode": 0,
+    "program": "build/aramf_core_tests.exe",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "status": "PASS",
+    "timestamp": "2026-09-27T09:57:07Z"
+}

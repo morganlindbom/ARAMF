@@ -1,0 +1,8 @@
+{
+    "check": "test_550-automated",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "dependencyFingerprint": "54140513cb57d7d2ce74e564d670c680892cecc07073ab7fe0856529d98f764b",
+    "observedResult": "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/campaign-550-windows.json",
+    "observedResultSHA256": "62bbe4b8e28b0b965ce0fc051e9bd12405d0144016fab35abe76a778988f6d26",
+    "status": "PASS"
+}

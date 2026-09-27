@@ -1,0 +1,14 @@
+{
+    "arguments": [
+    ],
+    "check": "campaign-550",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "cwd": ".",
+    "data": "cXQucXBhLnBsdWdpbjogQ291bGQgbm90IGZpbmQgdGhlIFF0IHBsYXRmb3JtIHBsdWdpbiAib2Zmc2NyZWVuIiBpbiAiIg0KVGhpcyBhcHBsaWNhdGlvbiBmYWlsZWQgdG8gc3RhcnQgYmVjYXVzZSBubyBRdCBwbGF0Zm9ybSBwbHVnaW4gY291bGQgYmUgaW5pdGlhbGl6ZWQuIFJlaW5zdGFsbGluZyB0aGUgYXBwbGljYXRpb24gbWF5IGZpeCB0aGlzIHByb2JsZW0uDQoNCkF2YWlsYWJsZSBwbGF0Zm9ybSBwbHVnaW5zIGFyZTogd2luZG93cy4NCg0K",
+    "encoding": "base64",
+    "exitCode": -999,
+    "program": "build/aramf_release_validation_runner.exe",
+    "rawSha256": "9ac4fdd5c48c6743be474a49ea76c9818242d1d729b0bfdb110d5c2f6bf82c09",
+    "status": "FAIL",
+    "timestamp": "2026-09-27T10:07:55Z"
+}

@@ -1,0 +1,71 @@
+{
+    "after": {
+        "bindingComplete": true,
+        "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+        "certifiedEvidenceFingerprint": "fbbf6746caf4e08de353315e942bbfd0775d98b279fae017ad2a8423559e1c9a",
+        "certifiedSourceFingerprint": "07fec2d74c39630a929a30c4547d998f96825579ee8744fb33b11339100ffd22",
+        "certifiedSourceRevision": "73d079d6643be8238599b979a404949f0e756aad",
+        "contractFresh": true,
+        "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+        "currentEvidenceFingerprint": "fbbf6746caf4e08de353315e942bbfd0775d98b279fae017ad2a8423559e1c9a",
+        "currentSourceFingerprint": "07fec2d74c39630a929a30c4547d998f96825579ee8744fb33b11339100ffd22",
+        "currentSourceRevision": "73d079d6643be8238599b979a404949f0e756aad",
+        "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+        "directDependencyFresh": true,
+        "directDependencyResults": [
+        ],
+        "evidenceFresh": true,
+        "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+        "historicalLifecycle": "S1.1.4.1.1",
+        "reasons": [
+        ],
+        "sourceBindingComplete": true,
+        "sourceFresh": true,
+        "status": "FRESH",
+        "subject": "S1",
+        "transitiveDependencyFresh": true
+    },
+    "before": {
+        "bindingComplete": true,
+        "certifiedContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+        "certifiedEvidenceFingerprint": "d19fe258870767e705699c8279627c5a79b57fafa7a956967f22dbfd74e77b2b",
+        "certifiedSourceFingerprint": "ce76c23fde7ec3807205b79d44541109e2671f2e0210906a37e5b9f106dccdfa",
+        "certifiedSourceRevision": "86b64f6a50d2c673867fea55e9da95e9f0580b57",
+        "contractFresh": true,
+        "currentContractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+        "currentEvidenceFingerprint": "d19fe258870767e705699c8279627c5a79b57fafa7a956967f22dbfd74e77b2b",
+        "currentSourceFingerprint": "07fec2d74c39630a929a30c4547d998f96825579ee8744fb33b11339100ffd22",
+        "currentSourceRevision": "73d079d6643be8238599b979a404949f0e756aad",
+        "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+        "directDependencyFresh": true,
+        "directDependencyResults": [
+        ],
+        "evidenceFresh": true,
+        "historicalCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+        "historicalLifecycle": "S1.1.4.1.1",
+        "reasons": [
+            "Certified source manifest differs from the current source manifest."
+        ],
+        "sourceBindingComplete": true,
+        "sourceFresh": false,
+        "status": "SOURCE_STALE",
+        "subject": "S1",
+        "transitiveDependencyFresh": true
+    },
+    "check": "freshness-revalidation",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "result": {
+        "contractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",
+        "dependencyManifestFingerprint": "b1ec5a60e3bbc57923739cd95e158b69c73672dd576f2081ac1f1ec210a8ef5a",
+        "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/S1/reval-e92d6aa3-e46b-4512-8aa4-a34706e46372/evidence.json",
+        "evidenceFingerprint": "fbbf6746caf4e08de353315e942bbfd0775d98b279fae017ad2a8423559e1c9a",
+        "historicalLifecycle": "S1.1.4.1.1",
+        "revalidationId": "reval-e92d6aa3-e46b-4512-8aa4-a34706e46372",
+        "revalidationOfCertificateId": "cert-2f382207-d79e-416c-b61e-86c454997a78",
+        "sourceFingerprint": "07fec2d74c39630a929a30c4547d998f96825579ee8744fb33b11339100ffd22",
+        "sourceRevision": "73d079d6643be8238599b979a404949f0e756aad",
+        "status": "FRESH",
+        "subject": "S1"
+    },
+    "status": "PASS"
+}

@@ -1,0 +1,14 @@
+{
+    "arguments": [
+    ],
+    "check": "campaign-550-windows",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "cwd": ".",
+    "data": "RVZJREVOQ0UgRDovT04gREVTQ1RPUC9IS1IgS1VSU0VSL0MrKy9BUkFNRjIvQVJBTUYvYnVpbGQvdGVzdF81NTAvcnVucy80MzZmNzBjNS02MjgxLTQ2ZmMtOWQxZS0yNDRlMTVkZDM2N2UNCmF1dG9tYXRlZENvbXBsZXRlZD0yNTAgYXV0b21hdGVkUGFzcz0yNTAgaGlzdG9yaWNhbE1hbnVhbEV4Y2x1ZGVkPTUwIGZhaWx1cmVzPTANCg==",
+    "encoding": "base64",
+    "exitCode": 0,
+    "program": "build/aramf_release_validation_runner.exe",
+    "rawSha256": "df609d0de6aaf0d8c37c4028cad11c87a8bc63b54cec1bf81063dc7b612d8379",
+    "status": "PASS",
+    "timestamp": "2026-09-27T10:16:54Z"
+}

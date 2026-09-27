@@ -1,0 +1,8 @@
+{
+    "check": "ctest",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "dependencyFingerprint": "54140513cb57d7d2ce74e564d670c680892cecc07073ab7fe0856529d98f764b",
+    "observedResult": "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/full-ctest-canonical.json",
+    "observedResultSHA256": "c5b6089be668e433cb48d3fcd90df330ea887407d29912bd64e7d29dc6e1780f",
+    "status": "PASS"
+}

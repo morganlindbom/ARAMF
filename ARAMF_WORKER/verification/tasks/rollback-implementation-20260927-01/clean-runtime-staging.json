@@ -1,0 +1,150 @@
+{
+    "backup": "build/rollback-runtime-before-20260927",
+    "check": "clean-runtime-staging",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "executables": [
+        {
+            "beforeSHA256": "8ed2d0a732e7cddbd001146e7b69d2df5a5343dfb8f4a3df3c93285aa6df8ec7",
+            "cleanBuildSHA256": "06a952374ef16afdea8d9c0a84d585912e3d5a3bbf59d7e9afdcbb7134b58433",
+            "destination": "build/aramf.exe",
+            "source": "build/rollback-clean-20260927/aramf.exe",
+            "stagedSHA256": "06a952374ef16afdea8d9c0a84d585912e3d5a3bbf59d7e9afdcbb7134b58433"
+        },
+        {
+            "beforeSHA256": "1592c1754b5c69330d04bce2a5b9ed2bc412d8c20361f505896f66c356c9f1a9",
+            "cleanBuildSHA256": "103007fb174cbf5e328745bb0f41e9cf43abbfb1be7c5843d3d2a411dc7faf99",
+            "destination": "build/aramf_campaign_runner.exe",
+            "source": "build/rollback-clean-20260927/aramf_campaign_runner.exe",
+            "stagedSHA256": "103007fb174cbf5e328745bb0f41e9cf43abbfb1be7c5843d3d2a411dc7faf99"
+        },
+        {
+            "beforeSHA256": "cabd7ee3d62374dbb15c6a847d9975530c69072db396d54b5f0633fea14c2cd0",
+            "cleanBuildSHA256": "d5c5b210d38e5a6dcb04a63d671ea9b7abf474f7a82d4abdc4f883b3e1247c34",
+            "destination": "build/aramf_configuration_update_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_configuration_update_tests.exe",
+            "stagedSHA256": "d5c5b210d38e5a6dcb04a63d671ea9b7abf474f7a82d4abdc4f883b3e1247c34"
+        },
+        {
+            "beforeSHA256": "309f9ce50c4082bfc36602ef134678e20413d78c98c523f623990846e309e653",
+            "cleanBuildSHA256": "2b7664907b62f3d487606a9129ea95aab0af09c42e7888d451281f165ad1c234",
+            "destination": "build/aramf_core_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_core_tests.exe",
+            "stagedSHA256": "2b7664907b62f3d487606a9129ea95aab0af09c42e7888d451281f165ad1c234"
+        },
+        {
+            "beforeSHA256": "075737fe82d6fafd4b0a0924f3c181dfbaec10f0e17f385630fe534bb00448ed",
+            "cleanBuildSHA256": "83354da1112e9113f1ae4a73c0aee5af85ddb35b8640a09a69774186e2598a3d",
+            "destination": "build/aramf_f1_independence.exe",
+            "source": "build/rollback-clean-20260927/aramf_f1_independence.exe",
+            "stagedSHA256": "83354da1112e9113f1ae4a73c0aee5af85ddb35b8640a09a69774186e2598a3d"
+        },
+        {
+            "beforeSHA256": "e1cf78294153560a933bcaf5b05473ab7234ba6327954eb13b12daab337e2dbc",
+            "cleanBuildSHA256": "b2f76b4e80a68b4f7cd0acccbec1c804a687c300aa82008ee8d982a804f19752",
+            "destination": "build/aramf_f2_independence.exe",
+            "source": "build/rollback-clean-20260927/aramf_f2_independence.exe",
+            "stagedSHA256": "b2f76b4e80a68b4f7cd0acccbec1c804a687c300aa82008ee8d982a804f19752"
+        },
+        {
+            "beforeSHA256": "b52eb995207108734af9266aae95addedacb6f49a3e782677b66dcf10d3da2d6",
+            "cleanBuildSHA256": "e6592dd28b87e5fef77b2a4ba26a8c1973054a8acd82ed61f3d65b47d45b4f18",
+            "destination": "build/aramf_f3_independence.exe",
+            "source": "build/rollback-clean-20260927/aramf_f3_independence.exe",
+            "stagedSHA256": "e6592dd28b87e5fef77b2a4ba26a8c1973054a8acd82ed61f3d65b47d45b4f18"
+        },
+        {
+            "beforeSHA256": "ae4d3a7c5675d3fe0a627ebd45a9433338dd05165af827840bee595b1394a232",
+            "cleanBuildSHA256": "bc35aa7f5d044b83fa91d36e5e0f385c731e202be75ba0e7c7633c55ae91f9c3",
+            "destination": "build/aramf_f4_independence.exe",
+            "source": "build/rollback-clean-20260927/aramf_f4_independence.exe",
+            "stagedSHA256": "bc35aa7f5d044b83fa91d36e5e0f385c731e202be75ba0e7c7633c55ae91f9c3"
+        },
+        {
+            "beforeSHA256": "b72ca874f9b9a1fd0a52b9401c3d2ca01151aba76047696d96c3c9907362bd8e",
+            "cleanBuildSHA256": "a24daad914fa608e2db3bbd0f758710f5436b37cd228aad562ef35ede573b6af",
+            "destination": "build/aramf_freshness_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_freshness_tests.exe",
+            "stagedSHA256": "a24daad914fa608e2db3bbd0f758710f5436b37cd228aad562ef35ede573b6af"
+        },
+        {
+            "beforeSHA256": "5f86f68dec270292bc48761fb30cbb53b2f94f654442b4e479c92270f5235691",
+            "cleanBuildSHA256": "27307e0954112261ee2a221accde751737b7cc1afa8d20a18ca14dd5aeda4c2c",
+            "destination": "build/aramf_release_validation_runner.exe",
+            "source": "build/rollback-clean-20260927/aramf_release_validation_runner.exe",
+            "stagedSHA256": "27307e0954112261ee2a221accde751737b7cc1afa8d20a18ca14dd5aeda4c2c"
+        },
+        {
+            "beforeSHA256": "7ff3c80cf4ec45b6784da4ed83e470c1ca8e1f91dca659195f7e842cf532f30d",
+            "cleanBuildSHA256": "20d882e332561d30a7b80cf5e5918927523d0a6b4bf44f6ae5ca8893ee5f31d5",
+            "destination": "build/aramf_revalidation_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_revalidation_tests.exe",
+            "stagedSHA256": "20d882e332561d30a7b80cf5e5918927523d0a6b4bf44f6ae5ca8893ee5f31d5"
+        },
+        {
+            "beforeSHA256": "01a0d0cff6d598dc516f996ea16a1fe3b7780529b1eb789de331f5012c8395fe",
+            "cleanBuildSHA256": "45fdefc85296a2515d3f206247579175bc5c2f94442f66f36b52037c0fe6fdee",
+            "destination": "build/aramf_s1_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_s1_tests.exe",
+            "stagedSHA256": "45fdefc85296a2515d3f206247579175bc5c2f94442f66f36b52037c0fe6fdee"
+        },
+        {
+            "beforeSHA256": "8e1b293932a0f83d52c2aa135435e367db63cf75f86fdc05015c00bb66961d6f",
+            "cleanBuildSHA256": "e4593d702f4d1954e658e850b1e6e287201e9ead805da3bc172114e49ee68c05",
+            "destination": "build/aramf_s2_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_s2_tests.exe",
+            "stagedSHA256": "e4593d702f4d1954e658e850b1e6e287201e9ead805da3bc172114e49ee68c05"
+        },
+        {
+            "beforeSHA256": "ac752eba1d3c34f5930616ef92672283f7bf502f9ada8244a6623f861a350640",
+            "cleanBuildSHA256": "c9bd5a3154de82ba00f9caa99d1fcb95834b35c80837918a16f27b11c602771a",
+            "destination": "build/aramf_s3_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_s3_tests.exe",
+            "stagedSHA256": "c9bd5a3154de82ba00f9caa99d1fcb95834b35c80837918a16f27b11c602771a"
+        },
+        {
+            "beforeSHA256": "3c41fc61bf974980fdcabc328dff47e5b78162ce7a6a7c3b870cd69a1a2472c5",
+            "cleanBuildSHA256": "043f69a5f6bb72336deb299fdcef752852086108010fa638d782e88713c40417",
+            "destination": "build/aramf_s4_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_s4_tests.exe",
+            "stagedSHA256": "043f69a5f6bb72336deb299fdcef752852086108010fa638d782e88713c40417"
+        },
+        {
+            "beforeSHA256": "ae61e0135393f64f1f50fc3ed1274b09b348dfe50c55fb2d24ea3b9373e4b5a3",
+            "cleanBuildSHA256": "bb77456daa95fc11c753bb68347dabefdc9ae0020ee6f69b73cdc27d06919967",
+            "destination": "build/aramf_s5_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_s5_tests.exe",
+            "stagedSHA256": "bb77456daa95fc11c753bb68347dabefdc9ae0020ee6f69b73cdc27d06919967"
+        },
+        {
+            "beforeSHA256": "4df95dcd285be1c3090095c39fc172be5cea579e93d7dcaa20f40e36a0153db1",
+            "cleanBuildSHA256": "001ecd43848f90158beeccacf903ecbfe416f80c2207c0e089c48870279f9fb9",
+            "destination": "build/aramf_s6_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_s6_tests.exe",
+            "stagedSHA256": "001ecd43848f90158beeccacf903ecbfe416f80c2207c0e089c48870279f9fb9"
+        },
+        {
+            "beforeSHA256": "2d1f024de201ad13a87141abb5c681c808dc14cc9b96e07abb99a495f1837ee6",
+            "cleanBuildSHA256": "c9cc0208310034a17a3e0254214453be2e42995cc81be814628c9300bd5903d8",
+            "destination": "build/aramf_template_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_template_tests.exe",
+            "stagedSHA256": "c9cc0208310034a17a3e0254214453be2e42995cc81be814628c9300bd5903d8"
+        },
+        {
+            "beforeSHA256": "ffe511921d8e80f171892a314ee884edb2b71a832e9d5af48035effaa033ad5d",
+            "cleanBuildSHA256": "f66b1853841d7818cbc151da0945802cd271e9de152fdc1ea2b35c1fbcd151cb",
+            "destination": "build/aramf_update_campaign_runner.exe",
+            "source": "build/rollback-clean-20260927/aramf_update_campaign_runner.exe",
+            "stagedSHA256": "f66b1853841d7818cbc151da0945802cd271e9de152fdc1ea2b35c1fbcd151cb"
+        },
+        {
+            "beforeSHA256": "4880ecd97c5532e7f71eccaeca17d9a470263dbabf56365f7c9e270bd84d6f99",
+            "cleanBuildSHA256": "51b9ee7a8bf2cd03fa7c1bb02ad499ec4556cc0de1f74bf50fb857f929886d67",
+            "destination": "build/aramf_workflow_tests.exe",
+            "source": "build/rollback-clean-20260927/aramf_workflow_tests.exe",
+            "stagedSHA256": "51b9ee7a8bf2cd03fa7c1bb02ad499ec4556cc0de1f74bf50fb857f929886d67"
+        }
+    ],
+    "matchingRuntimeLibraries": 18,
+    "reason": "Unchanged existing tests require canonical build working directory and executable parent; clean-built executables staged byte-identically there without changing source, tests or CTest definitions",
+    "status": "PASS"
+}

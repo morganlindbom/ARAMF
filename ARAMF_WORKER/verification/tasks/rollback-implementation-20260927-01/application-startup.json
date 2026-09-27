@@ -1,0 +1,14 @@
+{
+    "arguments": [
+    ],
+    "check": "application-startup",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "cwd": ".",
+    "data": "UEFTUyBBUkFNRiBNYWluV2luZG93IGluaXRpYWxpemVkIGFuZCByZXNwb25zaXZlIFBJRD0xNDk4OA0KUEFTUyBub3JtYWwgYXBwbGljYXRpb24gc2h1dGRvd24NClFQcm9jZXNzOiBEZXN0cm95ZWQgd2hpbGUgcHJvY2VzcyAoIkQ6XFxPTiBERVNDVE9QXFxIS1IgS1VSU0VSXFxDKytcXEFSQU1GMlxcQVJBTUZcXGJ1aWxkXFxhcmFtZi5leGUiKSBpcyBzdGlsbCBydW5uaW5nLg0K",
+    "encoding": "base64",
+    "exitCode": 0,
+    "program": "build/foundation-startup-probe.exe",
+    "rawSha256": "afec76f82c0ee2ce81873b65136cbc36893be2042711eef58692eb7e2959d64a",
+    "status": "PASS",
+    "timestamp": "2026-09-27T10:06:56Z"
+}

@@ -1,0 +1,15 @@
+{
+    "arguments": [
+        "--p3-execution"
+    ],
+    "check": "p3-execution",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "cwd": ".",
+    "data": "UDItRVhFQ1VUSU9OIGNoZWNrcz1QQVNTDQo=",
+    "encoding": "base64",
+    "exitCode": 0,
+    "program": "build/aramf_core_tests.exe",
+    "rawSha256": "457df4301e4dac04087f6bd0d1d301b16bce56a57969203b90212da36e078569",
+    "status": "PASS",
+    "timestamp": "2026-09-27T09:59:35Z"
+}

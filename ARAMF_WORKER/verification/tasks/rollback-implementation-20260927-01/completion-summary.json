@@ -1,0 +1,58 @@
+{
+  "check": "phase-2a-completion",
+  "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+  "status": "PASS",
+  "branch": "main",
+  "startingHead": "cb4ba92048c30a3fd8a5c41014dbfab0d54d3a12",
+  "implementationCommit": "73d079d6643be8238599b979a404949f0e756aad",
+  "implementationFiles": ["src/core/ProjectMemory.cpp", "tests/ProjectMemoryTests.cpp"],
+  "implementationCommitPurpose": "ARAMF: preserve exact bytes during governed rollback",
+  "postflight": "VERIFIED; see implementation-postflight.json",
+  "verification": {
+    "focusedRollback": "PASS, including LF, CRLF, mixed newline, UTF-8/BOM Markdown, trailing whitespace, four operation paths, multi-file rollback, existence state, unreadable capture and partial I/O mutation",
+    "oldImplementationNegativeControl": "FAIL, preserved separately; same original byte-preservation regression passes after repair",
+    "projectMemoryCore": "PASS",
+    "provenanceScope": "PASS",
+    "workerGovernance": "358 checks, 0 failures",
+    "p3Execution": "PASS",
+    "cleanBuild": "PASS, all 733 steps; exact clean-built binaries staged into canonical runtime placement for existing path-sensitive tests",
+    "fullCTest": "18/18 PASS; initial nested-build run 15/18 and corrected-placement regression 3/3 retained",
+    "campaign250": "250/250 PASS",
+    "campaign550Automated": "250/250 PASS: 140 GUI and 110 system cases; 50 historical manual cases excluded, not claimed",
+    "applicationStartup": "PASS, responsive MainWindow and normal OS-observed exit",
+    "memoryColdStartWorker": "PASS, including independent process readback after revalidation",
+    "gitDiffCheck": "PASS"
+  },
+  "freshness": {
+    "sourceStaleAfterImplementation": ["F1", "S1"],
+    "transitivelyStaleAfterImplementation": ["P1", "P2", "P3", "P4", "P5", "S2", "S3", "S4", "S5", "S6"],
+    "canonicalRevalidationsPerformed": ["F1", "S1", "S2", "S3", "S4", "S5", "S6"],
+    "resolvedWithoutSeparateRevalidation": ["P1", "P2", "P3", "P4", "P5"],
+    "alwaysFresh": ["F2", "F3", "F4"],
+    "final": "F1-F4, P1-P5, S1-S6 all FRESH; see freshness-final.json and seven revalidation records",
+    "historicalCertificates": "Unchanged; new canonical revalidation bindings only"
+  },
+  "integrity": {
+    "eventCount": 482,
+    "uniqueEventIds": 482,
+    "sequence": "1-482 continuous",
+    "wholeLedgerSHA256": "e3e2b4dff530509fd2444c705f63787cbd0c4a9ae11dc793ad29767fcdedc288",
+    "historicalPrefixSHA256": "6b7cb43a1101060274f3fc2f5a937d9769e2a7eb5ff41e86953a172432f06781",
+    "protectedHistoryFilesChecked": 593,
+    "phase1": "Unchanged. RECONSTRUCTED — exact complete pre-rollback byte state was not available for all files.",
+    "namedWorkerChanges": "Preserved, not changed or included in implementation/evidence commits",
+    "HVDComponents": "Read/hash-only verification; no modification",
+    "LICENSE": "Read/hash-only verification; not modified, staged or committed",
+    "testRunDirectories": "test_250/runs and test_550/runs read/hash-only, unchanged and excluded from commits",
+    "currentColdStart": "Required migration tests refreshed only checkedAt through the canonical service; no manual edit, binding/history change or inclusion of the pre-existing dirty live file in this boundary"
+  },
+  "boundaries": {
+    "configurationPropagationRepairStarted": false,
+    "HVDConfigurationStarted": false,
+    "FPSCStarted": false,
+    "P6Started": false,
+    "C1Started": false,
+    "sourceTreeRelocation": false,
+    "push": false
+  }
+}

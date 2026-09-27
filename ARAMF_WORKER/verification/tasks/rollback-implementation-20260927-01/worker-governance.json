@@ -1,0 +1,15 @@
+{
+    "arguments": [
+        "--worker-tasks"
+    ],
+    "check": "worker-governance",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "cwd": ".",
+    "data": "V09SS0VSLVRBU0sgY2hlY2tzPTM1OCBmYWlsZWQ9MCBtYXRyaXg9MTENCg==",
+    "encoding": "base64",
+    "exitCode": 0,
+    "program": "build/aramf_core_tests.exe",
+    "rawSha256": "5d8cd1bf7ec1a2c2aa1f258f2351d65b9ff4ead7628a6cf10f020f73b54c3c96",
+    "status": "PASS",
+    "timestamp": "2026-09-27T09:58:12Z"
+}

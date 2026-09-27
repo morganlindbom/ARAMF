@@ -1,0 +1,44 @@
+{
+  "check": "implementation-review",
+  "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+  "status": "PASS",
+  "actor": "Codex, operating under explicit Phase 2A implementation authorization",
+  "startingHead": "cb4ba92048c30a3fd8a5c41014dbfab0d54d3a12",
+  "scope": ["src/core/ProjectMemory.cpp", "tests/ProjectMemoryTests.cpp"],
+  "classification": "Semantic transactional rollback repair, not a structural refactor",
+  "audit": {
+    "snapshotCapture": "QFile ReadOnly captures raw QByteArray; previously an open failure silently became empty content. Capture now fails closed for non-regular, unreadable or incomplete snapshots, before any transaction write, and captures SHA-256 and original existence.",
+    "restore": "Batch restoration previously called writeTextFile with QIODevice::Text. Batch and single-file restoration now use the same binary QSaveFile path. Bytes and SHA-256 are verified after restoration. Unchanged files need not be rewritten. All snapshot restorations are attempted and failures are reported instead of discarded.",
+    "appendEvidenceWrites": ["event-log.jsonl", "memory-manifest.json", "metrics.json", "current-state.md"],
+    "postMutationValidationWrites": ["cold-start-validation.json", "memory-consistency-validation.json"],
+    "decisionAdditionalWrites": ["decisions.md"],
+    "supersessionAdditionalWrites": ["decisions.md"],
+    "checkpointAdditionalWrites": ["checkpoints.json"],
+    "operationalAdditionalWrites": ["../PROJECT_STATUS.md, only when configured task completion updates status"],
+    "coverageCorrection": "Decision and supersession add metrics and cold-start snapshots; checkpoint adds metrics. Operational recording already listed all seven targets but now requires successful capture. All four paths check cold-start/validation failure and preserve rollback error details.",
+    "unchangedSuccessfulPersistence": "Normal text/JSON producers, schemas, event identity/order and successful write semantics were not normalized or redesigned.",
+    "isolation": "No Foundation service or dependency was added or moved. ProjectMemory remains the existing external orchestration facade. No configuration propagation implementation was changed."
+  },
+  "regressionCoverage": [
+    "LF, CRLF, mixed newline and UTF-8 BOM Markdown snapshots, including trailing whitespace and UTF-8 content",
+    "Rejected decision, decision supersession, checkpoint and operational task completion",
+    "All nine observed files, byte equality and SHA-256 equality",
+    "Event objects, unique IDs, continuous sequences and order",
+    "Absent derived-file existence restoration",
+    "Non-regular target capture rejection before first write",
+    "Windows exclusive read lock capture rejection before first write",
+    "Windows readable/non-replaceable metrics: actual I/O failure after partial decision, ledger and manifest mutation",
+    "Successful decision persists, appends exactly one event and is not rolled back"
+  ],
+  "oldImplementationRegression": "../rollback-repair-20260927-01/regression-old-implementation.json records actual FAIL against the original source; regression-repair-first.json records the first repair PASS. Only their current-task JSON envelopes were completed with check/contract identity; base64 raw output and rawSha256 were not modified.",
+  "validationAttemptNotes": [
+    "The required full core/migration suite invokes ProjectMemory::validateColdStart on the live repository through ProcessNamespaceMigrationTests.cpp MIG-018 and FoundationNamespaceTests.cpp FOUND-019. Its canonical producer refreshed cold-start-validation.json checkedAt from 2026-09-27T09:18:22Z to 2026-09-27T10:24:57Z. Exact parsed comparison found checkedAt as the only changed field; the binding, checks and historical memory did not change. Earlier and later current results are retained in current-readonly-validation.json, final-readonly-validation.json and current-after-ctest.json. The implementation postflight recognized this as a valid canonical service change. The already-dirty live cold-start file is not included in the implementation/evidence commits, avoiding absorption of pre-existing recovery changes. No manual cold-start edit or unnecessary separate regeneration was performed.",
+    "The initial clean configure/build used build/rollback-clean-20260927. CTest from that nested directory exposed existing runner-location assumptions: CertificationFreshnessTests.cpp derives the repository only from a working directory named build, while CertificationRevalidationTests.cpp and test_update/runner/main.cpp use the executable's parent directory. The resulting freshness, revalidation and seven UPDATE fixture failures are preserved in full-ctest.json. No source/test assertion was changed. clean-runtime-staging.json proves all 20 clean-built executables were staged byte-identically into the canonical build directory, previous executables were backed up, and all 18 runtime DLLs matched. canonical-path-regression.json then records 3/3 PASS for precisely those three tests, including UPDATE 310/310. full-ctest-canonical.json is the full-suite retry under the unchanged canonical CTest definitions.",
+    "campaign-550.json preserves a failed launcher attempt with QT_QPA_PLATFORM=offscreen: only the Windows Qt platform plugin is installed. No scenario ran in that attempt. campaign-550-windows.json is the separately recorded retry using QT_QPA_PLATFORM=windows; no product or test semantics were changed.",
+    "An incremental relink failed with Permission denied while another test was using aramf_core_tests.exe. After that process exited, incremental-relink.json records PASS. No source workaround was made.",
+    "The first full-build launcher used a nonexistent C:/msys64/ucrt64/bin/cmake.exe and could not start. The actual CMake executable is C:/Program Files/CMake/bin/cmake.exe; the recorded clean-full-build command uses PATH resolution.",
+    "The evidence helper itself also could not be relinked while executing a build. A separately named helper executable was linked without modifying the running process or product implementation."
+  ],
+  "history": "RECONSTRUCTED — exact complete pre-rollback byte state was not available for all files. Phase 1 remains immutable and is not retroactively reclassified. The 482-event live ledger and its historical prefix are checked read-only.",
+  "verificationPolicy": "Runtime claims are in separate actual command/result artifacts. This static review does not substitute for full regression, postflight or canonical revalidation."
+}

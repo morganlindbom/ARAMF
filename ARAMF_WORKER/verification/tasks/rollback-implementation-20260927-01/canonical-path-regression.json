@@ -1,0 +1,19 @@
+{
+    "arguments": [
+        "--test-dir",
+        "build",
+        "--output-on-failure",
+        "-R",
+        "aramf_(freshness_tests|revalidation_tests|update_campaign)$"
+    ],
+    "check": "canonical-path-regression",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "cwd": ".",
+    "data": "VGVzdCBwcm9qZWN0IEQ6L09OIERFU0NUT1AvSEtSIEtVUlNFUi9DKysvQVJBTUYyL0FSQU1GL2J1aWxkCiAgICBTdGFydCAgNzogYXJhbWZfZnJlc2huZXNzX3Rlc3RzCjEvMyBUZXN0ICAjNzogYXJhbWZfZnJlc2huZXNzX3Rlc3RzIC4uLi4uLi4uLi4uLiAgIFBhc3NlZCAgICAwLjM2IHNlYwogICAgU3RhcnQgIDg6IGFyYW1mX3JldmFsaWRhdGlvbl90ZXN0cwoyLzMgVGVzdCAgIzg6IGFyYW1mX3JldmFsaWRhdGlvbl90ZXN0cyAuLi4uLi4uLi4gICBQYXNzZWQgICAgMS4wMiBzZWMKICAgIFN0YXJ0IDE3OiBhcmFtZl91cGRhdGVfY2FtcGFpZ24KMy8zIFRlc3QgIzE3OiBhcmFtZl91cGRhdGVfY2FtcGFpZ24gLi4uLi4uLi4uLi4uICAgUGFzc2VkICAgIDkuMTMgc2VjCgoxMDAlIHRlc3RzIHBhc3NlZCwgMCB0ZXN0cyBmYWlsZWQgb3V0IG9mIDMKClRvdGFsIFRlc3QgdGltZSAocmVhbCkgPSAgMTAuNTIgc2VjCg==",
+    "encoding": "base64",
+    "exitCode": 0,
+    "program": "ctest",
+    "rawSha256": "c25310900f1ebacd8f5bc91ed41df143858395c40d7ff5fe17af253fae9f7ba1",
+    "status": "PASS",
+    "timestamp": "2026-09-27T10:22:11Z"
+}

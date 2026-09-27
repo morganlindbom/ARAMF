@@ -1,0 +1,8 @@
+{
+    "check": "aramf_core_tests::--worker-tasks",
+    "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+    "dependencyFingerprint": "54140513cb57d7d2ce74e564d670c680892cecc07073ab7fe0856529d98f764b",
+    "observedResult": "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/project-memory-full.json",
+    "observedResultSHA256": "f149be85c07a4cd19fb77bcbbd59f4b5dfcb8df7d5b921ea822d04c67dad6584",
+    "status": "PASS"
+}
