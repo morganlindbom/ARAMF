@@ -190,10 +190,8 @@ void ProjectModel::setTemplateId(const QString& value)
 void ProjectModel::setWorkerNameSuffix(const QString& value)
 {
     const QString normalized = AramfPaths::normalizeWorkerNameSuffix(value);
-    const QString canonicalName = AramfPaths::workerDirectoryName(normalized);
-    if (workerNameSuffix_ == normalized && projectName_ == canonicalName) return;
+    if (workerNameSuffix_ == normalized) return;
     workerNameSuffix_ = normalized;
-    projectName_ = canonicalName;
     notifyChanged();
 }
 

@@ -698,7 +698,9 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
     model->setProjectFilePath(root.value("projectFilePath").toString());
     model->setWorkerNameSuffix(root.value("workerNameSuffix").toString());
     const QString canonicalName = AramfPaths::workerDirectoryName(model->workerNameSuffix());
-    model->setProjectName(canonicalName);
+    // Preserve an explicitly persisted logical name, including legacy worker-like
+    // names. Only identity-less legacy input retains the historical fallback.
+    if (!root.contains(QStringLiteral("projectName"))) model->setProjectName(canonicalName);
     // Preserve the file that was actually opened/persisted.  Only derive a
     // canonical filename when older/in-memory input has no project-file path;
     // otherwise a later Save Work could silently write to another file.

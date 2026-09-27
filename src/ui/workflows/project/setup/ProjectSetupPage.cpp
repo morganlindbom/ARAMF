@@ -45,7 +45,6 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
       type_(new QLineEdit(this)),
       description_(new QTextEdit(this))
 {
-    name_->setReadOnly(true);
     name_->setObjectName(QStringLiteral("canonicalProjectName"));
     // Description is the flexible field, but it must yield space to the
     // fixed-content controls above it when the page is short.
@@ -201,6 +200,7 @@ ProjectSetupPage::ProjectSetupPage(ProjectModel* model, TemplateManager* manager
     layout->addStretch();
 
     id_->setReadOnly(true);
+    connect(name_, &QLineEdit::textEdited, model_, &ProjectModel::setProjectName);
     connect(type_, &QLineEdit::textEdited, model_, &ProjectModel::setContext);
     connect(path_, &QLineEdit::textChanged, this, [this](const QString& value) {
         model_->setProjectPath(value);
@@ -384,7 +384,6 @@ bool ProjectSetupPage::confirmDiscardOrSave()
 void ProjectSetupPage::syncCanonicalIdentity(bool deriveProjectFile)
 {
     const QString workerName = AramfPaths::workerDirectoryName(model_->workerNameSuffix());
-    if (model_->projectName() != workerName) model_->setProjectName(workerName);
     workerNamePreview_->setText(workerName);
     const QString derivedFileName = workerName + QStringLiteral(".aramf.json");
     if (deriveProjectFile && !model_->projectPath().trimmed().isEmpty() && model_->projectFilePath().trimmed().isEmpty())
@@ -406,7 +405,7 @@ void ProjectSetupPage::refreshFromModel()
     const QSignalBlocker descriptionBlocker(description_);
     const QSignalBlocker suffixBlocker(workerNameSuffix_);
 
-    name_->setText(AramfPaths::workerDirectoryName(model_->workerNameSuffix()));
+    name_->setText(model_->projectName());
     path_->setText(model_->projectPath());
     id_->setText(model_->projectId());
     type_->setText(model_->context());

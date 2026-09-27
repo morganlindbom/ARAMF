@@ -2,6 +2,7 @@
 #include "core/ComponentVersion.h"
 #include "core/TemplateValidation.h"
 #include "core/ProjectPersistence.h"
+#include "core/WorkerTaskServices.h"
 #include "core/ProjectMemory.h"
 #include "core/AramfPaths.h"
 #include "core/EnvironmentCatalog.h"
@@ -47,6 +48,7 @@
 #include <QListWidget>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QProcess>
 #include <QTemporaryDir>
 #include <QTextStream>
 #include <QTimer>
@@ -71,11 +73,135 @@ QStringList list(const QJsonValue& value)
 {
     QStringList result; for (const auto& item : value.toArray()) result << item.toString(); return result;
 }
+
+QJsonObject readIdentityJson(const QString& path)
+{
+    QFile file(path);
+    check(file.open(QIODevice::ReadOnly), "identity artifact is persisted: " + path);
+    return QJsonDocument::fromJson(file.readAll()).object();
+}
+
+void checkReloadedIdentity(const ProjectModel& model, const QString& id, const QString& root)
+{
+    check(model.projectName() == "HVD Components", "reload preserves logical project name");
+    check(model.workerNameSuffix() == "HVD_COMPONENTS", "reload preserves worker suffix");
+    check(AramfPaths::workerDirectoryName(model.workerNameSuffix()) == "ARAMF_WORKER_HVD_COMPONENTS", "reload preserves worker directory identity");
+    check(model.projectId() == id, "reload preserves UUID");
+    check(model.projectPath() == root, "reload preserves root");
+    const QDir worker(QDir(root).filePath("ARAMF_WORKER_HVD_COMPONENTS"));
+    const auto project = readIdentityJson(worker.filePath("project.json"));
+    const auto manifest = readIdentityJson(worker.filePath("worker-manifest.json"));
+    check(project.value("projectName") == "HVD Components" && project.value("projectId") == id,
+          "worker project.json preserves logical name and UUID");
+    check(project.value("workerIdentity") == "ARAMF_WORKER_HVD_COMPONENTS"
+              && manifest.value("workerIdentity") == "ARAMF_WORKER_HVD_COMPONENTS"
+              && manifest.value("projectId") == id, "manifest binds worker to project UUID");
+    check(readIdentityJson(worker.filePath("context/context-index.json")).value("projectId") == id,
+          "context belongs to the reloaded project");
+    check(!QDir(root).exists("ARAMF_WORKER"), "no accidental unsuffixed worker");
+    check(VerificationServices().verify(model, model.generationOptions(), false).overallStatus == VerificationStatus::Pass,
+          "reloaded distinct identities pass read-only Worker verification");
+}
+
+void identityRegression(TemplateManager& manager, ProjectPersistence& persistence, const QTemporaryDir& fixture)
+{
+    ProjectModel names;
+    const QString id = names.projectId();
+    names.setProjectName("HVD Components");
+    check(names.workerNameSuffix().isEmpty(), "project name setter does not derive worker suffix");
+    names.setWorkerNameSuffix("HVD Components");
+    check(names.projectName() == "HVD Components" && names.workerNameSuffix() == "HVD_COMPONENTS", "project then worker preserves both names");
+    names.setWorkerNameSuffix("SECOND_WORKER");
+    check(names.projectName() == "HVD Components", "changing worker does not rename project");
+    names.setProjectName("Renamed logical project");
+    check(names.workerNameSuffix() == "SECOND_WORKER" && names.projectId() == id, "renaming project preserves worker and UUID");
+    ProjectModel reverse;
+    reverse.setWorkerNameSuffix("HVD_COMPONENTS");
+    reverse.setProjectName("HVD Components");
+    check(reverse.workerNameSuffix() == "HVD_COMPONENTS" && reverse.projectName() == "HVD Components", "worker then project preserves both names");
+    auto legacy = persistence.toJson(reverse);
+    legacy.insert("projectName", "ARAMF_WORKER_HVD_COMPONENTS");
+    ProjectModel restored;
+    check(persistence.fromJson(&restored, legacy), "legacy worker-like logical name loads");
+    check(restored.projectName() == "ARAMF_WORKER_HVD_COMPONENTS", "legacy logical name is not prettified");
+    legacy.remove("workerNameSuffix");
+    check(persistence.fromJson(&restored, legacy) && restored.workerNameSuffix().isEmpty()
+              && restored.projectName() == "ARAMF_WORKER_HVD_COMPONENTS", "single historical identity is not parsed into a worker suffix");
+    legacy.remove("projectName");
+    legacy.insert("workerNameSuffix", "LEGACY");
+    check(persistence.fromJson(&restored, legacy) && restored.projectName() == "ARAMF_WORKER_LEGACY", "absent legacy logical name retains original fallback");
+
+    // A managed project may not masquerade as a nested ARAMF Git worktree.
+    QTemporaryDir projectFixture(QDir::temp().filePath("aramf-identity-production-XXXXXX"));
+    projectFixture.setAutoRemove(false);
+    check(projectFixture.isValid(), "isolated production project fixture");
+    QString projectId, root = projectFixture.path(), config = projectFixture.filePath("identity-production.aramf.json"), error;
+    {
+        ProjectModel model;
+        check(manager.applyTemplate(&model, "cmake-library", &error), "identity production template: " + error);
+        model.setProjectName("HVD Components"); model.setWorkerNameSuffix("HVD_COMPONENTS");
+        model.setProjectPath(root); model.setProjectFilePath(config);
+        model.setDescription("Independent component workspace; future HVD integration only.");
+        auto ai = model.aiConfiguration(); ai.primaryAgent = "openai-codex";
+        ai.permissions = {"read-project-files", "create-files", "modify-files", "run-tests"};
+        model.setAiConfiguration(ai);
+        auto rules = model.ruleConfiguration(); rules.projectScopes = {"documentation"};
+        rules.scopeMetadata = {{"documentation", QJsonObject{{"files", QJsonArray{"README.md"}}, {"tests", QJsonArray{"workspace-intent"}}, {"affects", QJsonArray{}}, {"riskTraits", QJsonArray{}}, {"generatedArtifacts", QJsonArray{}}}}};
+        model.setRuleConfiguration(rules); projectId = model.projectId();
+        check(persistence.save(model, config, &error), "identity production save: " + error);
+        check(GenerationServices().generate(model, model.generationOptions()).success, "identity production generation");
+        check(VerificationServices().verify(model, model.generationOptions()).overallStatus == VerificationStatus::Pass,
+              "identity production verification persists canonical PASS evidence");
+        checkReloadedIdentity(model, projectId, root);
+    }
+    ProjectModel loaded;
+    check(persistence.load(&loaded, config, &error), "identity same-process reload: " + error);
+    checkReloadedIdentity(loaded, projectId, root);
+    QProcess child;
+    child.setProcessChannelMode(QProcess::MergedChannels);
+    child.start(QCoreApplication::applicationFilePath(), {"--identity-reload", config, projectId, root, fixture.path()});
+    const bool finished = child.waitForFinished(60000);
+    check(finished && child.exitStatus() == QProcess::NormalExit && child.exitCode() == 0,
+          "identity independent-process reload: " + QString::fromUtf8(child.readAll()));
+    WorkerTaskRequest request;
+    request.goal = "Document independent project intent"; request.type = "documentation";
+    request.scopes = {"documentation"}; request.files = {"README.md"}; request.definitionOfDone = {"Intent recorded"};
+    const auto contract = WorkerTaskServices::prepare(loaded, request);
+    saveJson(fixture.filePath("identity-preflight.json"), contract);
+    check(contract.value("preflight").toObject().value("status").toString().startsWith("READY"), "distinct identities preserve preflight");
+    const auto postflight = WorkerTaskServices::postflight(loaded, contract);
+    check(postflight.value("status") == "PASS", "distinct identities preserve non-mutating postflight safety");
+    loaded.setProjectId("another-project");
+    check(WorkerTaskServices::postflight(loaded, contract).value("status") == "FAIL", "different UUID cannot reuse task contract");
+    loaded.setProjectId(projectId); loaded.setProjectPath(fixture.path());
+    check(WorkerTaskServices::postflight(loaded, contract).value("status") == "FAIL", "different root cannot reuse task contract");
+    ProjectModel ui;
+    ui.setProjectName("HVD Components"); ui.setWorkerNameSuffix("HVD_COMPONENTS");
+    ProjectSetupPage page(&ui, &manager, &persistence);
+    auto* edit = page.findChild<QLineEdit*>("canonicalProjectName");
+    check(edit && !edit->isReadOnly() && edit->text() == "HVD Components", "UI exposes editable logical name");
+    ui.setWorkerNameSuffix("SECOND_WORKER");
+    check(edit && edit->text() == "HVD Components" && ui.projectName() == "HVD Components", "UI refresh does not couple names");
+    if (edit) {
+        edit->setText("Changed logical name");
+        QMetaObject::invokeMethod(edit, "textEdited", Q_ARG(QString, QString("Changed logical name")));
+        check(ui.projectName() == "Changed logical name" && ui.workerNameSuffix() == "SECOND_WORKER", "UI logical edit preserves worker");
+    }
+}
 }
 
 int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
+    if (app.arguments().value(1) == "--identity-reload") {
+        const auto args = app.arguments();
+        AramfPaths::setProgramRootForTests(args.value(5));
+        ReleaseManagementService::setStatePathForTests(QDir(args.value(5)).filePath("release-management.json"));
+        ProjectModel loaded; QString error;
+        check(ProjectPersistence().load(&loaded, args.value(2), &error), "independent disk load: " + error);
+        checkReloadedIdentity(loaded, args.value(3), args.value(4));
+        return failures ? 1 : 0;
+    }
     if (app.arguments().contains("--catalog-fingerprint")) {
         QTextStream(stdout) << TemplateValidation::catalogFingerprint() << '\n'; return 0;
     }
@@ -91,6 +217,11 @@ int main(int argc, char** argv)
     FinalizationServices finalization;
     AgentEntryPointService entryPoints;
     ProjectMemory memory;
+    identityRegression(manager, persistence, fixture);
+    if (app.arguments().contains("--identity")) {
+        QTextStream(stdout) << "Identity checks: " << checks << ", failures: " << failures << "\nEvidence: " << fixture.path() << '\n';
+        return failures ? 1 : 0;
+    }
     // Explicit high-risk choices are configuration only: never execute them.
     // Bulk selection must not grant these permissions implicitly.
     {
@@ -565,7 +696,7 @@ int main(int argc, char** argv)
     check(persistence.save(suffixedModel, fixture.filePath("suffixed-roundtrip.aramf.json"))
               && persistence.load(&suffixReloaded, fixture.filePath("suffixed-roundtrip.aramf.json"), &suffixError)
               && suffixReloaded.workerNameSuffix() == QStringLiteral("ANDROID_PICO")
-              && suffixReloaded.projectName() == QStringLiteral("ARAMF_WORKER_ANDROID_PICO")
+              && suffixReloaded.projectName() == suffixedModel.projectName()
               && QFileInfo(suffixReloaded.projectFilePath()).fileName() == QStringLiteral("suffixed-roundtrip.aramf.json"),
           "worker suffix save/reload preserves the actual project file");
     ProjectModel mlSuffixedModel;
@@ -833,7 +964,7 @@ int main(int argc, char** argv)
     const QString newId = restored.projectId();
     check(restarted.applyTemplate(&restored, customId, &error), "restart custom apply: " + error);
     check(persistence.configuration(restored) == savedConfiguration, "custom ALL configuration domains exact round trip");
-    check(restored.projectName() == "ARAMF_WORKER" && restored.projectId() == newId && restored.projectPath() == fixture.filePath("custom-target"), "custom uses canonical target identity");
+    check(restored.projectName() == "New target" && restored.projectId() == newId && restored.projectPath() == fixture.filePath("custom-target"), "custom preserves the target's logical identity");
     check(!restarted.removeCustomTemplate(definitions.first().id), "built-in protected from removal");
     check(!restarted.saveCustomTemplate(custom, definitions.first().displayName), "built-in protected from replacement");
     check(!restarted.saveCustomTemplate(custom, "Complete custom template"), "duplicate names rejected");
