@@ -1,0 +1,206 @@
+[1/42] Automatic MOC and UIC for target aramf_freshness_tests
+[2/41] Automatic MOC and UIC for target aramf_campaign_runner
+[3/40] Automatic MOC and UIC for target aramf_revalidation_tests
+[4/39] Automatic MOC and UIC for target aramf
+[5/38] Automatic MOC and UIC for target aramf_release_validation_runner
+[6/37] Automatic MOC and UIC for target aramf_workflow_tests
+[7/36] Automatic MOC and UIC for target aramf_template_tests
+[8/35] Automatic MOC and UIC for target aramf_update_campaign_runner
+[9/34] Automatic MOC and UIC for target aramf_configuration_update_tests
+[10/33] Building CXX object CMakeFiles/aramf.dir/src/core/CertificationRevalidation.cpp.obj
+[11/33] Building CXX object CMakeFiles/aramf_campaign_runner.dir/src/core/CertificationRevalidation.cpp.obj
+[12/33] Building CXX object CMakeFiles/aramf_freshness_tests.dir/src/core/CertificationRevalidation.cpp.obj
+[13/33] Building CXX object CMakeFiles/aramf_release_validation_runner.dir/src/core/CertificationRevalidation.cpp.obj
+[14/33] Linking CXX executable aramf.exe; Deploying Qt runtime files; Deploying libgcc_s_seh-1.dll for aramf; Deploying libstdc++-6.dll for aramf; Deploying libwinpthread-1.dll for aramf; Deploying libatomic-1.dll for aramf
+Warning: Translations will not be available due to the following error.
+Cannot open C:/msys64/ucrt64/share/qt6/translations/catalogs.json
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libgcc_s_seh-1.dll
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libstdc++-6.dll
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libwinpthread-1.dll
+D:\ON DESCTOP\HKR KURSER\C++\ARAMF2\ARAMF\build-relocation-governance-clean\aramf.exe 64 bit, release executable
+Adding in plugin type generic for module: Qt6Gui
+Adding Qt6Network for qtuiotouchplugin.dll from plugin type: generic
+Adding in plugin type imageformats for module: Qt6Gui
+Adding in plugin type networkinformation for module: Qt6Network
+Adding in plugin type platforms for module: Qt6Gui
+Adding in plugin type styles for module: Qt6Widgets
+Adding in plugin type tls for module: Qt6Network
+Skipping plugin qopensslbackend.dll. Use -force-openssl or specify -openssl-root if you want to use it.
+Performing additional pass of finding Qt plugins due to updated Qt module list: Qt6Core Qt6Gui Qt6Network Qt6Widgets
+Adding in plugin type generic for module: Qt6Gui
+Adding in plugin type imageformats for module: Qt6Gui
+Adding in plugin type networkinformation for module: Qt6Network
+Adding in plugin type platforms for module: Qt6Gui
+Adding in plugin type styles for module: Qt6Widgets
+Adding in plugin type tls for module: Qt6Network
+Skipping plugin qopensslbackend.dll. Use -force-openssl or specify -openssl-root if you want to use it.
+Direct dependencies: Qt6Core Qt6Gui Qt6Widgets
+All dependencies   : Qt6Core Qt6Gui Qt6Widgets
+To be deployed     : Qt6Core Qt6Gui Qt6Network Qt6Widgets
+Warning: Cannot find any version of the dxcompiler.dll and dxil.dll. This is not a problem unless Direct3D 12 and certain features are used by the application.
+Qt6Core.dll is up to date.
+Qt6Gui.dll is up to date.
+Qt6Network.dll is up to date.
+Qt6Widgets.dll is up to date.
+Skipping system library C:/WINDOWS/system32/D3Dcompiler_47.dll
+qtuiotouchplugin.dll is up to date.
+qgif.dll is up to date.
+qico.dll is up to date.
+qjpeg.dll is up to date.
+qglib.dll is up to date.
+qnetworklistmanager.dll is up to date.
+qwindows.dll is up to date.
+qmodernwindowsstyle.dll is up to date.
+qcertonlybackend.dll is up to date.
+qschannelbackend.dll is up to date.
+[15/33] Automatic MOC and UIC for target aramf_core_tests
+[16/32] Building CXX object CMakeFiles/aramf_revalidation_tests.dir/tests/CertificationRevalidationTests.cpp.obj
+[17/32] Building CXX object CMakeFiles/aramf_revalidation_tests.dir/src/core/CertificationRevalidation.cpp.obj
+[18/32] Building CXX object CMakeFiles/aramf_workflow_tests.dir/src/core/CertificationRevalidation.cpp.obj
+[19/32] Building CXX object CMakeFiles/aramf_core_tests.dir/src/core/CertificationRevalidation.cpp.obj
+[20/32] Building CXX object CMakeFiles/aramf_core_tests.dir/tests/FoundationCertificationTests.cpp.obj
+[21/32] Building CXX object CMakeFiles/aramf_template_tests.dir/src/core/CertificationRevalidation.cpp.obj
+[22/32] Building CXX object CMakeFiles/aramf_update_campaign_runner.dir/src/core/CertificationRevalidation.cpp.obj
+[23/32] Linking CXX executable aramf_campaign_runner.exe
+[24/32] Linking CXX executable aramf_freshness_tests.exe
+[25/32] Linking CXX executable aramf_revalidation_tests.exe
+[26/32] Linking CXX executable aramf_release_validation_runner.exe
+[27/32] Linking CXX executable aramf_core_tests.exe; Deploying Qt runtime files for aramf_core_tests; Deploying libgcc_s_seh-1.dll for aramf_core_tests; Deploying libstdc++-6.dll for aramf_core_tests; Deploying libwinpthread-1.dll for aramf_core_tests; Deploying libatomic-1.dll for aramf_core_tests
+Warning: Translations will not be available due to the following error.
+Cannot open C:/msys64/ucrt64/share/qt6/translations/catalogs.json
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libgcc_s_seh-1.dll
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libwinpthread-1.dll
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libstdc++-6.dll
+D:\ON DESCTOP\HKR KURSER\C++\ARAMF2\ARAMF\build-relocation-governance-clean\aramf_core_tests.exe 64 bit, release executable
+Direct dependencies: Qt6Core
+All dependencies   : Qt6Core
+To be deployed     : Qt6Core
+Qt6Core.dll is up to date.
+[28/32] Building CXX object CMakeFiles/aramf_configuration_update_tests.dir/src/core/CertificationRevalidation.cpp.obj
+[29/32] Linking CXX executable aramf_workflow_tests.exe; Deploying Qt runtime files for aramf_workflow_tests; Deploying libgcc_s_seh-1.dll for aramf_workflow_tests; Deploying libstdc++-6.dll for aramf_workflow_tests; Deploying libwinpthread-1.dll for aramf_workflow_tests; Deploying libatomic-1.dll for aramf_workflow_tests
+Warning: Translations will not be available due to the following error.
+Cannot open C:/msys64/ucrt64/share/qt6/translations/catalogs.json
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libgcc_s_seh-1.dll
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libstdc++-6.dll
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libwinpthread-1.dll
+D:\ON DESCTOP\HKR KURSER\C++\ARAMF2\ARAMF\build-relocation-governance-clean\aramf_workflow_tests.exe 64 bit, release executable
+Adding in plugin type generic for module: Qt6Gui
+Adding Qt6Network for qtuiotouchplugin.dll from plugin type: generic
+Adding in plugin type imageformats for module: Qt6Gui
+Adding in plugin type networkinformation for module: Qt6Network
+Adding in plugin type platforms for module: Qt6Gui
+Adding in plugin type styles for module: Qt6Widgets
+Adding in plugin type tls for module: Qt6Network
+Skipping plugin qopensslbackend.dll. Use -force-openssl or specify -openssl-root if you want to use it.
+Performing additional pass of finding Qt plugins due to updated Qt module list: Qt6Core Qt6Gui Qt6Network Qt6Widgets
+Adding in plugin type generic for module: Qt6Gui
+Adding in plugin type imageformats for module: Qt6Gui
+Adding in plugin type networkinformation for module: Qt6Network
+Adding in plugin type platforms for module: Qt6Gui
+Adding in plugin type styles for module: Qt6Widgets
+Adding in plugin type tls for module: Qt6Network
+Skipping plugin qopensslbackend.dll. Use -force-openssl or specify -openssl-root if you want to use it.
+Direct dependencies: Qt6Core Qt6Gui Qt6Widgets
+All dependencies   : Qt6Core Qt6Gui Qt6Widgets
+To be deployed     : Qt6Core Qt6Gui Qt6Network Qt6Widgets
+Warning: Cannot find any version of the dxcompiler.dll and dxil.dll. This is not a problem unless Direct3D 12 and certain features are used by the application.
+Qt6Core.dll is up to date.
+Qt6Gui.dll is up to date.
+Qt6Network.dll is up to date.
+Qt6Widgets.dll is up to date.
+Skipping system library C:/WINDOWS/system32/D3Dcompiler_47.dll
+qtuiotouchplugin.dll is up to date.
+qgif.dll is up to date.
+qico.dll is up to date.
+qjpeg.dll is up to date.
+qglib.dll is up to date.
+qnetworklistmanager.dll is up to date.
+qwindows.dll is up to date.
+qmodernwindowsstyle.dll is up to date.
+qcertonlybackend.dll is up to date.
+qschannelbackend.dll is up to date.
+[30/32] Linking CXX executable aramf_update_campaign_runner.exe; Deploying Qt runtime files for aramf_update_campaign_runner; Deploying libgcc_s_seh-1.dll for aramf_update_campaign_runner; Deploying libstdc++-6.dll for aramf_update_campaign_runner; Deploying libwinpthread-1.dll for aramf_update_campaign_runner; Deploying libatomic-1.dll for aramf_update_campaign_runner
+Warning: Translations will not be available due to the following error.
+Cannot open C:/msys64/ucrt64/share/qt6/translations/catalogs.json
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libgcc_s_seh-1.dll
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libstdc++-6.dll
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libwinpthread-1.dll
+D:\ON DESCTOP\HKR KURSER\C++\ARAMF2\ARAMF\build-relocation-governance-clean\aramf_update_campaign_runner.exe 64 bit, release executable
+Adding in plugin type generic for module: Qt6Gui
+Adding Qt6Network for qtuiotouchplugin.dll from plugin type: generic
+Adding in plugin type imageformats for module: Qt6Gui
+Adding in plugin type networkinformation for module: Qt6Network
+Adding in plugin type platforms for module: Qt6Gui
+Adding in plugin type styles for module: Qt6Widgets
+Adding in plugin type tls for module: Qt6Network
+Skipping plugin qopensslbackend.dll. Use -force-openssl or specify -openssl-root if you want to use it.
+Performing additional pass of finding Qt plugins due to updated Qt module list: Qt6Core Qt6Gui Qt6Network Qt6Widgets
+Adding in plugin type generic for module: Qt6Gui
+Adding in plugin type imageformats for module: Qt6Gui
+Adding in plugin type networkinformation for module: Qt6Network
+Adding in plugin type platforms for module: Qt6Gui
+Adding in plugin type styles for module: Qt6Widgets
+Adding in plugin type tls for module: Qt6Network
+Skipping plugin qopensslbackend.dll. Use -force-openssl or specify -openssl-root if you want to use it.
+Direct dependencies: Qt6Core Qt6Gui Qt6Widgets
+All dependencies   : Qt6Core Qt6Gui Qt6Widgets
+To be deployed     : Qt6Core Qt6Gui Qt6Network Qt6Widgets
+Warning: Cannot find any version of the dxcompiler.dll and dxil.dll. This is not a problem unless Direct3D 12 and certain features are used by the application.
+Qt6Core.dll is up to date.
+Qt6Gui.dll is up to date.
+Qt6Network.dll is up to date.
+Qt6Widgets.dll is up to date.
+Skipping system library C:/WINDOWS/system32/D3Dcompiler_47.dll
+qtuiotouchplugin.dll is up to date.
+qgif.dll is up to date.
+qico.dll is up to date.
+qjpeg.dll is up to date.
+qglib.dll is up to date.
+qnetworklistmanager.dll is up to date.
+qwindows.dll is up to date.
+qmodernwindowsstyle.dll is up to date.
+qcertonlybackend.dll is up to date.
+qschannelbackend.dll is up to date.
+[31/32] Linking CXX executable aramf_template_tests.exe; Deploying Qt runtime files for aramf_template_tests; Deploying libgcc_s_seh-1.dll for aramf_template_tests; Deploying libstdc++-6.dll for aramf_template_tests; Deploying libwinpthread-1.dll for aramf_template_tests; Deploying libatomic-1.dll for aramf_template_tests
+Warning: Translations will not be available due to the following error.
+Cannot open C:/msys64/ucrt64/share/qt6/translations/catalogs.json
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libgcc_s_seh-1.dll
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libstdc++-6.dll
+Adding local dependencyD:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build-relocation-governance-clean/libwinpthread-1.dll
+D:\ON DESCTOP\HKR KURSER\C++\ARAMF2\ARAMF\build-relocation-governance-clean\aramf_template_tests.exe 64 bit, release executable
+Adding in plugin type generic for module: Qt6Gui
+Adding Qt6Network for qtuiotouchplugin.dll from plugin type: generic
+Adding in plugin type imageformats for module: Qt6Gui
+Adding in plugin type networkinformation for module: Qt6Network
+Adding in plugin type platforms for module: Qt6Gui
+Adding in plugin type styles for module: Qt6Widgets
+Adding in plugin type tls for module: Qt6Network
+Skipping plugin qopensslbackend.dll. Use -force-openssl or specify -openssl-root if you want to use it.
+Performing additional pass of finding Qt plugins due to updated Qt module list: Qt6Core Qt6Gui Qt6Network Qt6Widgets
+Adding in plugin type generic for module: Qt6Gui
+Adding in plugin type imageformats for module: Qt6Gui
+Adding in plugin type networkinformation for module: Qt6Network
+Adding in plugin type platforms for module: Qt6Gui
+Adding in plugin type styles for module: Qt6Widgets
+Adding in plugin type tls for module: Qt6Network
+Skipping plugin qopensslbackend.dll. Use -force-openssl or specify -openssl-root if you want to use it.
+Direct dependencies: Qt6Core Qt6Gui Qt6Widgets
+All dependencies   : Qt6Core Qt6Gui Qt6Widgets
+To be deployed     : Qt6Core Qt6Gui Qt6Network Qt6Widgets
+Warning: Cannot find any version of the dxcompiler.dll and dxil.dll. This is not a problem unless Direct3D 12 and certain features are used by the application.
+Qt6Core.dll is up to date.
+Qt6Gui.dll is up to date.
+Qt6Network.dll is up to date.
+Qt6Widgets.dll is up to date.
+Skipping system library C:/WINDOWS/system32/D3Dcompiler_47.dll
+qtuiotouchplugin.dll is up to date.
+qgif.dll is up to date.
+qico.dll is up to date.
+qjpeg.dll is up to date.
+qglib.dll is up to date.
+qnetworklistmanager.dll is up to date.
+qwindows.dll is up to date.
+qmodernwindowsstyle.dll is up to date.
+qcertonlybackend.dll is up to date.
+qschannelbackend.dll is up to date.
+[32/32] Linking CXX executable aramf_configuration_update_tests.exe

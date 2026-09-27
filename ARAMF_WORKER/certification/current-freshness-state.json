@@ -24,6 +24,72 @@
             "supersedesRevalidationId": "reval-7e397be8-1e99-4da9-ae7a-3da0063d1e24",
             "timestamp": "2026-09-26T22:35:29.583Z"
         },
+        "F2": {
+            "contractFingerprint": "5ec3dffb752ece9c7bf1104f8873de8d71d37a201c7416b99e1219e7ad9d6462",
+            "contractProjectionVersion": 2,
+            "dependencyBindings": {
+                "dependencyManifestFingerprint": "d0ffcebda3b9dec82998c532a8c9b43a2dfac66e5e4429a5d0826545bc51bc9e"
+            },
+            "dependencyManifestFingerprint": "d0ffcebda3b9dec82998c532a8c9b43a2dfac66e5e4429a5d0826545bc51bc9e",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/F2/reval-e3a89fa7-2903-442f-94fb-52e953003d4f/evidence.json",
+            "evidenceFingerprint": "aa764e7e7851ed9423c281696c470a2cdbf9600d6d7f942fd8ff7da1c728e7d2",
+            "historicalLifecycle": "F2.1.1.1.1",
+            "provenance": "agent-direct",
+            "revalidationId": "reval-e3a89fa7-2903-442f-94fb-52e953003d4f",
+            "revalidationOfCertificateId": "cert-3dc7eb1e-c5ce-4df9-854b-09cd4ea41dc9",
+            "revalidationType": "FRESHNESS_REVALIDATION",
+            "schemaVersion": 1,
+            "semanticChange": true,
+            "sourceFingerprint": "e2e693af7aa51c2c83a616f8a4b9ed7917f7a35884415df9d3fc3dabd3ec3c7d",
+            "sourceRevision": "ee807ec56f3dfebb3a8229c4be4281c0b758f5a2",
+            "status": "FRESH",
+            "subject": "F2",
+            "timestamp": "2026-09-27T00:33:06.733Z"
+        },
+        "F3": {
+            "contractFingerprint": "e2ac3f8ceb760a54fd4d3287ca97bc7b603890e5f7432b085ea085fe77e9d6e4",
+            "contractProjectionVersion": 2,
+            "dependencyBindings": {
+                "dependencyManifestFingerprint": "bbf2e8389568cff6b8ce2efb23ece6fdf53aed78c551935eb7a67367b7928f78"
+            },
+            "dependencyManifestFingerprint": "bbf2e8389568cff6b8ce2efb23ece6fdf53aed78c551935eb7a67367b7928f78",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/F3/reval-0b3134bd-31ae-400b-bff4-9c000e0c0ec0/evidence.json",
+            "evidenceFingerprint": "3af953dc2c77c84d816bd781b91d8299d15162e1498ce0d21fa1f99eabc599e5",
+            "historicalLifecycle": "F3.1.1.1.1",
+            "provenance": "agent-direct",
+            "revalidationId": "reval-0b3134bd-31ae-400b-bff4-9c000e0c0ec0",
+            "revalidationOfCertificateId": "cert-e4991486-f9b4-4df7-acc2-d5c925b735f8",
+            "revalidationType": "FRESHNESS_REVALIDATION",
+            "schemaVersion": 1,
+            "semanticChange": true,
+            "sourceFingerprint": "fcb34c28841c48556bbae3872f27321cdb535b5a4058ec2741ddda7ff3eacf84",
+            "sourceRevision": "ee807ec56f3dfebb3a8229c4be4281c0b758f5a2",
+            "status": "FRESH",
+            "subject": "F3",
+            "timestamp": "2026-09-27T00:33:07.486Z"
+        },
+        "F4": {
+            "contractFingerprint": "1228f47d21adcd502053c972de8b4c6def3bb6cf4363d7d52e4d502edfa760f3",
+            "contractProjectionVersion": 2,
+            "dependencyBindings": {
+                "dependencyManifestFingerprint": "c8fd69da7b17505cadab356a5c8411f7c8b6300ab82e4643d8dc3cae7477aee3"
+            },
+            "dependencyManifestFingerprint": "c8fd69da7b17505cadab356a5c8411f7c8b6300ab82e4643d8dc3cae7477aee3",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/F4/reval-6edd33d8-86ea-4d1b-995d-aa96f6155f92/evidence.json",
+            "evidenceFingerprint": "caf8403210beac9e03624f014edc15edd9d02d0380d35d0251039f577cef8227",
+            "historicalLifecycle": "F4.1.1.1.1",
+            "provenance": "agent-direct",
+            "revalidationId": "reval-6edd33d8-86ea-4d1b-995d-aa96f6155f92",
+            "revalidationOfCertificateId": "cert-a444de8a-a244-45dc-9282-6237c8eda3a9",
+            "revalidationType": "FRESHNESS_REVALIDATION",
+            "schemaVersion": 1,
+            "semanticChange": true,
+            "sourceFingerprint": "b31f55ebc8210329fbe1e2f92a73327cd00ffde7bbf3a1eeb60533b23a2890e0",
+            "sourceRevision": "ee807ec56f3dfebb3a8229c4be4281c0b758f5a2",
+            "status": "FRESH",
+            "subject": "F4",
+            "timestamp": "2026-09-27T00:33:08.298Z"
+        },
         "P1": {
             "contractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
             "contractProjectionVersion": 2,
@@ -32,20 +98,21 @@
                 "f1ContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834"
             },
             "dependencyManifestFingerprint": "eaa2f59a037360532296644254ac1afd6b64dce5d87faaf1f401055ca58aa992",
-            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P1/reval-14e55f91-463c-4246-934a-81eb85f8eabc/evidence.json",
-            "evidenceFingerprint": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P1/reval-55a2869d-2668-4a34-8c9f-1e6f1ac474a7/evidence.json",
+            "evidenceFingerprint": "3e7ae8488b2dd6033b2f5bc9e7bc7952fd39663ff0f3d6a265aae37e492fd5e0",
             "historicalLifecycle": "P1.1.3.1.1",
             "provenance": "agent-direct",
-            "revalidationId": "reval-14e55f91-463c-4246-934a-81eb85f8eabc",
+            "revalidationId": "reval-55a2869d-2668-4a34-8c9f-1e6f1ac474a7",
             "revalidationOfCertificateId": "cert-823fefb3-0004-489e-b1c5-496bfcc6c254",
             "revalidationType": "FRESHNESS_REVALIDATION",
             "schemaVersion": 1,
-            "semanticChange": false,
-            "sourceFingerprint": "4bdf7cc0395579f4be4ea7bc99cd8165980a59d2f852623cbb41e90e1b44309a",
-            "sourceRevision": "3e1d2015bbc6dffac992dced4107e01fadd00a9b",
+            "semanticChange": true,
+            "sourceFingerprint": "237598249a3b15a017377b28443d779767b427789009fa813f72bf62317884f7",
+            "sourceRevision": "ee807ec56f3dfebb3a8229c4be4281c0b758f5a2",
             "status": "FRESH",
             "subject": "P1",
-            "timestamp": "2026-09-21T09:21:58.241Z"
+            "supersedesRevalidationId": "reval-14e55f91-463c-4246-934a-81eb85f8eabc",
+            "timestamp": "2026-09-27T00:33:10.408Z"
         },
         "P2": {
             "contractFingerprint": "ce0218c8aea13ce7f60319a76beeac4168011ad694ebd1601e94c7b836dccb81",

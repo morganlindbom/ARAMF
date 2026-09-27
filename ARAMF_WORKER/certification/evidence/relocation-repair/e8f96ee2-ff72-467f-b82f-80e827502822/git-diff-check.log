@@ -1,0 +1,10 @@
+warning: in the working copy of 'ARAMF_WORKER.aramf.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/CertificationRevalidation.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/CertificationRevalidation.h', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/FoundationCertificationCampaign.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/FoundationCertificationCampaign.h', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/WorkerTaskServices.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/WorkerTaskServices.h', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/CertificationRevalidationTests.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/FoundationCertificationTests.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/WorkerTaskTests.cpp', LF will be replaced by CRLF the next time Git touches it

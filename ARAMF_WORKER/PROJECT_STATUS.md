@@ -1074,7 +1074,8 @@ Campaign Evidence:
 
 
 
+
 ## Latest Agent Task
 
-- Task: Foundation repair complete; P6 unblocked and not started
+- Task: Governed source relocation repair verified; source-tree migration not started
 - Status: PASS

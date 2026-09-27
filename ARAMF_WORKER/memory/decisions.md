@@ -308,3 +308,14 @@ creating parallel lessons.
 - Superseded-By: none
 - Summary: Explicit user choice: Academic supports Swedish and English simultaneously as separate document versions, never a combined bilingual document. Saved language selections drive generation and freshness; legacy selections and custom source provenance are preserved.
 <!-- /ARAMF-DECISION -->
+
+## Decision Record: governed-source-relocation
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: governed-source-relocation
+- Topic: source-relocation-governance
+- Scope: project
+- Status: current
+- Superseded-By: none
+- Summary: Approved repair: RELOCATE requires explicit old/new task authorization, unique in-scope endpoints, committed source identity and exact destination bytes; disappearance without proof remains forbidden deletion. Historical certificate paths, revisions and sealed bytes remain immutable. Current source bindings use canonical revalidation after stale detection, with a fingerprint-bound witness proving the historical Git source. Cross-Foundation evaluation remains external. This does not authorize source-tree migration inside the repair.
+<!-- /ARAMF-DECISION -->

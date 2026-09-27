@@ -963,6 +963,7 @@
                     "files": [
                         "src/core/CertificationFreshness.cpp",
                         "src/core/CertificationRevalidation.cpp",
+                        "src/core/CertificationRevalidation.h",
                         "src/core/DocumentTemplate.cpp",
                         "src/core/DocumentTemplate.h",
                         "src/core/FoundationCertificationCampaign.cpp",
@@ -983,6 +984,7 @@
                         "src/core/Services.cpp",
                         "src/core/TemplateValidation.cpp",
                         "src/core/WorkerTaskServices.cpp",
+                        "src/core/WorkerTaskServices.h",
                         "src/foundations/F1/EvidenceStorage.cpp",
                         "src/foundations/F1/EvidenceStorage.h",
                         "src/foundations/F1/MemoryEvidenceFoundation.cpp",
@@ -1345,8 +1347,8 @@
         },
         "workerNameSuffix": ""
     },
-    "fingerprint": "f2d76b546ec57cf5f858bdcb25ff07d4ce796a8ec2712decbcdd886fb375ab84",
-    "generatedAt": "2026-09-26T22:57:54Z",
+    "fingerprint": "36b39136df975ff15d6128dbc4ff11ac308eb06efcca10059a609fe72a2afb59",
+    "generatedAt": "2026-09-27T00:38:31Z",
     "memory": true,
     "platforms": true,
     "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",

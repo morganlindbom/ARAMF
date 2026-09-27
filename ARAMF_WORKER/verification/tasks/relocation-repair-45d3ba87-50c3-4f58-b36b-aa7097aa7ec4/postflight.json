@@ -1,0 +1,127 @@
+{
+    "acceptedEvidence": [
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/acceptance-criteria.json",
+            "artifactFingerprint": "d4dcf617e80207116c94bff0c146f9f1675f78ecc26a4440f3771fa489bc93e6",
+            "check": "acceptance-criteria"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/affected-workflow-tests.json",
+            "artifactFingerprint": "22912f070f766c62d049888c9b2b3fdc7b8cf4ce83ef7e7ada2f972b501432d5",
+            "check": "affected-workflow-tests"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/application-startup.json",
+            "artifactFingerprint": "43a399ea58b013e73206a87daaa70098de78db75233a62f1da1580b5bd22ba85",
+            "check": "application-startup"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/aramf-worker-migration.json",
+            "artifactFingerprint": "2ca4cfa692e1b7d65273dda7c3e20061f54270800d4a6cfe64b23476de588c77",
+            "check": "aramf-worker-migration"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/aramf_core_tests__--p3-execution.json",
+            "artifactFingerprint": "677477856a0b16c14a9473b75a267481b8a0ab8c0fbe0d811bff4f532220f3ce",
+            "check": "aramf_core_tests::--p3-execution"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/aramf_core_tests__--worker-tasks.json",
+            "artifactFingerprint": "3d3a126859dd589c4b4132139bc5833f00eb029085ff1076e67a07d2f4d0b9b5",
+            "check": "aramf_core_tests::--worker-tasks"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/cold-start.json",
+            "artifactFingerprint": "ad93283f0cc0bdb098213c1128a399b50748518dbb40ab3e30aa786ec2cf5217",
+            "check": "cold-start"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/ctest.json",
+            "artifactFingerprint": "778bd1f273105da52294b14ce5161fd12cd0e55ad8304dedbabed425a4542bc8",
+            "check": "ctest"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/git-diff-check.json",
+            "artifactFingerprint": "9e429d06abd00d45cf578cedf55af05e683239926c190a0515f54807858953f1",
+            "check": "git-diff-check"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/impacted-validation.json",
+            "artifactFingerprint": "f7ec0fd31cdc1ce48a377b8746accda29ddf90c185f8416c5403d4d607876014",
+            "check": "impacted-validation"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/memory-consistency.json",
+            "artifactFingerprint": "0d0f17ba4da02e5e8a86887e272a16a597442b2e91c6bde99e7d27c3967c55d8",
+            "check": "memory-consistency"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/persistence-regression.json",
+            "artifactFingerprint": "c8d9a309a85043cf230dc750be41ceebb5e6925c36f6af9ee56b9b9fa617797f",
+            "check": "persistence-regression"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/production-build.json",
+            "artifactFingerprint": "c238d6fd773b2615b2fe1ca2cdb7a0064b366baf230080e2c8b5f95333850296",
+            "check": "production-build"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/targeted-regression.json",
+            "artifactFingerprint": "766a609de4499d82716731f0c2391dfef4957cf444ece02e12dfe54bc5435d7d",
+            "check": "targeted-regression"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/test_250.json",
+            "artifactFingerprint": "ae09b6e7cd591e798af3dd94cf129fbf7eed6cf175ad927eb47e9938f7c81526",
+            "check": "test_250"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/test_550-automated.json",
+            "artifactFingerprint": "b0366232ecb053bbda0dd06a49281efcf29ca1c8d0989a8c401c794a3587621f",
+            "check": "test_550-automated"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/relocation-repair-45d3ba87-50c3-4f58-b36b-aa7097aa7ec4/worker-topology.json",
+            "artifactFingerprint": "45c3a0dee19194f766a9ea61282371ab12f68109cf21732eaf0a0a726130b8aa",
+            "check": "worker-topology"
+        }
+    ],
+    "authority": "DERIVED",
+    "certificateId": null,
+    "certification": "CERTIFIED is issued only by the canonical CertificationService; physical evidence is never inferred.",
+    "completionState": "VERIFIED",
+    "contractId": "9a2db742cb4f3a35c5814141ffc2c4ce6b63ee03a09a4faa6288f549a0711b91",
+    "errors": [
+    ],
+    "evidenceFingerprints": {
+        "acceptance-criteria": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "affected-workflow-tests": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "application-startup": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "aramf-worker-migration": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "aramf_core_tests::--p3-execution": "54834431811d09db62ade8e231e860f48985822670d135ea1d2a7a655a8c0bc1",
+        "aramf_core_tests::--worker-tasks": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "cold-start": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "ctest": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "diff-boundary": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "git-diff-check": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "impacted-validation": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "memory-consistency": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "persistence-regression": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "production-build": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "targeted-regression": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "test_250": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "test_550-automated": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+        "worker-topology": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33"
+    },
+    "missingEvidence": [
+    ],
+    "modifiedFiles": [
+    ],
+    "relocations": [
+    ],
+    "resultFingerprint": "335ed4a21efcfbe5194ade85c6ade90ade5d33aa3dc0f9a8ea599e7611a3cb33",
+    "schemaVersion": 1,
+    "serviceChanges": [
+    ],
+    "status": "PASS"
+}
