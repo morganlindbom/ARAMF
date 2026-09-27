@@ -1,0 +1,874 @@
+{
+    "acceptedEvidence": [
+    ],
+    "authority": "DERIVED",
+    "certificateId": null,
+    "certification": "CERTIFIED is issued only by the canonical CertificationService; physical evidence is never inferred.",
+    "completionState": "BLOCKED",
+    "contractId": "3fdd284850508508df598c9ef569645e3b108c2fb29d5ca3f13e08e5646db984",
+    "errors": [
+        {
+            "code": "STALE_TASK_CONTRACT",
+            "message": "Canonical inputs or project identity changed; derive and review a new contract.",
+            "path": "",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_CONTRACT_INVALID",
+            "message": "Contract authorization differs from canonical derivation.",
+            "path": "impact",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_CONTRACT_INVALID",
+            "message": "Contract authorization differs from canonical derivation.",
+            "path": "evidenceDependencies",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_CONTRACT_INVALID",
+            "message": "Contract authorization differs from canonical derivation.",
+            "path": "taskDependencies",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER.aramf.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/AGENTS.md",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/AGENTS.md",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/current-freshness-state.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/current-freshness-state.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/memory/decisions.md",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/memory/decisions.md",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "UNEXPECTED_SERVICE_REGENERATION",
+            "message": "Derived change is undeclared or does not match its canonical producer.",
+            "path": "ARAMF_WORKER/project.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/project.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/project.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "UNEXPECTED_SERVICE_REGENERATION",
+            "message": "Derived change is undeclared or does not match its canonical producer.",
+            "path": "ARAMF_WORKER/routing/scope-routes.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/routing/scope-routes.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/routing/scope-routes.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "UNEXPECTED_SERVICE_REGENERATION",
+            "message": "Derived change is undeclared or does not match its canonical producer.",
+            "path": "ARAMF_WORKER/routing/task-routes.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/routing/task-routes.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/routing/task-routes.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/verification/generation-state.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/verification/generation-state.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "UNEXPECTED_SERVICE_REGENERATION",
+            "message": "Derived change is undeclared or does not match its canonical producer.",
+            "path": "ARAMF_WORKER/verification/latest-validation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/verification/latest-validation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/verification/latest-validation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "UNEXPECTED_SERVICE_REGENERATION",
+            "message": "Derived change is undeclared or does not match its canonical producer.",
+            "path": "ARAMF_WORKER/verification/verification-result.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/verification/verification-result.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/verification/verification-result.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "UNEXPECTED_SERVICE_REGENERATION",
+            "message": "Derived change is undeclared or does not match its canonical producer.",
+            "path": "ARAMF_WORKER/worker-manifest.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/worker-manifest.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/worker-manifest.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "test_update/runner/main.cpp",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/clean-configuration.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/clean-configuration.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/clean-tree-build.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/clean-tree-build.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/foundation-certification.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/foundation-certification.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/production-build.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/production-build.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/worker-tasks.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/worker-tasks.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/all-foundations.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/all-foundations.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/application-startup.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/application-startup.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/clean-configuration.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/clean-configuration.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/clean-tree-build.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/clean-tree-build.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/cold-start.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/cold-start.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/ctest.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/ctest.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-certification.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-certification.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-integration.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-integration.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-namespace.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-namespace.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/freshness.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/freshness.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/git-diff-check.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/git-diff-check.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/identity.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/identity.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/memory-consistency.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/memory-consistency.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/process-migration.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/process-migration.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/production-build.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/production-build.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/provenance-and-scope.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/provenance-and-scope.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/regression.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/regression.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/revalidation.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/revalidation.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/revalidations.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/revalidations.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/test-250.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/test-250.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/test-550-automated.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/test-550-automated.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/user-removal-acknowledgment.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/user-removal-acknowledgment.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/worker-tasks.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/worker-tasks.log.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S1/reval-cf9ee87b-292d-4ba9-bb73-4613fc658708/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S1/reval-cf9ee87b-292d-4ba9-bb73-4613fc658708/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S1/reval-cf9ee87b-292d-4ba9-bb73-4613fc658708/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S1/reval-cf9ee87b-292d-4ba9-bb73-4613fc658708/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S2/reval-b40e1f06-9043-4873-9d34-c247279ec4b8/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S2/reval-b40e1f06-9043-4873-9d34-c247279ec4b8/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S2/reval-b40e1f06-9043-4873-9d34-c247279ec4b8/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S2/reval-b40e1f06-9043-4873-9d34-c247279ec4b8/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S3/reval-ef9e2b19-cd07-47fd-b7a5-ce65928239b0/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S3/reval-ef9e2b19-cd07-47fd-b7a5-ce65928239b0/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S3/reval-ef9e2b19-cd07-47fd-b7a5-ce65928239b0/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S3/reval-ef9e2b19-cd07-47fd-b7a5-ce65928239b0/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S4/reval-56b2bf99-7e31-49b5-a5c0-2a2bb6556dd8/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S4/reval-56b2bf99-7e31-49b5-a5c0-2a2bb6556dd8/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S4/reval-56b2bf99-7e31-49b5-a5c0-2a2bb6556dd8/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S4/reval-56b2bf99-7e31-49b5-a5c0-2a2bb6556dd8/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S5/reval-e56df497-8a10-4e44-b0d7-a82387494ba5/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S5/reval-e56df497-8a10-4e44-b0d7-a82387494ba5/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S5/reval-e56df497-8a10-4e44-b0d7-a82387494ba5/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S5/reval-e56df497-8a10-4e44-b0d7-a82387494ba5/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S6/reval-8f3540ec-3959-43c9-b3b6-e956b18db6a7/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S6/reval-8f3540ec-3959-43c9-b3b6-e956b18db6a7/evidence.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/certification/revalidation/S6/reval-8f3540ec-3959-43c9-b3b6-e956b18db6a7/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/certification/revalidation/S6/reval-8f3540ec-3959-43c9-b3b6-e956b18db6a7/revalidation.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/verification/tasks/identity-repair-afa78a20-3cbf-44bb-b235-740247aba1a1/implementation-contracts.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/verification/tasks/identity-repair-afa78a20-3cbf-44bb-b235-740247aba1a1/implementation-contracts.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "TASK_SCOPE_VIOLATION",
+            "message": "Observed modification outside the exact permitted file set.",
+            "path": "ARAMF_WORKER/verification/tasks/identity-repair-afa78a20-3cbf-44bb-b235-740247aba1a1/protected-readonly-verification.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "FORBIDDEN_FILE_MODIFICATION",
+            "message": "A protected owner/source was modified.",
+            "path": "ARAMF_WORKER/verification/tasks/identity-repair-afa78a20-3cbf-44bb-b235-740247aba1a1/protected-readonly-verification.json",
+            "severity": "BLOCKED"
+        },
+        {
+            "code": "REQUIRED_EVIDENCE_MISSING",
+            "message": "Required evidence has not been verified: acceptance-criteria, affected-workflow-tests, application-startup, aramf-worker-migration, aramf_core_tests::--p3-execution, aramf_core_tests::--worker-tasks, cold-start, ctest, diff-boundary, git-diff-check, impacted-validation, memory-consistency, persistence-regression, production-build, targeted-regression, test_250, test_550-automated, worker-topology",
+            "path": "",
+            "severity": "WARNING"
+        }
+    ],
+    "evidenceFingerprints": {
+        "acceptance-criteria": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "affected-workflow-tests": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "application-startup": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "aramf-worker-migration": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "aramf_core_tests::--p3-execution": "d4b48392c185e531ada14e40bc6beb39f3dd90663db4d1a4a6c96ab54cc0716e",
+        "aramf_core_tests::--worker-tasks": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "cold-start": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "ctest": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "diff-boundary": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "git-diff-check": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "impacted-validation": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "memory-consistency": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "persistence-regression": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "production-build": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "targeted-regression": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "test_250": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "test_550-automated": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+        "worker-topology": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9"
+    },
+    "missingEvidence": [
+        "acceptance-criteria",
+        "affected-workflow-tests",
+        "application-startup",
+        "aramf-worker-migration",
+        "aramf_core_tests::--p3-execution",
+        "aramf_core_tests::--worker-tasks",
+        "cold-start",
+        "ctest",
+        "diff-boundary",
+        "git-diff-check",
+        "impacted-validation",
+        "memory-consistency",
+        "persistence-regression",
+        "production-build",
+        "targeted-regression",
+        "test_250",
+        "test_550-automated",
+        "worker-topology"
+    ],
+    "modifiedFiles": [
+        "ARAMF_WORKER.aramf.json",
+        "ARAMF_WORKER/AGENTS.md",
+        "ARAMF_WORKER/certification/current-freshness-state.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/clean-configuration.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/clean-tree-build.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/foundation-certification.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/production-build.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/worker-tasks.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/all-foundations.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/application-startup.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/clean-configuration.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/clean-tree-build.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/cold-start.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/ctest.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-certification.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-integration.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-namespace.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/freshness.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/git-diff-check.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/identity.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/memory-consistency.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/process-migration.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/production-build.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/provenance-and-scope.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/regression.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/revalidation.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/revalidations.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/test-250.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/test-550-automated.log.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/user-removal-acknowledgment.json",
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/worker-tasks.log.json",
+        "ARAMF_WORKER/certification/revalidation/S1/reval-cf9ee87b-292d-4ba9-bb73-4613fc658708/evidence.json",
+        "ARAMF_WORKER/certification/revalidation/S1/reval-cf9ee87b-292d-4ba9-bb73-4613fc658708/revalidation.json",
+        "ARAMF_WORKER/certification/revalidation/S2/reval-b40e1f06-9043-4873-9d34-c247279ec4b8/evidence.json",
+        "ARAMF_WORKER/certification/revalidation/S2/reval-b40e1f06-9043-4873-9d34-c247279ec4b8/revalidation.json",
+        "ARAMF_WORKER/certification/revalidation/S3/reval-ef9e2b19-cd07-47fd-b7a5-ce65928239b0/evidence.json",
+        "ARAMF_WORKER/certification/revalidation/S3/reval-ef9e2b19-cd07-47fd-b7a5-ce65928239b0/revalidation.json",
+        "ARAMF_WORKER/certification/revalidation/S4/reval-56b2bf99-7e31-49b5-a5c0-2a2bb6556dd8/evidence.json",
+        "ARAMF_WORKER/certification/revalidation/S4/reval-56b2bf99-7e31-49b5-a5c0-2a2bb6556dd8/revalidation.json",
+        "ARAMF_WORKER/certification/revalidation/S5/reval-e56df497-8a10-4e44-b0d7-a82387494ba5/evidence.json",
+        "ARAMF_WORKER/certification/revalidation/S5/reval-e56df497-8a10-4e44-b0d7-a82387494ba5/revalidation.json",
+        "ARAMF_WORKER/certification/revalidation/S6/reval-8f3540ec-3959-43c9-b3b6-e956b18db6a7/evidence.json",
+        "ARAMF_WORKER/certification/revalidation/S6/reval-8f3540ec-3959-43c9-b3b6-e956b18db6a7/revalidation.json",
+        "ARAMF_WORKER/context/compressed-context.json",
+        "ARAMF_WORKER/context/context-index.json",
+        "ARAMF_WORKER/context/freshness.json",
+        "ARAMF_WORKER/memory/cold-start-validation.json",
+        "ARAMF_WORKER/memory/current-state.md",
+        "ARAMF_WORKER/memory/decisions.md",
+        "ARAMF_WORKER/memory/event-log.jsonl",
+        "ARAMF_WORKER/memory/memory-consistency-validation.json",
+        "ARAMF_WORKER/memory/memory-manifest.json",
+        "ARAMF_WORKER/memory/metrics.json",
+        "ARAMF_WORKER/project.json",
+        "ARAMF_WORKER/routing/scope-routes.json",
+        "ARAMF_WORKER/routing/task-routes.json",
+        "ARAMF_WORKER/verification/generation-state.json",
+        "ARAMF_WORKER/verification/latest-validation.json",
+        "ARAMF_WORKER/verification/tasks/identity-repair-afa78a20-3cbf-44bb-b235-740247aba1a1/implementation-contracts.json",
+        "ARAMF_WORKER/verification/tasks/identity-repair-afa78a20-3cbf-44bb-b235-740247aba1a1/protected-readonly-verification.json",
+        "ARAMF_WORKER/verification/verification-result.json",
+        "ARAMF_WORKER/worker-manifest.json",
+        "src/core/ProjectModel.cpp",
+        "src/core/ProjectPersistence.cpp",
+        "src/ui/workflows/project/setup/ProjectSetupPage.cpp",
+        "test_update/runner/main.cpp",
+        "tests/TemplateConfigurationTests.cpp"
+    ],
+    "relocations": [
+    ],
+    "resultFingerprint": "aa62f3ba12220d2f14c6e07004e781596fb2525d7ae422e9033d2e20b1ef18f9",
+    "schemaVersion": 1,
+    "serviceChanges": [
+        {
+            "path": "ARAMF_WORKER/context/compressed-context.json",
+            "service": "ContextCoordinationService",
+            "validation": "canonical-producer-and-boundary"
+        },
+        {
+            "path": "ARAMF_WORKER/context/context-index.json",
+            "service": "ContextCoordinationService",
+            "validation": "canonical-producer-and-boundary"
+        },
+        {
+            "path": "ARAMF_WORKER/context/freshness.json",
+            "service": "ContextCoordinationService",
+            "validation": "canonical-producer-and-boundary"
+        },
+        {
+            "path": "ARAMF_WORKER/memory/cold-start-validation.json",
+            "service": "ProjectMemory recorder",
+            "validation": "canonical-producer-and-boundary"
+        },
+        {
+            "path": "ARAMF_WORKER/memory/current-state.md",
+            "service": "ProjectMemory recorder",
+            "validation": "canonical-producer-and-boundary"
+        },
+        {
+            "path": "ARAMF_WORKER/memory/event-log.jsonl",
+            "service": "ProjectMemory recorder",
+            "validation": "canonical-producer-and-boundary"
+        },
+        {
+            "path": "ARAMF_WORKER/memory/memory-consistency-validation.json",
+            "service": "ProjectMemory recorder",
+            "validation": "canonical-producer-and-boundary"
+        },
+        {
+            "path": "ARAMF_WORKER/memory/memory-manifest.json",
+            "service": "ProjectMemory recorder",
+            "validation": "canonical-producer-and-boundary"
+        },
+        {
+            "path": "ARAMF_WORKER/memory/metrics.json",
+            "service": "ProjectMemory recorder",
+            "validation": "canonical-producer-and-boundary"
+        }
+    ],
+    "status": "FAIL"
+}

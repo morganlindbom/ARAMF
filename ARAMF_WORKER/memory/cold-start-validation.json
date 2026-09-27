@@ -1,6 +1,6 @@
 {
     "_file": "cold-start-validation.json",
-    "checkedAt": "2026-09-27T00:38:43Z",
+    "checkedAt": "2026-09-27T02:32:42Z",
     "checks": [
         {
             "name": "ARAMF_WORKER/memory/decisions.md",
@@ -88,7 +88,7 @@
     "contractConfigConsistent": true,
     "errors": [
     ],
-    "fingerprint": "191a0ca0a263bf719fd30770b9a72e05d703bedf97378f648bb0c91caed61731",
+    "fingerprint": "7b64bfe6683870fbb018509095658c9fda0ef3dd109ff6b887cbb11551ed5fec",
     "recordingEnabled": true,
     "requireControlPlane": true,
     "status": "PASS",

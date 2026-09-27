@@ -1,6 +1,6 @@
 {
     "_file": "scope-routes.json",
-    "inputFingerprint": "36b39136df975ff15d6128dbc4ff11ac308eb06efcca10059a609fe72a2afb59",
+    "inputFingerprint": "c89272374b5153e7bacac0ff04727a7029258b5285008deefd1ca6299d396407",
     "schemaVersion": 1,
     "scopes": [
         {
@@ -172,7 +172,8 @@
                     "src/ui/workflows/ai/autonomy/AiAutonomyPage.cpp",
                     "src/ui/workflows/output/review/ReviewPage.cpp",
                     "src/ui/workflows/project/academic/ProjectAcademicPage.cpp",
-                    "src/ui/workflows/project/academic/ProjectAcademicPage.h"
+                    "src/ui/workflows/project/academic/ProjectAcademicPage.h",
+                    "src/ui/workflows/project/setup/ProjectSetupPage.cpp"
                 ],
                 "generatedArtifacts": [
                 ],
@@ -204,6 +205,7 @@
                 "files": [
                     "test_250/runner/main.cpp",
                     "test_550/runner/main.cpp",
+                    "test_update/runner/main.cpp",
                     "tests/CertificationFreshnessTests.cpp",
                     "tests/CertificationRevalidationTests.cpp",
                     "tests/FoundationCertificationTests.cpp",

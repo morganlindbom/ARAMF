@@ -999,7 +999,8 @@
                     "src/ui/workflows/ai/autonomy/AiAutonomyPage.cpp",
                     "src/ui/workflows/output/review/ReviewPage.cpp",
                     "src/ui/workflows/project/academic/ProjectAcademicPage.cpp",
-                    "src/ui/workflows/project/academic/ProjectAcademicPage.h"
+                    "src/ui/workflows/project/academic/ProjectAcademicPage.h",
+                    "src/ui/workflows/project/setup/ProjectSetupPage.cpp"
                 ],
                 "generatedArtifacts": [
                 ],
@@ -1017,6 +1018,7 @@
                 "files": [
                     "test_250/runner/main.cpp",
                     "test_550/runner/main.cpp",
+                    "test_update/runner/main.cpp",
                     "tests/CertificationFreshnessTests.cpp",
                     "tests/CertificationRevalidationTests.cpp",
                     "tests/FoundationCertificationTests.cpp",

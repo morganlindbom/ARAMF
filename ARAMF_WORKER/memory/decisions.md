@@ -319,3 +319,14 @@ creating parallel lessons.
 - Superseded-By: none
 - Summary: Approved repair: RELOCATE requires explicit old/new task authorization, unique in-scope endpoints, committed source identity and exact destination bytes; disappearance without proof remains forbidden deletion. Historical certificate paths, revisions and sealed bytes remain immutable. Current source bindings use canonical revalidation after stale detection, with a fingerprint-bound witness proving the historical Git source. Cross-Foundation evaluation remains external. This does not authorize source-tree migration inside the repair.
 <!-- /ARAMF-DECISION -->
+
+## Decision Record: independent-project-worker-identity
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: independent-project-worker-identity
+- Topic: project-worker-identity
+- Scope: project
+- Status: current
+- Superseded-By: none
+- Summary: Explicit approved identity repair: project UUID, saved logical project name, worker suffix/directory and project root are distinct. Worker setters/load/UI refresh do not replace a saved name. Legacy names remain literal; missing-name legacy input retains its historical worker-name fallback. UUID/root scope anchors remain unchanged. No source-tree migration, P6 or existing HVD Components target mutation.
+<!-- /ARAMF-DECISION -->
