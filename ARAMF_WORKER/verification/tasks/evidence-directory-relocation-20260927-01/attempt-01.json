@@ -1,0 +1,8 @@
+{
+  "status": "FAIL",
+  "stage": "post-first-rename manifest comparison",
+  "error": "Byte/count/path mismatch after rename",
+  "cause": "One-time helper used a relative iterator path in QDir::relativeFilePath, so manifest keys retained the old repository-relative directory prefix. The directory rename changed that prefix; file sizes and SHA-256 values did not change.",
+  "observedState": "First authorized directory moved; second remained at original path. No current validation files updated yet.",
+  "recovery": "Preserve original plan and helper. Derive child-relative manifest keys by removing the exact captured old-directory prefix, retain every captured size/hash, verify resumed state before any further rename. Correct helper to pass absolute paths to relativeFilePath."
+}

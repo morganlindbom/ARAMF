@@ -1,0 +1,9 @@
+{
+  "check": "full-regression-attempt",
+  "contractId": "3289090db275a107c8d2e6097a6e09ec25db44b0083c36d4cda3432db77e843f",
+  "status": "INTERRUPTED",
+  "observedExitCode": -1073741510,
+  "completedChecks": ["production-build", "named-worker-updates", "identity"],
+  "interruptedCheck": "ctest",
+  "note": "Process terminated before CTest and its evidence record completed. Cause not established. No full regression PASS claimed. Existing sealed logs and incomplete temporary file preserved. A new run is required."
+}

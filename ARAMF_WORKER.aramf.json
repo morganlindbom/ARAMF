@@ -963,6 +963,8 @@
                     "src/core/CertificationFreshness.cpp",
                     "src/core/CertificationRevalidation.cpp",
                     "src/core/CertificationRevalidation.h",
+                    "src/core/ConfigurationUpdateService.cpp",
+                    "src/core/ConfigurationUpdateService.h",
                     "src/core/DocumentTemplate.cpp",
                     "src/core/DocumentTemplate.h",
                     "src/core/FoundationCertificationCampaign.cpp",
@@ -981,6 +983,8 @@
                     "src/core/ProjectModel.h",
                     "src/core/ProjectPersistence.cpp",
                     "src/core/Services.cpp",
+                    "src/core/Services.h",
+                    "src/core/TemplateManager.cpp",
                     "src/core/TemplateValidation.cpp",
                     "src/core/WorkerTaskServices.cpp",
                     "src/core/WorkerTaskServices.h",
@@ -1021,6 +1025,7 @@
                     "test_update/runner/main.cpp",
                     "tests/CertificationFreshnessTests.cpp",
                     "tests/CertificationRevalidationTests.cpp",
+                    "tests/ConfigurationUpdateTests.cpp",
                     "tests/FoundationCertificationTests.cpp",
                     "tests/FoundationIndependenceTests.cpp",
                     "tests/FoundationTests.cpp",
@@ -1038,6 +1043,11 @@
                 "tests": [
                     "aramf_core_tests::--p3-execution",
                     "aramf_core_tests::--worker-tasks"
+                ]
+            },
+            "ui-ux": {
+                "files": [
+                    "src/ui/workflows/update/configuration/UpdateConfigurationPage.cpp"
                 ]
             }
         },

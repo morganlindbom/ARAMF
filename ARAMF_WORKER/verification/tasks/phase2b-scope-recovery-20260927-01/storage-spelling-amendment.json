@@ -1,0 +1,8 @@
+{
+    "earlierEvidenceUnchanged": true,
+    "exactAuthoritativeDelta": "Only the three scopeMetadata file additions",
+    "initialPersistedPath": "ARAMF_WORKER.aramf.json",
+    "preservedOriginalPath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER.aramf.json",
+    "producer": "ProjectPersistence::save",
+    "reason": "Initial canonical save used a relative pathname; repeat canonical save with original absolute pathname to preserve unrelated persisted projectFilePath exactly"
+}

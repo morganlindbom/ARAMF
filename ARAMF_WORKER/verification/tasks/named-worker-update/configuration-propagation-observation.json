@@ -1,0 +1,27 @@
+{
+  "check": "hvd-configuration-propagation-diagnostic",
+  "contractId": "3289090db275a107c8d2e6097a6e09ec25db44b0083c36d4cda3432db77e843f",
+  "status": "FAIL",
+  "classification": "Separate pre-existing configuration propagation defect; not repaired in named-worker identity task",
+  "baseline": "cb4ba92048c30a3fd8a5c41014dbfab0d54d3a12",
+  "reproduction": "Load existing generation baseline into isolated ProjectModel with fresh UUID/root; production save/generate; apply desired C++/Qt 6 model using ConfigurationUpdateService.validate/save/apply; inspect physical generated outputs.",
+  "observed": {
+    "fixture": "C:/Users/morga/AppData/Local/Temp/hvd-settings-update-zNZpHk",
+    "updateReportedSuccess": true,
+    "updateError": "",
+    "expectedFrameworks": [
+      "qt"
+    ],
+    "actualFrameworks": [],
+    "expectedIde": "qt-creator",
+    "actualIde": "visual-studio-code",
+    "expectedResources": 3,
+    "actualResources": 0,
+    "rulesUpdated": false,
+    "realTargetModified": false,
+    "rawEvidenceHash": "4469A01127B893380FCD3E9B4F3217D1B25191995AEA220F6E2307FD845335B8"
+  },
+  "rootCause": "ConfigurationUpdateService::apply delegates to repairDerivedArtifacts, which updates topology but does not regenerate rules, platform metadata or resource products. The baseline and generic verification can report current configuration while these products retain old values.",
+  "scopeBoundary": "Do not mutate the real HVD Components project or silently expand the product repair; require separately authorized update propagation/verification repair.",
+  "evidence": "build/hvd-cpp-qt6-isolated-apply.json"
+}

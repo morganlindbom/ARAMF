@@ -1,0 +1,28 @@
+{
+    "allOriginalUnrelatedAndProtectedFilesUnchanged": true,
+    "classification": "RECONSTRUCTION",
+    "diffCheckExitCode": 0,
+    "events": {
+        "duplicateIds": [
+        ],
+        "eventCount": 482,
+        "firstSequence": 1,
+        "lastSequence": 482,
+        "parseValid": true,
+        "sequenceContinuous": true,
+        "uniqueEventIds": 482,
+        "wholeFileHash": "e3e2b4dff530509fd2444c705f63787cbd0c4a9ae11dc793ad29767fcdedc288"
+    },
+    "hashes": {
+        "ARAMF_WORKER/memory/current-state.md": "230e4183ed8f157fc5595a42077ae0b35535b8c319e6d5160434cc61309493c7",
+        "ARAMF_WORKER/memory/decisions.md": "adb28a1a1f719e8f2b43dc33df004016d5699b402a721c6184f1f89cbb199e3b",
+        "ARAMF_WORKER/memory/event-log.jsonl": "e3e2b4dff530509fd2444c705f63787cbd0c4a9ae11dc793ad29767fcdedc288",
+        "ARAMF_WORKER/memory/memory-consistency-validation.json": "93504e163cbfe7aa6ae7121f0f53bbd89536685ca6c5a3d759059af515e0cf1a",
+        "ARAMF_WORKER/memory/memory-manifest.json": "7218e1eba499096d7de421fb6bc71383a8ab77c2038ac767e70dfc614cfbfb8c"
+    },
+    "historicalPrefixHash": "6b7cb43a1101060274f3fc2f5a937d9769e2a7eb5ff41e86953a172432f06781",
+    "memoryConsistency": "FAIL",
+    "onlyFivePreExistingFilesChanged": true,
+    "phase2Started": false,
+    "stagingEmpty": true
+}

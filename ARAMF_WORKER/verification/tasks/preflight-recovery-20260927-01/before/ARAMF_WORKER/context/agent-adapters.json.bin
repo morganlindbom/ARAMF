@@ -1,0 +1,27 @@
+{
+    "_file": "agent-adapters.json",
+    "adapters": [
+        {
+            "governanceOverride": false,
+            "id": "generic",
+            "presentation": "canonical-json"
+        },
+        {
+            "governanceOverride": false,
+            "id": "openai-codex",
+            "presentation": "codex-task-contract"
+        },
+        {
+            "governanceOverride": false,
+            "id": "gemini",
+            "presentation": "gemini-task-contract"
+        },
+        {
+            "governanceOverride": false,
+            "id": "copilot",
+            "presentation": "copilot-task-contract"
+        }
+    ],
+    "authority": "DERIVED",
+    "schemaVersion": 1
+}

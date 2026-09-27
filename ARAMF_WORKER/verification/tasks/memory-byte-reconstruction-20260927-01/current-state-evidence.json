@@ -1,0 +1,171 @@
+{
+    "current-state.md": {
+        "CRCRLF": 15,
+        "CRLF": 0,
+        "bareCR": 0,
+        "bareLF": 0,
+        "bytes": 234,
+        "encoding": "UTF-8 (validated)",
+        "logicalHash": "e92ebc9873a933e1344c363568f21dd48e02576d04fc926ed051912a9422b338",
+        "relativePath": "ARAMF_WORKER/memory/current-state.md",
+        "sha256": "028c9d21a3010741c9cf5c4e2a2d8dea306e66d18b7088cc0556d4981ca33889",
+        "utf8BOM": false
+    },
+    "decisions.md": {
+        "CRCRLF": 332,
+        "CRLF": 0,
+        "bareCR": 0,
+        "bareLF": 0,
+        "bytes": 19138,
+        "encoding": "UTF-8 (validated)",
+        "logicalHash": "4113c9c6cba1afe887f1c5f09ec1544facc087ef418215db3ef6bab026eefe7e",
+        "relativePath": "ARAMF_WORKER/memory/decisions.md",
+        "sha256": "37b6261f2b660a3b17d59430d1963fcc61e2be8d745e54d64b8483fd3a959ad8",
+        "utf8BOM": false
+    },
+    "event-log.jsonl": {
+        "CRCRLF": 482,
+        "CRLF": 0,
+        "bareCR": 0,
+        "bareLF": 0,
+        "bytes": 220198,
+        "encoding": "UTF-8 (validated)",
+        "events": {
+            "duplicateIds": [
+            ],
+            "eventCount": 482,
+            "firstSequence": 1,
+            "lastSequence": 482,
+            "parseValid": true,
+            "sequenceContinuous": true,
+            "uniqueEventIds": 482,
+            "wholeFileHash": "42d2e69194b7b4063d7000be3039b4a93d5e11494078e5cd43ebb5e1fd1a8d7f"
+        },
+        "logicalHash": "4b93dccb021ee6dcd6ffa912004e1576ab65e60948fd8682ddd02c5e35af5250",
+        "relativePath": "ARAMF_WORKER/memory/event-log.jsonl",
+        "sha256": "42d2e69194b7b4063d7000be3039b4a93d5e11494078e5cd43ebb5e1fd1a8d7f",
+        "utf8BOM": false
+    },
+    "memory-consistency-validation.json": {
+        "CRCRLF": 89,
+        "CRLF": 0,
+        "bareCR": 0,
+        "bareLF": 0,
+        "bytes": 2340,
+        "encoding": "UTF-8 (validated)",
+        "logicalHash": "e1ffe1e1d19b286b03d41d426e178c40253881d73916166f6913c64daa923bfe",
+        "parsedContent": {
+            "_file": "memory-consistency-validation.json",
+            "checkedAt": "2026-09-27T03:41:03Z",
+            "checks": [
+                {
+                    "name": "event-identifiers-unique",
+                    "status": "PASS"
+                },
+                {
+                    "name": "legacy-event-id-integrity-exceptions",
+                    "status": "PASS"
+                },
+                {
+                    "name": "sequence-order",
+                    "status": "PASS"
+                },
+                {
+                    "name": "manifest-next-sequence",
+                    "status": "PASS"
+                },
+                {
+                    "name": "manifest-event-count",
+                    "status": "PASS"
+                },
+                {
+                    "name": "checkpoint-identifiers-unique",
+                    "status": "PASS"
+                },
+                {
+                    "name": "checkpoint-fields-valid",
+                    "status": "PASS"
+                },
+                {
+                    "name": "checkpoint-references-valid",
+                    "status": "PASS"
+                },
+                {
+                    "name": "event-provenance-valid",
+                    "status": "PASS"
+                },
+                {
+                    "name": "persisted-scope-validity",
+                    "status": "PASS"
+                },
+                {
+                    "name": "conflicting-decisions",
+                    "status": "PASS"
+                },
+                {
+                    "name": "stale-current-state",
+                    "status": "PASS"
+                },
+                {
+                    "name": "project-status-consistency",
+                    "status": "PASS"
+                },
+                {
+                    "name": "referenced-resources",
+                    "status": "PASS"
+                },
+                {
+                    "name": "configured-validation-coverage",
+                    "status": "PASS"
+                },
+                {
+                    "name": "cold-start-fresh",
+                    "status": "PASS"
+                },
+                {
+                    "message": "Structural memory consistency checks executed.",
+                    "name": "memory-consistency",
+                    "status": "PASS"
+                },
+                {
+                    "message": "Sequence continuity check executed.",
+                    "name": "sequence-continuity",
+                    "status": "PASS"
+                }
+            ],
+            "durableSequence": 482,
+            "errors": [
+            ],
+            "productionSequence": 482,
+            "status": "PASS",
+            "unsupportedValidations": [
+            ],
+            "warnings": [
+            ]
+        },
+        "relativePath": "ARAMF_WORKER/memory/memory-consistency-validation.json",
+        "sha256": "2e752bc2523ce2ac003610f4c04c5546d96af4d120a96a8060e4238d5dded810",
+        "utf8BOM": false
+    },
+    "memory-manifest.json": {
+        "CRCRLF": 9,
+        "CRLF": 0,
+        "bareCR": 0,
+        "bareLF": 0,
+        "bytes": 273,
+        "encoding": "UTF-8 (validated)",
+        "logicalHash": "b2f90479c833e32068e2bf22c8f8f7f696b445c4eebcf0565d63f59af1ab01eb",
+        "parsedContent": {
+            "_file": "memory-manifest.json",
+            "eventCount": 482,
+            "latestEventId": "event-190f6861-2a70-4e92-9872-8bf50dc5ad06",
+            "legacyProvenanceCutoffSequence": 311,
+            "memoryVersion": "3",
+            "nextSequenceNumber": 483,
+            "workEntryCount": 0
+        },
+        "relativePath": "ARAMF_WORKER/memory/memory-manifest.json",
+        "sha256": "3269eef6ce1ed9711fd6902132c6091ebaafa6792b888bc89b0dd206e624e601",
+        "utf8BOM": false
+    }
+}

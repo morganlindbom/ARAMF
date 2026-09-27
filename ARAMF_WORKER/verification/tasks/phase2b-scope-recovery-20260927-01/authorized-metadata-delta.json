@@ -1,0 +1,115 @@
+{
+    "afterScopeMetadata": {
+        "source-code": {
+            "affects": [
+                "tests"
+            ],
+            "files": [
+                "src/core/CertificationFreshness.cpp",
+                "src/core/CertificationRevalidation.cpp",
+                "src/core/CertificationRevalidation.h",
+                "src/core/ConfigurationUpdateService.cpp",
+                "src/core/DocumentTemplate.cpp",
+                "src/core/DocumentTemplate.h",
+                "src/core/FoundationCertificationCampaign.cpp",
+                "src/core/FoundationCertificationCampaign.h",
+                "src/core/FoundationProjectValidation.cpp",
+                "src/core/FoundationProjectValidation.h",
+                "src/core/FoundationServices.cpp",
+                "src/core/FoundationServices.h",
+                "src/core/MemoryEvidenceFoundation.cpp",
+                "src/core/MemoryEvidenceFoundation.h",
+                "src/core/ProcessVersion.cpp",
+                "src/core/ProcessVersion.h",
+                "src/core/ProjectMemory.cpp",
+                "src/core/ProjectMemory.h",
+                "src/core/ProjectModel.cpp",
+                "src/core/ProjectModel.h",
+                "src/core/ProjectPersistence.cpp",
+                "src/core/Services.cpp",
+                "src/core/TemplateManager.cpp",
+                "src/core/TemplateValidation.cpp",
+                "src/core/WorkerTaskServices.cpp",
+                "src/core/WorkerTaskServices.h",
+                "src/foundations/F1/EvidenceStorage.cpp",
+                "src/foundations/F1/EvidenceStorage.h",
+                "src/foundations/F1/MemoryEvidenceFoundation.cpp",
+                "src/foundations/F1/MemoryEvidenceFoundation.h",
+                "src/foundations/F2/IdentityTrustFoundation.cpp",
+                "src/foundations/F2/IdentityTrustFoundation.h",
+                "src/foundations/F3/ScopeIntegrityFoundation.cpp",
+                "src/foundations/F3/ScopeIntegrityFoundation.h",
+                "src/foundations/F4/LifecycleCertificationFoundation.cpp",
+                "src/foundations/F4/LifecycleCertificationFoundation.h",
+                "src/foundations/F4/ProcessVersion.cpp",
+                "src/foundations/F4/ProcessVersion.h",
+                "src/ui/workflows/ai/autonomy/AiAutonomyPage.cpp",
+                "src/ui/workflows/output/review/ReviewPage.cpp",
+                "src/ui/workflows/project/academic/ProjectAcademicPage.cpp",
+                "src/ui/workflows/project/academic/ProjectAcademicPage.h",
+                "src/ui/workflows/project/setup/ProjectSetupPage.cpp",
+                "src/core/ConfigurationUpdateService.h",
+                "src/core/Services.h"
+            ],
+            "generatedArtifacts": [
+            ],
+            "riskTraits": [
+                "governance",
+                "persistence"
+            ],
+            "tests": [
+                "aramf_core_tests::--worker-tasks"
+            ]
+        },
+        "tests": {
+            "affects": [
+            ],
+            "files": [
+                "test_250/runner/main.cpp",
+                "test_550/runner/main.cpp",
+                "test_update/runner/main.cpp",
+                "tests/CertificationFreshnessTests.cpp",
+                "tests/CertificationRevalidationTests.cpp",
+                "tests/ConfigurationUpdateTests.cpp",
+                "tests/FoundationCertificationTests.cpp",
+                "tests/FoundationIndependenceTests.cpp",
+                "tests/FoundationTests.cpp",
+                "tests/P2ExecutionTests.cpp",
+                "tests/ProjectMemoryTests.cpp",
+                "tests/TemplateConfigurationTests.cpp",
+                "tests/WorkerTaskTests.cpp"
+            ],
+            "generatedArtifacts": [
+            ],
+            "riskTraits": [
+                "governance",
+                "persistence"
+            ],
+            "tests": [
+                "aramf_core_tests::--p3-execution",
+                "aramf_core_tests::--worker-tasks"
+            ]
+        },
+        "ui-ux": {
+            "files": [
+                "src/ui/workflows/update/configuration/UpdateConfigurationPage.cpp"
+            ]
+        }
+    },
+    "beforeScopeMetadata": null,
+    "mappings": [
+        {
+            "path": "src/core/ConfigurationUpdateService.h",
+            "scope": "source-code"
+        },
+        {
+            "path": "src/core/Services.h",
+            "scope": "source-code"
+        },
+        {
+            "path": "src/ui/workflows/update/configuration/UpdateConfigurationPage.cpp",
+            "scope": "ui-ux"
+        }
+    ],
+    "otherConfigurationUnchanged": true
+}

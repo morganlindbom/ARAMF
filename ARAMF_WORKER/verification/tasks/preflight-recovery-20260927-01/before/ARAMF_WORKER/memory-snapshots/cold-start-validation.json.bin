@@ -1,0 +1,97 @@
+{
+    "_file": "cold-start-validation.json",
+    "checkedAt": "2026-09-27T03:41:03Z",
+    "checks": [
+        {
+            "name": "ARAMF_WORKER/memory/decisions.md",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/framework-knowledge.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/current-state.md",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/memory-config.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/memory-contract.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/memory-manifest.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/event-id-integrity-exceptions.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/project-knowledge.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/memory/compaction-manifest.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/AGENTS.md",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/PROJECT_STATUS.md",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/project.json",
+            "status": "PASS"
+        },
+        {
+            "name": "ARAMF_WORKER/worker-manifest.json",
+            "status": "PASS"
+        },
+        {
+            "message": "Event log parsed through ProjectMemory read API.",
+            "name": "event-log-semantic-recovery",
+            "status": "PASS"
+        },
+        {
+            "message": "Durable decisions parsed through ProjectMemory read API.",
+            "name": "decisions-semantic-recovery",
+            "status": "PASS"
+        },
+        {
+            "message": "Checkpoints parsed through ProjectMemory read API.",
+            "name": "checkpoints-semantic-recovery",
+            "status": "PASS"
+        },
+        {
+            "message": "Manifest sequence does not agree with recovered event history.",
+            "name": "manifest-event-recovery",
+            "status": "PASS"
+        },
+        {
+            "message": "Current decision state could not be reconstructed.",
+            "name": "current-decisions-recovery",
+            "status": "PASS"
+        },
+        {
+            "message": "Latest checkpoint could not be recovered.",
+            "name": "latest-checkpoint-recovery",
+            "status": "PASS"
+        }
+    ],
+    "contractConfigConsistent": true,
+    "errors": [
+    ],
+    "fingerprint": "071a70ec352785bd2468249c38cf8816a12242556852081f1044d4c08bde4e76",
+    "recordingEnabled": true,
+    "requireControlPlane": true,
+    "status": "PASS",
+    "warnings": [
+    ]
+}

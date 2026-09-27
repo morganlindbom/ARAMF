@@ -1,0 +1,5 @@
+warning: in the working copy of 'ARAMF_WORKER.aramf.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/ConfigurationUpdateService.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/core/TemplateManager.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/ConfigurationUpdateTests.cpp', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/TemplateConfigurationTests.cpp', LF will be replaced by CRLF the next time Git touches it

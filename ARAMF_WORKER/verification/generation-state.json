@@ -1,6 +1,4 @@
 {
-    "_file": "generation-state.json",
-    "agentRules": true,
     "canonicalState": {
         "academic": {
             "academicDeliverables": [
@@ -964,6 +962,8 @@
                         "src/core/CertificationFreshness.cpp",
                         "src/core/CertificationRevalidation.cpp",
                         "src/core/CertificationRevalidation.h",
+                        "src/core/ConfigurationUpdateService.cpp",
+                        "src/core/ConfigurationUpdateService.h",
                         "src/core/DocumentTemplate.cpp",
                         "src/core/DocumentTemplate.h",
                         "src/core/FoundationCertificationCampaign.cpp",
@@ -982,6 +982,8 @@
                         "src/core/ProjectModel.h",
                         "src/core/ProjectPersistence.cpp",
                         "src/core/Services.cpp",
+                        "src/core/Services.h",
+                        "src/core/TemplateManager.cpp",
                         "src/core/TemplateValidation.cpp",
                         "src/core/WorkerTaskServices.cpp",
                         "src/core/WorkerTaskServices.h",
@@ -1022,6 +1024,7 @@
                         "test_update/runner/main.cpp",
                         "tests/CertificationFreshnessTests.cpp",
                         "tests/CertificationRevalidationTests.cpp",
+                        "tests/ConfigurationUpdateTests.cpp",
                         "tests/FoundationCertificationTests.cpp",
                         "tests/FoundationIndependenceTests.cpp",
                         "tests/FoundationTests.cpp",
@@ -1039,6 +1042,11 @@
                     "tests": [
                         "aramf_core_tests::--p3-execution",
                         "aramf_core_tests::--worker-tasks"
+                    ]
+                },
+                "ui-ux": {
+                    "files": [
+                        "src/ui/workflows/update/configuration/UpdateConfigurationPage.cpp"
                     ]
                 }
             },
@@ -1349,12 +1357,6 @@
         },
         "workerNameSuffix": ""
     },
-    "fingerprint": "c89272374b5153e7bacac0ff04727a7029258b5285008deefd1ca6299d396407",
-    "generatedAt": "2026-09-27T02:32:42Z",
-    "memory": true,
-    "platforms": true,
-    "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
-    "provenance": true,
-    "resources": true,
-    "routing": true
+    "fingerprint": "25ee1a03a5d3f24b60eecbbf30319069a034a0c87ffee517b9e8ef73a52fa8c6",
+    "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF"
 }

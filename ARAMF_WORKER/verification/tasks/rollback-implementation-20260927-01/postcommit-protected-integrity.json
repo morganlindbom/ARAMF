@@ -1,0 +1,334 @@
+{
+  "check": "postcommit-protected-integrity",
+  "contractId": "a4eb55bdba60fdb9ff43016276dc2354ae432d7b43a23fee988f898a05b1777b",
+  "status": "FAIL",
+  "observedAtUtc": "2026-09-27T10:36:29.2352958Z",
+  "head": "0d9aa5950255fc101eb22b42b271a98bac98b529",
+  "baseline": "protected-after-revalidation.json",
+  "baselineWrittenAtUtc": "2026-09-27T10:30:00.6137849Z",
+  "unchangedFileCount": 538,
+  "changedFiles": [],
+  "missingFiles": [
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/.gitignore",
+      "expectedSHA256": "0f45f352af8f8d0df19aedea20ab6d886cff4a5179e179f20c463e8bcc6afe52"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/AGENTS.md",
+      "expectedSHA256": "ddbd60bd8a18f5b30d7920501939dd4f1a021b01da2ce7b09af82ef01492d9d0"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS.aramf.json",
+      "expectedSHA256": "3a5bcf9a381ab3a8b700275bcdf6daa9d284a7f71149f45c9475119029cfa332"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/AGENTS.md",
+      "expectedSHA256": "7f570e70b8f7cc61116be2ca04f9a0f4c121f23bcdbc41ac247b761aa8821ab9"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/ARAMF_WORKER_HVD_COMPONENTS.json",
+      "expectedSHA256": "9b616e6753fb43ea289d8113440e21fd9e10e6b406fb8489ba8ef6a3d00337c0"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/PROJECT_STATUS.md",
+      "expectedSHA256": "361721b1404b74ce598fcdc4882321beb1df2db48cbd67d26f36ad779c69ab13"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/certification/certificates.jsonl",
+      "expectedSHA256": "c7507997d29175d6cebbd42b76f88c247ffd19dd889eec0eaa60c9e6d11f208c"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/certification/certification-contract.json",
+      "expectedSHA256": "7f415e8d9ee59174957063c8bd5835634b28ea16f6441f0e8c96cdd0d57f3af6"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/certification/current-certification-state.json",
+      "expectedSHA256": "c8e5d9351e3da2760ebf20feb240f4bc33f7be609b9692eec1417bb5272d5b19"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/context/agent-adapters.json",
+      "expectedSHA256": "647352349c47e8860fff6ecf12f0927d42032a884b4da360c4bd5fe4f6ec67d7"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/context/compressed-context.json",
+      "expectedSHA256": "aa958fed1909311f5b8535c178a89ea6350ed8d8e0b4c7f76c608a07f2f452a7"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/context/context-index.json",
+      "expectedSHA256": "b70c8ca38491fb85293eaf45b1be1ba3b13ab28955921a62c9f1e0180a2cd3b1"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/context/freshness.json",
+      "expectedSHA256": "9578df08dee27b8762083f73a28e9c0fba1fdc7ff85184a8541f7466b2e897b1"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/context/task-dag.json",
+      "expectedSHA256": "cc62086417419afa3e5bf6f281a5517a845fa2e34bf73f9547838c2f54824a56"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/checkpoints.json",
+      "expectedSHA256": "1b67d07273e1c15153086cbc96e3a4c11ab42396fa9c861203a432843fddb43e"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/cold-start-validation.json",
+      "expectedSHA256": "7f62eba94abef3aea3ca33dee7dfc8d2b97ff77d32806421bd5d4f08dbb3250f"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/compaction-history.jsonl",
+      "expectedSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/compaction-manifest.json",
+      "expectedSHA256": "de75ad5b9040cef1dbd3fcf0c3976fb95250cb34c75a4f627cb2b622dc73904a"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/current-state.md",
+      "expectedSHA256": "365f5cc818611f87f34b54272185a98ad8b23f3b4fe162dec0347136cbd1e8fa"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/decisions.md",
+      "expectedSHA256": "f8833a1a4f5600feb4866072d1789770375c80dc2a15a2c7c19f40d129587a58"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/event-id-integrity-exceptions.json",
+      "expectedSHA256": "4ca9735b92d3401b46f1aaf19311003f6b4e0bade41c059cddca9935d45c55af"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/event-log.jsonl",
+      "expectedSHA256": "e3252f744209db81f77ca9946201131cfc649ae4c3546c18cd02811fa735d54c"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/framework-knowledge.json",
+      "expectedSHA256": "809a0c3bdf706050f16e3df210c819a1724093de38376cd176971c65b6762b48"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/memory-config.json",
+      "expectedSHA256": "018ee953e18bf4b18dcead059a4b892ba9742c5a6664d8582c77e8c96d63a5ee"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/memory-consistency-validation.json",
+      "expectedSHA256": "5f50393d2f978379ff6b403d1d4a258b40ed96266229acaafe95cf6934307c8a"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/memory-contract.json",
+      "expectedSHA256": "af96e05b6a106b93d451c09c63940136f750c2edef6951fc2c85e206810c6e4e"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/memory-manifest.json",
+      "expectedSHA256": "f1a4d96ac18ad028d5f8e023c1fe1c392f98785a4fc79ce6269d5506033e4dcc"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/metrics.json",
+      "expectedSHA256": "7867d0651fad0640c30e043d1efa3391ddb2a0157d16e8e881215ad965f21e9a"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/memory/project-knowledge.json",
+      "expectedSHA256": "55f600087cb2e2d66e76ad6d758ce75a9a99ec42c02f95411f4644cecafed147"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/platforms/platform-metadata.json",
+      "expectedSHA256": "81dc93d748a5191eec589a2b440a0258f4b64aa198578ee785f7f8b988a9e482"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/project.json",
+      "expectedSHA256": "6d3ef4199dbf9c5d97bd3bd5ec9bf1cb8e3e51b026b1a71504f09f69eb30cced"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/provenance.json",
+      "expectedSHA256": "753bdbe358ee8b320bbefcde00ddff407a6220183d8f1449a470ce4a4c4d4684"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/resources/resources.json",
+      "expectedSHA256": "2d13f370d400352c5defbb308c2c49be314d43f30676bc47a45860de7c9cf2cf"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/routing/README.md",
+      "expectedSHA256": "f6b179a37826f47f98e903a1061ae9402cb0bfeab385b15948e4718098e7b0df"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/routing/scope-routes.json",
+      "expectedSHA256": "824fc0916074a1475d63e042db211041cb45c3053e787014428bae3c4944230c"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/routing/task-routes.json",
+      "expectedSHA256": "2bce6a2962a6a59713fbb9993cb24d36fa59906d48bcd4b607f6321e82167656"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/routing/validation-policy.json",
+      "expectedSHA256": "ff9eccf12591380b7cedc9cb21fd02a73442ae1c36bebc21c98c5c789b13b9bd"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/rules/generated-rules.md",
+      "expectedSHA256": "af530793dd8bb6bc904bd26a6264c3b5d1f4f8713b778bd48d08f1c90adb6210"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/selection-effects.json",
+      "expectedSHA256": "552b490f94007063faf4ce68cdb50e280d5cbab37d24b301830679558c86ecad"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/generation-state.json",
+      "expectedSHA256": "7ab8634413d68f9100fabb5dc27e4543e1c698dba84229e54b247463c676250b"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/latest-validation.json",
+      "expectedSHA256": "a1efd4e4609c1189ffaa15db478e1f74e42c7bb315fd6af465dfe542577826bc"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/tasks/pre-fpsc-smoke/acceptance-criteria.json",
+      "expectedSHA256": "eb27231381f8a372dabdde5189cced40310c05ff407b7aef4cff04aceb64dc44"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/tasks/pre-fpsc-smoke/affected-focused-tests.json",
+      "expectedSHA256": "37561d74c346c0320192395f045a1170e9cb31b4154cf5758b66dd18bbb0f3b0"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/tasks/pre-fpsc-smoke/affected-target-build.json",
+      "expectedSHA256": "a2a874e0c0620de9b4a4797026ee39624efb4fe6542d175a38d089199aa9a252"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/tasks/pre-fpsc-smoke/cold-start.json",
+      "expectedSHA256": "8fe4e45873ccc5f9f42bf2c58b4e60bb49e046582aa7601db30890c624a89080"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/tasks/pre-fpsc-smoke/contract.json",
+      "expectedSHA256": "21edb644bc309dcd95caf5112c1f5954052e8eac7a6503619af26f086ad72037"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/tasks/pre-fpsc-smoke/generation-observation.json",
+      "expectedSHA256": "19d227a657eacb7e087608cf6d8dc4c360a4e28820cce0e4f7bbfb1a39aede45"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/tasks/pre-fpsc-smoke/git-diff-check.json",
+      "expectedSHA256": "8f9a1f2157ad020186a3b357ccaa40127d1cd5df6f7e62efa3dfe1fa02e37f2c"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/tasks/pre-fpsc-smoke/impacted-validation.json",
+      "expectedSHA256": "7bc60f83abb919f6849049f4a8154d0ab570f808f844b654928ecae65528e502"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/tasks/pre-fpsc-smoke/postflight.json",
+      "expectedSHA256": "424cace98ca59feab89d71698444d063809e551510551eda3b8ba0fc3de86fe8"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/tasks/pre-fpsc-smoke/source-unchanged.json",
+      "expectedSHA256": "7e97fd1d801b6c06bf6276cf4c3e87d85f09a04fbe87a613e74e6fa440b83e2a"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/tasks/pre-fpsc-smoke/workspace-intent.json",
+      "expectedSHA256": "bce7637091f5c83ee7f8d160570e8de08503f581421e8e3143b5e87e6132ca96"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/verification/verification-result.json",
+      "expectedSHA256": "b2f89dcd65c5972d03e33d183a0a315b8fd3a74829fb251896ca3c59e618b5d5"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/ARAMF_WORKER_HVD_COMPONENTS/worker-manifest.json",
+      "expectedSHA256": "d2562ab378ce1b3ca73ec592fc66dd8b0eeb513b9017cf2375f0a98d6e2dafc8"
+    },
+    {
+      "observed": "MISSING",
+      "path": "../../C++Summer 2026 Project7/Components/README.md",
+      "expectedSHA256": "82e758236a56b06172e0fed7220bb0ecae80e57f4239fd85632cbfcbd9fd0bfb"
+    }
+  ],
+  "targetPath": "D:\\ON DESCTOP\\HKR KURSER\\C++\\C++Summer 2026 Project7\\Components",
+  "targetLastWriteTimeUtc": "2026-09-27T10:30:16.3654826Z",
+  "targetEntryCount": 0,
+  "origin": "UNKNOWN; no attribution is established. The task commands did not issue writes, moves, removals or regeneration against this target.",
+  "disposition": "STOP. No target repair/recreation or historical evidence rewrite. Implementation and evidence commits remain immutable; current protected-target acceptance cannot be claimed.",
+  "phase2AImplementation": "Committed; required tests PASS; canonical postflight VERIFIED before this final integrity observation",
+  "finalFreshness": "F1-F4, P1-P5, S1-S6 FRESH via read-only post-commit evaluation",
+  "gitStatusShort": [
+    " M ARAMF_WORKER.aramf.json",
+    " M ARAMF_WORKER/AGENTS.md",
+    " M ARAMF_WORKER/context/compressed-context.json",
+    " M ARAMF_WORKER/context/context-index.json",
+    " M ARAMF_WORKER/context/freshness.json",
+    " M ARAMF_WORKER/memory/cold-start-validation.json",
+    " M ARAMF_WORKER/memory/current-state.md",
+    " M ARAMF_WORKER/memory/event-log.jsonl",
+    " M ARAMF_WORKER/memory/memory-consistency-validation.json",
+    " M ARAMF_WORKER/memory/memory-manifest.json",
+    " M ARAMF_WORKER/memory/metrics.json",
+    " M ARAMF_WORKER/project.json",
+    " M ARAMF_WORKER/routing/scope-routes.json",
+    " M ARAMF_WORKER/routing/task-routes.json",
+    " M ARAMF_WORKER/verification/generation-state.json",
+    " M ARAMF_WORKER/verification/latest-validation.json",
+    " M ARAMF_WORKER/verification/verification-result.json",
+    " M ARAMF_WORKER/worker-manifest.json",
+    " M LICENSE",
+    " M src/core/ConfigurationUpdateService.cpp",
+    " M src/core/TemplateManager.cpp",
+    " M tests/ConfigurationUpdateTests.cpp",
+    " M tests/TemplateConfigurationTests.cpp",
+    "?? ARAMF_WORKER/verification/tasks/evidence-directory-relocation-20260927-01/",
+    "?? ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/",
+    "?? ARAMF_WORKER/verification/tasks/named-worker-update/",
+    "?? ARAMF_WORKER/verification/tasks/preflight-recovery-20260927-01/",
+    "?? ARAMF_WORKER/verification/tasks/rollback-byte-audit-20260927-01/",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/PREFLIGHT-BLOCKED.md",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/baseline.json",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/before/",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/freshness-before.json",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/head-before.txt",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/implementation-contract.json",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/status-before.txt",
+    "?? test_250/runs/",
+    "?? test_550/runs/"
+  ]
+}

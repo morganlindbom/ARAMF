@@ -1,0 +1,30 @@
+ M ARAMF_WORKER.aramf.json
+ M ARAMF_WORKER/AGENTS.md
+ M ARAMF_WORKER/context/compressed-context.json
+ M ARAMF_WORKER/context/context-index.json
+ M ARAMF_WORKER/context/freshness.json
+ M ARAMF_WORKER/memory/cold-start-validation.json
+ M ARAMF_WORKER/memory/current-state.md
+ M ARAMF_WORKER/memory/event-log.jsonl
+ M ARAMF_WORKER/memory/memory-consistency-validation.json
+ M ARAMF_WORKER/memory/memory-manifest.json
+ M ARAMF_WORKER/memory/metrics.json
+ M ARAMF_WORKER/project.json
+ M ARAMF_WORKER/routing/scope-routes.json
+ M ARAMF_WORKER/routing/task-routes.json
+ M ARAMF_WORKER/verification/generation-state.json
+ M ARAMF_WORKER/verification/latest-validation.json
+ M ARAMF_WORKER/verification/verification-result.json
+ M ARAMF_WORKER/worker-manifest.json
+ M LICENSE
+ M src/core/ConfigurationUpdateService.cpp
+ M src/core/TemplateManager.cpp
+ M tests/ConfigurationUpdateTests.cpp
+ M tests/TemplateConfigurationTests.cpp
+?? ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/
+?? ARAMF_WORKER/verification/tasks/named-worker-update/
+?? ARAMF_WORKER/verification/tasks/preflight-recovery-20260927-01/
+?? ARAMF_WORKER/verification/tasks/rollback-byte-audit-20260927-01/
+?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/
+?? test_250/runs/
+?? test_550/runs/

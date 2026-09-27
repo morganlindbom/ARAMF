@@ -1,0 +1,557 @@
+{
+    "error": "",
+    "evidence": {
+        "checks": [
+            {
+                "details": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+                "id": "project-path",
+                "name": "Project Path",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER directory exists.",
+                "id": "control-plane",
+                "name": "ARAMF_WORKER control plane",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/project.json",
+                "id": "project-configuration",
+                "name": "Canonical project configuration",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/worker-manifest.json",
+                "id": "worker-manifest",
+                "name": "Worker topology manifest",
+                "status": "PASS"
+            },
+            {
+                "details": "Derived context index is readable and project-bound.",
+                "id": "p1-context-index",
+                "name": "P1 context index",
+                "status": "PASS"
+            },
+            {
+                "details": "Indexed sources are current.",
+                "id": "p1-context-freshness",
+                "name": "P1 context freshness",
+                "status": "PASS"
+            },
+            {
+                "details": "Worker schema version 1 and canonical ownership are valid.",
+                "id": "worker-topology",
+                "name": "Worker topology schema",
+                "status": "PASS"
+            },
+            {
+                "details": "Canonical ownership is unique.",
+                "id": "canonical-owners",
+                "name": "Unique canonical file ownership",
+                "status": "PASS"
+            },
+            {
+                "details": "Competing canonical or ad-hoc Worker state detected: ",
+                "id": "parallel-state",
+                "name": "No competing canonical state systems",
+                "status": "FAIL"
+            },
+            {
+                "details": "project.json matches the active ProjectModel.",
+                "id": "project-identity",
+                "name": "Project identity is current",
+                "status": "PASS"
+            },
+            {
+                "details": "project.json dependencies are current.",
+                "id": "stale-project-configuration",
+                "name": "Project configuration fingerprint",
+                "status": "PASS"
+            },
+            {
+                "details": "Worker topology dependencies are current.",
+                "id": "stale-worker-manifest",
+                "name": "Worker manifest fingerprint",
+                "status": "PASS"
+            },
+            {
+                "details": "Routing dependencies are current.",
+                "id": "stale-routing",
+                "name": "Routing dependency fingerprint",
+                "status": "PASS"
+            },
+            {
+                "details": "AGENTS.md",
+                "id": "root-agents",
+                "name": "Root AGENTS.md",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/AGENTS.md",
+                "id": "aramf-worker-agents",
+                "name": "ARAMF_WORKER/AGENTS.md",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/PROJECT_STATUS.md",
+                "id": "project-status",
+                "name": "PROJECT_STATUS.md",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/rules/generated-rules.md",
+                "id": "generated-rules",
+                "name": "Generated rules",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/routing/task-routes.json",
+                "id": "task-routes",
+                "name": "Task routes",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/routing/scope-routes.json",
+                "id": "scope-routes",
+                "name": "Scope routes",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/platforms/platform-metadata.json",
+                "id": "platforms",
+                "name": "Platform metadata",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/resources/resources.json",
+                "id": "resources",
+                "name": "Resource manifest",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/memory/memory-config.json",
+                "id": "memory",
+                "name": "Memory configuration",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/memory/framework-knowledge.json",
+                "id": "framework-knowledge",
+                "name": "Framework Knowledge",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/provenance.json",
+                "id": "provenance",
+                "name": "Provenance",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/selection-effects.json",
+                "id": "selection-effects",
+                "name": "Selection effects",
+                "status": "PASS"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "communication-contract",
+                "name": "Communication contract",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "multi-target-build",
+                "name": "Multi-target build model",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "certification-contract",
+                "name": "Certification contract",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "current-certification-state",
+                "name": "Current certification state",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "All configured resources have unique canonical identities.",
+                "id": "resource-identities",
+                "name": "Unique resource identities",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-project.json",
+                "name": "Valid JSON: ARAMF_WORKER/project.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-worker-manifest.json",
+                "name": "Valid JSON: ARAMF_WORKER/worker-manifest.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-task-routes.json",
+                "name": "Valid JSON: ARAMF_WORKER/routing/task-routes.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-scope-routes.json",
+                "name": "Valid JSON: ARAMF_WORKER/routing/scope-routes.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-platform-metadata.json",
+                "name": "Valid JSON: ARAMF_WORKER/platforms/platform-metadata.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-resources.json",
+                "name": "Valid JSON: ARAMF_WORKER/resources/resources.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-memory-config.json",
+                "name": "Valid JSON: ARAMF_WORKER/memory/memory-config.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-framework-knowledge.json",
+                "name": "Valid JSON: ARAMF_WORKER/memory/framework-knowledge.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-provenance.json",
+                "name": "Valid JSON: ARAMF_WORKER/provenance.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-selection-effects.json",
+                "name": "Valid JSON: ARAMF_WORKER/selection-effects.json",
+                "status": "PASS"
+            },
+            {
+                "details": "PASS",
+                "id": "memory-consistency",
+                "name": "Memory consistency",
+                "status": "PASS"
+            },
+            {
+                "details": "PASS",
+                "id": "cold-start",
+                "name": "Cold-start validation",
+                "status": "PASS"
+            },
+            {
+                "details": "Fingerprint matches ProjectModel.",
+                "id": "freshness",
+                "name": "Generated configuration is current",
+                "status": "PASS"
+            },
+            {
+                "details": "Latest validation summary is structurally valid.",
+                "id": "validation-summary-integrity",
+                "name": "Latest validation summary integrity",
+                "status": "PASS"
+            }
+        ],
+        "fingerprint": "e1cc334e87fa1d47d914f72592a640a3065109925fd71072c41de61bb17be04a",
+        "overallStatus": "FAIL",
+        "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF"
+    },
+    "summary": {
+        "checks": [
+            {
+                "details": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+                "id": "project-path",
+                "name": "Project Path",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER directory exists.",
+                "id": "control-plane",
+                "name": "ARAMF_WORKER control plane",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/project.json",
+                "id": "project-configuration",
+                "name": "Canonical project configuration",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/worker-manifest.json",
+                "id": "worker-manifest",
+                "name": "Worker topology manifest",
+                "status": "PASS"
+            },
+            {
+                "details": "Derived context index is readable and project-bound.",
+                "id": "p1-context-index",
+                "name": "P1 context index",
+                "status": "PASS"
+            },
+            {
+                "details": "Indexed sources are current.",
+                "id": "p1-context-freshness",
+                "name": "P1 context freshness",
+                "status": "PASS"
+            },
+            {
+                "details": "Worker schema version 1 and canonical ownership are valid.",
+                "id": "worker-topology",
+                "name": "Worker topology schema",
+                "status": "PASS"
+            },
+            {
+                "details": "Canonical ownership is unique.",
+                "id": "canonical-owners",
+                "name": "Unique canonical file ownership",
+                "status": "PASS"
+            },
+            {
+                "details": "Competing canonical or ad-hoc Worker state detected: ",
+                "id": "parallel-state",
+                "name": "No competing canonical state systems",
+                "status": "FAIL"
+            },
+            {
+                "details": "project.json matches the active ProjectModel.",
+                "id": "project-identity",
+                "name": "Project identity is current",
+                "status": "PASS"
+            },
+            {
+                "details": "project.json dependencies are current.",
+                "id": "stale-project-configuration",
+                "name": "Project configuration fingerprint",
+                "status": "PASS"
+            },
+            {
+                "details": "Worker topology dependencies are current.",
+                "id": "stale-worker-manifest",
+                "name": "Worker manifest fingerprint",
+                "status": "PASS"
+            },
+            {
+                "details": "Routing dependencies are current.",
+                "id": "stale-routing",
+                "name": "Routing dependency fingerprint",
+                "status": "PASS"
+            },
+            {
+                "details": "AGENTS.md",
+                "id": "root-agents",
+                "name": "Root AGENTS.md",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/AGENTS.md",
+                "id": "aramf-worker-agents",
+                "name": "ARAMF_WORKER/AGENTS.md",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/PROJECT_STATUS.md",
+                "id": "project-status",
+                "name": "PROJECT_STATUS.md",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/rules/generated-rules.md",
+                "id": "generated-rules",
+                "name": "Generated rules",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/routing/task-routes.json",
+                "id": "task-routes",
+                "name": "Task routes",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/routing/scope-routes.json",
+                "id": "scope-routes",
+                "name": "Scope routes",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/platforms/platform-metadata.json",
+                "id": "platforms",
+                "name": "Platform metadata",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/resources/resources.json",
+                "id": "resources",
+                "name": "Resource manifest",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/memory/memory-config.json",
+                "id": "memory",
+                "name": "Memory configuration",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/memory/framework-knowledge.json",
+                "id": "framework-knowledge",
+                "name": "Framework Knowledge",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/provenance.json",
+                "id": "provenance",
+                "name": "Provenance",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/selection-effects.json",
+                "id": "selection-effects",
+                "name": "Selection effects",
+                "status": "PASS"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "communication-contract",
+                "name": "Communication contract",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "multi-target-build",
+                "name": "Multi-target build model",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "certification-contract",
+                "name": "Certification contract",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "current-certification-state",
+                "name": "Current certification state",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "All configured resources have unique canonical identities.",
+                "id": "resource-identities",
+                "name": "Unique resource identities",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-project.json",
+                "name": "Valid JSON: ARAMF_WORKER/project.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-worker-manifest.json",
+                "name": "Valid JSON: ARAMF_WORKER/worker-manifest.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-task-routes.json",
+                "name": "Valid JSON: ARAMF_WORKER/routing/task-routes.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-scope-routes.json",
+                "name": "Valid JSON: ARAMF_WORKER/routing/scope-routes.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-platform-metadata.json",
+                "name": "Valid JSON: ARAMF_WORKER/platforms/platform-metadata.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-resources.json",
+                "name": "Valid JSON: ARAMF_WORKER/resources/resources.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-memory-config.json",
+                "name": "Valid JSON: ARAMF_WORKER/memory/memory-config.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-framework-knowledge.json",
+                "name": "Valid JSON: ARAMF_WORKER/memory/framework-knowledge.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-provenance.json",
+                "name": "Valid JSON: ARAMF_WORKER/provenance.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-selection-effects.json",
+                "name": "Valid JSON: ARAMF_WORKER/selection-effects.json",
+                "status": "PASS"
+            },
+            {
+                "details": "PASS",
+                "id": "memory-consistency",
+                "name": "Memory consistency",
+                "status": "PASS"
+            },
+            {
+                "details": "PASS",
+                "id": "cold-start",
+                "name": "Cold-start validation",
+                "status": "PASS"
+            },
+            {
+                "details": "Fingerprint matches ProjectModel.",
+                "id": "freshness",
+                "name": "Generated configuration is current",
+                "status": "PASS"
+            },
+            {
+                "details": "Latest validation summary is structurally valid.",
+                "id": "validation-summary-integrity",
+                "name": "Latest validation summary integrity",
+                "status": "PASS"
+            }
+        ],
+        "coldStartValid": true,
+        "contextStaleCount": 0,
+        "contextValid": true,
+        "documentationRoutingValid": true,
+        "fingerprint": "e1cc334e87fa1d47d914f72592a640a3065109925fd71072c41de61bb17be04a",
+        "instructionsReachable": true,
+        "memoryConsistent": true,
+        "overallStatus": "FAIL",
+        "resourcesReachable": true,
+        "routingConflictCount": 0,
+        "routingValid": true,
+        "schemaVersion": 1,
+        "staleArtifactCount": 0,
+        "topologyValid": false,
+        "workerSchemaValid": true
+    }
+}

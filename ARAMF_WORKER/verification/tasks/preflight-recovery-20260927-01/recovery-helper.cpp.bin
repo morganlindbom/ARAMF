@@ -1,0 +1,126 @@
+#define main reconstructionUtilityMain
+#include "memory-reconstruction.cpp"
+#undef main
+#include "core/ProjectModel.h"
+#include "core/ProjectPersistence.h"
+#include "core/WorkerTaskServices.h"
+#include "core/ContextCoordinationService.h"
+#include "core/CertificationFreshness.h"
+#include "core/Services.h"
+
+const QStringList subjects{"F1","F2","F3","F4","P1","P2","P3","P4","P5","S1","S2","S3","S4","S5","S6"};
+QJsonObject readObject(const QString& path) {return parsed(bytes(path)).object();}
+QJsonObject freshnessReport() {
+    QJsonObject out;
+    for(const auto& subject:subjects)out.insert(subject,CertificationFreshnessService::evaluate(subject,root).toJson());
+    return out;
+}
+void requireFresh(const QJsonObject& report) {
+    for(const auto& subject:subjects)require(report.value(subject).toObject().value("status")=="FRESH","STOP: certificate not FRESH: "+subject);
+}
+bool equivalent(QJsonObject a,QJsonObject b) {a.remove("_file");b.remove("_file");return a==b;}
+int main(int argc,char** argv) {
+ QCoreApplication app(argc,argv);
+ try {
+    root=QDir::currentPath();area="ARAMF_WORKER/verification/tasks/preflight-recovery-20260927-01";
+    require(app.arguments().size()==1,"No alternate modes or target projects");
+    require(!QFileInfo::exists(area),"Evidence package already exists; do not overwrite");emptyIndex();
+    require(git({"rev-parse","HEAD"}).trimmed()=="cb4ba92048c30a3fd8a5c41014dbfab0d54d3a12","Unexpected HEAD");
+    ProjectModel model;QString error;
+    require(ProjectPersistence().load(&model,"ARAMF_WORKER.aramf.json",&error),error);
+    require(QFileInfo(model.projectPath()).canonicalFilePath()==QFileInfo(root).canonicalFilePath()&&model.workerNameSuffix().isEmpty(),"Wrong project/worker");
+    const auto before=snapshot();json(area+"/baseline.json",before);
+    add(area+"/git-status-before.txt",git({"status","--short"}));
+    add(area+"/recovery-helper.cpp.bin",bytes("build/preflight-recovery.cpp"));
+    add(area+"/utility-helper.cpp.bin",bytes("build/memory-reconstruction.cpp"));
+    const auto initialFresh=freshnessReport();json(area+"/freshness-before.json",initialFresh);requireFresh(initialFresh);
+    const QStringList allowedDerived{
+        "ARAMF_WORKER/context/context-index.json","ARAMF_WORKER/context/compressed-context.json",
+        "ARAMF_WORKER/context/freshness.json","ARAMF_WORKER/context/agent-adapters.json",
+        "ARAMF_WORKER/memory/cold-start-validation.json","ARAMF_WORKER/memory/memory-consistency-validation.json",
+        "ARAMF_WORKER/verification/verification-result.json","ARAMF_WORKER/verification/latest-validation.json"};
+    for(const auto& path:allowedDerived) {require(before.contains(path),"Expected existing current file: "+path);add(area+"/before/"+path+".bin",bytes(path));}
+    require(QFileInfo::exists("ARAMF_WORKER/context/task-dag.json"),"Unexpected missing task DAG");
+    const QString phase1="ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/";
+    QJsonArray moves;
+    for(const auto& folder:QStringList{"candidates","logical-before"}) {
+        const auto oldPath=phase1+folder+"/current-state.md",newPath=phase1+folder+"/current-state.snapshot.md";
+        const QFileInfo oldInfo(oldPath),newInfo(newPath);
+        require(oldInfo.isFile()&&!oldInfo.isSymLink()&&!newInfo.exists()&&!newInfo.isSymLink(),"Unsafe evidence rename");
+        require(oldInfo.canonicalPath()==QFileInfo(phase1+folder).canonicalFilePath(),"Evidence outside exact parent");
+        const auto content=bytes(oldPath);
+        moves.append(QJsonObject{{"oldPath",oldPath},{"newPath",newPath},{"originalSHA256",hash(content)},
+            {"originalByteCount",content.size()},{"historicalEvidenceNotLiveState",true}});
+    }
+    const QJsonObject provenance{{"actor","agent"},{"agentId","codex"},{"tool","preflight-recovery production-service driver"},
+        {"authorizingTask","APPROVED - PREFLIGHT RECOVERY ONLY"},{"authority","Explicit user permission to rename only these two evidence copies and refresh canonical current derived state"}};
+    json(area+"/relocation-plan.json",{{"relocations",moves},{"provenance",provenance},{"timestamp",QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}});
+    compareSnapshot(before);
+    QJsonArray relocated;
+    for(const auto& value:moves) {
+        auto record=value.toObject();const auto oldPath=record.value("oldPath").toString(),newPath=record.value("newPath").toString();
+        require(hash(bytes(oldPath))==record.value("originalSHA256").toString(),"Evidence changed since snapshot");
+        require(QFile::rename(oldPath,newPath),"Exact evidence rename failed");
+        const auto afterBytes=bytes(newPath);
+        require(hash(afterBytes)==record.value("originalSHA256").toString()&&afterBytes.size()==record.value("originalByteCount").toInteger(),"Evidence bytes changed during rename");
+        record.insert("newSHA256",hash(afterBytes));record.insert("newByteCount",afterBytes.size());record.insert("byteIdentical",true);
+        record.insert("reason","Evidence-only filename collided with reserved live current-state.md authority check; payload is historical evidence, not live state");
+        record.insert("timestamp",QDateTime::currentDateTimeUtc().toString(Qt::ISODate));relocated.append(record);
+    }
+    json(area+"/relocation-amendment.json",{{"relocations",relocated},{"provenance",provenance},
+        {"phase1StatementUnchanged","RECONSTRUCTED - exact complete pre-rollback byte state was not available for all files."},
+        {"phase1READMEEdited",false},{"payloadsEdited",false}});
+    auto expected=before;
+    for(const auto& value:relocated){const auto r=value.toObject();expected.remove(r.value("oldPath").toString());expected.insert(r.value("newPath").toString(),r.value("newSHA256"));}
+    compareSnapshot(expected);
+    json(area+"/context-before.json",ContextCoordinationService::validate(model));
+    const auto generated=ContextCoordinationService::generate(model);json(area+"/context-generation.json",generated);
+    require(generated.value("success")==true,"Canonical P1 generation failed");
+    const auto context=ContextCoordinationService::validate(model);json(area+"/context-after.json",context);require(context.value("valid")==true,"P1 not current after generation");
+    require(equivalent(readObject("ARAMF_WORKER/context/context-index.json"),ContextCoordinationService::buildIndex(model)),"P1 index readback differs");
+    require(equivalent(readObject("ARAMF_WORKER/context/compressed-context.json"),ContextCoordinationService::compress(model)),"P1 compressed readback differs");
+    require(equivalent(readObject("ARAMF_WORKER/context/freshness.json"),ContextCoordinationService::freshness(model)),"P1 freshness readback differs");
+    require(equivalent(readObject("ARAMF_WORKER/context/agent-adapters.json"),ContextCoordinationService::adapterDescriptors()),"P1 adapter readback differs");
+    ProjectMemory memory;
+    const auto cold=memory.validateColdStart(root,&error);json(area+"/cold-start-result.json",cold);
+    require(error.isEmpty()&&cold.value("status")=="PASS", "Canonical cold-start failed: "+error);
+    require(readObject("ARAMF_WORKER/memory/cold-start-validation.json")==cold,"Cold-start readback differs");
+    const auto mem=memory.validate(root,&error);json(area+"/memory-result.json",mem);
+    require(error.isEmpty()&&mem.value("status")=="PASS","Canonical memory validation failed: "+error);
+    require(readObject("ARAMF_WORKER/memory/memory-consistency-validation.json")==mem,"Memory report readback differs");
+    const auto verify=VerificationServices().verify(model,model.generationOptions());
+    json(area+"/worker-verification.json",{{"summary",verify.summary},{"evidence",verify.evidence},{"error",verify.error}});
+    require(verify.overallStatus==VerificationStatus::Pass,"Canonical worker verification failed");
+    require(equivalent(readObject("ARAMF_WORKER/verification/latest-validation.json"),verify.summary),"Verification summary readback differs");
+    require(equivalent(readObject("ARAMF_WORKER/verification/verification-result.json"),verify.evidence),"Verification evidence readback differs");
+    const auto afterFresh=freshnessReport();json(area+"/freshness-after.json",afterFresh);requireFresh(afterFresh);
+    QJsonArray changed;
+    for(const auto& path:allowedDerived){const auto currentHash=hash(bytes(path));expected.insert(path,currentHash);if(before.value(path)!=currentHash)changed.append(path);}
+    compareSnapshot(expected);emptyIndex();
+    // Reload saved configuration independently of the in-memory generation model.
+    ProjectModel reloaded;error.clear();require(ProjectPersistence().load(&reloaded,"ARAMF_WORKER.aramf.json",&error),error);
+    require(ContextCoordinationService::validate(reloaded).value("valid")==true,"Reloaded context invalid");
+    require(VerificationServices().verify(reloaded,reloaded.generationOptions(),false).overallStatus==VerificationStatus::Pass,"Read-only reloaded verification not PASS");
+    require(memory.validate(root,&error,false).value("status")=="PASS","Final read-only memory not PASS");
+    const auto original=readObject("ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/implementation-contract.json").value("contract").toObject();
+    const auto contract=WorkerTaskServices::prepare(reloaded,WorkerTaskRequest::fromJson(original.value("request").toObject()));
+    json(area+"/phase2a-ready-contract.json",{{"contract",contract}});
+    const auto preflight=contract.value("preflight").toObject();
+    QTextStream(stdout)<<QJsonDocument(preflight).toJson();
+    const auto events=eventSummary(bytes("ARAMF_WORKER/memory/event-log.jsonl"));
+    QProcess diff;diff.start("git",{"diff","--check"});require(diff.waitForFinished(60000),"diff check timeout");
+    const auto diffOutput=diff.readAllStandardOutput()+diff.readAllStandardError();
+    git({"diff","--cached","--check"});emptyIndex();compareSnapshot(expected);
+    json(area+"/result.json",{{"check","preflight-recovery"},{"contractId",contract.value("contractId")},
+        {"status",preflight.value("status").toString().startsWith("READY")&&diff.exitCode()==0?"PASS":"FAIL"},
+        {"head",QString::fromUtf8(git({"rev-parse","HEAD"})).trimmed()},{"provenance",provenance},{"preflight",preflight},
+        {"changedDerivedFiles",changed},{"relocations",relocated},{"context","PASS"},{"coldStart","PASS"},{"memory","PASS"},{"verification","PASS"},
+        {"freshness",afterFresh},{"eventLog",events},{"allOtherExistingFilesUnchanged",true},{"phase1PayloadsUnchanged",true},
+        {"stagingEmpty",true},{"gitDiffCheckExit",diff.exitCode()},{"gitDiffCheckOutput",QString::fromUtf8(diffOutput)},
+        {"gitStatus",QString::fromUtf8(git({"status","--short"}))},{"implementationStarted",false}});
+    require(preflight.value("status").toString().startsWith("READY"),"Phase 2A preflight remains blocked");
+    require(diff.exitCode()==0,"Diff check failed");
+    QTextStream(stdout)<<"RECOVERY PASS; READY; no implementation started; "<<area<<Qt::endl;
+    return 0;
+ } catch(const std::exception& e){QTextStream(stderr)<<"STOP: "<<e.what()<<Qt::endl;return 1;}
+}

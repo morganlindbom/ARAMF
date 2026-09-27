@@ -1,0 +1,91 @@
+{
+    "_file": "memory-consistency-validation.json",
+    "callError": "",
+    "checkedAt": "2026-09-27T08:55:20Z",
+    "checks": [
+        {
+            "name": "event-identifiers-unique",
+            "status": "PASS"
+        },
+        {
+            "name": "legacy-event-id-integrity-exceptions",
+            "status": "PASS"
+        },
+        {
+            "name": "sequence-order",
+            "status": "PASS"
+        },
+        {
+            "name": "manifest-next-sequence",
+            "status": "PASS"
+        },
+        {
+            "name": "manifest-event-count",
+            "status": "PASS"
+        },
+        {
+            "name": "checkpoint-identifiers-unique",
+            "status": "PASS"
+        },
+        {
+            "name": "checkpoint-fields-valid",
+            "status": "PASS"
+        },
+        {
+            "name": "checkpoint-references-valid",
+            "status": "PASS"
+        },
+        {
+            "name": "event-provenance-valid",
+            "status": "PASS"
+        },
+        {
+            "name": "persisted-scope-validity",
+            "status": "PASS"
+        },
+        {
+            "name": "conflicting-decisions",
+            "status": "PASS"
+        },
+        {
+            "name": "stale-current-state",
+            "status": "PASS"
+        },
+        {
+            "name": "project-status-consistency",
+            "status": "PASS"
+        },
+        {
+            "name": "referenced-resources",
+            "status": "PASS"
+        },
+        {
+            "name": "configured-validation-coverage",
+            "status": "PASS"
+        },
+        {
+            "name": "cold-start-fresh",
+            "status": "FAIL"
+        },
+        {
+            "message": "Structural memory consistency checks executed.",
+            "name": "memory-consistency",
+            "status": "PASS"
+        },
+        {
+            "message": "Sequence continuity check executed.",
+            "name": "sequence-continuity",
+            "status": "PASS"
+        }
+    ],
+    "durableSequence": 482,
+    "errors": [
+        "Persisted cold-start validation is missing, failed, or stale."
+    ],
+    "productionSequence": 482,
+    "status": "FAIL",
+    "unsupportedValidations": [
+    ],
+    "warnings": [
+    ]
+}

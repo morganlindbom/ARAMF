@@ -1,0 +1,38 @@
+{
+    "payloadsEdited": false,
+    "phase1READMEEdited": false,
+    "phase1StatementUnchanged": "RECONSTRUCTED - exact complete pre-rollback byte state was not available for all files.",
+    "provenance": {
+        "actor": "agent",
+        "agentId": "codex",
+        "authority": "Explicit user permission to rename only these two evidence copies and refresh canonical current derived state",
+        "authorizingTask": "APPROVED - PREFLIGHT RECOVERY ONLY",
+        "tool": "preflight-recovery production-service driver"
+    },
+    "relocations": [
+        {
+            "byteIdentical": true,
+            "historicalEvidenceNotLiveState": true,
+            "newByteCount": 219,
+            "newPath": "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/candidates/current-state.snapshot.md",
+            "newSHA256": "230e4183ed8f157fc5595a42077ae0b35535b8c319e6d5160434cc61309493c7",
+            "oldPath": "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/candidates/current-state.md",
+            "originalByteCount": 219,
+            "originalSHA256": "230e4183ed8f157fc5595a42077ae0b35535b8c319e6d5160434cc61309493c7",
+            "reason": "Evidence-only filename collided with reserved live current-state.md authority check; payload is historical evidence, not live state",
+            "timestamp": "2026-09-27T09:18:21Z"
+        },
+        {
+            "byteIdentical": true,
+            "historicalEvidenceNotLiveState": true,
+            "newByteCount": 204,
+            "newPath": "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/logical-before/current-state.snapshot.md",
+            "newSHA256": "e92ebc9873a933e1344c363568f21dd48e02576d04fc926ed051912a9422b338",
+            "oldPath": "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/logical-before/current-state.md",
+            "originalByteCount": 204,
+            "originalSHA256": "e92ebc9873a933e1344c363568f21dd48e02576d04fc926ed051912a9422b338",
+            "reason": "Evidence-only filename collided with reserved live current-state.md authority check; payload is historical evidence, not live state",
+            "timestamp": "2026-09-27T09:18:21Z"
+        }
+    ]
+}

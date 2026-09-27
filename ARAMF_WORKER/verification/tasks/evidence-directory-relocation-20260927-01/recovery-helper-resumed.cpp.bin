@@ -1,0 +1,144 @@
+#define main reconstructionUtilityMain
+#include "memory-reconstruction.cpp"
+#undef main
+#include "core/ProjectModel.h"
+#include "core/ProjectPersistence.h"
+#include "core/WorkerTaskServices.h"
+#include "core/ContextCoordinationService.h"
+#include "core/CertificationFreshness.h"
+#include "core/Services.h"
+
+QJsonObject readObject(const QString& path){return parsed(bytes(path)).object();}
+QJsonObject treeManifest(const QString& path){
+    require(QFileInfo(path).isDir()&&!QFileInfo(path).isSymLink(),"Not an ordinary snapshot directory");
+    QJsonObject files;QJsonArray directories; qint64 total=0;
+    QDirIterator it(path,QDir::Files|QDir::Dirs|QDir::NoDotAndDotDot|QDir::Hidden|QDir::System,QDirIterator::Subdirectories);
+    while(it.hasNext()){
+        const auto file=it.next();const QFileInfo info(file);require(!info.isSymLink(),"Snapshot symlink forbidden");
+        const auto relative=QDir(QFileInfo(path).absoluteFilePath()).relativeFilePath(info.absoluteFilePath());
+        if(info.isDir()){directories.append(relative);continue;}
+        require(info.isFile(),"Unsupported snapshot entry");const auto data=bytes(file);total+=data.size();
+        files.insert(relative,QJsonObject{{"size",data.size()},{"sha256",hash(data)}});
+    }
+    return {{"files",files},{"directories",directories},{"fileCount",files.size()},{"totalBytes",total},
+            {"aggregateSHA256",hash(QJsonDocument(files).toJson(QJsonDocument::Compact))}};
+}
+QJsonObject freshnessReport(){
+    QJsonObject result;
+    for(const auto&s:QStringList{"F1","F2","F3","F4","P1","P2","P3","P4","P5","S1","S2","S3","S4","S5","S6"})
+        result.insert(s,CertificationFreshnessService::evaluate(s,root).toJson());
+    return result;
+}
+int main(int argc,char**argv){
+ QCoreApplication app(argc,argv);
+ try{
+    root=QDir::currentPath();area="ARAMF_WORKER/verification/tasks/evidence-directory-relocation-20260927-01";
+    const bool resume=app.arguments().size()==2&&app.arguments()[1]=="--resume";
+    require(resume||!QFileInfo::exists(area),"Do not overwrite existing evidence");emptyIndex();
+    const auto startingHead=git({"rev-parse","HEAD"}).trimmed();require(startingHead=="cb4ba92048c30a3fd8a5c41014dbfab0d54d3a12","Unexpected HEAD");
+    const auto before=resume?readObject(area+"/baseline.json"):snapshot();
+    if(!resume){
+        json(area+"/baseline.json",before);
+        add(area+"/status-before.txt",git({"status","--short"}));
+        add(area+"/recovery-helper.cpp.bin",bytes("build/evidence-directory-recovery.cpp"));
+        add(area+"/utility-helper.cpp.bin",bytes("build/memory-reconstruction.cpp"));
+    } else add(area+"/recovery-helper-resumed.cpp.bin",bytes("build/evidence-directory-recovery.cpp"));
+    // Flat archive filenames: never introduce reserved live filenames or roots.
+    const QStringList currentOutputs{"ARAMF_WORKER/verification/verification-result.json","ARAMF_WORKER/verification/latest-validation.json","ARAMF_WORKER/memory/memory-consistency-validation.json"};
+    if(!resume)for(const auto&p:currentOutputs)add(area+"/previous-"+QFileInfo(p).fileName()+".bin",bytes(p));
+    QJsonArray plan;
+    if(!resume)for(const auto& task:QStringList{"rollback-repair-20260927-01","preflight-recovery-20260927-01"}){
+        const auto parent="ARAMF_WORKER/verification/tasks/"+task+"/before/ARAMF_WORKER";
+        const auto oldPath=parent+"/memory",newPath=parent+"/memory-snapshots";
+        const auto actual=QFileInfo(oldPath).canonicalFilePath();const auto resolvedParent=QFileInfo(parent).canonicalFilePath();
+        require(!actual.isEmpty()&&actual==resolvedParent+"/memory"&&resolvedParent.startsWith(root+"/ARAMF_WORKER/verification/tasks/"),"Rename escapes exact intended parent");
+        require(!QFileInfo(newPath).exists()&&!QFileInfo(newPath).isSymLink(),"Destination already exists");
+        plan.append(QJsonObject{{"oldDirectory",oldPath},{"newDirectory",newPath},{"resolvedOldDirectory",actual},
+            {"resolvedNewDirectory",resolvedParent+"/memory-snapshots"},{"before",treeManifest(oldPath)}});
+    }
+    if(resume){
+        const auto captured=readObject(area+"/relocation-plan.json").value("directories").toArray();
+        require(captured.size()==2,"Unexpected captured plan");
+        auto observedExpected=before;
+        for(const auto&v:captured){
+            auto r=v.toObject();const auto oldPath=r.value("oldDirectory").toString(),newPath=r.value("newDirectory").toString();
+            require((oldPath=="ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/before/ARAMF_WORKER/memory"
+                ||oldPath=="ARAMF_WORKER/verification/tasks/preflight-recovery-20260927-01/before/ARAMF_WORKER/memory")&&newPath==oldPath+"-snapshots","Unexpected relocation target");
+            auto b=r.value("before").toObject();QJsonObject normalized;
+            const auto files=b.value("files").toObject();
+            for(auto i=files.begin();i!=files.end();++i){require(i.key().startsWith(oldPath+'/'),"Unexpected original manifest key");normalized.insert(i.key().mid(oldPath.size()+1),i.value());}
+            b.insert("files",normalized);b.insert("aggregateSHA256",hash(QJsonDocument(normalized).toJson(QJsonDocument::Compact)));r.insert("before",b);
+            const bool movedAlready=!QFileInfo::exists(oldPath)&&QFileInfo(newPath).isDir();
+            require(movedAlready||(QFileInfo(oldPath).isDir()&&!QFileInfo::exists(newPath)),"Ambiguous resume state");
+            const auto existing=movedAlready?newPath:oldPath;
+            require(QFileInfo(existing).canonicalFilePath()==QFileInfo(oldPath).absolutePath()+(movedAlready?"/memory-snapshots":"/memory"),"Resume target escaped parent");
+            require(treeManifest(existing)==b,"Captured byte/size/count evidence does not match resumed state");
+            if(movedAlready)for(const auto&p:before.keys())if(p.startsWith(oldPath+'/')){observedExpected.remove(p);observedExpected.insert(newPath+p.mid(oldPath.size()),before.value(p));}
+            plan.append(r);
+        }
+        compareSnapshot(observedExpected);
+    }
+    const QJsonObject provenance{{"actor","agent"},{"agentId","codex"},{"tool","evidence-directory-recovery production-service driver"},
+      {"authorizingTask","APPROVED - RESOLVE ONLY THE TWO EVIDENCE DIRECTORY NAME COLLISIONS"},
+      {"authority","Explicit current user authorization; preflight recovery only"}};
+    json(area+(resume?"/relocation-plan-relative-keys.json":"/relocation-plan.json"),{{"directories",plan},{"provenance",provenance},{"timestamp",QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}});
+    if(!resume)compareSnapshot(before);auto expected=before;QJsonArray moved;
+    for(const auto&v:plan){
+        auto record=v.toObject();const auto oldPath=record.value("oldDirectory").toString(),newPath=record.value("newDirectory").toString();
+        if(QFileInfo::exists(oldPath)){
+            require(treeManifest(oldPath)==record.value("before").toObject(),"Directory changed before move");
+            require(QDir().rename(oldPath,newPath),"Exact directory path rename failed");
+        }else require(resume&&treeManifest(newPath)==record.value("before").toObject(),"Unexpected absent original directory");
+        const auto after=treeManifest(newPath);require(after==record.value("before").toObject(),"Byte/count/path mismatch after rename");
+        require(!QFileInfo::exists(oldPath),"Old directory still exists");
+        record.insert("after",after);record.insert("bytePreservation","PASS");record.insert("historicalEvidenceNotLiveState",true);
+        record.insert("reason","evidence-only directory collided with canonical active-memory discovery");
+        record.insert("timestamp",QDateTime::currentDateTimeUtc().toString(Qt::ISODate));moved.append(record);
+        for(const auto&p:before.keys())if(p.startsWith(oldPath+'/')){expected.remove(p);expected.insert(newPath+p.mid(oldPath.size()),before.value(p));}
+    }
+    json(area+"/relocation-amendment.json",{{"directories",moved},{"provenance",provenance},{"noEvidenceContentChanges",true},{"noFilesDeleted",true},{"phase1PackageUntouched",true}});
+    compareSnapshot(expected);
+    ProjectModel model;QString error;require(ProjectPersistence().load(&model,"ARAMF_WORKER.aramf.json",&error),error);
+    require(QFileInfo(model.projectPath()).canonicalFilePath()==QFileInfo(root).canonicalFilePath()&&model.workerNameSuffix().isEmpty(),"Wrong project selected");
+    const auto fresh=freshnessReport();json(area+"/freshness-after-renames.json",fresh);
+    for(const auto&s:fresh.keys())require(fresh.value(s).toObject().value("status")=="FRESH","Stale certificate: "+s);
+    const auto context=ContextCoordinationService::validate(model);
+    const auto mem=ProjectMemory().validate(root,nullptr,false);
+    require(context.value("valid")==true&&mem.value("status")=="PASS","Existing context/memory no longer valid; stop without regeneration");
+    // Dry check first: no writes if an additional competing authority exists.
+    const auto preview=VerificationServices().verify(model,model.generationOptions(),false);
+    json(area+"/verification-read-only.json",{{"summary",preview.summary},{"evidence",preview.evidence}});
+    require(preview.overallStatus==VerificationStatus::Pass,"New worker verification blocker; do not rename anything else");
+    // Normal canonical persistence also saves its memory-validation report.
+    const auto verification=VerificationServices().verify(model,model.generationOptions());
+    json(area+"/verification-persisted.json",{{"summary",verification.summary},{"evidence",verification.evidence}});
+    require(verification.overallStatus==VerificationStatus::Pass,"Canonical persisted worker verification failed");
+    auto stored=readObject("ARAMF_WORKER/verification/verification-result.json");stored.remove("_file");stored.remove("checkedAt");
+    auto storedSummary=readObject("ARAMF_WORKER/verification/latest-validation.json");storedSummary.remove("_file");
+    require(stored==verification.evidence&&storedSummary==verification.summary,"Canonical verification readback mismatch");
+    QJsonArray changed;
+    for(const auto&p:currentOutputs){const auto currentHash=hash(bytes(p));if(expected.value(p)!=currentHash)changed.append(p);expected.insert(p,currentHash);}
+    compareSnapshot(expected);emptyIndex();
+    const auto finalFresh=freshnessReport();json(area+"/freshness-final.json",finalFresh);
+    for(const auto&s:finalFresh.keys())require(finalFresh.value(s).toObject().value("status")=="FRESH","Stale certificate: "+s);
+    add(area+"/SCOPE.md",QByteArray("# Evidence directory relocation only\n\nTwo explicitly authorized directory renames preserve every snapshot byte.\nNo Phase 1 edit, source change, recorder event, context/cold-start regeneration, staging or commit.\nVerificationServices persisted current verification plus its mandatory memory-validation report.\nPrevious current reports are preserved as flat previous-*.bin snapshots.\nrelocation-amendment.json contains complete recursive before/after manifests and provenance.\nEarlier blocked reports remain unchanged at their original locations except the two authorized backup-directory relocations.\nPhase 2A PREPARE is recorded separately; no execution is authorized by this task.\n"));
+    const auto original=readObject("ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/implementation-contract.json").value("contract").toObject();
+    const auto contract=WorkerTaskServices::prepare(model,WorkerTaskRequest::fromJson(original.value("request").toObject()));
+    json(area+"/phase2a-prepare.json",{{"contract",contract}});
+    QProcess diff;diff.start("git",{"diff","--check"});require(diff.waitForFinished(60000),"diff timeout");const auto diffOutput=diff.readAllStandardOutput()+diff.readAllStandardError();
+    git({"diff","--cached","--check"});emptyIndex();compareSnapshot(expected);
+    const auto ready=contract.value("preflight").toObject().value("status").toString();
+    json(area+"/result.json",{{"check","evidence-directory-relocation"},{"contractId",contract.value("contractId")},{"status",ready.startsWith("READY")&&diff.exitCode()==0?"PASS":"FAIL"},
+        {"head",QString::fromUtf8(startingHead)},{"preflight",contract.value("preflight")},{"relocations",moved},{"workerVerification",verification.summary},
+        {"context",context},{"memory",ProjectMemory().validate(root,nullptr,false)},{"coldStart",readObject("ARAMF_WORKER/memory/cold-start-validation.json")},
+        {"freshness",finalFresh},{"eventLog",eventSummary(bytes("ARAMF_WORKER/memory/event-log.jsonl"))},{"changedCurrentFiles",changed},
+        {"allOtherExistingFilesUnchanged",true},{"phase1Unchanged",true},{"noEvidenceBytesChanged",true},{"noEvidenceFilesDeleted",true},
+        {"stagingEmpty",true},{"gitStatus",QString::fromUtf8(git({"status","--short"}))},{"gitDiffCheckExit",diff.exitCode()},{"gitDiffCheckOutput",QString::fromUtf8(diffOutput)},
+        {"gitCachedDiffCheckExit",0},{"implementationStarted",false}});
+    compareSnapshot(expected);require(git({"rev-parse","HEAD"}).trimmed()==startingHead,"HEAD changed");
+    QTextStream(stdout)<<QJsonDocument(contract.value("preflight").toObject()).toJson();
+    require(ready.startsWith("READY")&&diff.exitCode()==0,"Final checks not READY/PASS");
+    QTextStream(stdout)<<"PASS: directory bytes preserved, worker verification PASS, all certifications FRESH, Phase 2A "<<ready<<". STOP before implementation."<<Qt::endl;
+    return 0;
+ }catch(const std::exception&e){QTextStream(stderr)<<"STOP: "<<e.what()<<Qt::endl;return 1;}
+}

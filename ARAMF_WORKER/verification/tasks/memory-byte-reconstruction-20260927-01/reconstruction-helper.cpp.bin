@@ -1,0 +1,236 @@
+#include "core/ProjectMemory.h"
+#include <QCoreApplication>
+#include <QCryptographicHash>
+#include <QDateTime>
+#include <QDir>
+#include <QDirIterator>
+#include <QFile>
+#include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QProcess>
+#include <QSaveFile>
+#include <QSet>
+#include <QStringDecoder>
+#include <QTextStream>
+#include <stdexcept>
+
+// One-time recovery/evidence utility, not ARAMF product implementation.
+const QStringList names{"decisions.md", "event-log.jsonl", "memory-manifest.json",
+                        "current-state.md", "memory-consistency-validation.json"};
+const QString memory = "ARAMF_WORKER/memory/";
+QString root, area;
+void require(bool ok, const QString& reason) { if (!ok) throw std::runtime_error(reason.toStdString()); }
+QByteArray bytes(const QString& path) {
+    QFile f(path); require(f.open(QIODevice::ReadOnly), "Cannot read " + path); return f.readAll();
+}
+QString hash(const QByteArray& data) { return QString::fromLatin1(QCryptographicHash::hash(data, QCryptographicHash::Sha256).toHex()); }
+void add(const QString& path, const QByteArray& data) {
+    require(!QFileInfo::exists(path), "Evidence already exists: " + path);
+    require(QDir().mkpath(QFileInfo(path).absolutePath()), "Cannot create evidence parent");
+    QFile f(path); require(f.open(QIODevice::WriteOnly | QIODevice::NewOnly), "Cannot create evidence");
+    require(f.write(data) == data.size() && f.flush(), "Evidence write failure"); f.close();
+    require(bytes(path) == data, "Evidence readback failure");
+}
+void json(const QString& path, const QJsonObject& obj) { add(path, QJsonDocument(obj).toJson()); }
+QJsonDocument parsed(const QByteArray& data) {
+    QJsonParseError e; auto d = QJsonDocument::fromJson(data, &e);
+    require(e.error == QJsonParseError::NoError && !d.isNull(), "JSON parse error: " + e.errorString()); return d;
+}
+QByteArray git(const QStringList& args, int expected = 0) {
+    QProcess p; p.setWorkingDirectory(root); p.start("git", args);
+    require(p.waitForFinished(60000), "Git timeout");
+    require(p.exitCode() == expected, "Git failed: " + QString::fromUtf8(p.readAllStandardError())); return p.readAllStandardOutput();
+}
+QJsonObject distribution(const QByteArray& b) {
+    int crcrlf=0, crlf=0, lf=0, bare=0;
+    for (qsizetype i=0; i<b.size(); ++i) {
+        if (b.mid(i,3)=="\r\r\n") {++crcrlf; i+=2;}
+        else if (b.mid(i,2)=="\r\n") {++crlf; ++i;}
+        else if (b[i]=='\n') ++lf;
+        else if (b[i]=='\r') ++bare;
+    }
+    QStringDecoder decoder(QStringDecoder::Utf8); QString decoded=decoder(b); Q_UNUSED(decoded);
+    require(!decoder.hasError(), "Invalid UTF-8; reconstruction not authorized");
+    const bool bom=b.startsWith(QByteArray::fromHex("efbbbf"));
+    return {{"CRCRLF",crcrlf},{"CRLF",crlf},{"bareLF",lf},{"bareCR",bare},
+            {"encoding","UTF-8 (validated)"},{"utf8BOM",bom},{"bytes",b.size()},{"sha256",hash(b)}};
+}
+QByteArray logical(const QByteArray& b) {
+    const auto d=distribution(b); require(d.value("bareCR").toInt()==0, "Unexpected CR outside newline");
+    QByteArray result=b; result.replace("\r\r\n","\n"); result.replace("\r\n","\n"); return result;
+}
+QByteArray candidate(const QByteArray& raw) {
+    const auto d=distribution(raw);
+    require(d.value("CRCRLF").toInt()>0 && d.value("CRLF").toInt()==0
+            && d.value("bareLF").toInt()==0 && d.value("bareCR").toInt()==0,
+            "Not the isolated uniform CRCRLF defect; stop");
+    // Inverse of the observed Windows Qt Text write, operating on bytes only.
+    QByteArray out;
+    for (qsizetype i=0; i<raw.size(); ++i) {
+        if (raw[i]=='\r' && i+1<raw.size() && raw[i+1]=='\n') continue;
+        out.append(raw[i]);
+    }
+    require(logical(raw)==logical(out), "Logical content differs"); return out;
+}
+QJsonObject eventSummary(const QByteArray& b, QJsonArray* parsedEvents=nullptr) {
+    QJsonArray values, duplicates; QSet<QString> ids; int count=0; bool continuous=true;
+    for (auto line:b.split('\n')) {
+        if (line.trimmed().isEmpty()) continue;
+        auto d=parsed(line); require(d.isObject(), "Non-object event"); auto e=d.object();
+        const auto id=e.value("eventId").toString(); require(!id.isEmpty(), "Missing event ID");
+        if (ids.contains(id)) duplicates.append(id); ids.insert(id); ++count;
+        continuous &= e.value("sequenceNumber").toInt(-1)==count; values.append(e);
+    }
+    if (parsedEvents) *parsedEvents=values;
+    return {{"eventCount",count},{"uniqueEventIds",ids.size()},{"duplicateIds",duplicates},
+            {"firstSequence",values.first().toObject().value("sequenceNumber")},
+            {"lastSequence",values.last().toObject().value("sequenceNumber")},
+            {"sequenceContinuous",continuous},{"parseValid",true},{"wholeFileHash",hash(b)}};
+}
+QJsonObject snapshot() {
+    QJsonObject result;
+    auto listed=git({"ls-files","--cached","--others","--exclude-standard","-z"}).split('\0');
+    for (const auto& item:listed) {
+        if (item.isEmpty()) continue; const auto path=QString::fromUtf8(item);
+        if (path.startsWith(area+"/")) continue;
+        require(!QFileInfo(path).isSymLink(), "Unexpected symlink: "+path);
+        result.insert(path,hash(bytes(path)));
+    }
+    const QStringList protectedDirs{"test_250/runs", "test_550/runs",
+        "../../C++Summer 2026 Project7/Components"};
+    for (const auto& dir:protectedDirs) {
+        require(QFileInfo(dir).isDir(), "Missing protected directory: "+dir);
+        QDirIterator it(dir,QDir::Files|QDir::Hidden|QDir::System,QDirIterator::Subdirectories);
+        while(it.hasNext()) {
+            const auto path=it.next(); require(!QFileInfo(path).isSymLink(), "Protected symlink");
+            result.insert(QDir(root).relativeFilePath(QFileInfo(path).absoluteFilePath()),hash(bytes(path)));
+        }
+    }
+    return result;
+}
+void compareSnapshot(const QJsonObject& expected) { require(snapshot()==expected,"Repository/protected state changed outside permitted reconstruction"); }
+QJsonObject validateMemory() { QString error; auto result=ProjectMemory().validate(root,&error,false); result.insert("callError",error); return result; }
+void emptyIndex() { require(git({"diff","--cached","--name-only"}).trimmed().isEmpty(),"Index is not empty"); }
+int main(int argc,char** argv) {
+ QCoreApplication app(argc,argv);
+ try {
+    const auto args=app.arguments(); require(args.size()==3,"Usage: helper audit|apply evidence-relative-path");
+    root=QDir::currentPath(); area=args[2];
+    require(area.startsWith("ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-")
+            && !area.contains("..") && !QDir::isAbsolutePath(area),"Invalid evidence boundary");
+    emptyIndex();
+    if(args[1]=="audit") {
+        require(!QFileInfo::exists(area),"Use a new evidence directory");
+        const auto observed=snapshot();
+        const auto oldProtected=parsed(bytes("build/named-worker-protected.json")).object().value("files").toObject();
+        for(auto it=oldProtected.begin();it!=oldProtected.end();++it)
+            require(hash(bytes(it.key()))==it.value().toString(),"Protected baseline mismatch: "+it.key());
+        json(area+"/repository-before.json",observed);
+        add(area+"/git-status-before.txt",git({"status","--short"}));
+        add(area+"/head.txt",git({"rev-parse","HEAD"}));
+        add(area+"/prepare-contract.bin",bytes("build/named-worker-contract.json"));
+        add(area+"/protected-baseline.bin",bytes("build/named-worker-protected.json"));
+        add(area+"/ProjectMemory.cpp.bin",bytes("src/core/ProjectMemory.cpp"));
+        add(area+"/failed-closeout-helper.cpp.bin",bytes("build/named-worker-verify.cpp"));
+        add(area+"/reconstruction-helper.cpp.bin",bytes("build/memory-reconstruction.cpp"));
+        QJsonObject current;
+        // Capture all five raw files and logical views BEFORE producing any candidate.
+        for(const auto& name:names) {
+            const auto raw=bytes(memory+name); add(area+"/before/"+name+".bin",raw);
+            auto record=distribution(raw); record.insert("relativePath",memory+name);
+            add(area+"/logical-before/"+name,logical(raw));
+            record.insert("logicalHash",hash(logical(raw)));
+            if(name=="event-log.jsonl") { QJsonArray events; record.insert("events",eventSummary(raw,&events)); add(area+"/events-before.json",QJsonDocument(events).toJson()); }
+            else if(name.endsWith(".json")) { auto d=parsed(raw); record.insert("parsedContent",d.object()); }
+            current.insert(name,record);
+        }
+        json(area+"/current-state-evidence.json",current);
+        const auto contract=parsed(bytes("build/named-worker-contract.json")).object().value("contract").toObject();
+        QJsonObject records; bool all=true;
+        for(const auto& name:names) {
+            const auto raw=bytes(area+"/before/"+name+".bin"); const auto out=candidate(raw);
+            add(area+"/candidates/"+name,out);
+            // Exercise the actual Qt writer used by failed rollback, only in new evidence files.
+            const auto probe=area+"/qt-text-replay/"+name+".bin";
+            require(QDir().mkpath(QFileInfo(probe).absolutePath()),"Probe directory failure");
+            require(!QFileInfo::exists(probe),"Probe exists");
+            QSaveFile f(probe); require(f.open(QIODevice::WriteOnly|QIODevice::Text),"Probe open failed");
+            require(f.write(out)==out.size() && f.commit(),"Probe write failed");
+            require(bytes(probe)==raw,"Actual Qt text writer does not reproduce current bytes");
+            QJsonObject r{{"path",memory+name},{"current",distribution(raw)},{"candidate",distribution(out)},
+                {"logicalEquality",logical(raw)==logical(out)},{"logicalHash",hash(logical(out))},
+                {"qtTextReplayEqualsCurrentBytes",true},{"transformation","Remove exactly one CR immediately before each LF; CRCRLF -> CRLF; all other bytes untouched"},
+                {"earlierPrepareBaselineHash",contract.value("baseline").toObject().value(memory+name)},
+                {"completeImmediatePreRollbackHashAvailable",false},{"classification","RECONSTRUCTION"}};
+            if(name.endsWith(".json")) {require(parsed(raw)==parsed(out),"Parsed JSON differs");r.insert("parsedEquality",true);}
+            if(name=="decisions.md") {
+                require(hash(out)==contract.value("baseline").toObject().value(memory+name).toString(),"Decisions historical hash mismatch");
+                r.insert("exactEarlierBaselineMatch",true);
+                r.insert("decisionRecordCount",out.count("- Decision-ID:"));
+            }
+            if(name=="event-log.jsonl") {
+                QJsonArray before,after;const auto b=eventSummary(raw,&before),a=eventSummary(out,&after);
+                require(before==after && a.value("eventCount")==482 && a.value("uniqueEventIds")==482
+                    && a.value("sequenceContinuous")==true,"Event invariant violation");
+                const auto length=contract.value("historyLengths").toObject().value(memory+name).toInteger();
+                const auto expected=contract.value("baseline").toObject().value(memory+name).toString();
+                require(length>0 && hash(out.left(length))==expected,"Historical prefix mismatch");
+                r.insert("beforeEvents",b);r.insert("afterEvents",a);r.insert("parsedEquality",true);
+                r.insert("historicalPrefixBytes",length);r.insert("historicalPrefixHash",expected);
+                r.insert("currentRawPrefixHash",hash(raw.left(length)));r.insert("candidatePrefixMatches",true);
+            }
+            r.insert("allChecksPass",true);records.insert(name,r);
+        }
+        const auto canonical=validateMemory(); json(area+"/memory-consistency-before.json",canonical);
+        compareSnapshot(observed); emptyIndex();
+        json(area+"/reconstruction-manifest.json",{{"classification","RECONSTRUCTION"},
+            {"statement","RECONSTRUCTED - exact complete pre-rollback byte state was not available for all files."},
+            {"evidenceGap","No complete immediate pre-rollback full-file hashes exist for all five files. Earlier PREPARE hash proves decisions candidate and 213608-byte event prefix only. Later events through 482 are retained verbatim except newline representation. No missing content inferred."},
+            {"sourceTrace","ProjectMemory.cpp snapshotFiles reads raw bytes; recordDecision captures these five paths; restoreSnapshots delegates raw snapshots to writeTextFile using QSaveFile WriteOnly|Text. Failed closeout helper records valid checks before rejected duplicate-topic decision. Original snapshot storage was in-process only."},
+            {"authorization","Explicit revised Phase 1 user authorization: deterministic reconstruction only; no event writes, implementation repair, staging, commit or HVD change."},
+            {"files",records},{"allCandidatesPass",all},{"protectedHistoricalBaselineMatches",oldProtected.size()},
+            {"createdAt",QDateTime::currentDateTimeUtc().toString(Qt::ISODate)}});
+        QTextStream(stdout)<<"AUDIT PASS; all five candidates verified; tracked files unchanged; "<<area<<Qt::endl;
+    } else if(args[1]=="apply") {
+        const auto manifest=parsed(bytes(area+"/reconstruction-manifest.json")).object();
+        require(manifest.value("allCandidatesPass")==true,"Candidates not approved");
+        auto expected=parsed(bytes(area+"/repository-before.json")).object(); compareSnapshot(expected);
+        require(!QFileInfo::exists(area+"/after.json"),"Already applied");
+        const auto records=manifest.value("files").toObject();
+        for(const auto& name:names) {
+            const auto r=records.value(name).toObject(); const auto current=bytes(memory+name), out=bytes(area+"/candidates/"+name);
+            require(hash(current)==r.value("current").toObject().value("sha256").toString(),"Current hash changed");
+            require(hash(out)==r.value("candidate").toObject().value("sha256").toString() && candidate(current)==out,"Candidate changed");
+        }
+        // Only these five existing, explicitly authorized targets are replaced atomically, in binary mode.
+        for(const auto& name:names) {
+            const auto out=bytes(area+"/candidates/"+name); QSaveFile f(memory+name);
+            require(f.open(QIODevice::WriteOnly),"Binary replacement open failed");
+            require(f.write(out)==out.size() && f.commit(),"Binary replacement failed");
+            require(bytes(memory+name)==out,"Replacement readback mismatch");expected.insert(memory+name,hash(out));
+        }
+        compareSnapshot(expected);emptyIndex();
+        const auto validation=validateMemory();json(area+"/memory-consistency-after.json",validation);
+        compareSnapshot(expected);emptyIndex();
+        QProcess diff;diff.setWorkingDirectory(root);diff.start("git",{"diff","--check"});require(diff.waitForFinished(60000),"Diff check timeout");
+        add(area+"/git-diff-check.txt",diff.readAllStandardOutput()+diff.readAllStandardError());
+        add(area+"/git-status-after.txt",git({"status","--short"}));
+        git({"diff","--cached","--check"});
+        const auto event=eventSummary(bytes(memory+"event-log.jsonl"));
+        const auto contract=parsed(bytes(area+"/prepare-contract.bin")).object().value("contract").toObject();
+        const auto prefix=hash(bytes(memory+"event-log.jsonl").left(contract.value("historyLengths").toObject().value(memory+"event-log.jsonl").toInteger()));
+        require(prefix==contract.value("baseline").toObject().value(memory+"event-log.jsonl").toString(),"Final historical prefix mismatch");
+        QJsonObject after{{"classification","RECONSTRUCTION"},{"events",event},{"historicalPrefixHash",prefix},
+            {"memoryConsistency",validation.value("status")},{"diffCheckExitCode",diff.exitCode()},
+            {"onlyFivePreExistingFilesChanged",true},{"allOriginalUnrelatedAndProtectedFilesUnchanged",true},
+            {"stagingEmpty",true},{"phase2Started",false},{"hashes",QJsonObject{}}};
+        QJsonObject hashes;for(const auto& name:names)hashes.insert(memory+name,hash(bytes(memory+name)));after.insert("hashes",hashes);
+        json(area+"/after.json",after);compareSnapshot(expected);
+        QTextStream(stdout)<<QJsonDocument(after).toJson()<<Qt::endl;
+        return validation.value("status")=="PASS" && diff.exitCode()==0 ? 0:2;
+    } else require(false,"Unknown mode");
+    return 0;
+ } catch(const std::exception& e) { QTextStream(stderr)<<"STOP: "<<e.what()<<Qt::endl;return 1; }
+}

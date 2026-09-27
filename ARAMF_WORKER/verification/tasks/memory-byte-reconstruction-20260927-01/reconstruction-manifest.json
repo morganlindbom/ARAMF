@@ -1,0 +1,198 @@
+{
+    "allCandidatesPass": true,
+    "authorization": "Explicit revised Phase 1 user authorization: deterministic reconstruction only; no event writes, implementation repair, staging, commit or HVD change.",
+    "classification": "RECONSTRUCTION",
+    "createdAt": "2026-09-27T08:55:21Z",
+    "evidenceGap": "No complete immediate pre-rollback full-file hashes exist for all five files. Earlier PREPARE hash proves decisions candidate and 213608-byte event prefix only. Later events through 482 are retained verbatim except newline representation. No missing content inferred.",
+    "files": {
+        "current-state.md": {
+            "allChecksPass": true,
+            "candidate": {
+                "CRCRLF": 0,
+                "CRLF": 15,
+                "bareCR": 0,
+                "bareLF": 0,
+                "bytes": 219,
+                "encoding": "UTF-8 (validated)",
+                "sha256": "230e4183ed8f157fc5595a42077ae0b35535b8c319e6d5160434cc61309493c7",
+                "utf8BOM": false
+            },
+            "classification": "RECONSTRUCTION",
+            "completeImmediatePreRollbackHashAvailable": false,
+            "current": {
+                "CRCRLF": 15,
+                "CRLF": 0,
+                "bareCR": 0,
+                "bareLF": 0,
+                "bytes": 234,
+                "encoding": "UTF-8 (validated)",
+                "sha256": "028c9d21a3010741c9cf5c4e2a2d8dea306e66d18b7088cc0556d4981ca33889",
+                "utf8BOM": false
+            },
+            "earlierPrepareBaselineHash": "e7548a9a99be18d20660a4e1b2788794950e3f80d5231559cf53d6d669ca0f24",
+            "logicalEquality": true,
+            "logicalHash": "e92ebc9873a933e1344c363568f21dd48e02576d04fc926ed051912a9422b338",
+            "path": "ARAMF_WORKER/memory/current-state.md",
+            "qtTextReplayEqualsCurrentBytes": true,
+            "transformation": "Remove exactly one CR immediately before each LF; CRCRLF -> CRLF; all other bytes untouched"
+        },
+        "decisions.md": {
+            "allChecksPass": true,
+            "candidate": {
+                "CRCRLF": 0,
+                "CRLF": 332,
+                "bareCR": 0,
+                "bareLF": 0,
+                "bytes": 18806,
+                "encoding": "UTF-8 (validated)",
+                "sha256": "adb28a1a1f719e8f2b43dc33df004016d5699b402a721c6184f1f89cbb199e3b",
+                "utf8BOM": false
+            },
+            "classification": "RECONSTRUCTION",
+            "completeImmediatePreRollbackHashAvailable": false,
+            "current": {
+                "CRCRLF": 332,
+                "CRLF": 0,
+                "bareCR": 0,
+                "bareLF": 0,
+                "bytes": 19138,
+                "encoding": "UTF-8 (validated)",
+                "sha256": "37b6261f2b660a3b17d59430d1963fcc61e2be8d745e54d64b8483fd3a959ad8",
+                "utf8BOM": false
+            },
+            "decisionRecordCount": 16,
+            "earlierPrepareBaselineHash": "adb28a1a1f719e8f2b43dc33df004016d5699b402a721c6184f1f89cbb199e3b",
+            "exactEarlierBaselineMatch": true,
+            "logicalEquality": true,
+            "logicalHash": "4113c9c6cba1afe887f1c5f09ec1544facc087ef418215db3ef6bab026eefe7e",
+            "path": "ARAMF_WORKER/memory/decisions.md",
+            "qtTextReplayEqualsCurrentBytes": true,
+            "transformation": "Remove exactly one CR immediately before each LF; CRCRLF -> CRLF; all other bytes untouched"
+        },
+        "event-log.jsonl": {
+            "afterEvents": {
+                "duplicateIds": [
+                ],
+                "eventCount": 482,
+                "firstSequence": 1,
+                "lastSequence": 482,
+                "parseValid": true,
+                "sequenceContinuous": true,
+                "uniqueEventIds": 482,
+                "wholeFileHash": "e3e2b4dff530509fd2444c705f63787cbd0c4a9ae11dc793ad29767fcdedc288"
+            },
+            "allChecksPass": true,
+            "beforeEvents": {
+                "duplicateIds": [
+                ],
+                "eventCount": 482,
+                "firstSequence": 1,
+                "lastSequence": 482,
+                "parseValid": true,
+                "sequenceContinuous": true,
+                "uniqueEventIds": 482,
+                "wholeFileHash": "42d2e69194b7b4063d7000be3039b4a93d5e11494078e5cd43ebb5e1fd1a8d7f"
+            },
+            "candidate": {
+                "CRCRLF": 0,
+                "CRLF": 482,
+                "bareCR": 0,
+                "bareLF": 0,
+                "bytes": 219716,
+                "encoding": "UTF-8 (validated)",
+                "sha256": "e3e2b4dff530509fd2444c705f63787cbd0c4a9ae11dc793ad29767fcdedc288",
+                "utf8BOM": false
+            },
+            "candidatePrefixMatches": true,
+            "classification": "RECONSTRUCTION",
+            "completeImmediatePreRollbackHashAvailable": false,
+            "current": {
+                "CRCRLF": 482,
+                "CRLF": 0,
+                "bareCR": 0,
+                "bareLF": 0,
+                "bytes": 220198,
+                "encoding": "UTF-8 (validated)",
+                "sha256": "42d2e69194b7b4063d7000be3039b4a93d5e11494078e5cd43ebb5e1fd1a8d7f",
+                "utf8BOM": false
+            },
+            "currentRawPrefixHash": "9d3a817be6cf24d22475db8fba4e25feb5f435589147753799825136d44ee954",
+            "earlierPrepareBaselineHash": "6b7cb43a1101060274f3fc2f5a937d9769e2a7eb5ff41e86953a172432f06781",
+            "historicalPrefixBytes": 213608,
+            "historicalPrefixHash": "6b7cb43a1101060274f3fc2f5a937d9769e2a7eb5ff41e86953a172432f06781",
+            "logicalEquality": true,
+            "logicalHash": "4b93dccb021ee6dcd6ffa912004e1576ab65e60948fd8682ddd02c5e35af5250",
+            "parsedEquality": true,
+            "path": "ARAMF_WORKER/memory/event-log.jsonl",
+            "qtTextReplayEqualsCurrentBytes": true,
+            "transformation": "Remove exactly one CR immediately before each LF; CRCRLF -> CRLF; all other bytes untouched"
+        },
+        "memory-consistency-validation.json": {
+            "allChecksPass": true,
+            "candidate": {
+                "CRCRLF": 0,
+                "CRLF": 89,
+                "bareCR": 0,
+                "bareLF": 0,
+                "bytes": 2251,
+                "encoding": "UTF-8 (validated)",
+                "sha256": "93504e163cbfe7aa6ae7121f0f53bbd89536685ca6c5a3d759059af515e0cf1a",
+                "utf8BOM": false
+            },
+            "classification": "RECONSTRUCTION",
+            "completeImmediatePreRollbackHashAvailable": false,
+            "current": {
+                "CRCRLF": 89,
+                "CRLF": 0,
+                "bareCR": 0,
+                "bareLF": 0,
+                "bytes": 2340,
+                "encoding": "UTF-8 (validated)",
+                "sha256": "2e752bc2523ce2ac003610f4c04c5546d96af4d120a96a8060e4238d5dded810",
+                "utf8BOM": false
+            },
+            "earlierPrepareBaselineHash": "664c96006ad9320d47226b52c6935b71bc6b4ffd33232b4658a0eadf1b55af66",
+            "logicalEquality": true,
+            "logicalHash": "e1ffe1e1d19b286b03d41d426e178c40253881d73916166f6913c64daa923bfe",
+            "parsedEquality": true,
+            "path": "ARAMF_WORKER/memory/memory-consistency-validation.json",
+            "qtTextReplayEqualsCurrentBytes": true,
+            "transformation": "Remove exactly one CR immediately before each LF; CRCRLF -> CRLF; all other bytes untouched"
+        },
+        "memory-manifest.json": {
+            "allChecksPass": true,
+            "candidate": {
+                "CRCRLF": 0,
+                "CRLF": 9,
+                "bareCR": 0,
+                "bareLF": 0,
+                "bytes": 264,
+                "encoding": "UTF-8 (validated)",
+                "sha256": "7218e1eba499096d7de421fb6bc71383a8ab77c2038ac767e70dfc614cfbfb8c",
+                "utf8BOM": false
+            },
+            "classification": "RECONSTRUCTION",
+            "completeImmediatePreRollbackHashAvailable": false,
+            "current": {
+                "CRCRLF": 9,
+                "CRLF": 0,
+                "bareCR": 0,
+                "bareLF": 0,
+                "bytes": 273,
+                "encoding": "UTF-8 (validated)",
+                "sha256": "3269eef6ce1ed9711fd6902132c6091ebaafa6792b888bc89b0dd206e624e601",
+                "utf8BOM": false
+            },
+            "earlierPrepareBaselineHash": "693058d57feb348b410a7de0d179bc8e97338ea3d0818b8492de8d1b11419555",
+            "logicalEquality": true,
+            "logicalHash": "b2f90479c833e32068e2bf22c8f8f7f696b445c4eebcf0565d63f59af1ab01eb",
+            "parsedEquality": true,
+            "path": "ARAMF_WORKER/memory/memory-manifest.json",
+            "qtTextReplayEqualsCurrentBytes": true,
+            "transformation": "Remove exactly one CR immediately before each LF; CRCRLF -> CRLF; all other bytes untouched"
+        }
+    },
+    "protectedHistoricalBaselineMatches": 194,
+    "sourceTrace": "ProjectMemory.cpp snapshotFiles reads raw bytes; recordDecision captures these five paths; restoreSnapshots delegates raw snapshots to writeTextFile using QSaveFile WriteOnly|Text. Failed closeout helper records valid checks before rejected duplicate-topic decision. Original snapshot storage was in-process only.",
+    "statement": "RECONSTRUCTED - exact complete pre-rollback byte state was not available for all files."
+}

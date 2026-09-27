@@ -1,0 +1,102 @@
+{
+    "directories": [
+        {
+            "after": {
+                "aggregateSHA256": "1034c17948a118810d6c8798c4536ca4e5c4980957cdaeeb92f5f819b60d4766",
+                "directories": [
+                ],
+                "fileCount": 2,
+                "files": {
+                    "cold-start-validation.json.bin": {
+                        "sha256": "7be1dba922ac12eeec72078a5a6f0a019b5c38bf79822e02d18b20729f544097",
+                        "size": 2977
+                    },
+                    "memory-consistency-validation.json.bin": {
+                        "sha256": "93504e163cbfe7aa6ae7121f0f53bbd89536685ca6c5a3d759059af515e0cf1a",
+                        "size": 2251
+                    }
+                },
+                "totalBytes": 5228
+            },
+            "before": {
+                "aggregateSHA256": "1034c17948a118810d6c8798c4536ca4e5c4980957cdaeeb92f5f819b60d4766",
+                "directories": [
+                ],
+                "fileCount": 2,
+                "files": {
+                    "cold-start-validation.json.bin": {
+                        "sha256": "7be1dba922ac12eeec72078a5a6f0a019b5c38bf79822e02d18b20729f544097",
+                        "size": 2977
+                    },
+                    "memory-consistency-validation.json.bin": {
+                        "sha256": "93504e163cbfe7aa6ae7121f0f53bbd89536685ca6c5a3d759059af515e0cf1a",
+                        "size": 2251
+                    }
+                },
+                "totalBytes": 5228
+            },
+            "bytePreservation": "PASS",
+            "historicalEvidenceNotLiveState": true,
+            "newDirectory": "ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/before/ARAMF_WORKER/memory-snapshots",
+            "oldDirectory": "ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/before/ARAMF_WORKER/memory",
+            "reason": "evidence-only directory collided with canonical active-memory discovery",
+            "resolvedNewDirectory": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/before/ARAMF_WORKER/memory-snapshots",
+            "resolvedOldDirectory": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/before/ARAMF_WORKER/memory",
+            "timestamp": "2026-09-27T09:28:21Z"
+        },
+        {
+            "after": {
+                "aggregateSHA256": "1034c17948a118810d6c8798c4536ca4e5c4980957cdaeeb92f5f819b60d4766",
+                "directories": [
+                ],
+                "fileCount": 2,
+                "files": {
+                    "cold-start-validation.json.bin": {
+                        "sha256": "7be1dba922ac12eeec72078a5a6f0a019b5c38bf79822e02d18b20729f544097",
+                        "size": 2977
+                    },
+                    "memory-consistency-validation.json.bin": {
+                        "sha256": "93504e163cbfe7aa6ae7121f0f53bbd89536685ca6c5a3d759059af515e0cf1a",
+                        "size": 2251
+                    }
+                },
+                "totalBytes": 5228
+            },
+            "before": {
+                "aggregateSHA256": "1034c17948a118810d6c8798c4536ca4e5c4980957cdaeeb92f5f819b60d4766",
+                "directories": [
+                ],
+                "fileCount": 2,
+                "files": {
+                    "cold-start-validation.json.bin": {
+                        "sha256": "7be1dba922ac12eeec72078a5a6f0a019b5c38bf79822e02d18b20729f544097",
+                        "size": 2977
+                    },
+                    "memory-consistency-validation.json.bin": {
+                        "sha256": "93504e163cbfe7aa6ae7121f0f53bbd89536685ca6c5a3d759059af515e0cf1a",
+                        "size": 2251
+                    }
+                },
+                "totalBytes": 5228
+            },
+            "bytePreservation": "PASS",
+            "historicalEvidenceNotLiveState": true,
+            "newDirectory": "ARAMF_WORKER/verification/tasks/preflight-recovery-20260927-01/before/ARAMF_WORKER/memory-snapshots",
+            "oldDirectory": "ARAMF_WORKER/verification/tasks/preflight-recovery-20260927-01/before/ARAMF_WORKER/memory",
+            "reason": "evidence-only directory collided with canonical active-memory discovery",
+            "resolvedNewDirectory": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/verification/tasks/preflight-recovery-20260927-01/before/ARAMF_WORKER/memory-snapshots",
+            "resolvedOldDirectory": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/verification/tasks/preflight-recovery-20260927-01/before/ARAMF_WORKER/memory",
+            "timestamp": "2026-09-27T09:28:21Z"
+        }
+    ],
+    "noEvidenceContentChanges": true,
+    "noFilesDeleted": true,
+    "phase1PackageUntouched": true,
+    "provenance": {
+        "actor": "agent",
+        "agentId": "codex",
+        "authority": "Explicit current user authorization; preflight recovery only",
+        "authorizingTask": "APPROVED - RESOLVE ONLY THE TWO EVIDENCE DIRECTORY NAME COLLISIONS",
+        "tool": "evidence-directory-recovery production-service driver"
+    }
+}

@@ -1,0 +1,219 @@
+{
+  "accepted": false,
+  "eventObjectsEqual": true,
+  "eventsAfter": 2,
+  "eventsBefore": 2,
+  "files": {
+    "cold-start-validation.json": {
+      "afterSHA256": "a372debb8c45fbc6b8ceedee36aaab6d15133672a6ac3cdc0607f2ffe66c793e",
+      "beforeSHA256": "24244b14362191a0d4a485ff3328ed8d7dae4f0b481739cc24dc7847c03aff79",
+      "bytesEqual": false,
+      "changedLogicalFields": {
+        "fingerprint": {
+          "after": "f8c16ab1eb684f9c59e782418e471b6e60392f1baec24918a62a936c3a599685",
+          "before": "9c4cbf4d5aa9a12f66d6acd7278c61afb2df914ac5a698276140ab5cdadf42e3"
+        }
+      },
+      "snapshotCoverage": false
+    },
+    "current-state.md": {
+      "afterSHA256": "a7a0424eb038184d0eec0a29268d5670852e2e843c22cdf2ec750f6d9644ea6a",
+      "beforeSHA256": "6fbe01cdfad1f8668ba067d0fd9581e75e0781d07f523787474a2719aba2d8ed",
+      "bytesEqual": false,
+      "snapshotCoverage": true
+    },
+    "decisions.md": {
+      "afterSHA256": "c9acd29e25966422dd026f759541899b7f8672ca9391076449e4bbb5dfb9b824",
+      "beforeSHA256": "193e5679c8ab3c270dd3a350cb637416000cb56b6949b7d562972c95c72f6c35",
+      "bytesEqual": false,
+      "snapshotCoverage": true
+    },
+    "event-log.jsonl": {
+      "afterSHA256": "78d85d0c275ec5a9ac7259bdd07f2acd0af1c9a9e01414602468f6944567593a",
+      "beforeSHA256": "a5177c592f9257f0644ff4e032a08ae72fe177d1cd2c3aa92114bf44b42ced26",
+      "bytesEqual": false,
+      "snapshotCoverage": true
+    },
+    "memory-consistency-validation.json": {
+      "afterSHA256": "b8b0b1ff8999272c7d61e79d02cde29c4d3082e073ff956af04d8dc275ba0615",
+      "beforeSHA256": "5f450fbe346278c901c48403e37b77eeb3e57b8e39ecaa667249fb22af494479",
+      "bytesEqual": false,
+      "changedLogicalFields": {},
+      "snapshotCoverage": true
+    },
+    "memory-manifest.json": {
+      "afterSHA256": "e69e83721c97bfdf855d6b7e224587f1a067083dd9e892a8cb497c4f9d8ac273",
+      "beforeSHA256": "ed4ade794b7d2d54348060aeea5023f2f7000049059539b9c2a96e0017362c51",
+      "bytesEqual": false,
+      "changedLogicalFields": {},
+      "snapshotCoverage": true
+    },
+    "metrics.json": {
+      "afterSHA256": "418a081db3bd0530d71516de75627dc911b63a8efe47b5242be772141a8f8bf8",
+      "beforeSHA256": "c292c282f2f06b54651ceabf7306f0fa8812399030734d79ea426ce8d4efb32d",
+      "bytesEqual": false,
+      "changedLogicalFields": {
+        "activeEvents": {
+          "after": 3,
+          "before": 2
+        },
+        "totalEventsCreated": {
+          "after": 3,
+          "before": 2
+        }
+      },
+      "snapshotCoverage": false
+    }
+  },
+  "fixture": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/build/rollback-coverage-audit-DRGamO",
+  "operationError": "",
+  "purpose": "Read-only product-source audit; isolated production-API reproduction, not repair",
+  "validationAfter": {
+    "_file": "memory-consistency-validation.json",
+    "checkedAt": "2026-09-27T09:05:55Z",
+    "checks": [
+      {
+        "name": "event-identifiers-unique",
+        "status": "PASS"
+      },
+      {
+        "name": "legacy-event-id-integrity-exceptions",
+        "status": "PASS"
+      },
+      {
+        "name": "sequence-order",
+        "status": "PASS"
+      },
+      {
+        "name": "manifest-next-sequence",
+        "status": "PASS"
+      },
+      {
+        "name": "manifest-event-count",
+        "status": "PASS"
+      },
+      {
+        "name": "checkpoint-identifiers-unique",
+        "status": "PASS"
+      },
+      {
+        "name": "checkpoint-fields-valid",
+        "status": "PASS"
+      },
+      {
+        "name": "checkpoint-references-valid",
+        "status": "PASS"
+      },
+      {
+        "name": "event-provenance-valid",
+        "status": "PASS"
+      },
+      {
+        "name": "persisted-scope-validity",
+        "status": "PASS"
+      },
+      {
+        "name": "conflicting-decisions",
+        "status": "PASS"
+      },
+      {
+        "name": "stale-current-state",
+        "status": "PASS"
+      },
+      {
+        "name": "configured-validation-coverage",
+        "status": "PASS"
+      },
+      {
+        "name": "cold-start-fresh",
+        "status": "FAIL"
+      },
+      {
+        "message": "Structural memory consistency checks executed.",
+        "name": "memory-consistency",
+        "status": "PASS"
+      }
+    ],
+    "durableSequence": 2,
+    "errors": [
+      "Persisted cold-start validation is missing, failed, or stale."
+    ],
+    "productionSequence": 0,
+    "status": "FAIL",
+    "unsupportedValidations": [],
+    "warnings": []
+  },
+  "validationBefore": {
+    "_file": "memory-consistency-validation.json",
+    "checkedAt": "2026-09-27T09:05:55Z",
+    "checks": [
+      {
+        "name": "event-identifiers-unique",
+        "status": "PASS"
+      },
+      {
+        "name": "legacy-event-id-integrity-exceptions",
+        "status": "PASS"
+      },
+      {
+        "name": "sequence-order",
+        "status": "PASS"
+      },
+      {
+        "name": "manifest-next-sequence",
+        "status": "PASS"
+      },
+      {
+        "name": "manifest-event-count",
+        "status": "PASS"
+      },
+      {
+        "name": "checkpoint-identifiers-unique",
+        "status": "PASS"
+      },
+      {
+        "name": "checkpoint-fields-valid",
+        "status": "PASS"
+      },
+      {
+        "name": "checkpoint-references-valid",
+        "status": "PASS"
+      },
+      {
+        "name": "event-provenance-valid",
+        "status": "PASS"
+      },
+      {
+        "name": "persisted-scope-validity",
+        "status": "PASS"
+      },
+      {
+        "name": "conflicting-decisions",
+        "status": "PASS"
+      },
+      {
+        "name": "stale-current-state",
+        "status": "PASS"
+      },
+      {
+        "name": "configured-validation-coverage",
+        "status": "PASS"
+      },
+      {
+        "name": "cold-start-fresh",
+        "status": "PASS"
+      },
+      {
+        "message": "Structural memory consistency checks executed.",
+        "name": "memory-consistency",
+        "status": "PASS"
+      }
+    ],
+    "durableSequence": 2,
+    "errors": [],
+    "productionSequence": 0,
+    "status": "PASS",
+    "unsupportedValidations": [],
+    "warnings": []
+  }
+}

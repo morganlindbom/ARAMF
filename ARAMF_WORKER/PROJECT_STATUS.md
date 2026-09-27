@@ -1076,7 +1076,9 @@ Campaign Evidence:
 
 
 
+
+
 ## Latest Agent Task
 
-- Task: identity-repair
+- Task: Phase 2B named-worker configuration propagation
 - Status: PASS

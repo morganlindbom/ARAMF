@@ -1,0 +1,10 @@
+{
+    "fingerprint": "5c2180f143b9b125c4e68a7fec244d316a99742e7a5d5ded016753f5b6134201",
+    "generatedFiles": [
+        "ARAMF_WORKER/context/context-index.json",
+        "ARAMF_WORKER/context/compressed-context.json",
+        "ARAMF_WORKER/context/freshness.json",
+        "ARAMF_WORKER/context/agent-adapters.json"
+    ],
+    "success": true
+}
