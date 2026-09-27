@@ -1,0 +1,749 @@
+{
+    "check": "final-current-state",
+    "coldStart": {
+        "_file": "cold-start-validation.json",
+        "checkedAt": "2026-09-27T14:38:42Z",
+        "checks": [
+            {
+                "name": "ARAMF_WORKER/memory/decisions.md",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/memory/framework-knowledge.json",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/memory/current-state.md",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/memory/memory-config.json",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/memory/memory-contract.json",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/memory/memory-manifest.json",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/memory/event-id-integrity-exceptions.json",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/memory/project-knowledge.json",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/memory/compaction-manifest.json",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/AGENTS.md",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/PROJECT_STATUS.md",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/project.json",
+                "status": "PASS"
+            },
+            {
+                "name": "ARAMF_WORKER/worker-manifest.json",
+                "status": "PASS"
+            },
+            {
+                "message": "Event log parsed through ProjectMemory read API.",
+                "name": "event-log-semantic-recovery",
+                "status": "PASS"
+            },
+            {
+                "message": "Durable decisions parsed through ProjectMemory read API.",
+                "name": "decisions-semantic-recovery",
+                "status": "PASS"
+            },
+            {
+                "message": "Checkpoints parsed through ProjectMemory read API.",
+                "name": "checkpoints-semantic-recovery",
+                "status": "PASS"
+            },
+            {
+                "message": "Manifest sequence does not agree with recovered event history.",
+                "name": "manifest-event-recovery",
+                "status": "PASS"
+            },
+            {
+                "message": "Current decision state could not be reconstructed.",
+                "name": "current-decisions-recovery",
+                "status": "PASS"
+            },
+            {
+                "message": "Latest checkpoint could not be recovered.",
+                "name": "latest-checkpoint-recovery",
+                "status": "PASS"
+            }
+        ],
+        "contractConfigConsistent": true,
+        "errors": [
+        ],
+        "fingerprint": "dfac1f722d4561c4fac3e78789d8adec6a71e699687781a6e77d7317d8ba53e1",
+        "recordingEnabled": true,
+        "requireControlPlane": true,
+        "status": "PASS",
+        "warnings": [
+        ]
+    },
+    "context": {
+        "errorCode": null,
+        "freshness": {
+            "_file": "freshness.json",
+            "authority": "DERIVED",
+            "entries": [
+                {
+                    "currentFingerprint": "35f7cec94411f8253eff8a0b6da534e9e523d16e07cff5c84a568736a1e9a028",
+                    "id": "097b5bdd4418619619c2",
+                    "recordedFingerprint": "35f7cec94411f8253eff8a0b6da534e9e523d16e07cff5c84a568736a1e9a028",
+                    "scope": "all",
+                    "section": "knowledge",
+                    "source": "ARAMF_WORKER/memory/framework-knowledge.json",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "adae3f864113fdfb7c74dc6da7f76205457277e4558242ebb1a873af024dfe39",
+                    "id": "1108253459cd14d05d60",
+                    "recordedFingerprint": "adae3f864113fdfb7c74dc6da7f76205457277e4558242ebb1a873af024dfe39",
+                    "scope": "current-project-state",
+                    "section": "resources",
+                    "source": "external:c693014c-27ef-4ce1-9291-6fb37ff0c375",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "id": "13755694461dd3e6bc0a",
+                    "recordedFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "scope": "testing",
+                    "section": "resources",
+                    "source": "external:be17deda-e75e-47bc-afd8-5c83472af077",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "id": "15315567c5f086f3bc87",
+                    "recordedFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "scope": "software",
+                    "section": "resources",
+                    "source": "external:226c31e8-233e-4bcb-acf0-f1f853c04cbf",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "b3525fcbfaaac022e6f94c5a7b9acdb055e4b111850a445f89ba1494826d35ea",
+                    "id": "18635c7cd22b919fd9fe",
+                    "recordedFingerprint": "b3525fcbfaaac022e6f94c5a7b9acdb055e4b111850a445f89ba1494826d35ea",
+                    "scope": "all",
+                    "section": "routing",
+                    "source": "ARAMF_WORKER/routing/task-routes.json",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "id": "1970a7e29f52f2105277",
+                    "recordedFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "scope": "current-project-state",
+                    "section": "resources",
+                    "source": "external:04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "abf35151170c48ee992d0edb5a6b54c65c5f5ab0e212cc5bef2cb8781870d774",
+                    "id": "1bf5b61e779e42541cf5",
+                    "recordedFingerprint": "abf35151170c48ee992d0edb5a6b54c65c5f5ab0e212cc5bef2cb8781870d774",
+                    "scope": "all",
+                    "section": "routing",
+                    "source": "ARAMF_WORKER/routing/scope-routes.json",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "id": "269d88cc0f32de1bd9a6",
+                    "recordedFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "scope": "architecture",
+                    "section": "resources",
+                    "source": "external:226c31e8-233e-4bcb-acf0-f1f853c04cbf",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e05f43e9e4ed7d6919b2986be2644c754df8b60a12c1f4ddf1491d7a6454a9d6",
+                    "id": "29d4a5207d5c9948f146",
+                    "recordedFingerprint": "e05f43e9e4ed7d6919b2986be2644c754df8b60a12c1f4ddf1491d7a6454a9d6",
+                    "scope": "all",
+                    "section": "resources",
+                    "source": "ARAMF_WORKER/resources/resources.json",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "id": "2efef8bed19dca113814",
+                    "recordedFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "scope": "testing",
+                    "section": "resources",
+                    "source": "external:47cf373a-e57b-49fa-b876-c21d975986e8",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "id": "2fb5b4b56f5a98276198",
+                    "recordedFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "scope": "build-system",
+                    "section": "resources",
+                    "source": "external:d6ba3523-c781-4897-9ffa-144cae535632",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "id": "3c714f9c4714ba999b63",
+                    "recordedFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "scope": "architecture",
+                    "section": "resources",
+                    "source": "external:d6ba3523-c781-4897-9ffa-144cae535632",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "9f22f5d37a50b7996604ada418aa7a0dd141d9af19896fc41f12a53db6d108f1",
+                    "id": "3e0aac4d24e266687153",
+                    "recordedFingerprint": "9f22f5d37a50b7996604ada418aa7a0dd141d9af19896fc41f12a53db6d108f1",
+                    "scope": "software",
+                    "section": "resources",
+                    "source": "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "7cbb3f20c3613c27b1664c90f41aac34e8bc40ad1298a20cd3071b7f05cadeba",
+                    "id": "4e31696dd258350fa701",
+                    "recordedFingerprint": "7cbb3f20c3613c27b1664c90f41aac34e8bc40ad1298a20cd3071b7f05cadeba",
+                    "scope": "all",
+                    "section": "governance",
+                    "source": "ARAMF_WORKER/AGENTS.md",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "00e081ba2a5a7acbbe82c07394525fe304ffa7305e237aabb11c38d30aadfddb",
+                    "id": "5279bc546fb4c7b6194d",
+                    "recordedFingerprint": "00e081ba2a5a7acbbe82c07394525fe304ffa7305e237aabb11c38d30aadfddb",
+                    "scope": "all",
+                    "section": "project-state",
+                    "source": "ARAMF_WORKER/PROJECT_STATUS.md",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "adb28a1a1f719e8f2b43dc33df004016d5699b402a721c6184f1f89cbb199e3b",
+                    "id": "5af84d7b0624524c28b1",
+                    "recordedFingerprint": "adb28a1a1f719e8f2b43dc33df004016d5699b402a721c6184f1f89cbb199e3b",
+                    "scope": "all",
+                    "section": "decisions",
+                    "source": "ARAMF_WORKER/memory/decisions.md",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "adae3f864113fdfb7c74dc6da7f76205457277e4558242ebb1a873af024dfe39",
+                    "id": "7c2889b721487db1608b",
+                    "recordedFingerprint": "adae3f864113fdfb7c74dc6da7f76205457277e4558242ebb1a873af024dfe39",
+                    "scope": "architecture",
+                    "section": "resources",
+                    "source": "external:c693014c-27ef-4ce1-9291-6fb37ff0c375",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "id": "a4e87afaa837f2939296",
+                    "recordedFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "scope": "testing",
+                    "section": "resources",
+                    "source": "external:d6ba3523-c781-4897-9ffa-144cae535632",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "id": "a8b6471b033b3ff7166e",
+                    "recordedFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "scope": "software",
+                    "section": "resources",
+                    "source": "external:eb45af79-6ae2-43df-aafa-a41b80ba8f2b",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "a104473ee71df74624816f042e9c11eb563e5dbd5e067be7ce7275e0cf64c19e",
+                    "id": "a9be820da65a6b88c14e",
+                    "recordedFingerprint": "a104473ee71df74624816f042e9c11eb563e5dbd5e067be7ce7275e0cf64c19e",
+                    "scope": "all",
+                    "section": "project-state",
+                    "source": "ARAMF_WORKER/memory/current-state.md",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "855d4cf68a97d2b9f2db850b23adc2aac87cf95adf1934370d5ae6a20805fbce",
+                    "id": "b52bec6560673926b399",
+                    "recordedFingerprint": "855d4cf68a97d2b9f2db850b23adc2aac87cf95adf1934370d5ae6a20805fbce",
+                    "scope": "all",
+                    "section": "resources",
+                    "source": "external:ad17b8ba-7dfb-4fed-998b-ca0a66a9ab48",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "adae3f864113fdfb7c74dc6da7f76205457277e4558242ebb1a873af024dfe39",
+                    "id": "c901a6d785a6d10c7a2f",
+                    "recordedFingerprint": "adae3f864113fdfb7c74dc6da7f76205457277e4558242ebb1a873af024dfe39",
+                    "scope": "software",
+                    "section": "resources",
+                    "source": "external:c693014c-27ef-4ce1-9291-6fb37ff0c375",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "id": "cae31206f3f40e55de88",
+                    "recordedFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "scope": "project-requirements",
+                    "section": "resources",
+                    "source": "external:04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "adae3f864113fdfb7c74dc6da7f76205457277e4558242ebb1a873af024dfe39",
+                    "id": "cc24840ba621face72a7",
+                    "recordedFingerprint": "adae3f864113fdfb7c74dc6da7f76205457277e4558242ebb1a873af024dfe39",
+                    "scope": "project-requirements",
+                    "section": "resources",
+                    "source": "external:c693014c-27ef-4ce1-9291-6fb37ff0c375",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "c612d874bf1d8e48835321f01c8f4556e2cbbcc6d23b591c42f3e5b12bf33ea7",
+                    "id": "ced2078baaa891daeec6",
+                    "recordedFingerprint": "c612d874bf1d8e48835321f01c8f4556e2cbbcc6d23b591c42f3e5b12bf33ea7",
+                    "scope": "all",
+                    "section": "resources",
+                    "source": "external:1e352162-a59b-4e73-89fb-a35072a97cfd",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "id": "d1e869590592bd66d43b",
+                    "recordedFingerprint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                    "scope": "software",
+                    "section": "resources",
+                    "source": "external:d6ba3523-c781-4897-9ffa-144cae535632",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "39d0c09a1828d1ebeb7f4d8b64f03b37fb45ab3fdde8d3cea192aa0a73292b55",
+                    "id": "d337e707f92b78abc66f",
+                    "recordedFingerprint": "39d0c09a1828d1ebeb7f4d8b64f03b37fb45ab3fdde8d3cea192aa0a73292b55",
+                    "scope": "all",
+                    "section": "topology",
+                    "source": "ARAMF_WORKER/worker-manifest.json",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "9f22f5d37a50b7996604ada418aa7a0dd141d9af19896fc41f12a53db6d108f1",
+                    "id": "e8c9100501b1a532de18",
+                    "recordedFingerprint": "9f22f5d37a50b7996604ada418aa7a0dd141d9af19896fc41f12a53db6d108f1",
+                    "scope": "build-system",
+                    "section": "resources",
+                    "source": "external:769b24cd-ace8-482f-8f96-05c09a1a4cb8",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "9a6620a8ae7cc0bc671b8d3c0a102f27b1d37750aa6e5f3c0a5634a33ca03318",
+                    "id": "ea90b19399412ab49dc5",
+                    "recordedFingerprint": "9a6620a8ae7cc0bc671b8d3c0a102f27b1d37750aa6e5f3c0a5634a33ca03318",
+                    "scope": "all",
+                    "section": "validation",
+                    "source": "ARAMF_WORKER/routing/validation-policy.json",
+                    "status": "CURRENT"
+                },
+                {
+                    "currentFingerprint": "adae3f864113fdfb7c74dc6da7f76205457277e4558242ebb1a873af024dfe39",
+                    "id": "f67561dff6753c983275",
+                    "recordedFingerprint": "adae3f864113fdfb7c74dc6da7f76205457277e4558242ebb1a873af024dfe39",
+                    "scope": "testing",
+                    "section": "resources",
+                    "source": "external:c693014c-27ef-4ce1-9291-6fb37ff0c375",
+                    "status": "CURRENT"
+                }
+            ],
+            "indexFingerprint": "7327b6a33e75e1436823c6a8d1a8730a153963d275ef7dbd0cc89f55b86e43ff",
+            "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
+            "schemaVersion": 1,
+            "staleCount": 0
+        },
+        "indexValid": true,
+        "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
+        "valid": true
+    },
+    "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+    "independentReload": true,
+    "memory": {
+        "_file": "memory-consistency-validation.json",
+        "checkedAt": "2026-09-27T14:38:42Z",
+        "checks": [
+            {
+                "name": "event-identifiers-unique",
+                "status": "PASS"
+            },
+            {
+                "name": "legacy-event-id-integrity-exceptions",
+                "status": "PASS"
+            },
+            {
+                "name": "sequence-order",
+                "status": "PASS"
+            },
+            {
+                "name": "manifest-next-sequence",
+                "status": "PASS"
+            },
+            {
+                "name": "manifest-event-count",
+                "status": "PASS"
+            },
+            {
+                "name": "checkpoint-identifiers-unique",
+                "status": "PASS"
+            },
+            {
+                "name": "checkpoint-fields-valid",
+                "status": "PASS"
+            },
+            {
+                "name": "checkpoint-references-valid",
+                "status": "PASS"
+            },
+            {
+                "name": "event-provenance-valid",
+                "status": "PASS"
+            },
+            {
+                "name": "persisted-scope-validity",
+                "status": "PASS"
+            },
+            {
+                "name": "conflicting-decisions",
+                "status": "PASS"
+            },
+            {
+                "name": "stale-current-state",
+                "status": "PASS"
+            },
+            {
+                "name": "project-status-consistency",
+                "status": "PASS"
+            },
+            {
+                "name": "referenced-resources",
+                "status": "PASS"
+            },
+            {
+                "name": "configured-validation-coverage",
+                "status": "PASS"
+            },
+            {
+                "name": "cold-start-fresh",
+                "status": "PASS"
+            },
+            {
+                "message": "Structural memory consistency checks executed.",
+                "name": "memory-consistency",
+                "status": "PASS"
+            },
+            {
+                "message": "Sequence continuity check executed.",
+                "name": "sequence-continuity",
+                "status": "PASS"
+            }
+        ],
+        "durableSequence": 493,
+        "errors": [
+        ],
+        "productionSequence": 493,
+        "status": "PASS",
+        "unsupportedValidations": [
+        ],
+        "warnings": [
+        ]
+    },
+    "status": "PASS",
+    "workerVerification": {
+        "checks": [
+            {
+                "details": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
+                "id": "project-path",
+                "name": "Project Path",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER directory exists.",
+                "id": "control-plane",
+                "name": "ARAMF_WORKER control plane",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/project.json",
+                "id": "project-configuration",
+                "name": "Canonical project configuration",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/worker-manifest.json",
+                "id": "worker-manifest",
+                "name": "Worker topology manifest",
+                "status": "PASS"
+            },
+            {
+                "details": "Derived context index is readable and project-bound.",
+                "id": "p1-context-index",
+                "name": "P1 context index",
+                "status": "PASS"
+            },
+            {
+                "details": "Indexed sources are current.",
+                "id": "p1-context-freshness",
+                "name": "P1 context freshness",
+                "status": "PASS"
+            },
+            {
+                "details": "Worker schema version 1 and canonical ownership are valid.",
+                "id": "worker-topology",
+                "name": "Worker topology schema",
+                "status": "PASS"
+            },
+            {
+                "details": "Canonical ownership is unique.",
+                "id": "canonical-owners",
+                "name": "Unique canonical file ownership",
+                "status": "PASS"
+            },
+            {
+                "details": "Canonical Worker state roots are unique.",
+                "id": "parallel-state",
+                "name": "No competing canonical state systems",
+                "status": "PASS"
+            },
+            {
+                "details": "project.json matches the active ProjectModel.",
+                "id": "project-identity",
+                "name": "Project identity is current",
+                "status": "PASS"
+            },
+            {
+                "details": "project.json dependencies are current.",
+                "id": "stale-project-configuration",
+                "name": "Project configuration fingerprint",
+                "status": "PASS"
+            },
+            {
+                "details": "Worker topology dependencies are current.",
+                "id": "stale-worker-manifest",
+                "name": "Worker manifest fingerprint",
+                "status": "PASS"
+            },
+            {
+                "details": "Routing dependencies are current.",
+                "id": "stale-routing",
+                "name": "Routing dependency fingerprint",
+                "status": "PASS"
+            },
+            {
+                "details": "AGENTS.md",
+                "id": "root-agents",
+                "name": "Root AGENTS.md",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/AGENTS.md",
+                "id": "aramf-worker-agents",
+                "name": "ARAMF_WORKER/AGENTS.md",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/PROJECT_STATUS.md",
+                "id": "project-status",
+                "name": "PROJECT_STATUS.md",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/rules/generated-rules.md",
+                "id": "generated-rules",
+                "name": "Generated rules",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/routing/task-routes.json",
+                "id": "task-routes",
+                "name": "Task routes",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/routing/scope-routes.json",
+                "id": "scope-routes",
+                "name": "Scope routes",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/platforms/platform-metadata.json",
+                "id": "platforms",
+                "name": "Platform metadata",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/resources/resources.json",
+                "id": "resources",
+                "name": "Resource manifest",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/memory/memory-config.json",
+                "id": "memory",
+                "name": "Memory configuration",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/memory/framework-knowledge.json",
+                "id": "framework-knowledge",
+                "name": "Framework Knowledge",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/provenance.json",
+                "id": "provenance",
+                "name": "Provenance",
+                "status": "PASS"
+            },
+            {
+                "details": "ARAMF_WORKER/selection-effects.json",
+                "id": "selection-effects",
+                "name": "Selection effects",
+                "status": "PASS"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "communication-contract",
+                "name": "Communication contract",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "multi-target-build",
+                "name": "Multi-target build model",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "certification-contract",
+                "name": "Certification contract",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "Product was not selected.",
+                "id": "current-certification-state",
+                "name": "Current certification state",
+                "status": "NOT_APPLICABLE"
+            },
+            {
+                "details": "All configured resources have unique canonical identities.",
+                "id": "resource-identities",
+                "name": "Unique resource identities",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-project.json",
+                "name": "Valid JSON: ARAMF_WORKER/project.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-worker-manifest.json",
+                "name": "Valid JSON: ARAMF_WORKER/worker-manifest.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-task-routes.json",
+                "name": "Valid JSON: ARAMF_WORKER/routing/task-routes.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-scope-routes.json",
+                "name": "Valid JSON: ARAMF_WORKER/routing/scope-routes.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-platform-metadata.json",
+                "name": "Valid JSON: ARAMF_WORKER/platforms/platform-metadata.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-resources.json",
+                "name": "Valid JSON: ARAMF_WORKER/resources/resources.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-memory-config.json",
+                "name": "Valid JSON: ARAMF_WORKER/memory/memory-config.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-framework-knowledge.json",
+                "name": "Valid JSON: ARAMF_WORKER/memory/framework-knowledge.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-provenance.json",
+                "name": "Valid JSON: ARAMF_WORKER/provenance.json",
+                "status": "PASS"
+            },
+            {
+                "details": "Parsed successfully.",
+                "id": "json-selection-effects.json",
+                "name": "Valid JSON: ARAMF_WORKER/selection-effects.json",
+                "status": "PASS"
+            },
+            {
+                "details": "PASS",
+                "id": "memory-consistency",
+                "name": "Memory consistency",
+                "status": "PASS"
+            },
+            {
+                "details": "PASS",
+                "id": "cold-start",
+                "name": "Cold-start validation",
+                "status": "PASS"
+            },
+            {
+                "details": "Fingerprint matches ProjectModel.",
+                "id": "freshness",
+                "name": "Generated configuration is current",
+                "status": "PASS"
+            },
+            {
+                "details": "Latest validation summary is structurally valid.",
+                "id": "validation-summary-integrity",
+                "name": "Latest validation summary integrity",
+                "status": "PASS"
+            }
+        ],
+        "fingerprint": "25ee1a03a5d3f24b60eecbbf30319069a034a0c87ffee517b9e8ef73a52fa8c6",
+        "overallStatus": "PASS",
+        "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF"
+    }
+}

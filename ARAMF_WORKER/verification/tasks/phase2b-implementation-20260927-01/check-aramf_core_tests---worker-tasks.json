@@ -1,0 +1,8 @@
+{
+    "check": "aramf_core_tests::--worker-tasks",
+    "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+    "dependencyFingerprint": "24415cee0b1df98a5ff3dcbf28dc9961ceb770ee5197634fc04cc9531ac0cd40",
+    "observedResult": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/full-ctest.json",
+    "observedResultSHA256": "6e756ceb21d1b2f9ec8e647b71ebada7ca5ec22a872327f213d7adac83af945d",
+    "status": "PASS"
+}

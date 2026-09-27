@@ -1,0 +1,14 @@
+{
+    "arguments": [
+    ],
+    "check": "campaign-250",
+    "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+    "cwd": ".",
+    "data": "RVZJREVOQ0UgRDovT04gREVTQ1RPUC9IS1IgS1VSU0VSL0MrKy9BUkFNRjIvQVJBTUYvYnVpbGQvdGVzdF8yNTAvcnVucy9iNDJjZTRkMC01OTU3LTRmM2QtOTQ5MC0xYzljMTg3N2U3OGUNCmNvbXBsZXRlZD0yNTAgcGFzc2VkPTI1MCBmYWlsZWQ9MA0K",
+    "encoding": "base64",
+    "exitCode": 0,
+    "program": "./build/aramf_campaign_runner.exe",
+    "rawSha256": "645837124a0f428b3ee3e51b1fec243d116ab5f380fe2272aac9c6ddbac87126",
+    "status": "PASS",
+    "timestamp": "2026-09-27T14:31:41Z"
+}

@@ -1,0 +1,2475 @@
+{
+    "baseline": "amended-ready-contract.json/protectedBefore",
+    "check": "protected-after-revalidation",
+    "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+    "differences": [
+    ],
+    "events": {
+        "duplicateIds": [
+        ],
+        "eventCount": 493,
+        "firstSequence": 1,
+        "lastSequence": 493,
+        "parseValid": true,
+        "sequenceContinuous": true,
+        "uniqueEventIds": 493,
+        "wholeFileHash": "c0d2089e94cbaa0c30a519c0183a4f69463ddf1796a4674eb359312077d0dafa"
+    },
+    "hvdComponentsEmpty": true,
+    "ignoredFilesBaseline": "rollback-implementation-20260927-01/protected-after-revalidation.json: hashes; original Git listing omitted ignored protected descendants",
+    "status": "PASS",
+    "verified": {
+        "ARAMF_WORKER/certification/certificates.jsonl": {
+            "bytes": 30415,
+            "sha256": "3ad9f64eb6254a79571f410b2ac8bc1f2d965af514f158574b66c26f7ba8d46f"
+        },
+        "ARAMF_WORKER/certification/certification-contract.json": {
+            "bytes": 1845,
+            "sha256": "7f415e8d9ee59174957063c8bd5835634b28ea16f6441f0e8c96cdd0d57f3af6"
+        },
+        "ARAMF_WORKER/certification/current-certification-state.json": {
+            "bytes": 30119,
+            "sha256": "4a656968a8f57ced9b052dc769d8acb2723d6a678a2a0dfe97c1b9b8d6bbb082"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/f1-focused-suite.json": {
+            "bytes": 550,
+            "sha256": "9becf6456849533970da7720ff1fa748c0de9a1233eaf8045720f4f6dfd69f2a"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/f1-focused-suite.log": {
+            "bytes": 86,
+            "sha256": "a4ea3f731e6feb07c20a9b0247862ffdb46b9a235c1691d36e6dd9e8c760b04d"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/f1-physical-validation.json": {
+            "bytes": 585,
+            "sha256": "4edabb45f9da33cdf8f94438bd96d1f921e440ff2ac8f52ecf7d2f37bc191105"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/f1-physical-validation.log": {
+            "bytes": 284,
+            "sha256": "25864c86e21369000ac42beb6c3879e744108ec37d277e37ad4f4249927f57ab"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/foundation-namespace.json": {
+            "bytes": 566,
+            "sha256": "9cbf7d41d9585beeade987ef03ae4449f4fc036e745194597014abb194ef3697"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/foundation-namespace.log": {
+            "bytes": 8288,
+            "sha256": "7f7c748fa728db53d7cb20319d363248f3be2f380fea46297abe335d181df557"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/full-ctest.json": {
+            "bytes": 539,
+            "sha256": "65b6e98dd96f5c8f003c824374e6230ab4b6076798a434b6fcd766fd421f492a"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/full-ctest.log": {
+            "bytes": 675,
+            "sha256": "93596147c6f5f4f3056269007255c7d13a48b3b291b81065bc25231153c7fc15"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/memory-cold-start.json": {
+            "bytes": 565,
+            "sha256": "d9512a406424e8dddd73bf026ae1f37fef86314f277a1afc280ec97f0b32bf71"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/memory-cold-start.log": {
+            "bytes": 45,
+            "sha256": "35021676a9a2a9cad08a673b6e9a4cd60ff568e43b41f54c26680d8f8f3c4e77"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/memory-consistency.json": {
+            "bytes": 563,
+            "sha256": "cafc56a349e4df11a7fbe591d62fb4d03dddad22716b1a5ba1f9fbbdd21e4e05"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/memory-consistency.log": {
+            "bytes": 43,
+            "sha256": "3c001d1c2d6e3a65cc0a618426accf068841cf29c2608acdee87b113b4a872ce"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/p1-governance.json": {
+            "bytes": 538,
+            "sha256": "7a2ebe642454c4b6e7ec202e5c6feaa8f4c0808a4c9643c9fd7648a8afed0655"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/p1-governance.log": {
+            "bytes": 44,
+            "sha256": "9d61375c9f5cb0072eede5ea1b022a697293c939a7df56dcb44c351dab2514f1"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/p2-context.json": {
+            "bytes": 526,
+            "sha256": "618f34cafbf9fe8cf2e790865189283cad064881d539e7d9904123353e3e7587"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/p2-context.log": {
+            "bytes": 34,
+            "sha256": "937802ce92f58f7d219eb7e5aa044e7c4c8e9d0f4e7a7e827f69a9d1e10b62ec"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/p3-execution.json": {
+            "bytes": 534,
+            "sha256": "fb2601b98584c378d4bda00f9657b92b8f67faad1683512847f3cb6a28e3b3e4"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/p3-execution.log": {
+            "bytes": 27,
+            "sha256": "b5c8183acaf91590663a2a6750e0bb8d9b0da7c2d6e6438270952d6d0606d7d2"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/p4-predictive.json": {
+            "bytes": 538,
+            "sha256": "122149f227b01ed9db00a9b705dfa3741e3ab02c6e0c49b13d843562b5221b39"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/p4-predictive.log": {
+            "bytes": 124,
+            "sha256": "e23ca38200151e206496f33167b253424ebcd37982a61d925363524fa36b7d05"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/p5-routing.json": {
+            "bytes": 526,
+            "sha256": "40a590e4e079f155985237b0aaca1e94d3eab8c94df1a8a12796ca7d621a5201"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/p5-routing.log": {
+            "bytes": 6996,
+            "sha256": "273744a122dcb7bcab70a3cb2e1b796d7eea61539c4f89f3a8fe899f31d0e98b"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/process-namespace-migration.json": {
+            "bytes": 574,
+            "sha256": "4d9bffd58c6071b6c805cadf0d85548f68ad55c8fb4228fa7b65aa72c0482fcd"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/process-namespace-migration.log": {
+            "bytes": 6197,
+            "sha256": "6e9026e10d89e86c7f1b61f45cc73c503bff277bf02ff24a502f3e60c5285d91"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/provenance-and-scope.json": {
+            "bytes": 566,
+            "sha256": "b83caedc15cb065840b7836397f5eef55041006026b2967d53e3fd897072be88"
+        },
+        "ARAMF_WORKER/certification/evidence/checks/provenance-and-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/f1-evidence-iteration-2.json": {
+            "bytes": 9203,
+            "sha256": "97e4b0199ec6cb23f60b60b12789022d1b71eb9ac8b8fde00104f612e3714b5f"
+        },
+        "ARAMF_WORKER/certification/evidence/f1-evidence-iteration-3.json": {
+            "bytes": 10181,
+            "sha256": "d46f0785c9e6cb859ab59a78440e69de574b7c86640c40cbef2b7ec96407bc01"
+        },
+        "ARAMF_WORKER/certification/evidence/f1-evidence.json": {
+            "bytes": 3076,
+            "sha256": "aa87213b5e5df159c3fbeef9ef69846b776b53ef1b111b4c9b7421fdd0343176"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/f1-focused-suite.json": {
+            "bytes": 687,
+            "sha256": "3504a14f49b9ba9a400ca6906fd268fe1c1ac52ddbf3cf7226dd0727fb277134"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/f1-focused-suite.log": {
+            "bytes": 86,
+            "sha256": "a4ea3f731e6feb07c20a9b0247862ffdb46b9a235c1691d36e6dd9e8c760b04d"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/f1-physical-validation.json": {
+            "bytes": 722,
+            "sha256": "35b9b4d76a8517734a552b940a442b77ccb93ed1705dce150977c8158f58f000"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/f1-physical-validation.log": {
+            "bytes": 284,
+            "sha256": "6218edfef4453af8c91935e3f7136f5977cfdedabbb23c23ca10bed22854b165"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/foundation-namespace.json": {
+            "bytes": 703,
+            "sha256": "0ee922bd85da531b0c81524366036d18a47b75e8a398cd8dcfcb1026ddab114f"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/foundation-namespace.log": {
+            "bytes": 8288,
+            "sha256": "7f7c748fa728db53d7cb20319d363248f3be2f380fea46297abe335d181df557"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/full-ctest.json": {
+            "bytes": 676,
+            "sha256": "23c63fac47ed175631bcbcd3b9640d4a0ac6d7c770d941476474899fbd1cf579"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/full-ctest.log": {
+            "bytes": 675,
+            "sha256": "f0cf00f67d41d6a4bbc9dd16693d1524ccc4acae3599b45c8acd992519c7a813"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/memory-cold-start.json": {
+            "bytes": 702,
+            "sha256": "96baed68acd91b9ec685200dc143bca5709faa94e7290c5babdadf9f85b689f8"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/memory-cold-start.log": {
+            "bytes": 45,
+            "sha256": "35021676a9a2a9cad08a673b6e9a4cd60ff568e43b41f54c26680d8f8f3c4e77"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/memory-consistency.json": {
+            "bytes": 700,
+            "sha256": "cd87ab3c100a749f7ecd0f35547ef0a313eff82edcf503fd7601acbd2ebbcebf"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/memory-consistency.log": {
+            "bytes": 43,
+            "sha256": "3c001d1c2d6e3a65cc0a618426accf068841cf29c2608acdee87b113b4a872ce"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/p1-governance.json": {
+            "bytes": 675,
+            "sha256": "b737bdedb525af66e86e6dcc40e81d5a402073117f276cdc289520b43868d9c1"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/p1-governance.log": {
+            "bytes": 44,
+            "sha256": "9d61375c9f5cb0072eede5ea1b022a697293c939a7df56dcb44c351dab2514f1"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/p2-context.json": {
+            "bytes": 663,
+            "sha256": "2a01fd6814ed967424dd927c160f5bbc103f11a7d558256384371252f6ca273d"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/p2-context.log": {
+            "bytes": 34,
+            "sha256": "937802ce92f58f7d219eb7e5aa044e7c4c8e9d0f4e7a7e827f69a9d1e10b62ec"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/p3-execution.json": {
+            "bytes": 671,
+            "sha256": "dc86b60a797cf1988dddb1ee36c63a876c9e776bd5f64dadc93f157a938502ee"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/p3-execution.log": {
+            "bytes": 27,
+            "sha256": "b5c8183acaf91590663a2a6750e0bb8d9b0da7c2d6e6438270952d6d0606d7d2"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/p4-predictive.json": {
+            "bytes": 675,
+            "sha256": "12bb5342f92c3628a90a8f3783c4689750d3e945740cd6babafcf86e80d7f8ee"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/p4-predictive.log": {
+            "bytes": 124,
+            "sha256": "e23ca38200151e206496f33167b253424ebcd37982a61d925363524fa36b7d05"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/p5-routing.json": {
+            "bytes": 663,
+            "sha256": "792b74249827db1f2f018a0380cc0275b410a8546fbf80485c3006328763a85a"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/p5-routing.log": {
+            "bytes": 6996,
+            "sha256": "273744a122dcb7bcab70a3cb2e1b796d7eea61539c4f89f3a8fe899f31d0e98b"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/process-namespace-migration.json": {
+            "bytes": 711,
+            "sha256": "9994ec4dbfede0595030a10f1eb4cc311ea1cecdbdf6e7df290032ab2cafdeaa"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/process-namespace-migration.log": {
+            "bytes": 6197,
+            "sha256": "6e9026e10d89e86c7f1b61f45cc73c503bff277bf02ff24a502f3e60c5285d91"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/provenance-and-scope.json": {
+            "bytes": 703,
+            "sha256": "be3540d9e435e853f154df009117dccb5bb608efaed10e7c64c47cbefb95d4b7"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/checks/provenance-and-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/f1.1.4/iteration-4/f1-evidence.json": {
+            "bytes": 12356,
+            "sha256": "c0aac36aa2e1fe4d5157b19bf7b6e0e8d188c86309100f5f0f42800e03f69b81"
+        },
+        "ARAMF_WORKER/certification/evidence/f2/F2.1.1.0.0/7809240f-3906-40d2-bdfb-571dba42c0b1/checks/certification.log": {
+            "bytes": 4618,
+            "sha256": "08fcfcb248a46d206b78cac0adb77f490ee7f36f06f59254c21ace01360fef31"
+        },
+        "ARAMF_WORKER/certification/evidence/f2/F2.1.1.0.0/7809240f-3906-40d2-bdfb-571dba42c0b1/checks/domain.log": {
+            "bytes": 73,
+            "sha256": "0a21434896aea98714255ab7f5158f64401d11eaf487741558792f86b2b370a9"
+        },
+        "ARAMF_WORKER/certification/evidence/f2/F2.1.1.0.0/7809240f-3906-40d2-bdfb-571dba42c0b1/checks/full-ctest.log": {
+            "bytes": 2091,
+            "sha256": "3ff6beb2d415f59c6d80059281b32c5a555a73035b99e622b10c057a150d153c"
+        },
+        "ARAMF_WORKER/certification/evidence/f2/F2.1.1.0.0/7809240f-3906-40d2-bdfb-571dba42c0b1/checks/independence.log": {
+            "bytes": 1393,
+            "sha256": "0846acedb4b2526e09c38667d30b2fc7c8a7d95935fc18f95659b2b73bc821fd"
+        },
+        "ARAMF_WORKER/certification/evidence/f2/F2.1.1.0.0/7809240f-3906-40d2-bdfb-571dba42c0b1/checks/integration.log": {
+            "bytes": 67,
+            "sha256": "4031cdf4b5a44241d25f60bb2737fa7b67006ff83a214c32f0808d2da1badced"
+        },
+        "ARAMF_WORKER/certification/evidence/f2/F2.1.1.0.0/7809240f-3906-40d2-bdfb-571dba42c0b1/checks/migration.log": {
+            "bytes": 6091,
+            "sha256": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd"
+        },
+        "ARAMF_WORKER/certification/evidence/f2/F2.1.1.0.0/7809240f-3906-40d2-bdfb-571dba42c0b1/checks/namespace.log": {
+            "bytes": 8144,
+            "sha256": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1"
+        },
+        "ARAMF_WORKER/certification/evidence/f2/F2.1.1.0.0/7809240f-3906-40d2-bdfb-571dba42c0b1/checks/provenance-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/f2/F2.1.1.0.0/7809240f-3906-40d2-bdfb-571dba42c0b1/evidence.json": {
+            "bytes": 6370,
+            "sha256": "f4ce65aa60d8147db7e11a4b94eb3cc03fcc16483f4f9ed6e19231a2dcdfe0e9"
+        },
+        "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/certification.log": {
+            "bytes": 4618,
+            "sha256": "75079b9b290c6f8ea18d5dc03cc72fe48b04c8dab053592fd658d890a627a8d4"
+        },
+        "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/domain.log": {
+            "bytes": 69,
+            "sha256": "94440f730a888a388194196b91bb74b08cdcfce5dbd23fc42b8f58771d1a0858"
+        },
+        "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/full-ctest.log": {
+            "bytes": 2091,
+            "sha256": "91a3b3e9fcc41a972c89c95840ef41db93550a43aecfefa80557cbf8931d73ac"
+        },
+        "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/independence.log": {
+            "bytes": 1370,
+            "sha256": "c3692ea6f8b236464118fb3a46f5d25bb83f3c552f10faba0e975a98fcf45d36"
+        },
+        "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/integration.log": {
+            "bytes": 67,
+            "sha256": "4031cdf4b5a44241d25f60bb2737fa7b67006ff83a214c32f0808d2da1badced"
+        },
+        "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/migration.log": {
+            "bytes": 6091,
+            "sha256": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd"
+        },
+        "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/namespace.log": {
+            "bytes": 8144,
+            "sha256": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1"
+        },
+        "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/checks/provenance-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/f3/F3.1.1.0.0/1e63eb7f-115d-4a1f-94a8-ad730047dcf4/evidence.json": {
+            "bytes": 6371,
+            "sha256": "591c78cb31d59bb16327510343b73502583f5bef006ee570a1283d93dea2fe60"
+        },
+        "ARAMF_WORKER/certification/evidence/f4/F4.1.1.0.0/db9dd3f4-ac0f-465a-8860-37dd655625aa/checks/certification.log": {
+            "bytes": 4618,
+            "sha256": "6661de21f365db7394cc65cebcb691463065a4be9b18d463de395bf6cd4b7786"
+        },
+        "ARAMF_WORKER/certification/evidence/f4/F4.1.1.0.0/db9dd3f4-ac0f-465a-8860-37dd655625aa/checks/domain.log": {
+            "bytes": 70,
+            "sha256": "43bed769c7f7fd3aee2404dfff1ff2851d2c61e7beb4a51f5fdb6fbced083583"
+        },
+        "ARAMF_WORKER/certification/evidence/f4/F4.1.1.0.0/db9dd3f4-ac0f-465a-8860-37dd655625aa/checks/full-ctest.log": {
+            "bytes": 2091,
+            "sha256": "3df3460aa29e93b19e6fcd07b66a8c036dbb7ed2399e3e5e491f7745622321a0"
+        },
+        "ARAMF_WORKER/certification/evidence/f4/F4.1.1.0.0/db9dd3f4-ac0f-465a-8860-37dd655625aa/checks/independence.log": {
+            "bytes": 2064,
+            "sha256": "dfc1507c73f8612a252c4d4fee09aebf5752b5436dd58fb6c9c89415716d327d"
+        },
+        "ARAMF_WORKER/certification/evidence/f4/F4.1.1.0.0/db9dd3f4-ac0f-465a-8860-37dd655625aa/checks/integration.log": {
+            "bytes": 67,
+            "sha256": "4031cdf4b5a44241d25f60bb2737fa7b67006ff83a214c32f0808d2da1badced"
+        },
+        "ARAMF_WORKER/certification/evidence/f4/F4.1.1.0.0/db9dd3f4-ac0f-465a-8860-37dd655625aa/checks/migration.log": {
+            "bytes": 6091,
+            "sha256": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd"
+        },
+        "ARAMF_WORKER/certification/evidence/f4/F4.1.1.0.0/db9dd3f4-ac0f-465a-8860-37dd655625aa/checks/namespace.log": {
+            "bytes": 8144,
+            "sha256": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1"
+        },
+        "ARAMF_WORKER/certification/evidence/f4/F4.1.1.0.0/db9dd3f4-ac0f-465a-8860-37dd655625aa/checks/provenance-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/f4/F4.1.1.0.0/db9dd3f4-ac0f-465a-8860-37dd655625aa/evidence.json": {
+            "bytes": 6379,
+            "sha256": "f2ebb7e50a2e5475f372838a3f01ffca0113adc13c3c05ea7bd6431308e13ef2"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/all-foundations.log": {
+            "bytes": 425,
+            "sha256": "399879299c13bf53a6268e15a6661e707f995e29c71f9b85adbd63b0a7b0f89f"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/application-startup.log": {
+            "bytes": 216,
+            "sha256": "dae5f2b1aa4136262b6c15dd0b3b0e75a5fff2a82add69541e41be030862de3a"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/cold-start.log": {
+            "bytes": 44,
+            "sha256": "7651ac7c938b90eeadd10b797720a4d938a64e89347496acde26ed4f37611099"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/ctest.log": {
+            "bytes": 2091,
+            "sha256": "6f0ae9e856dd50411adcce59f2e5f0772645da9dad7c18cae7615cfbe4a16ca5"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/foundation-namespace.log": {
+            "bytes": 8144,
+            "sha256": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/git-diff-check.log": {
+            "bytes": 3336,
+            "sha256": "1f734213496873a1d6bd405e4a93c0aa9948c023da723527979d676e5804d0b7"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/memory-consistency.log": {
+            "bytes": 42,
+            "sha256": "e00e3704f836b0e152dbdd42ca9a3f21ce75fcbf0e2fe39cd61d37fa0f6315bb"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/p1-governance.log": {
+            "bytes": 43,
+            "sha256": "57c1c1cb913789572c0035d98805d701468ce6493ef4b08c1c287ebc061175ba"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/p2-context.log": {
+            "bytes": 33,
+            "sha256": "35a16f7a1d8eb26eb75d77b15e8e10a30ceb71177cda5ef3e9456943eaa280b3"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/p3-execution.log": {
+            "bytes": 26,
+            "sha256": "457df4301e4dac04087f6bd0d1d301b16bce56a57969203b90212da36e078569"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/p4-predictive.log": {
+            "bytes": 122,
+            "sha256": "0f3cf3b72a215353c7da4730e2ada932a0f0c962e8a584e1050d4239c7c99645"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/p5-routing.log": {
+            "bytes": 6873,
+            "sha256": "6252025e76ac78dc4a3bc451f5a0d7d187b85293136a631f4ef48f7b8a4cb5a6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/process-migration.log": {
+            "bytes": 6091,
+            "sha256": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/production-build.log": {
+            "bytes": 23,
+            "sha256": "71aa391ec7d7e291b419a7f40fba91919e14ac2394ab4e8b66ed126e267d70f6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/provenance-and-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/regression.json": {
+            "bytes": 220156,
+            "sha256": "435144ee526f5f729960113066ddc3de3e6ee4eb5f4d58926eb9dba173e0c575"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/test-250.log": {
+            "bytes": 209,
+            "sha256": "8cf3a6294c772985db1b077b03f842a747ffbe4f274a7985b35e28d5ad8b5f48"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/1394853f-5c2e-47ff-bffe-bd35e643fa83/test-550-automated.log": {
+            "bytes": 255,
+            "sha256": "32ed43642ec5531ccf43c24076e41d34790bb7f761bda174cb7a7ecd6fdbc46c"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/68f8f396-f67f-45f2-a0d3-f8c97418a396/all-foundations.log": {
+            "bytes": 425,
+            "sha256": "399879299c13bf53a6268e15a6661e707f995e29c71f9b85adbd63b0a7b0f89f"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/68f8f396-f67f-45f2-a0d3-f8c97418a396/foundation-namespace.log": {
+            "bytes": 8144,
+            "sha256": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/68f8f396-f67f-45f2-a0d3-f8c97418a396/p1-governance.log": {
+            "bytes": 43,
+            "sha256": "57c1c1cb913789572c0035d98805d701468ce6493ef4b08c1c287ebc061175ba"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/68f8f396-f67f-45f2-a0d3-f8c97418a396/p2-context.log": {
+            "bytes": 33,
+            "sha256": "35a16f7a1d8eb26eb75d77b15e8e10a30ceb71177cda5ef3e9456943eaa280b3"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/68f8f396-f67f-45f2-a0d3-f8c97418a396/p3-execution.log": {
+            "bytes": 26,
+            "sha256": "457df4301e4dac04087f6bd0d1d301b16bce56a57969203b90212da36e078569"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/68f8f396-f67f-45f2-a0d3-f8c97418a396/p4-predictive.log": {
+            "bytes": 122,
+            "sha256": "0f3cf3b72a215353c7da4730e2ada932a0f0c962e8a584e1050d4239c7c99645"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/68f8f396-f67f-45f2-a0d3-f8c97418a396/p5-routing.log": {
+            "bytes": 6873,
+            "sha256": "6252025e76ac78dc4a3bc451f5a0d7d187b85293136a631f4ef48f7b8a4cb5a6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/68f8f396-f67f-45f2-a0d3-f8c97418a396/process-migration.log": {
+            "bytes": 6091,
+            "sha256": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/68f8f396-f67f-45f2-a0d3-f8c97418a396/production-build.log": {
+            "bytes": 23,
+            "sha256": "71aa391ec7d7e291b419a7f40fba91919e14ac2394ab4e8b66ed126e267d70f6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/68f8f396-f67f-45f2-a0d3-f8c97418a396/provenance-and-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/all-foundations.log": {
+            "bytes": 425,
+            "sha256": "399879299c13bf53a6268e15a6661e707f995e29c71f9b85adbd63b0a7b0f89f"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/application-startup.log": {
+            "bytes": 215,
+            "sha256": "01e56ba6018a25cb6667e3eded7d4fe7329dff73a60c4c40b37b2251e64ed773"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/cold-start.log": {
+            "bytes": 44,
+            "sha256": "7651ac7c938b90eeadd10b797720a4d938a64e89347496acde26ed4f37611099"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/ctest.log": {
+            "bytes": 2091,
+            "sha256": "84943f70c42da238efd1e7c2922e77d29a032d1edbe7fa77c2283b1e75d0209b"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/foundation-live-validation.log": {
+            "bytes": 179,
+            "sha256": "a7a092f62c69fcbcd82dd90d25fa9996f8293e138a4424f770636b48541f695a"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/foundation-namespace.log": {
+            "bytes": 8144,
+            "sha256": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/git-diff-check.log": {
+            "bytes": 3476,
+            "sha256": "b36f68d1d5ec7bb6e7f9c84098301ba0202f4bc2c4c355ba84540a40c97181ea"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/memory-consistency.log": {
+            "bytes": 42,
+            "sha256": "e00e3704f836b0e152dbdd42ca9a3f21ce75fcbf0e2fe39cd61d37fa0f6315bb"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/p1-governance.log": {
+            "bytes": 43,
+            "sha256": "57c1c1cb913789572c0035d98805d701468ce6493ef4b08c1c287ebc061175ba"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/p2-context.log": {
+            "bytes": 33,
+            "sha256": "35a16f7a1d8eb26eb75d77b15e8e10a30ceb71177cda5ef3e9456943eaa280b3"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/p3-execution.log": {
+            "bytes": 26,
+            "sha256": "457df4301e4dac04087f6bd0d1d301b16bce56a57969203b90212da36e078569"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/p4-predictive.log": {
+            "bytes": 122,
+            "sha256": "0f3cf3b72a215353c7da4730e2ada932a0f0c962e8a584e1050d4239c7c99645"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/p5-routing.log": {
+            "bytes": 6873,
+            "sha256": "6252025e76ac78dc4a3bc451f5a0d7d187b85293136a631f4ef48f7b8a4cb5a6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/process-migration.log": {
+            "bytes": 6091,
+            "sha256": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/production-build.log": {
+            "bytes": 23,
+            "sha256": "71aa391ec7d7e291b419a7f40fba91919e14ac2394ab4e8b66ed126e267d70f6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/provenance-and-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/regression.json": {
+            "bytes": 220865,
+            "sha256": "ddb8bb1764fca2c6637996ad0e882dcb4e6015d918dc0464a759dbf8b83a774e"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/revalidations.json": {
+            "bytes": 269517,
+            "sha256": "79b7d2bbb0d81d6033847ee488d4fbcd5bc8d4ca3854e48af9ce29b64b4d6d0e"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/test-250.log": {
+            "bytes": 209,
+            "sha256": "757689a1e75f856504fe8a5ea8c74c610803ab34e27ec3080efde68b00ae230e"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/be703a12-901f-4bb5-9249-a0d0a6e8fafb/test-550-automated.log": {
+            "bytes": 255,
+            "sha256": "bf84f08d85a7c577c99867e03002dde73dbf82b9ee97efc2d336d9f3e362bda4"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/cf525d85-a470-4dbe-b567-41198c9e8764/all-foundations.log": {
+            "bytes": 425,
+            "sha256": "399879299c13bf53a6268e15a6661e707f995e29c71f9b85adbd63b0a7b0f89f"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/cf525d85-a470-4dbe-b567-41198c9e8764/foundation-namespace.log": {
+            "bytes": 8144,
+            "sha256": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/cf525d85-a470-4dbe-b567-41198c9e8764/p1-governance.log": {
+            "bytes": 43,
+            "sha256": "57c1c1cb913789572c0035d98805d701468ce6493ef4b08c1c287ebc061175ba"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/cf525d85-a470-4dbe-b567-41198c9e8764/p2-context.log": {
+            "bytes": 33,
+            "sha256": "35a16f7a1d8eb26eb75d77b15e8e10a30ceb71177cda5ef3e9456943eaa280b3"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/cf525d85-a470-4dbe-b567-41198c9e8764/p3-execution.log": {
+            "bytes": 26,
+            "sha256": "457df4301e4dac04087f6bd0d1d301b16bce56a57969203b90212da36e078569"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/cf525d85-a470-4dbe-b567-41198c9e8764/p4-predictive.log": {
+            "bytes": 122,
+            "sha256": "0f3cf3b72a215353c7da4730e2ada932a0f0c962e8a584e1050d4239c7c99645"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/cf525d85-a470-4dbe-b567-41198c9e8764/p5-routing.log": {
+            "bytes": 6873,
+            "sha256": "6252025e76ac78dc4a3bc451f5a0d7d187b85293136a631f4ef48f7b8a4cb5a6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/cf525d85-a470-4dbe-b567-41198c9e8764/process-migration.log": {
+            "bytes": 6091,
+            "sha256": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/cf525d85-a470-4dbe-b567-41198c9e8764/production-build.log": {
+            "bytes": 23,
+            "sha256": "71aa391ec7d7e291b419a7f40fba91919e14ac2394ab4e8b66ed126e267d70f6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/cf525d85-a470-4dbe-b567-41198c9e8764/provenance-and-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/dd5a4d45-f03f-47a6-976e-97a7b1c0c022/all-foundations.log": {
+            "bytes": 425,
+            "sha256": "399879299c13bf53a6268e15a6661e707f995e29c71f9b85adbd63b0a7b0f89f"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/dd5a4d45-f03f-47a6-976e-97a7b1c0c022/foundation-namespace.log": {
+            "bytes": 8144,
+            "sha256": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/dd5a4d45-f03f-47a6-976e-97a7b1c0c022/p1-governance.log": {
+            "bytes": 43,
+            "sha256": "57c1c1cb913789572c0035d98805d701468ce6493ef4b08c1c287ebc061175ba"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/dd5a4d45-f03f-47a6-976e-97a7b1c0c022/p2-context.log": {
+            "bytes": 33,
+            "sha256": "35a16f7a1d8eb26eb75d77b15e8e10a30ceb71177cda5ef3e9456943eaa280b3"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/dd5a4d45-f03f-47a6-976e-97a7b1c0c022/p3-execution.log": {
+            "bytes": 26,
+            "sha256": "457df4301e4dac04087f6bd0d1d301b16bce56a57969203b90212da36e078569"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/dd5a4d45-f03f-47a6-976e-97a7b1c0c022/p4-predictive.log": {
+            "bytes": 122,
+            "sha256": "0f3cf3b72a215353c7da4730e2ada932a0f0c962e8a584e1050d4239c7c99645"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/dd5a4d45-f03f-47a6-976e-97a7b1c0c022/p5-routing.log": {
+            "bytes": 6873,
+            "sha256": "6252025e76ac78dc4a3bc451f5a0d7d187b85293136a631f4ef48f7b8a4cb5a6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/dd5a4d45-f03f-47a6-976e-97a7b1c0c022/process-migration.log": {
+            "bytes": 6091,
+            "sha256": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/dd5a4d45-f03f-47a6-976e-97a7b1c0c022/production-build.log": {
+            "bytes": 23,
+            "sha256": "71aa391ec7d7e291b419a7f40fba91919e14ac2394ab4e8b66ed126e267d70f6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/dd5a4d45-f03f-47a6-976e-97a7b1c0c022/provenance-and-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/all-foundations.log": {
+            "bytes": 425,
+            "sha256": "399879299c13bf53a6268e15a6661e707f995e29c71f9b85adbd63b0a7b0f89f"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/application-startup.log": {
+            "bytes": 216,
+            "sha256": "5230cf38fb718dc673ca7266ded4437340999f3a34eedbf17e2d192c13fa190d"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/cold-start.log": {
+            "bytes": 44,
+            "sha256": "7651ac7c938b90eeadd10b797720a4d938a64e89347496acde26ed4f37611099"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/ctest.log": {
+            "bytes": 2091,
+            "sha256": "47e0588727b4d33c6bf15dfb3506d5d4393a2cf5651303f250feaf19852736e7"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/foundation-namespace.log": {
+            "bytes": 8144,
+            "sha256": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/git-diff-check.log": {
+            "bytes": 1582,
+            "sha256": "cc761ffac5a5c8ada740f60399a445eeed2baf350ba3f0e0342c0a1e73a5ec25"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/memory-consistency.log": {
+            "bytes": 42,
+            "sha256": "e00e3704f836b0e152dbdd42ca9a3f21ce75fcbf0e2fe39cd61d37fa0f6315bb"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/p1-governance.log": {
+            "bytes": 43,
+            "sha256": "57c1c1cb913789572c0035d98805d701468ce6493ef4b08c1c287ebc061175ba"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/p2-context.log": {
+            "bytes": 33,
+            "sha256": "35a16f7a1d8eb26eb75d77b15e8e10a30ceb71177cda5ef3e9456943eaa280b3"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/p3-execution.log": {
+            "bytes": 26,
+            "sha256": "457df4301e4dac04087f6bd0d1d301b16bce56a57969203b90212da36e078569"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/p4-predictive.log": {
+            "bytes": 122,
+            "sha256": "0f3cf3b72a215353c7da4730e2ada932a0f0c962e8a584e1050d4239c7c99645"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/p5-routing.log": {
+            "bytes": 6873,
+            "sha256": "6252025e76ac78dc4a3bc451f5a0d7d187b85293136a631f4ef48f7b8a4cb5a6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/process-migration.log": {
+            "bytes": 6091,
+            "sha256": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/production-build.log": {
+            "bytes": 23,
+            "sha256": "71aa391ec7d7e291b419a7f40fba91919e14ac2394ab4e8b66ed126e267d70f6"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/provenance-and-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/regression.json": {
+            "bytes": 190603,
+            "sha256": "fc0fc840f6a5002dcb7e71c43714fcf837580a08ae6c590baf53618fa2050143"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/test-250.log": {
+            "bytes": 54,
+            "sha256": "42c0bae26706afe427274919a68ba031bb3499c7f266ca444cb885b844612d85"
+        },
+        "ARAMF_WORKER/certification/evidence/foundation-repair/ef4dfb4f-b1c8-45b3-b624-79944df5bea9/test-550-automated.log": {
+            "bytes": 82,
+            "sha256": "ca0a011e291c5eb9f68294ea75fa386936371c4c94c8d84f9eff859bda8000e9"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/clean-configuration.log.json": {
+            "bytes": 1095,
+            "sha256": "8708aa8dd31849666878ebc1c046a169ca180d0d8490187ab8274c8be3dc07b4"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/clean-tree-build.log.json": {
+            "bytes": 167442,
+            "sha256": "29868dac4c1ad35969404009fc6dd78897f008873cbf96fa9bfe30632618ffdc"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/foundation-certification.log.json": {
+            "bytes": 8596,
+            "sha256": "e512a3f9fa2ef45cd6ee1564a63e5900b77e168602fe6b3e6a12f36d2e14999b"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/production-build.log.json": {
+            "bytes": 17829,
+            "sha256": "679f61fb0e4d3ca2355da5adfd03a8b91b43fc6384add9e8d20364ec8a3f9932"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/577ca696-b09d-4c13-9166-4a69d887216f/worker-tasks.log.json": {
+            "bytes": 214,
+            "sha256": "1c1948030d6ced4d0ce0aab1e193bac74c85a3a9d7db22296c84ce5fbedc0015"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/all-foundations.log.json": {
+            "bytes": 723,
+            "sha256": "e8732bc6e01d780945593f70d0c63a6e7febaacce06a6eee31b5df49ec2b48c8"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/application-startup.log.json": {
+            "bytes": 443,
+            "sha256": "43a8623e439ddb2b742a5c993a888f2e97f122f798ef54136e3caea10bab415e"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/clean-configuration.log.json": {
+            "bytes": 359,
+            "sha256": "d27c4cbc474bb9f9912c2082e586401af02884a95b10c374f793bf9be137c041"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/clean-tree-build.log.json": {
+            "bytes": 246,
+            "sha256": "3ce419798964961ef6259b464da1d2e9a211447cf670ac025e310b7cbc341ad1"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/cold-start.log.json": {
+            "bytes": 214,
+            "sha256": "32a9bcfc72df8f4ef82fa8e474a400c16e019784a959656ff4a66fb085c8f988"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/ctest.log.json": {
+            "bytes": 2944,
+            "sha256": "6634e415c60c6be27944f82eb24a9fb1f16eff565e5e5fa322deb817a79259e5"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-certification.log.json": {
+            "bytes": 8596,
+            "sha256": "af8bc186df63213777aa6ea64f4778e512e3128415fcbb92f58b5928529ab753"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-integration.log.json": {
+            "bytes": 246,
+            "sha256": "638523ca9a4324200d098faa1356ae87fe272aa80f59fafa2f77bbc2c1860ac6"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/foundation-namespace.log.json": {
+            "bytes": 11016,
+            "sha256": "20aba5152e99f6545440b7c600f9d3184d74579b8488b6d684f689d57a659a06"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/freshness.log.json": {
+            "bytes": 153,
+            "sha256": "147e6e32d0b6bf89764d988935d5075e342677bd3facbf53c72da49d5b528256"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/git-diff-check.log.json": {
+            "bytes": 1159,
+            "sha256": "e88036cfc224237687198903ea3ab54a2faaa307fdd147b57058f361b1e8d11a"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/identity.log.json": {
+            "bytes": 315,
+            "sha256": "aa74b3420dfc087006f6a5958c1c6ab73004e1f37abb3213a50d5c1e242aac2a"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/memory-consistency.log.json": {
+            "bytes": 210,
+            "sha256": "f01ed276294ca488b0c14f7fd85b1641403177f759639fddb73f8eed152d836b"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/process-migration.log.json": {
+            "bytes": 8280,
+            "sha256": "ac9969b8430d7a05f2531e5c5867c851f47368deb05afc6f1026399ecab95195"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/production-build.log.json": {
+            "bytes": 186,
+            "sha256": "a7e4bde35b8162e977ab64f11c7ba401d99bbc44f1eadc5318b6329a12ec2be0"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/provenance-and-scope.log.json": {
+            "bytes": 153,
+            "sha256": "147e6e32d0b6bf89764d988935d5075e342677bd3facbf53c72da49d5b528256"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/regression.json": {
+            "bytes": 221999,
+            "sha256": "f19bb8384fa884ac209b8a2e1070a7df4b9d58522f1193f7c179484777353cec"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/revalidation.log.json": {
+            "bytes": 153,
+            "sha256": "147e6e32d0b6bf89764d988935d5075e342677bd3facbf53c72da49d5b528256"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/revalidations.json": {
+            "bytes": 265194,
+            "sha256": "6079d623cda08ff3b4eeb93be576c68ef8814491ab51d027d58331f6d8574545"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/test-250.log.json": {
+            "bytes": 431,
+            "sha256": "3be4a4cf17082df8de01257cec008692b1e22c266bfa5f0015eff64a718fc2ba"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/test-550-automated.log.json": {
+            "bytes": 495,
+            "sha256": "a0feac4e6c1a4e5fdca4914dce343fcf983f4bc38d52baad6e77dcbd144c6d0f"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/user-removal-acknowledgment.json": {
+            "bytes": 59230,
+            "sha256": "3d7ad85d0cb8b49daad19373bb95f6dfa494e3e4059393c286df044c52aa5344"
+        },
+        "ARAMF_WORKER/certification/evidence/identity-repair/e9a93002-a31b-4694-b341-bf66fbc4f039/worker-tasks.log.json": {
+            "bytes": 214,
+            "sha256": "1c1948030d6ced4d0ce0aab1e193bac74c85a3a9d7db22296c84ce5fbedc0015"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/application-startup.log": {
+            "bytes": 331,
+            "sha256": "32e12f579e26fdb231e14e317ceb6bd4d6db47d630a202fef38f2b8a07d2a6ee"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/cold-start.log": {
+            "bytes": 44,
+            "sha256": "98cd1b8a91bf677fe73a69717cd0fcf6b916a0cb721fbccbfd93f947db4c98d2"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/foundation-namespace.log": {
+            "bytes": 7971,
+            "sha256": "19f3de538cc098b8575c99133d6a9d7bc1ad9e781ec7c43afee3ae4c7c442ade"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/full-ctest.log": {
+            "bytes": 661,
+            "sha256": "1282697a4cffa996072dec1c5237aad92f68849ccd1fd97a7604a2b342658a31"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/git-diff-check.log": {
+            "bytes": 474,
+            "sha256": "40a750951e9a400fdc924ead0b17dff9bc95b2bb6c97f6ca807d98593d96c18e"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/memory-consistency.log": {
+            "bytes": 42,
+            "sha256": "c58277d83034fc5222febf0dc9581d827c089e59173fe2f51a7afa66f5073dd9"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/p3-execution.log": {
+            "bytes": 26,
+            "sha256": "750f1ded28f9e8b194b39c5e4a9dddc59e84925ebca12aa84383a5a2857005f7"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/process-namespace-migration.log": {
+            "bytes": 5986,
+            "sha256": "28521b8e5db51b7d38ac78809c6835ce964954697facc38135b7f2d35393afdb"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/production-build.log": {
+            "bytes": 5960,
+            "sha256": "c5ef02f79e88170dd220c10ddbc4fa6533db879ae1e9d5f6ae489a7183337a64"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/task-postflight-verified.json": {
+            "bytes": 6542,
+            "sha256": "e5f07657b83164cded63c24d6a70562194853523b33cd07b3efe6560ec86222a"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/test-250.log": {
+            "bytes": 54,
+            "sha256": "48ee96cc76f20c6d8a88101b7eff03166f788fc61183e293fdc1471508a36d76"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/test-550-automated.log": {
+            "bytes": 81,
+            "sha256": "60fec1ebcc787da1b8c23e88be9689b122198cfe35d71d5b1cc22e85e6259006"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/worker-tasks.log": {
+            "bytes": 43,
+            "sha256": "69d530345ac004f1116b97a1c6c658ce594cb05d256f1da60fdd36144ff1b4dd"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/checks/worker-topology.log": {
+            "bytes": 389,
+            "sha256": "6d1552239afa6591465f9dad283a8d1c03f30fd2916d4143f05a915cbde77420"
+        },
+        "ARAMF_WORKER/certification/evidence/p1.1.3/iteration-3/p1-evidence.json": {
+            "bytes": 7802,
+            "sha256": "94f8e9f41217d09cd971437812685f326b805b9affa2da23c22241cbba72fa4f"
+        },
+        "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/checks/cold-start.log": {
+            "bytes": 44,
+            "sha256": "98cd1b8a91bf677fe73a69717cd0fcf6b916a0cb721fbccbfd93f947db4c98d2"
+        },
+        "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/checks/full-ctest.log": {
+            "bytes": 661,
+            "sha256": "1282697a4cffa996072dec1c5237aad92f68849ccd1fd97a7604a2b342658a31"
+        },
+        "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/checks/lifecycle-sync.log": {
+            "bytes": 1277,
+            "sha256": "b8b6bef607a139d21f678c84679ae29b05d8a2469f6636991a1bf4095869dc31"
+        },
+        "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/checks/memory-consistency.log": {
+            "bytes": 42,
+            "sha256": "c58277d83034fc5222febf0dc9581d827c089e59173fe2f51a7afa66f5073dd9"
+        },
+        "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/checks/p2-context.log": {
+            "bytes": 33,
+            "sha256": "1c4732ee3f2bf9d8b66c7a19807f0ae7eb3125f81852403e57469a1ac2a3bc2e"
+        },
+        "ARAMF_WORKER/certification/evidence/p2.1.2/iteration-2/p2-evidence.json": {
+            "bytes": 2693,
+            "sha256": "fbc563987b51b06f38e87c4ae85d4c908e086bb2f5fea7a17d04a4dc7a2dd15e"
+        },
+        "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/checks/cold-start.log": {
+            "bytes": 44,
+            "sha256": "98cd1b8a91bf677fe73a69717cd0fcf6b916a0cb721fbccbfd93f947db4c98d2"
+        },
+        "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/checks/full-ctest.log": {
+            "bytes": 661,
+            "sha256": "1282697a4cffa996072dec1c5237aad92f68849ccd1fd97a7604a2b342658a31"
+        },
+        "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/checks/lifecycle-sync.log": {
+            "bytes": 1277,
+            "sha256": "b8b6bef607a139d21f678c84679ae29b05d8a2469f6636991a1bf4095869dc31"
+        },
+        "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/checks/memory-consistency.log": {
+            "bytes": 42,
+            "sha256": "c58277d83034fc5222febf0dc9581d827c089e59173fe2f51a7afa66f5073dd9"
+        },
+        "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/checks/p3-execution.log": {
+            "bytes": 26,
+            "sha256": "750f1ded28f9e8b194b39c5e4a9dddc59e84925ebca12aa84383a5a2857005f7"
+        },
+        "ARAMF_WORKER/certification/evidence/p3.1.5/iteration-5/p3-evidence.json": {
+            "bytes": 2669,
+            "sha256": "a73d8900e964fe1bf2b42c98f074cb9cb411310d37407777f308a7d5987167ac"
+        },
+        "ARAMF_WORKER/certification/evidence/p4.1.5/iteration-5/checks/cold-start.log": {
+            "bytes": 44,
+            "sha256": "98cd1b8a91bf677fe73a69717cd0fcf6b916a0cb721fbccbfd93f947db4c98d2"
+        },
+        "ARAMF_WORKER/certification/evidence/p4.1.5/iteration-5/checks/full-ctest.log": {
+            "bytes": 661,
+            "sha256": "1282697a4cffa996072dec1c5237aad92f68849ccd1fd97a7604a2b342658a31"
+        },
+        "ARAMF_WORKER/certification/evidence/p4.1.5/iteration-5/checks/lifecycle-sync.log": {
+            "bytes": 1277,
+            "sha256": "b8b6bef607a139d21f678c84679ae29b05d8a2469f6636991a1bf4095869dc31"
+        },
+        "ARAMF_WORKER/certification/evidence/p4.1.5/iteration-5/checks/memory-consistency.log": {
+            "bytes": 42,
+            "sha256": "c58277d83034fc5222febf0dc9581d827c089e59173fe2f51a7afa66f5073dd9"
+        },
+        "ARAMF_WORKER/certification/evidence/p4.1.5/iteration-5/checks/p4-predictive.log": {
+            "bytes": 121,
+            "sha256": "d98d381d7ac2ebcc461764d2f28dd1a1b4b893099c7c19f0ee69e5119dcab9d7"
+        },
+        "ARAMF_WORKER/certification/evidence/p4.1.5/iteration-5/p4-evidence.json": {
+            "bytes": 2668,
+            "sha256": "6ae9942a0b81a76c70da2fa9a5d1ae7cd6e095e48c83ae9729b69a432d0eceeb"
+        },
+        "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/checks/cold-start.log": {
+            "bytes": 44,
+            "sha256": "98cd1b8a91bf677fe73a69717cd0fcf6b916a0cb721fbccbfd93f947db4c98d2"
+        },
+        "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/checks/full-ctest.log": {
+            "bytes": 661,
+            "sha256": "1282697a4cffa996072dec1c5237aad92f68849ccd1fd97a7604a2b342658a31"
+        },
+        "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/checks/lifecycle-sync.log": {
+            "bytes": 1277,
+            "sha256": "b8b6bef607a139d21f678c84679ae29b05d8a2469f6636991a1bf4095869dc31"
+        },
+        "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/checks/memory-consistency.log": {
+            "bytes": 42,
+            "sha256": "c58277d83034fc5222febf0dc9581d827c089e59173fe2f51a7afa66f5073dd9"
+        },
+        "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/checks/p5-routing.log": {
+            "bytes": 6751,
+            "sha256": "5ac15c73cab75ece0d2b7cca026cc31231fced2423ce91a0ca4237fde2291d10"
+        },
+        "ARAMF_WORKER/certification/evidence/p5.1.5/iteration-5/p5-evidence.json": {
+            "bytes": 2642,
+            "sha256": "d579a5cc20004e275b9787c29c29fcd94603bec1e971bafb1918665a49da33de"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/all-foundations.log": {
+            "bytes": 425,
+            "sha256": "399879299c13bf53a6268e15a6661e707f995e29c71f9b85adbd63b0a7b0f89f"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/application-startup.log": {
+            "bytes": 216,
+            "sha256": "348666e5587e8094c52d1d3fc0866ad157251f31169fe62adecf30f37ed38885"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/clean-configuration.log": {
+            "bytes": 166,
+            "sha256": "b1a429da6f5c3152c54764117fa9ee72e30f79b97b4c1e6328595dcad3f93139"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/clean-tree-build.log": {
+            "bytes": 14513,
+            "sha256": "c703ac191877802cb70a5be2202cc25c2daa05db74518615b413447932a8ab18"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/cold-start.log": {
+            "bytes": 44,
+            "sha256": "7651ac7c938b90eeadd10b797720a4d938a64e89347496acde26ed4f37611099"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/ctest.log": {
+            "bytes": 2091,
+            "sha256": "cc2ccbb1e8a5acfdb1f7620fe2b7a8c66081d883ffc6184a7d939606bc6bc992"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/foundation-certification.log": {
+            "bytes": 6329,
+            "sha256": "cc5b77c0c83b35ce7da69c857c85a21fa5271c3d5125d6eb6fe6049a7d1ec0fc"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/foundation-integration.log": {
+            "bytes": 67,
+            "sha256": "4031cdf4b5a44241d25f60bb2737fa7b67006ff83a214c32f0808d2da1badced"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/foundation-namespace.log": {
+            "bytes": 8144,
+            "sha256": "3bb74a047ae61e02725a43e59c299a59f6be72150e65d00ba52b4082b87d6af1"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/freshness.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/git-diff-check.log": {
+            "bytes": 1276,
+            "sha256": "ff0bcac73abb90e39dedae58ee2c5c3da69f8cd539e79619e6bdc25c8b44a4e0"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/memory-consistency.log": {
+            "bytes": 42,
+            "sha256": "e00e3704f836b0e152dbdd42ca9a3f21ce75fcbf0e2fe39cd61d37fa0f6315bb"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/prior-clean-tree-ctest.log": {
+            "bytes": 2325,
+            "sha256": "c194326bac76e75513a3bcaef8d18c4b5e73c93da094a8e2f311c38720318a66"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/process-migration.log": {
+            "bytes": 6091,
+            "sha256": "cad8f3dc9306d96aca293a0fbfec5ad7a9e2457476afd06bc1da70f45fef36cd"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/production-build.log": {
+            "bytes": 10888,
+            "sha256": "8fb7f902439e9018e2799ec1a4713f341edb4c6726765f44ba76593154a8224f"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/provenance-and-scope.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/regression.json": {
+            "bytes": 209731,
+            "sha256": "d0d77d75ef5c115c35ca37e14d74ac3334f5cceb9d33e1bed0eccef9b75eb9df"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/revalidation.log": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/revalidations.json": {
+            "bytes": 21416,
+            "sha256": "d4f8f066cf6f763d45a39aeac83992fa248b3d0b1a78a08620c2c37bf6225fd5"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/test-250.log": {
+            "bytes": 209,
+            "sha256": "aa1850456dd04efc42cd557f7cae372ccc78d61655159b275170993bc299b41c"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/test-550-automated.log": {
+            "bytes": 255,
+            "sha256": "6511ea46f081af858008bf65e82cc6fcd9b09d7808db0a8ef07e44df9df3a12b"
+        },
+        "ARAMF_WORKER/certification/evidence/relocation-repair/e8f96ee2-ff72-467f-b82f-80e827502822/worker-tasks.log": {
+            "bytes": 43,
+            "sha256": "5d8cd1bf7ec1a2c2aa1f258f2351d65b9ff4ead7628a6cf10f020f73b54c3c96"
+        },
+        "ARAMF_WORKER/certification/evidence/s1.1.1/iteration-1/s1-evidence.json": {
+            "bytes": 777,
+            "sha256": "b505ed807d328dc59d2f694e9534350eb07b100865671640f806f5d88d9d1d35"
+        },
+        "ARAMF_WORKER/certification/evidence/s1.1.2/iteration-2/s1-evidence.json": {
+            "bytes": 801,
+            "sha256": "de030210a330545bce955906c58cd8f407ff6be8cb0fdf0123806492987fe9ab"
+        },
+        "ARAMF_WORKER/certification/evidence/s1.1.3/iteration-3/s1-evidence.json": {
+            "bytes": 801,
+            "sha256": "71da05eb7e5dd7d9cb2dbc4e64333f24a26d4771e55d7c1f7768cbc102dcfd5c"
+        },
+        "ARAMF_WORKER/certification/evidence/s1.1.4/iteration-4/s1-evidence.json": {
+            "bytes": 796,
+            "sha256": "97056d20f8ad66d98d291367ffec524e9da11ccd571717c1769a6a96f7e3751a"
+        },
+        "ARAMF_WORKER/certification/evidence/s2.1.1/iteration-1/s2-evidence.json": {
+            "bytes": 894,
+            "sha256": "dcc26974bac0e1eb48613cad141bd1c46287760d5543f47b6adf814728c41a4f"
+        },
+        "ARAMF_WORKER/certification/evidence/s2.1.2/iteration-2/s2-evidence.json": {
+            "bytes": 894,
+            "sha256": "6c1e118c4b674ed5de7d48b4056923801df3f1d95450445967783d83ec0f9681"
+        },
+        "ARAMF_WORKER/certification/evidence/s3.1.1/iteration-1/s3-evidence.json": {
+            "bytes": 935,
+            "sha256": "4f0da49cc257131eb452960e57f49daf0ef945c1993950baf3fa48073f1276ca"
+        },
+        "ARAMF_WORKER/certification/evidence/s3.1.2/iteration-2/s3-evidence.json": {
+            "bytes": 935,
+            "sha256": "c8604d8045c97eb032ebe599ef6e5a407b9d3ec92c5db8ff6b19a50bf766fa3e"
+        },
+        "ARAMF_WORKER/certification/evidence/s3.1.3/iteration-3/s3-evidence.json": {
+            "bytes": 911,
+            "sha256": "24254213d6b20a8366168038fb4c9bf0233d73837addd0898540958e692263e9"
+        },
+        "ARAMF_WORKER/certification/evidence/s4.1.1/iteration-1/s4-evidence.json": {
+            "bytes": 1008,
+            "sha256": "d7820f86f540702518a13b2dec67b1fec0f0f2f848011328cbca0c7de8175b5b"
+        },
+        "ARAMF_WORKER/certification/evidence/s5.1.1/iteration-1/s5-evidence.json": {
+            "bytes": 1107,
+            "sha256": "2efc59129ef045081b8f26d4a772f1c79568f5264349e00566fff84a0b2dbed0"
+        },
+        "ARAMF_WORKER/certification/evidence/s6.1.1/iteration-1/s6-evidence.json": {
+            "bytes": 719,
+            "sha256": "fc205152ce05e1974f1b25c8d896d4a3ed16833545a53728084e583c88a5bee0"
+        },
+        "ARAMF_WORKER/certification/integration/94f74ce0-199a-4929-9ce9-667e0c548f93/acceptance.json": {
+            "bytes": 214238,
+            "sha256": "3999013f7a0aac5bc4cfa55698c24be1fb4029d628bcb727632e5311576b7ac5"
+        },
+        "ARAMF_WORKER/certification/integration/cf8c4f7a-520c-4437-830a-98c8a7f60b82/acceptance.json": {
+            "bytes": 214238,
+            "sha256": "12ea6200c2af019690b43bffb97438662497b1304d6338aebcdbf6ba956cd8ee"
+        },
+        "ARAMF_WORKER/certification/revalidation/F1/reval-14fda293-8ed3-46d9-a08f-580b7806a191/evidence.json": {
+            "bytes": 1580,
+            "sha256": "4e0c5a006f90d8057697165aaa945e0de0ff26d6cf5de36e9d066ca7e9c7a8e5"
+        },
+        "ARAMF_WORKER/certification/revalidation/F1/reval-14fda293-8ed3-46d9-a08f-580b7806a191/revalidation.json": {
+            "bytes": 1126,
+            "sha256": "a99f02d8bcf99cdcdad784c4ac0d2cee8886395ee8ee9819468306d79b203b0e"
+        },
+        "ARAMF_WORKER/certification/revalidation/F1/reval-7e397be8-1e99-4da9-ae7a-3da0063d1e24/evidence.json": {
+            "bytes": 1334,
+            "sha256": "67173e1e156c1a52705c4d7c55041c1c71691675b00116e460ac8286e4120fd4"
+        },
+        "ARAMF_WORKER/certification/revalidation/F1/reval-7e397be8-1e99-4da9-ae7a-3da0063d1e24/revalidation.json": {
+            "bytes": 1126,
+            "sha256": "86f2a65d9f928e8b2273fab41ac76405734e0c1b41a92db13bc37a88f406dd97"
+        },
+        "ARAMF_WORKER/certification/revalidation/F1/reval-7f34036a-f9a6-4c6f-aeea-dec11f73d8b5/evidence.json": {
+            "bytes": 1334,
+            "sha256": "91314f1d20461ee416db3805779cb0cbe2df8f28ead36558ba85437947fd1eb8"
+        },
+        "ARAMF_WORKER/certification/revalidation/F1/reval-7f34036a-f9a6-4c6f-aeea-dec11f73d8b5/revalidation.json": {
+            "bytes": 1126,
+            "sha256": "4e2c5b0f727aab00b12b3aadac98b713bbb60a1d2490864b681ca16cdeee65c3"
+        },
+        "ARAMF_WORKER/certification/revalidation/F1/reval-9e1a6d7e-0276-4ae1-89df-0c80270a2dbf/evidence.json": {
+            "bytes": 8850,
+            "sha256": "4c565b9af6d1b1c6a9b8a578f07950686a376166c0e8bc9b00fab1d328af821d"
+        },
+        "ARAMF_WORKER/certification/revalidation/F1/reval-9e1a6d7e-0276-4ae1-89df-0c80270a2dbf/revalidation.json": {
+            "bytes": 1125,
+            "sha256": "6250d361d99e21cf3a300f834c1393ad9517a63df1553047ba0e98e57045ccf1"
+        },
+        "ARAMF_WORKER/certification/revalidation/F1/reval-9f899901-3ce6-420a-abcd-1c5aa2e8c20c/evidence.json": {
+            "bytes": 1252,
+            "sha256": "35c3554482b88cabac2acb7471db1cfeca4b06e6efaf4403502b7e4a2ba2ae63"
+        },
+        "ARAMF_WORKER/certification/revalidation/F1/reval-9f899901-3ce6-420a-abcd-1c5aa2e8c20c/revalidation.json": {
+            "bytes": 1044,
+            "sha256": "7bf86b08a4d6a41ef13d37c406ff36b3498c78b525903cfaadd40a77e6cf4ff3"
+        },
+        "ARAMF_WORKER/certification/revalidation/F2/reval-e3a89fa7-2903-442f-94fb-52e953003d4f/evidence.json": {
+            "bytes": 567713,
+            "sha256": "aa764e7e7851ed9423c281696c470a2cdbf9600d6d7f942fd8ff7da1c728e7d2"
+        },
+        "ARAMF_WORKER/certification/revalidation/F2/reval-e3a89fa7-2903-442f-94fb-52e953003d4f/revalidation.json": {
+            "bytes": 1053,
+            "sha256": "4e3f349b60c3359a1904d280f1de89bfe723ebb994e6ea48fe87ee726c1b0436"
+        },
+        "ARAMF_WORKER/certification/revalidation/F3/reval-0b3134bd-31ae-400b-bff4-9c000e0c0ec0/evidence.json": {
+            "bytes": 575671,
+            "sha256": "3af953dc2c77c84d816bd781b91d8299d15162e1498ce0d21fa1f99eabc599e5"
+        },
+        "ARAMF_WORKER/certification/revalidation/F3/reval-0b3134bd-31ae-400b-bff4-9c000e0c0ec0/revalidation.json": {
+            "bytes": 1053,
+            "sha256": "d44d6a21ea6825c0610a1054432fe8e92406b502f165fd2765c62c757f800283"
+        },
+        "ARAMF_WORKER/certification/revalidation/F4/reval-6edd33d8-86ea-4d1b-995d-aa96f6155f92/evidence.json": {
+            "bytes": 647649,
+            "sha256": "caf8403210beac9e03624f014edc15edd9d02d0380d35d0251039f577cef8227"
+        },
+        "ARAMF_WORKER/certification/revalidation/F4/reval-6edd33d8-86ea-4d1b-995d-aa96f6155f92/revalidation.json": {
+            "bytes": 1053,
+            "sha256": "6d412f5545ba43f6eeed39bb12482977fd595bbaf9e9ded6d561d332d1464a5e"
+        },
+        "ARAMF_WORKER/certification/revalidation/P1/reval-14e55f91-463c-4246-934a-81eb85f8eabc/evidence.json": {
+            "bytes": 1444,
+            "sha256": "c59aa4e07e2763f4f08561cca9880b9bfb4f009bb41e7a0fe169e12ac69f7acb"
+        },
+        "ARAMF_WORKER/certification/revalidation/P1/reval-14e55f91-463c-4246-934a-81eb85f8eabc/revalidation.json": {
+            "bytes": 1145,
+            "sha256": "9c69be72e84fbbb298956138af8c810e3eac6cdd8068ac33c33c132ddabf9ae6"
+        },
+        "ARAMF_WORKER/certification/revalidation/P1/reval-55a2869d-2668-4a34-8c9f-1e6f1ac474a7/evidence.json": {
+            "bytes": 1723,
+            "sha256": "3e7ae8488b2dd6033b2f5bc9e7bc7952fd39663ff0f3d6a265aae37e492fd5e0"
+        },
+        "ARAMF_WORKER/certification/revalidation/P1/reval-55a2869d-2668-4a34-8c9f-1e6f1ac474a7/revalidation.json": {
+            "bytes": 1216,
+            "sha256": "d41fb95b07db78e648e569cd89b31a1455a923a73c4f8c387b649c86835b341e"
+        },
+        "ARAMF_WORKER/certification/revalidation/P2/reval-2cd8b5b6-c31f-4367-bab7-db3d1ede5285/evidence.json": {
+            "bytes": 1444,
+            "sha256": "54b6a353b2ff8a0b055d77f285f6c456fb6d656c44d15fb530f4a04952d1a545"
+        },
+        "ARAMF_WORKER/certification/revalidation/P2/reval-2cd8b5b6-c31f-4367-bab7-db3d1ede5285/revalidation.json": {
+            "bytes": 1145,
+            "sha256": "a20e90aa37b9f732a7fb7296e9213d074b955465f213c839efad379c6c23bc85"
+        },
+        "ARAMF_WORKER/certification/revalidation/P3/reval-97ca75f6-f492-42d1-965f-cf7a16a47da4/evidence.json": {
+            "bytes": 1626,
+            "sha256": "3a3a430f30a80d712207ccf9712881eacb781f19eee9308dd247c0138fdf2678"
+        },
+        "ARAMF_WORKER/certification/revalidation/P3/reval-97ca75f6-f492-42d1-965f-cf7a16a47da4/revalidation.json": {
+            "bytes": 1236,
+            "sha256": "98c68e571f5e5cab8e186695a1c06595e45275505cf10457fb46134a9ef7a75d"
+        },
+        "ARAMF_WORKER/certification/revalidation/P4/reval-6ef8c7f2-5727-43bf-b274-509d3bb5c8cd/evidence.json": {
+            "bytes": 1444,
+            "sha256": "17aec21b6aef00cc6297035bd0abadecf72bf4fe43cc06a377b503dcae8bcb1f"
+        },
+        "ARAMF_WORKER/certification/revalidation/P4/reval-6ef8c7f2-5727-43bf-b274-509d3bb5c8cd/revalidation.json": {
+            "bytes": 1145,
+            "sha256": "8f1d7b92e731be46f6fe82fe5a1d7d320ec0d3c3275aedd795738caad8b879f4"
+        },
+        "ARAMF_WORKER/certification/revalidation/P5/reval-9c4b340c-c81b-42be-be87-bf22ac5caf6a/evidence.json": {
+            "bytes": 1626,
+            "sha256": "b8d902f2d502679b46dfd5c83537dfd177df1eda3590b20f7bf0fbdc4267121c"
+        },
+        "ARAMF_WORKER/certification/revalidation/P5/reval-9c4b340c-c81b-42be-be87-bf22ac5caf6a/revalidation.json": {
+            "bytes": 1236,
+            "sha256": "90677ed0f03c54dc09a9dd1dfdef3a10075552b0d4cf3ac429cd2b6d7355c099"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-547fcfec-5c1e-410a-b9dc-598ee87ef8a7/evidence.json": {
+            "bytes": 1334,
+            "sha256": "fb2a65afb16b5a36fcb910e8041506662df5b8d9257a308f9f393dcb6216efba"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-547fcfec-5c1e-410a-b9dc-598ee87ef8a7/revalidation.json": {
+            "bytes": 1126,
+            "sha256": "2fb4f35314596873963658696fc8d2c314b773adfb6fb634f6a9791b383b0b4c"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-b118f5b3-6f41-4d06-90d1-cc961d4c6587/evidence.json": {
+            "bytes": 1262,
+            "sha256": "fe253b1ab7e856080ca1469fb517c5ba6f4f067421873c720e80ef4bfa3a94bd"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-b118f5b3-6f41-4d06-90d1-cc961d4c6587/revalidation.json": {
+            "bytes": 1054,
+            "sha256": "6a9787149bd64a505a207f7fe6fdd6ca8d531347874e3a5e61ba94e72ffe9976"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-cd818b52-1d6e-4dce-a357-05849535fb0f/evidence.json": {
+            "bytes": 1580,
+            "sha256": "4752e4787b40c29fa0322adfaa5338c5770a1f65648bd8f234af9e2e6a2ee581"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-cd818b52-1d6e-4dce-a357-05849535fb0f/revalidation.json": {
+            "bytes": 1126,
+            "sha256": "25d42eb16a9e8db9d0461373dc54caa680329545edfda2287e3aa66efa238416"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-cf9ee87b-292d-4ba9-bb73-4613fc658708/evidence.json": {
+            "bytes": 1540,
+            "sha256": "d19fe258870767e705699c8279627c5a79b57fafa7a956967f22dbfd74e77b2b"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-cf9ee87b-292d-4ba9-bb73-4613fc658708/revalidation.json": {
+            "bytes": 1125,
+            "sha256": "bfb9ab337d94f025253d7a50a18c40b5394f3e160bb5e0b7ad33e65c3ca65f3b"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-e92d6aa3-e46b-4512-8aa4-a34706e46372/evidence.json": {
+            "bytes": 8850,
+            "sha256": "fbbf6746caf4e08de353315e942bbfd0775d98b279fae017ad2a8423559e1c9a"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-e92d6aa3-e46b-4512-8aa4-a34706e46372/revalidation.json": {
+            "bytes": 1125,
+            "sha256": "502bf479aad3480ab21fc7f516d02a52e6a27df92e0180895150c13e5d77a73c"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-f9cefc6c-e4f1-4903-a2f9-04734e21c7d6/evidence.json": {
+            "bytes": 1334,
+            "sha256": "ae5c6c6d03abcef57b7a7fa91186b9a74873ed186f62430f0128160f77531bc3"
+        },
+        "ARAMF_WORKER/certification/revalidation/S1/reval-f9cefc6c-e4f1-4903-a2f9-04734e21c7d6/revalidation.json": {
+            "bytes": 1126,
+            "sha256": "d7dd97d82ffb9a3ed46d28dc028eeb47c5882a3ff70b8f49760d91064685ab7c"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-25739821-9a4b-4f76-ab11-448a53a229c1/evidence.json": {
+            "bytes": 1516,
+            "sha256": "5aed05581a932ef27ebd6b3bbc80f651bf0c34149a4948b4b65f50e9cd96e41d"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-25739821-9a4b-4f76-ab11-448a53a229c1/revalidation.json": {
+            "bytes": 1217,
+            "sha256": "c8e0a06c30fbba5457ac401a926df42fc9606cec2979ed8b6971d7fa012ab7d4"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-4b7a5f1e-4355-4684-bf6f-5360669f2f1c/evidence.json": {
+            "bytes": 1444,
+            "sha256": "833566ff6f34d4a7430fe8fb78c976eec1ef509322822091c25b893a88a660c7"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-4b7a5f1e-4355-4684-bf6f-5360669f2f1c/revalidation.json": {
+            "bytes": 1145,
+            "sha256": "8495d339d9d87f3258879c20d5c80959e357ec901695e0db5c55615eae6ce820"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-943684d5-6158-4a5f-bdc2-9fd058f925e3/evidence.json": {
+            "bytes": 1762,
+            "sha256": "215cd86affd35f41facf09d5fe59861e6761f8f5cff3bd4568f2a362c5719018"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-943684d5-6158-4a5f-bdc2-9fd058f925e3/revalidation.json": {
+            "bytes": 1217,
+            "sha256": "07860872d9324443e20c4dab972928993eb43bdfb3f8ccb6cb017cd79c010f86"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-978e982c-8c7f-42db-9317-fd6e0cbdd10f/evidence.json": {
+            "bytes": 1516,
+            "sha256": "e2f4e465d7485c6761a642053d1e54de5f4e276145c68d3f1d4c49f1509a5883"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-978e982c-8c7f-42db-9317-fd6e0cbdd10f/revalidation.json": {
+            "bytes": 1217,
+            "sha256": "577c039800927eb8f914a33a1de2d053482aca4e2acf8d9b6e49572b22575e16"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-b36f85ea-9baf-4991-9389-9491af51b362/evidence.json": {
+            "bytes": 9032,
+            "sha256": "77255c0da372826c505c77c7f1d52b1424c921bc1659d49c3737c94a84d5f8c0"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-b36f85ea-9baf-4991-9389-9491af51b362/revalidation.json": {
+            "bytes": 1216,
+            "sha256": "59b99ff892c0a05dcab75433024cbd846c3cea8c6800102e07baf33b36a5a0ad"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-b40e1f06-9043-4873-9d34-c247279ec4b8/evidence.json": {
+            "bytes": 1722,
+            "sha256": "1b39fa915ef8f2470ff373883dcab9eb97e4cc092ea32d1a7c7ec13f2e3e5c14"
+        },
+        "ARAMF_WORKER/certification/revalidation/S2/reval-b40e1f06-9043-4873-9d34-c247279ec4b8/revalidation.json": {
+            "bytes": 1216,
+            "sha256": "cb5c4d9fbba82f610c66ab2a6b13b9c1fae126b5cfc6c39311b09b06501528ae"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-018c5884-dcb0-4ee8-aee1-2bbefebdf059/evidence.json": {
+            "bytes": 1698,
+            "sha256": "98fafa09c487fd910aa2129e28aea695c406cb248e26515bdcb41dedd0d6c675"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-018c5884-dcb0-4ee8-aee1-2bbefebdf059/revalidation.json": {
+            "bytes": 1308,
+            "sha256": "f7ba161f620573a299fc3ddec0671e078bd785588c8db392b9b84bb16050d692"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-b616dc92-9bb9-43f4-8a67-6227a40ab8bc/evidence.json": {
+            "bytes": 1626,
+            "sha256": "465d71f6d218332b53f7f1408769b0b73d3770cfad7bf2ef46ee3cf75e85e839"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-b616dc92-9bb9-43f4-8a67-6227a40ab8bc/revalidation.json": {
+            "bytes": 1236,
+            "sha256": "f731ba5830c558c71f0ea197c9f8f9bd8e2722e64ace10b4a50b959d3fe852c3"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-d783aa2f-b49d-46a2-95b7-5fbbd9d86d6c/evidence.json": {
+            "bytes": 1944,
+            "sha256": "ff24d0559a65e687c89d423b5cb07c8b7dae748002e617e4126cacd3124cc913"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-d783aa2f-b49d-46a2-95b7-5fbbd9d86d6c/revalidation.json": {
+            "bytes": 1308,
+            "sha256": "5c1c64cdcf51375a69a2ed9b183d521a529c124012d19a66fbb7f263d8fe9c9b"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-e35fa0e1-fa8c-4133-832f-f361b4ae3023/evidence.json": {
+            "bytes": 9214,
+            "sha256": "4333daa24822618ea82091fb81b3436164b049f4e6e6c61f0ff97889d15e529a"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-e35fa0e1-fa8c-4133-832f-f361b4ae3023/revalidation.json": {
+            "bytes": 1307,
+            "sha256": "89095cb5aee9b56f40f33f26876a4e747ba598b58f420c30e691a725d6cca9b9"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-e987bfaf-1351-45b4-99db-86c3b2971f27/evidence.json": {
+            "bytes": 1698,
+            "sha256": "0d6dbcbdab3a28aeec05baab819c6fd6fc216819d7a7873e4e583d2b54247705"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-e987bfaf-1351-45b4-99db-86c3b2971f27/revalidation.json": {
+            "bytes": 1308,
+            "sha256": "8e76b4c6b4a475333c7a39b3763183f5ce6348cac5cdc9a320d06c51711a268b"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-ef9e2b19-cd07-47fd-b7a5-ce65928239b0/evidence.json": {
+            "bytes": 1904,
+            "sha256": "eb2bee35e288f355f49e0d7c336d5662505ef7b15b192e8b3139c411c295d7f3"
+        },
+        "ARAMF_WORKER/certification/revalidation/S3/reval-ef9e2b19-cd07-47fd-b7a5-ce65928239b0/revalidation.json": {
+            "bytes": 1307,
+            "sha256": "2b92ead7656ebd342b6a00f3987fce5cc7486d727f87541209049b654751c462"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-0dbdcd4b-d55b-4d32-8a8e-6c11eaf4c6d6/evidence.json": {
+            "bytes": 1808,
+            "sha256": "b5bd5172c34ec192f10ea1595bca2529b6a10f4e381d4e868e6c92e547fdcd1a"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-0dbdcd4b-d55b-4d32-8a8e-6c11eaf4c6d6/revalidation.json": {
+            "bytes": 1327,
+            "sha256": "f0c33bc7541f1f9c443ff08bccb8639a5b72f455852eff8cf5a849e073bfd33d"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-53d230f9-2271-477c-b52e-ed6ce85f069a/evidence.json": {
+            "bytes": 1880,
+            "sha256": "5ed7380b65944680d929f9cdeaec249bfa73378644b0bef4b6acacd55e48577b"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-53d230f9-2271-477c-b52e-ed6ce85f069a/revalidation.json": {
+            "bytes": 1399,
+            "sha256": "82eebab33216cd4990f68a509387304c07a26c8ff0aa9f118f166c6444cfcb43"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-56b2bf99-7e31-49b5-a5c0-2a2bb6556dd8/evidence.json": {
+            "bytes": 2086,
+            "sha256": "7452d7094c8a8bdd2b978ee1f81c05432ab9badbdc55f89329ba8501f4505a8f"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-56b2bf99-7e31-49b5-a5c0-2a2bb6556dd8/revalidation.json": {
+            "bytes": 1398,
+            "sha256": "1e7d5ee02a999fb92366217770e415b4eea228d8b0d07c732357ed842b1c5dde"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-7e356642-2b8a-4c85-b30d-1e72a568694a/evidence.json": {
+            "bytes": 1880,
+            "sha256": "648c4792e915beb7c2c702194e07ff181c9c13847b03701a91506ff5195e17fb"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-7e356642-2b8a-4c85-b30d-1e72a568694a/revalidation.json": {
+            "bytes": 1399,
+            "sha256": "67babbb793217b5cceb19ae0d9bff5c742ba61cc03354bf4c7c5d0974c8c016f"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-890b64ea-5227-44c5-beb8-378b7a49c707/evidence.json": {
+            "bytes": 2126,
+            "sha256": "f2492846c430922397ce1b12a8538e1618c27a29cff7b3ea1b478f7156841c32"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-890b64ea-5227-44c5-beb8-378b7a49c707/revalidation.json": {
+            "bytes": 1399,
+            "sha256": "289b2e7ffe9c255c790aa82f4c2e1d9393f450f4180e61be5768d7c47fb825ec"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-f0dbcba9-2b0b-458f-a535-28a5339e22d7/evidence.json": {
+            "bytes": 9396,
+            "sha256": "c6ba808922db487a8aea5c5e052d187439344919245f166ea17ba5adbeda8f84"
+        },
+        "ARAMF_WORKER/certification/revalidation/S4/reval-f0dbcba9-2b0b-458f-a535-28a5339e22d7/revalidation.json": {
+            "bytes": 1398,
+            "sha256": "21f2fe0e54cf78a7648c09ef59f7425926806d4cb9de5612e4d107f57eafa693"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-12a5c670-c82b-4c65-9a22-560da9c68298/evidence.json": {
+            "bytes": 2308,
+            "sha256": "7221aa859bda2d114dfabbaa1d0963573868cd46e452f3c1a044db1d422ed626"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-12a5c670-c82b-4c65-9a22-560da9c68298/revalidation.json": {
+            "bytes": 1490,
+            "sha256": "24034579775340fd74eff40a923bdb6aab859ec3b9271783c40b383a1ecb6cba"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-5a655649-5e73-461f-9707-3c5589a74407/evidence.json": {
+            "bytes": 9578,
+            "sha256": "654e03d9efcc354bfe289e1aa6f06c91db29cd518c4f1b58f5a2dad9a3b1551e"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-5a655649-5e73-461f-9707-3c5589a74407/revalidation.json": {
+            "bytes": 1489,
+            "sha256": "9035e84100ba7b56b5e9a184647bb57e9c74743e7ac3c1950749996f35aa53b2"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-8ba2a19d-b918-40c9-bea9-5508e2fff186/evidence.json": {
+            "bytes": 2062,
+            "sha256": "79ccb68718771e4a6d61e7717c7035affe8a8d52112115870a5c16664c1dc456"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-8ba2a19d-b918-40c9-bea9-5508e2fff186/revalidation.json": {
+            "bytes": 1490,
+            "sha256": "9caaf754ff09d6cadd66bdeb1489966ffa30e6583ccb4971724131c2ec6cb16d"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-b51f8970-5660-457b-8f65-a72a07bacd43/evidence.json": {
+            "bytes": 2062,
+            "sha256": "085356daf86e2f30d8df9904040237193effb11a799908c8b5d8f032dab0898d"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-b51f8970-5660-457b-8f65-a72a07bacd43/revalidation.json": {
+            "bytes": 1490,
+            "sha256": "968cab276600af895a454f71db522dab4ca0df53e9c9006010d97e0f41196519"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-e56df497-8a10-4e44-b0d7-a82387494ba5/evidence.json": {
+            "bytes": 2268,
+            "sha256": "162475dc47d7d5a6d6678de8e1781786a4d399ee823af7939e2d53a293be2bf7"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-e56df497-8a10-4e44-b0d7-a82387494ba5/revalidation.json": {
+            "bytes": 1489,
+            "sha256": "3c77859eefcb836c3f221163ba7f8bb6449e2f466e29c0a491269f1fdefd0141"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-ebddd71a-b6ea-4ae8-82bc-64c25262b543/evidence.json": {
+            "bytes": 1990,
+            "sha256": "55d0c1b9ecac03b8699a7033c0d8e74103a1ca5828c26867826621ab71ccebd2"
+        },
+        "ARAMF_WORKER/certification/revalidation/S5/reval-ebddd71a-b6ea-4ae8-82bc-64c25262b543/revalidation.json": {
+            "bytes": 1418,
+            "sha256": "f4f9ec519c8ff993187b73b5982d5ea7d015aedfdfa0baa099fe0aadd7e7411d"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-252ceeca-bd73-4daa-9fbb-4c3a68b1a1f7/evidence.json": {
+            "bytes": 2172,
+            "sha256": "6b37d02a0525b1335f360fc9f7a1b2e6ef6766ea183f75ca879fb12ba30854f0"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-252ceeca-bd73-4daa-9fbb-4c3a68b1a1f7/revalidation.json": {
+            "bytes": 1509,
+            "sha256": "48527d1a70ae1809465032d0271933ef06744be935297bb8ed35b4ff440b5780"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-318d08e4-2d49-4ecc-b5f2-4e10fc3015da/evidence.json": {
+            "bytes": 2244,
+            "sha256": "26f0e3ff112e7e86281536f3111cccad03aaa08d5702641f120f29ba8197fcf4"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-318d08e4-2d49-4ecc-b5f2-4e10fc3015da/revalidation.json": {
+            "bytes": 1581,
+            "sha256": "94ac98962955c11526b234a71e44363173f620e699d877ac6e4acebf0b8a2798"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-6acfff9e-6582-455a-991b-976521c95d9c/evidence.json": {
+            "bytes": 2244,
+            "sha256": "4fef4275f2eb074464dde9b95a0d1e8be0e5695fca5f9720f90e5b24ca1f73f7"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-6acfff9e-6582-455a-991b-976521c95d9c/revalidation.json": {
+            "bytes": 1581,
+            "sha256": "2a77f1cdf3f77177c5ade1d23e5030e898c7a21d1b2f0960a0bc066e488bd9b7"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-8f3540ec-3959-43c9-b3b6-e956b18db6a7/evidence.json": {
+            "bytes": 2450,
+            "sha256": "62777a2a495bd19200dc79d78810833540aad906a697d2f538a3aeeac26ceb28"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-8f3540ec-3959-43c9-b3b6-e956b18db6a7/revalidation.json": {
+            "bytes": 1580,
+            "sha256": "ddc3e6a37f29d6c059064fafc1ca68f3168d8b2c67eeb984031ff127f04f581e"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-af31d9ba-eb6d-460d-97e0-5bf61f8a931a/evidence.json": {
+            "bytes": 9760,
+            "sha256": "7f881be8f4f0e5a8252c640223f9fff3c1a601818f47dd9cabeca27f08b4f51d"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-af31d9ba-eb6d-460d-97e0-5bf61f8a931a/revalidation.json": {
+            "bytes": 1580,
+            "sha256": "7301bcf0d3e45275d2bfe327d6f76638dd2c71c236eb5f7a65c3f789040daa09"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-e9b3fdfb-b3ff-4a0e-8651-179d2a46c405/evidence.json": {
+            "bytes": 2490,
+            "sha256": "eb5f63feeeaf94439e65119bf832c7c7101aba7e361f284dda1ce3af5c192562"
+        },
+        "ARAMF_WORKER/certification/revalidation/S6/reval-e9b3fdfb-b3ff-4a0e-8651-179d2a46c405/revalidation.json": {
+            "bytes": 1581,
+            "sha256": "25fd6d43b4d32c4edcf180b5b9f0869e436a4a49beb18420a2defe8356549a3d"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/ProjectMemory.cpp.bin": {
+            "bytes": 127861,
+            "sha256": "f2bff0f16e84850c8b39ce052266dd6981d2fcc29e90558d314ba4dab98e9b12"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/README.md": {
+            "bytes": 6299,
+            "sha256": "f1c9577331a4c6400b4b1c77b626e05ae3de46ffdf5b347a4dc5d5bdfdf78a97"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/after.json": {
+            "bytes": 1309,
+            "sha256": "949d6fdaea56da5d5c4bc8e7b1dd2a549050885632faf1258b801742fbb1a51f"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/before/current-state.md.bin": {
+            "bytes": 234,
+            "sha256": "028c9d21a3010741c9cf5c4e2a2d8dea306e66d18b7088cc0556d4981ca33889"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/before/decisions.md.bin": {
+            "bytes": 19138,
+            "sha256": "37b6261f2b660a3b17d59430d1963fcc61e2be8d745e54d64b8483fd3a959ad8"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/before/event-log.jsonl.bin": {
+            "bytes": 220198,
+            "sha256": "42d2e69194b7b4063d7000be3039b4a93d5e11494078e5cd43ebb5e1fd1a8d7f"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/before/memory-consistency-validation.json.bin": {
+            "bytes": 2340,
+            "sha256": "2e752bc2523ce2ac003610f4c04c5546d96af4d120a96a8060e4238d5dded810"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/before/memory-manifest.json.bin": {
+            "bytes": 273,
+            "sha256": "3269eef6ce1ed9711fd6902132c6091ebaafa6792b888bc89b0dd206e624e601"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/candidates/current-state.snapshot.md": {
+            "bytes": 219,
+            "sha256": "230e4183ed8f157fc5595a42077ae0b35535b8c319e6d5160434cc61309493c7"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/candidates/decisions.md": {
+            "bytes": 18806,
+            "sha256": "adb28a1a1f719e8f2b43dc33df004016d5699b402a721c6184f1f89cbb199e3b"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/candidates/event-log.jsonl": {
+            "bytes": 219716,
+            "sha256": "e3e2b4dff530509fd2444c705f63787cbd0c4a9ae11dc793ad29767fcdedc288"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/candidates/memory-consistency-validation.json": {
+            "bytes": 2251,
+            "sha256": "93504e163cbfe7aa6ae7121f0f53bbd89536685ca6c5a3d759059af515e0cf1a"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/candidates/memory-manifest.json": {
+            "bytes": 264,
+            "sha256": "7218e1eba499096d7de421fb6bc71383a8ab77c2038ac767e70dfc614cfbfb8c"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/current-state-evidence.json": {
+            "bytes": 5881,
+            "sha256": "0a592deef917119a30c74ef87ffdb4a43382fc5fb18f25279be588095be6e685"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/events-before.json": {
+            "bytes": 283087,
+            "sha256": "aa1153b2268e7ece02d7e70c488b8a0fe7742d8087703000a4a895b11563e44c"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/failed-closeout-helper.cpp.bin": {
+            "bytes": 15318,
+            "sha256": "48b20fbf5abe6941d9dee7584aa2a68f8c630d09f23864ffae55ca23cf549602"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/git-diff-check.txt": {
+            "bytes": 625,
+            "sha256": "ce7dd7fffa6340de5c47a2ac70062a8d8fa8bc66256a4a436f7f03c4c64eb2cd"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/git-status-after.txt": {
+            "bytes": 1087,
+            "sha256": "adf110b5ea90b0b3a2279c33a47f1b115f7dbe3739444b908d704f06bda272be"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/git-status-before.txt": {
+            "bytes": 1123,
+            "sha256": "2a3009ace8e90437e165ee539144c9e456af97841e98ae7fba8fae453a384952"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/head.txt": {
+            "bytes": 41,
+            "sha256": "a494d9ba646240634773017dd01985d99469913e34aab4b6ac65f48aca745729"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/logical-before/current-state.snapshot.md": {
+            "bytes": 204,
+            "sha256": "e92ebc9873a933e1344c363568f21dd48e02576d04fc926ed051912a9422b338"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/logical-before/decisions.md": {
+            "bytes": 18474,
+            "sha256": "4113c9c6cba1afe887f1c5f09ec1544facc087ef418215db3ef6bab026eefe7e"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/logical-before/event-log.jsonl": {
+            "bytes": 219234,
+            "sha256": "4b93dccb021ee6dcd6ffa912004e1576ab65e60948fd8682ddd02c5e35af5250"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/logical-before/memory-consistency-validation.json": {
+            "bytes": 2162,
+            "sha256": "e1ffe1e1d19b286b03d41d426e178c40253881d73916166f6913c64daa923bfe"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/logical-before/memory-manifest.json": {
+            "bytes": 255,
+            "sha256": "b2f90479c833e32068e2bf22c8f8f7f696b445c4eebcf0565d63f59af1ab01eb"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/memory-consistency-after.json": {
+            "bytes": 2255,
+            "sha256": "6f1f6fe6463cab6e12d5f0cb4e527cb3d9aa4ce3195b923691df30c5cd0a9d84"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/memory-consistency-before.json": {
+            "bytes": 2255,
+            "sha256": "8ff194f93de2d04ef72fde9fafc3b83ec9ef5fac4f2294c5fdcd995e999cee5b"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/prepare-contract.bin": {
+            "bytes": 1309247,
+            "sha256": "e02f59f91f3300527c0634cb34ce6967a7709ae7ba52229cb492f8d625cccdc3"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/protected-baseline.bin": {
+            "bytes": 35066,
+            "sha256": "0f21e6a7f35c5c029ff313c73c8fdf2f97c81f28d948592787b278d022c41501"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/qt-text-replay/current-state.md.bin": {
+            "bytes": 234,
+            "sha256": "028c9d21a3010741c9cf5c4e2a2d8dea306e66d18b7088cc0556d4981ca33889"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/qt-text-replay/decisions.md.bin": {
+            "bytes": 19138,
+            "sha256": "37b6261f2b660a3b17d59430d1963fcc61e2be8d745e54d64b8483fd3a959ad8"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/qt-text-replay/event-log.jsonl.bin": {
+            "bytes": 220198,
+            "sha256": "42d2e69194b7b4063d7000be3039b4a93d5e11494078e5cd43ebb5e1fd1a8d7f"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/qt-text-replay/memory-consistency-validation.json.bin": {
+            "bytes": 2340,
+            "sha256": "2e752bc2523ce2ac003610f4c04c5546d96af4d120a96a8060e4238d5dded810"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/qt-text-replay/memory-manifest.json.bin": {
+            "bytes": 273,
+            "sha256": "3269eef6ce1ed9711fd6902132c6091ebaafa6792b888bc89b0dd206e624e601"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/reconstruction-helper.cpp.bin": {
+            "bytes": 16578,
+            "sha256": "8683cfa35affbf6eb265a937c3bb3fd0a25d8c8a7bb7dae38bd8de731a3a9612"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/reconstruction-manifest.json": {
+            "bytes": 9430,
+            "sha256": "f5eaa6677e698baf2c0116246427dd52360684e9b32a7d1f6eab1fd3894f15ea"
+        },
+        "ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/repository-before.json": {
+            "bytes": 1191859,
+            "sha256": "8f4b006e9c48cb32fb2f8f5428f0a1196cf881ce167d022278ef1f3c76264bb3"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/application-startup.json": {
+            "bytes": 717,
+            "sha256": "46afe999c20c517ed8ba6afcc9f8e5e80613fc37935df6abd5eca72fb3ef2d9e"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/archived-campaign-evidence.json": {
+            "bytes": 770623,
+            "sha256": "c1c8261a6f110c9251c0cf86addb9da39ce7982e8c23c864ceb4b2be831cb096"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/campaign-250.json": {
+            "bytes": 611,
+            "sha256": "1665dd7ee1dbc1761c33d32d49a462036237bdeac8305c852a2507cd3ba23bd9"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/campaign-550-windows.json": {
+            "bytes": 693,
+            "sha256": "62bbe4b8e28b0b965ce0fc051e9bd12405d0144016fab35abe76a778988f6d26"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/campaign-550.json": {
+            "bytes": 772,
+            "sha256": "beb298b166fb70b7d0b92f01eebbd184e4a9517eae872194a8de000fcd5b721b"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/campaign-target-build.json": {
+            "bytes": 1168,
+            "sha256": "746ae3eeba5fe74ecf0131837928b1ad8e2279719eee7a39b94859d3f6476f92"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/canonical-path-regression.json": {
+            "bytes": 1180,
+            "sha256": "54380770aa747005cd1651f3b8ea8a2a28213417b7e980d190f5d0e6366008b8"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-acceptance-criteria.json": {
+            "bytes": 464,
+            "sha256": "d26e1d41917802a7cd4f581f445a19fee9b572e14c10de3ebb45b8c2c5c0fe1f"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-affected-workflow-tests.json": {
+            "bytes": 462,
+            "sha256": "07792613edb21ba8f1f50a0dab1336dc56a2a68587ff283150cfbf33743ff45a"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-application-startup.json": {
+            "bytes": 458,
+            "sha256": "715545a979dbf72085d032a197ddd0a0d47b36749b8c5e0d6cd347acf5cfa4d5"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-aramf-worker-migration.json": {
+            "bytes": 461,
+            "sha256": "b2aefaf9f5e13dce81059ac3f81f3e66a581ed78a31aa5ad31185ce5f2932840"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-aramf_core_tests---p3-execution.json": {
+            "bytes": 471,
+            "sha256": "3fca1a97c1abe975f367b1a8c36c780a387ad68d3a5ac4edaec3bfaa69d200e0"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-aramf_core_tests---worker-tasks.json": {
+            "bytes": 471,
+            "sha256": "3fca9760f70f027156abac33ec2b59db3af441f333eeee24d1ab947a6dcae150"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-cold-start.json": {
+            "bytes": 455,
+            "sha256": "7092e1cb86a86807a7dcfa0e610ed8dd690bddaf2b326b93c71885467cf099c4"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-ctest.json": {
+            "bytes": 445,
+            "sha256": "e09ef0e91779ba0a1690f2e94710b228d06bd1d4648702b8bb96d1828ff56a63"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-git-diff-check.json": {
+            "bytes": 448,
+            "sha256": "2dca1845572f1793165f04b9457507ad58ca1bdf2901ad6778726ba0236dafae"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-impacted-validation.json": {
+            "bytes": 459,
+            "sha256": "07e92392df9880655b7d8bfde9b5a24fc7d7daacd350c5ccac62369420c9f1d9"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-memory-consistency.json": {
+            "bytes": 463,
+            "sha256": "637ff2f1d26bcef5833a17cdd0c7d414c20ee0d29fea56d1970b1136067bf9bf"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-persistence-regression.json": {
+            "bytes": 461,
+            "sha256": "0d6bae4fbc386d592ddde1638523127e6ca2e613e958dbd2a2668d28f4535b1c"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-production-build.json": {
+            "bytes": 452,
+            "sha256": "1af2c9b53073540bb9e0ffcd1d349b1dbe958cdb57b4cd47a3be44fc364b565a"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-targeted-regression.json": {
+            "bytes": 464,
+            "sha256": "526ef00c04d90f4b52a44c798530288132bb684f38e7aa34133750f13b4179ae"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-test_250.json": {
+            "bytes": 440,
+            "sha256": "8df8fd6c104bf01f35399e58c3e61eb263a2f76e9bf69a7321a97d9f4a8ae74a"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-test_550-automated.json": {
+            "bytes": 458,
+            "sha256": "d71b4ee4f348dea82ffcb1ade371e5039538e53fb291ce6dd62670018fcd26cc"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/check-worker-topology.json": {
+            "bytes": 460,
+            "sha256": "f9cdf318d42abaa898f900b1ea3f27974c0ceecbe156a64c8b8890814f183920"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/clean-full-build.json": {
+            "bytes": 168043,
+            "sha256": "7f79f9a0e2f4a1c36e5ce2d2baee0f7cdcae3e26054658a21ed1433821596eee"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/clean-runtime-staging.json": {
+            "bytes": 9513,
+            "sha256": "e7598fb93c61a977128662761406e8c010cd2d6fa75ae39fe4c5a1726d0d2131"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/completion-summary.json": {
+            "bytes": 3504,
+            "sha256": "91cc3b7c0a9328933e1b5228e8a09b14edf56f2ec86e274dd4e2b9f8cfe22611"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/current-after-ctest.json": {
+            "bytes": 16502,
+            "sha256": "5d492d466193e3ca88a6ded5e8e29e733412ec30c5e59c0c0a1941caa5001918"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/current-readonly-validation.json": {
+            "bytes": 16502,
+            "sha256": "c79da10b31b6ce11ef807d52a2300dfc14a286b308362ab3171fc1117f802e1c"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/final-readonly-validation.json": {
+            "bytes": 16502,
+            "sha256": "528602f64ff2b44db316903c94a0cc0f13a67c6fd5548943ea8e4c860572b076"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/focused-complete-rollback.json": {
+            "bytes": 2542,
+            "sha256": "32b3203ca9daea8a4e66aabafa39d291967a11292db665b65ea83bb75599d4bd"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/focused-rollback.json": {
+            "bytes": 2533,
+            "sha256": "bd6ae1886167c02b123588cebde1b07b6280dea59802b455520fdf4a891af96f"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/freshness-after-implementation.json": {
+            "bytes": 180530,
+            "sha256": "9c80ea71bdb49da575131bbfca365d10a45240521b4ba37b30c0ea039f08a07b"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/freshness-final.json": {
+            "bytes": 164570,
+            "sha256": "ae9bfc558b5b885e15c8b0120934646ff6eecadda8e339f0a7078b5ef47689a1"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/full-ctest-canonical.json": {
+            "bytes": 3285,
+            "sha256": "c5b6089be668e433cb48d3fcd90df330ea887407d29912bd64e7d29dc6e1780f"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/full-ctest.json": {
+            "bytes": 5635,
+            "sha256": "e929049717cfcd259e84c54b3794595593c479b77c6fdd03ace45f119dda14f9"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/git-diff-check.json": {
+            "bytes": 1583,
+            "sha256": "e09fcebd20af18bb5b3c1956b514c87abd8e2b7a654a84306d530d000fc0e630"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/implementation-postflight.json": {
+            "bytes": 7708,
+            "sha256": "ec9a3308123ce287014464b47e09c0edbc95a7d20aacbc06cef29f4cea509a44"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/implementation-review.json": {
+            "bytes": 6590,
+            "sha256": "b6344a2505d2758d0808f6287ca6e2f4937b533bf69e1cd937c41971700a2a55"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/incremental-relink.json": {
+            "bytes": 1745,
+            "sha256": "7f86a29ab494da8a907d9de7e8a8932b736e7133218b46cd3779b4d0b67afb5f"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/initial-postflight.json": {
+            "bytes": 3563,
+            "sha256": "3e39a2d3a9b4d4f7df4fdb6a597b38df09499a6124e8e4d22467faf75fd90935"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/originating-task-contract.json": {
+            "bytes": 1331786,
+            "sha256": "3c761a433dac864ddf578fb3b8d8dcd1ada42dfe52dea246e50052aafe5faf2a"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/p3-execution.json": {
+            "bytes": 475,
+            "sha256": "49def13da9e7ce24ef3335efa6bc51cad1538a1fdeac1604aeec0034a6f45d59"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/postcommit-protected-integrity.json": {
+            "bytes": 17066,
+            "sha256": "1e4f984528d4b6b44fe85d3ee62fbeaab8c3b4c78d36a15790bc07396b2615ff"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/project-memory-full.json": {
+            "bytes": 31669,
+            "sha256": "f149be85c07a4cd19fb77bcbbd59f4b5dfcb8df7d5b921ea822d04c67dad6584"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/protected-after-campaigns.json": {
+            "bytes": 105906,
+            "sha256": "baadcd2fb4b827a4bd0521000a9ee8c9068c21dc79594ad89296db79025a4865"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/protected-after-revalidation.json": {
+            "bytes": 105906,
+            "sha256": "baadcd2fb4b827a4bd0521000a9ee8c9068c21dc79594ad89296db79025a4865"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/protected-before-closeout.json": {
+            "bytes": 105906,
+            "sha256": "baadcd2fb4b827a4bd0521000a9ee8c9068c21dc79594ad89296db79025a4865"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/protected-before-full.json": {
+            "bytes": 90340,
+            "sha256": "60d3c0287eaae2e4c55a0c403145a287db7e902545ba971e6788ef62a8d96bcc"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/provenance-scope.json": {
+            "bytes": 451,
+            "sha256": "b3508346ddc552c9e825251f4fe9f00402997d70e164a3b2b2be297420fe116d"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/regression-evidence.json": {
+            "bytes": 9473,
+            "sha256": "ec0828d626b7533f923eac5564e49d005d8ef9178eec4cc99f182d8aec405af7"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/revalidation-F1.json": {
+            "bytes": 3973,
+            "sha256": "e255e3e182c94f3db2297efb0702980653bd0571b4851b515c5f7156e79db781"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/revalidation-S1.json": {
+            "bytes": 3973,
+            "sha256": "6967f793b52ea7741767feccadf4afa3287a6c6e775f217289dcbe03640e19b5"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/revalidation-S2.json": {
+            "bytes": 7221,
+            "sha256": "9261f7172c76886dd303aa8de18a4aaa1bf758f3d36890d143b1825b2ffa8ec2"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/revalidation-S3.json": {
+            "bytes": 14135,
+            "sha256": "28c83a9b3c9a2c54dd8db20b19a7d5d40095736d4e774ff32c46684589fd3796"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/revalidation-S4.json": {
+            "bytes": 28795,
+            "sha256": "aa31967463ec81897b9c7d6e853843549bc54919e0918944d48a9e003d1d7cbf"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/revalidation-S5.json": {
+            "bytes": 59779,
+            "sha256": "a3ae14aff822abcead809d13fdcd494ba230da93674f322355ef283de0ddaa17"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/revalidation-S6.json": {
+            "bytes": 125075,
+            "sha256": "21ae294ee494016387b9691eac79aa74aed73dd552622ef1fa650383cbf8d527"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/revalidation-before.json": {
+            "bytes": 180530,
+            "sha256": "9c1dc55189514a626e5955b5089cc215dc257f17e4426c2ac2c0eb50095f00c9"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/state-after-revalidation.json": {
+            "bytes": 16502,
+            "sha256": "173d8c623ad89c2a63088a7f69148aa520a2b11f6af7c3b4229ebf55220d1f50"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/user-clarification-hvd-cleanup.json": {
+            "bytes": 1789,
+            "sha256": "7c710aace135f68d61a1ca1229977aefd71692607074ce7bdb559d78faf091d0"
+        },
+        "ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/worker-governance.json": {
+            "bytes": 504,
+            "sha256": "ef38d86c75d49686db67837134ef97a19e2ec9105e0d4edda78a1b7b6ce7bd4c"
+        },
+        "LICENSE": {
+            "bytes": 169,
+            "sha256": "7181ea1a5a9bd10ea49563600feb8f4d39daec8ea206d43d58b66ac8ccb55922"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/campaign.json": {
+            "bytes": 281,
+            "sha256": "013fccef42076b14ee378698aafe76c32c1415405471e1960f293436658a7dbf"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/global/framework-knowledge-library.json": {
+            "bytes": 100,
+            "sha256": "cf462499f5c49ab55940b2a25b89c9b289ac68420b554b454c6904ef2bd36612"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/info.md": {
+            "bytes": 290,
+            "sha256": "5332f614ef6b6c7a027f075d419e8c08eede1decff09d95bdc0fe617ca3a3d15"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/.gitignore": {
+            "bytes": 155,
+            "sha256": "35964f6663819f7b55a9fbeb2339d52c98cbe41a69523084851fb413e28a6a0b"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/checkpoints.json": {
+            "bytes": 69,
+            "sha256": "5670c031760964a0295bf021e42e8188aa9fb838d008037e04ffe32212136b57"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/cold-start-validation.json": {
+            "bytes": 2624,
+            "sha256": "22c05c94d8c6b3b789bcbe7fadf265193dc91a2798e76f366817ddda77ca4ee2"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/compaction-history.jsonl": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/compaction-manifest.json": {
+            "bytes": 70,
+            "sha256": "de75ad5b9040cef1dbd3fcf0c3976fb95250cb34c75a4f627cb2b622dc73904a"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/current-state.md": {
+            "bytes": 173,
+            "sha256": "939888c42390ef8c3e6e38133775b65ff69097702b7869aba208e39898c5f36e"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/decisions.md": {
+            "bytes": 48,
+            "sha256": "f8833a1a4f5600feb4866072d1789770375c80dc2a15a2c7c19f40d129587a58"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/event-id-integrity-exceptions.json": {
+            "bytes": 182,
+            "sha256": "4ca9735b92d3401b46f1aaf19311003f6b4e0bade41c059cddca9935d45c55af"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/event-log.jsonl": {
+            "bytes": 258,
+            "sha256": "d32356fed8b9cd900022642cbfe7e976f377e1e65ba2ade50a6f316b80c80b4d"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/framework-knowledge.json": {
+            "bytes": 2642,
+            "sha256": "f642e7c4d4086298ba53a08ba0cfcf24a8c8d1bd02469ded882ced4bbabf277a"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/memory-config.json": {
+            "bytes": 638,
+            "sha256": "7fdfaab26fc0f965d327d916dfac6ea771579e844292dcb18f7adb70783bdbd2"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/memory-consistency-validation.json": {
+            "bytes": 1762,
+            "sha256": "9fd41025faa60e2366c7acfb799f0e943cb8c88daac98bb759eaddfaa3dc7f5d"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/memory-contract.json": {
+            "bytes": 4452,
+            "sha256": "8b5de648b85bfca9b33e5704c8dfdf8b526d166dfe825a4f802c0f9fdda4040b"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/memory-manifest.json": {
+            "bytes": 216,
+            "sha256": "4b2c7472baec034719ff1fbeb457be2b65aabb5de09040901a7e29a4b33af43f"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/metrics.json": {
+            "bytes": 420,
+            "sha256": "10ac2accbea2025e9525a2fbcfc9f2aad86a3be5754a0015b376d0c76c8b1934"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/memory/project-knowledge.json": {
+            "bytes": 71,
+            "sha256": "55f600087cb2e2d66e76ad6d758ce75a9a99ec42c02f95411f4644cecafed147"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/project.json": {
+            "bytes": 5353,
+            "sha256": "976416346d0c909e13e9a95b30d75fa3347ee853e3555b396fa63f0c7fa19501"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/resources/resources.json": {
+            "bytes": 101,
+            "sha256": "2d13f370d400352c5defbb308c2c49be314d43f30676bc47a45860de7c9cf2cf"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/routing/README.md": {
+            "bytes": 250,
+            "sha256": "6d9eab9e8d6424b881d6cadd428e45a69e658fbfb8a46067b7f81e2b4a842e8a"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/routing/scope-routes.json": {
+            "bytes": 1160,
+            "sha256": "2152c58db473c60b53c33cdf2e1302acf1c002266848ebb1b2a0bb0c6b783573"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/routing/task-routes.json": {
+            "bytes": 725,
+            "sha256": "1aff9ae716eea975aff9d35b9f372a8e98de10b84c81ad51b5fbf4bc67c3b4c9"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/target/ARAMF_WORKER/routing/validation-policy.json": {
+            "bytes": 3449,
+            "sha256": "ff9eccf12591380b7cedc9cb21fd02a73442ae1c36bebc21c98c5c789b13b9bd"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/projects/test_196/test_196.aramf.json": {
+            "bytes": 14083,
+            "sha256": "d0456747c5124853d809743c983450e00da277d3e9aac16580c99eb6e6813f3a"
+        },
+        "test_250/runs/5c7e9b58-6f9e-445b-8557-9a020dbe02fb/scenarios/test_196/result.md": {
+            "bytes": 1397,
+            "sha256": "bfa7e73ba2e67b73ebba0e4e56de1f3f3f644edfe2fc13dc13e221670b93da16"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/campaign.json": {
+            "bytes": 281,
+            "sha256": "0ef7f6e7307ec76a89a12c26521ce6a26705981946003f2a388a453ab8df9471"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/info.md": {
+            "bytes": 160,
+            "sha256": "ec50bc3d0636156db2cf71cdf26aa97affbf87e87164ac05d7aff6e48e4aa40a"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/.gitignore": {
+            "bytes": 155,
+            "sha256": "35964f6663819f7b55a9fbeb2339d52c98cbe41a69523084851fb413e28a6a0b"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/AGENTS.md": {
+            "bytes": 224,
+            "sha256": "5332d472790353db0ee9c322dc66acae7343c9602793446ebd02c9c5ce409c58"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/ARAMF_WORKER.json": {
+            "bytes": 257,
+            "sha256": "c685806ca0b766facfa4c4631e278971200379f2c12bcbf5c1a1749f6005bb88"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/PROJECT_STATUS.md": {
+            "bytes": 50,
+            "sha256": "c5af8b30a319ff3698c833f048a6fca77eb01be756b62768aeb85ae469507aa0"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/certification/certificates.jsonl": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/certification/certification-contract.json": {
+            "bytes": 1845,
+            "sha256": "7f415e8d9ee59174957063c8bd5835634b28ea16f6441f0e8c96cdd0d57f3af6"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/certification/current-certification-state.json": {
+            "bytes": 101,
+            "sha256": "61496946d46ec78ff785830a358bebd1b88da729e180017e331270f01eadca83"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/context/agent-adapters.json": {
+            "bytes": 708,
+            "sha256": "647352349c47e8860fff6ecf12f0927d42032a884b4da360c4bd5fe4f6ec67d7"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/context/compressed-context.json": {
+            "bytes": 1421,
+            "sha256": "022d0810c2abd964b044a936ad71a2f291e9d54166f66990f28ca73dee65ee0c"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/context/context-index.json": {
+            "bytes": 1939,
+            "sha256": "f44c0dc3a1a1dccf08e77b9b619e6cbab0acd2f3a32a692a71f0c0ec9e74f4f5"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/context/freshness.json": {
+            "bytes": 1137,
+            "sha256": "4cfdec0b12da45b36ed86268b31b069e1f9645dd5c580af4e2678cec2cf2c9cd"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/context/task-dag.json": {
+            "bytes": 324,
+            "sha256": "4d7817734ff83ae80a323a46be149582c50a7bc2bcc994933664b5595983fbf1"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/platforms/platform-metadata.json": {
+            "bytes": 994,
+            "sha256": "18183d476b6d59c8db85c3ae6baeeb3d9c9ae39c509fdcb945c111ffe825726b"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/project.json": {
+            "bytes": 5433,
+            "sha256": "d3038142d83731025e7f0ed6ee3880705154e719343c3229f6ab96a38510032d"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/provenance.json": {
+            "bytes": 292,
+            "sha256": "73e83a853120afaea9666f636d5398850c9dadfd4b946273e93e39bc4f58b14e"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/resources/resources.json": {
+            "bytes": 101,
+            "sha256": "2d13f370d400352c5defbb308c2c49be314d43f30676bc47a45860de7c9cf2cf"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/selection-effects.json": {
+            "bytes": 959,
+            "sha256": "1aea012d3937ee1aae27c392a0894d05ab3f9671667dfaee96e3a0d1773213b1"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/verification/finalization-state.json": {
+            "bytes": 217,
+            "sha256": "987dcff721c4140ab04aef14044500478a314426ab8856f8363c2c289ab14017"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/verification/generation-state.json": {
+            "bytes": 46854,
+            "sha256": "35305195302f47496acb8b28e12f17b688f4e50c71715780bb52b8201a1bcdb1"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/verification/latest-validation.json": {
+            "bytes": 8770,
+            "sha256": "d8fdf21afbd6adbffb059cfc665f5e0c57664765584d0384f096b3675bfed44f"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/verification/verification-result.json": {
+            "bytes": 8552,
+            "sha256": "f2c5b3c9781150d9953e360ed4aaabd9e2c59ca60c8cc402b44a91de7c239b32"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/ARAMF_WORKER/worker-manifest.json": {
+            "bytes": 7896,
+            "sha256": "8b3e9a5022136362db7b2d020920266ab8cabc8a286dd7ee281230488055c577"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/target/GEMINI.md": {
+            "bytes": 224,
+            "sha256": "5332d472790353db0ee9c322dc66acae7343c9602793446ebd02c9c5ce409c58"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/projects/test_198/test_198.aramf.json": {
+            "bytes": 40577,
+            "sha256": "c4031ceec5d72060b97f5c3b708a940aeb025ff76ff07cb5f97ff055ea4129b3"
+        },
+        "test_250/runs/6d83e9c2-3691-474d-b300-6f25f17fb8ce/scenarios/test_198/result.md": {
+            "bytes": 1395,
+            "sha256": "02fcc6448c64fab059ce77ece499cb0954491d9cab55d9f9490d9e8430743d4d"
+        },
+        "test_250/runs/be52580e-9ec9-430e-b2ea-1fe7b98827e6/campaign.json": {
+            "bytes": 280,
+            "sha256": "5847c7400957a7d51eb4e1feb507eddd495cde9b5719fb07e9454aacce6521b1"
+        },
+        "test_250/runs/be52580e-9ec9-430e-b2ea-1fe7b98827e6/info.md": {
+            "bytes": 493,
+            "sha256": "f52faba6a142b29a7abcd061873cec0069d40760ca5f1ac3b36e5093197105e5"
+        },
+        "test_250/runs/be52580e-9ec9-430e-b2ea-1fe7b98827e6/projects/test_001/test_001.aramf.json": {
+            "bytes": 40348,
+            "sha256": "48a5a0d4364109cda6e3e5aad86dcebec26fd146be7e591af57fbea4dfaadb59"
+        },
+        "test_250/runs/be52580e-9ec9-430e-b2ea-1fe7b98827e6/scenarios/test_001/result.md": {
+            "bytes": 1596,
+            "sha256": "7e91606df3f9c6d2e5074b4b6546bddc7c41a61696722347dc133eb221eac4db"
+        },
+        "test_250/runs/fd75d776-dbbb-4827-85a5-21b0d813489d/campaign.json": {
+            "bytes": 281,
+            "sha256": "013fccef42076b14ee378698aafe76c32c1415405471e1960f293436658a7dbf"
+        },
+        "test_250/runs/fd75d776-dbbb-4827-85a5-21b0d813489d/info.md": {
+            "bytes": 346,
+            "sha256": "34fb168ec8c99a1ea28e6e0ab8d3a0a18cc0656b46b086d98b0aea701c985bfd"
+        },
+        "test_250/runs/fd75d776-dbbb-4827-85a5-21b0d813489d/projects/test_001/test_001.aramf.json": {
+            "bytes": 40303,
+            "sha256": "08a886881fba03eb1f1e1c2fa88f3b498e830682394efce279479efa7c123bf2"
+        },
+        "test_250/runs/fd75d776-dbbb-4827-85a5-21b0d813489d/scenarios/test_001/result.md": {
+            "bytes": 1449,
+            "sha256": "03d3f7517a39a0576258784d25fe74cd5bda485e95944ee7c2f80eea3f6c3a95"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/campaign.json": {
+            "bytes": 212,
+            "sha256": "b8ca30256c563023d22eaa6de25683f9a40c086ecc1fafad3e898727884c611f"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/.gitignore": {
+            "bytes": 167,
+            "sha256": "0f45f352af8f8d0df19aedea20ab6d886cff4a5179e179f20c463e8bcc6afe52"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/AGENTS.md": {
+            "bytes": 246,
+            "sha256": "8942827a9d246072305e719010230f7fbe518070267e5c76ac3ce001562b347b"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/AGENTS.md": {
+            "bytes": 12556,
+            "sha256": "d970706f051dc581f9cd32110bf24e51b79e50eaea79ff164cb275edf0aadc3a"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/ARAMF_WORKER.json": {
+            "bytes": 251,
+            "sha256": "a65624239fc956c64d1fba667b92c23451eea37193f003ace67cac22155d3838"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/PROJECT_STATUS.md": {
+            "bytes": 504,
+            "sha256": "c57915ba739a3929dd5b9809fae7c00d36bd7ab13ee9e65fdbae7d9fd03784f9"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/certification/certificates.jsonl": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/certification/certification-contract.json": {
+            "bytes": 1845,
+            "sha256": "7f415e8d9ee59174957063c8bd5835634b28ea16f6441f0e8c96cdd0d57f3af6"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/certification/current-certification-state.json": {
+            "bytes": 101,
+            "sha256": "61496946d46ec78ff785830a358bebd1b88da729e180017e331270f01eadca83"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/context/agent-adapters.json": {
+            "bytes": 708,
+            "sha256": "647352349c47e8860fff6ecf12f0927d42032a884b4da360c4bd5fe4f6ec67d7"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/context/compressed-context.json": {
+            "bytes": 5869,
+            "sha256": "162099c61cf4bf5b8716a1085827d4e00b4e7b082e9d2311f7c1addadb0d3128"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/context/context-index.json": {
+            "bytes": 8123,
+            "sha256": "cce2e868447e29e50b2dbcfb817dbf1d6e5e669cdcc026250a568b95872ca741"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/context/freshness.json": {
+            "bytes": 4611,
+            "sha256": "c9332e4524bb68eaec44510289f301d81ccdf1a2da31343eb30def5564befa83"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/context/task-dag.json": {
+            "bytes": 318,
+            "sha256": "db350aae8dc929a6bddfe21cb5e5035e5bfb6798f59da02a16ef968270cec675"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/checkpoints.json": {
+            "bytes": 69,
+            "sha256": "5670c031760964a0295bf021e42e8188aa9fb838d008037e04ffe32212136b57"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/cold-start-validation.json": {
+            "bytes": 2943,
+            "sha256": "9cc1310b34b6324a63c3744f4568496badb9e55e2e5372dc4fdd220fa17e24af"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/compaction-history.jsonl": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/compaction-manifest.json": {
+            "bytes": 70,
+            "sha256": "de75ad5b9040cef1dbd3fcf0c3976fb95250cb34c75a4f627cb2b622dc73904a"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/current-state.md": {
+            "bytes": 173,
+            "sha256": "939888c42390ef8c3e6e38133775b65ff69097702b7869aba208e39898c5f36e"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/decisions.md": {
+            "bytes": 48,
+            "sha256": "f8833a1a4f5600feb4866072d1789770375c80dc2a15a2c7c19f40d129587a58"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/event-id-integrity-exceptions.json": {
+            "bytes": 182,
+            "sha256": "4ca9735b92d3401b46f1aaf19311003f6b4e0bade41c059cddca9935d45c55af"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/event-log.jsonl": {
+            "bytes": 258,
+            "sha256": "a307ec142d2c70b1d718b6ad2479bc41abd894973f0318be10f5bc14f55e0ced"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/framework-knowledge.json": {
+            "bytes": 2642,
+            "sha256": "f642e7c4d4086298ba53a08ba0cfcf24a8c8d1bd02469ded882ced4bbabf277a"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/memory-config.json": {
+            "bytes": 2008,
+            "sha256": "da702a27af8b5dfa83309e0f9650ec56612d7a336f3524739bded349ca692098"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/memory-consistency-validation.json": {
+            "bytes": 2247,
+            "sha256": "c9061401aae5c3756e0f8874359a21835aa28bed4f0b81ba1db9065cb50eff36"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/memory-contract.json": {
+            "bytes": 4710,
+            "sha256": "af96e05b6a106b93d451c09c63940136f750c2edef6951fc2c85e206810c6e4e"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/memory-manifest.json": {
+            "bytes": 216,
+            "sha256": "f5f549b26c50d7d61f182402e9785c0a0aea48c8081c5936784e2c2925e52f21"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/metrics.json": {
+            "bytes": 420,
+            "sha256": "10ac2accbea2025e9525a2fbcfc9f2aad86a3be5754a0015b376d0c76c8b1934"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/memory/project-knowledge.json": {
+            "bytes": 71,
+            "sha256": "55f600087cb2e2d66e76ad6d758ce75a9a99ec42c02f95411f4644cecafed147"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/platforms/platform-metadata.json": {
+            "bytes": 963,
+            "sha256": "6db0263bb010e0e4c997ccbefe18393a1b13711ace01aebcc8ca692eab57345a"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/project.json": {
+            "bytes": 5367,
+            "sha256": "e7cd4c3875b9f61a713781b7df6a80ad095afe9ea8c537909bf2edcb3fbbe08e"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/provenance.json": {
+            "bytes": 281,
+            "sha256": "b1fec16ae2cee724d38f324cb1586d71ee1e462a8bd8e3e598baf0aa1a5bd392"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/resources/resources.json": {
+            "bytes": 101,
+            "sha256": "2d13f370d400352c5defbb308c2c49be314d43f30676bc47a45860de7c9cf2cf"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/routing/README.md": {
+            "bytes": 481,
+            "sha256": "46b28af89b1f6a8d30505fd441af728c415f17fa3bbbe0630e53330244e2d1bc"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/routing/scope-routes.json": {
+            "bytes": 4122,
+            "sha256": "432b48d0630ab98e39605ff322fb53018bc90ee1664817ae3e72f27c37fddd16"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/routing/task-routes.json": {
+            "bytes": 1372,
+            "sha256": "f6bf86655c5a552901520677281a5323fcbc7a363c46ff2e54ad5840dfe14e6b"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/routing/validation-policy.json": {
+            "bytes": 3449,
+            "sha256": "ff9eccf12591380b7cedc9cb21fd02a73442ae1c36bebc21c98c5c789b13b9bd"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/rules/generated-rules.md": {
+            "bytes": 2131,
+            "sha256": "61867d30afab4979b4cb8888842da60080cbe63be96fb011f08089c14580d72a"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/selection-effects.json": {
+            "bytes": 2555,
+            "sha256": "6830a343042400956d70dcb186738d64b81e1600a8c1c00bdc7c8c870b30d4a2"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/verification/generation-state.json": {
+            "bytes": 50240,
+            "sha256": "d07583e5b9e6610327f677d5fc469de6780b531439147c371dbaa0460f0850c1"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/ARAMF_WORKER/worker-manifest.json": {
+            "bytes": 7887,
+            "sha256": "1ffc92ceab33bd1f460823d4456627690153909e94167857991e0b42a05eba28"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/CLAUDE.md": {
+            "bytes": 224,
+            "sha256": "5332d472790353db0ee9c322dc66acae7343c9602793446ebd02c9c5ce409c58"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/GEMINI.md": {
+            "bytes": 224,
+            "sha256": "5332d472790353db0ee9c322dc66acae7343c9602793446ebd02c9c5ce409c58"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/fixtures/system-521-eqhAti/project.aramf.json": {
+            "bytes": 44818,
+            "sha256": "8d6ab0116e46c619bf6dd9ee06c410dc9cd9198e0b2eb33c695c45976802881f"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/global/framework-knowledge-library.json": {
+            "bytes": 100,
+            "sha256": "cf462499f5c49ab55940b2a25b89c9b289ac68420b554b454c6904ef2bd36612"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/info.md": {
+            "bytes": 280,
+            "sha256": "fc5d809690835797a2148a6a7e0738be7dce5d2b50771b5721784136106635cd"
+        },
+        "test_550/runs/01537f8d-27b6-4523-8698-0b1f57f23022/scenarios/test_521/result.md": {
+            "bytes": 293,
+            "sha256": "3798a7e9ac1538894d818d1c1d0a95c1de5cb7ff44dbfeb53f547c570104d8b8"
+        },
+        "test_550/runs/02ccb124-a4cc-4dcc-8ed4-8960ab253c84/campaign.json": {
+            "bytes": 212,
+            "sha256": "958c1ff7498b8aee0f7000fe756442a716e213da48485badc39eb28d5a641ec9"
+        },
+        "test_550/runs/02ccb124-a4cc-4dcc-8ed4-8960ab253c84/global/framework-knowledge-library.json": {
+            "bytes": 100,
+            "sha256": "cf462499f5c49ab55940b2a25b89c9b289ac68420b554b454c6904ef2bd36612"
+        },
+        "test_550/runs/02ccb124-a4cc-4dcc-8ed4-8960ab253c84/info.md": {
+            "bytes": 280,
+            "sha256": "fc5d809690835797a2148a6a7e0738be7dce5d2b50771b5721784136106635cd"
+        },
+        "test_550/runs/02ccb124-a4cc-4dcc-8ed4-8960ab253c84/scenarios/test_261/result.md": {
+            "bytes": 349,
+            "sha256": "1595c65ec0cb3d7ba0fc3aeb15671933f0cd1694822cbf48c00821cd08ef3cf6"
+        },
+        "test_550/runs/27f72fbf-f31c-4012-b239-e7687a5b5a9c/campaign.json": {
+            "bytes": 212,
+            "sha256": "b8ca30256c563023d22eaa6de25683f9a40c086ecc1fafad3e898727884c611f"
+        },
+        "test_550/runs/27f72fbf-f31c-4012-b239-e7687a5b5a9c/fixtures/system-501-zUEqvD/ARAMF_WORKER/memory/current-state.md": {
+            "bytes": 173,
+            "sha256": "939888c42390ef8c3e6e38133775b65ff69097702b7869aba208e39898c5f36e"
+        },
+        "test_550/runs/27f72fbf-f31c-4012-b239-e7687a5b5a9c/fixtures/system-501-zUEqvD/ARAMF_WORKER/memory/event-log.jsonl": {
+            "bytes": 344,
+            "sha256": "848ae14d512a8d9cb58cc4273ee1f6cf989c89bbaae30e9e40e84283b0c1d843"
+        },
+        "test_550/runs/27f72fbf-f31c-4012-b239-e7687a5b5a9c/fixtures/system-501-zUEqvD/ARAMF_WORKER/memory/framework-knowledge.json": {
+            "bytes": 1180,
+            "sha256": "c01feda3fc97290578d2748f701708855462a4ad2f39e632bcd3faff98fc0e60"
+        },
+        "test_550/runs/27f72fbf-f31c-4012-b239-e7687a5b5a9c/fixtures/system-501-zUEqvD/ARAMF_WORKER/memory/memory-manifest.json": {
+            "bytes": 190,
+            "sha256": "a6ca0392e2255740873c9751ae47d991b596a7dad51eea7fc34be082b133abf6"
+        },
+        "test_550/runs/27f72fbf-f31c-4012-b239-e7687a5b5a9c/fixtures/system-501-zUEqvD/ARAMF_WORKER/memory/metrics.json": {
+            "bytes": 89,
+            "sha256": "1454cfe623cd32d998e10065284c3bf1354fb15486604a1f6508c0c2c1cad355"
+        },
+        "test_550/runs/27f72fbf-f31c-4012-b239-e7687a5b5a9c/fixtures/system-501-zUEqvD/project.aramf.json": {
+            "bytes": 44818,
+            "sha256": "fe2f41bdbf14dbb019abc99edff8b7362b7416a3c48a681049076f074d2fa777"
+        },
+        "test_550/runs/27f72fbf-f31c-4012-b239-e7687a5b5a9c/global/framework-knowledge-library.json": {
+            "bytes": 100,
+            "sha256": "cf462499f5c49ab55940b2a25b89c9b289ac68420b554b454c6904ef2bd36612"
+        },
+        "test_550/runs/27f72fbf-f31c-4012-b239-e7687a5b5a9c/info.md": {
+            "bytes": 280,
+            "sha256": "fc5d809690835797a2148a6a7e0738be7dce5d2b50771b5721784136106635cd"
+        },
+        "test_550/runs/27f72fbf-f31c-4012-b239-e7687a5b5a9c/scenarios/test_501/result.md": {
+            "bytes": 290,
+            "sha256": "db21b9b0a0424a00a2137ef84ffc04777aab02c38b1d51884a1e68fd5fca8319"
+        },
+        "test_550/runs/899eb112-5663-4c49-8494-5e521840a683/campaign.json": {
+            "bytes": 212,
+            "sha256": "b8ca30256c563023d22eaa6de25683f9a40c086ecc1fafad3e898727884c611f"
+        },
+        "test_550/runs/899eb112-5663-4c49-8494-5e521840a683/fixtures/system-421-BEXYMe/project.aramf.json": {
+            "bytes": 44818,
+            "sha256": "73bf34ec23bbefa440c82f297b6edb06eff7885470457c389af2e16f3b994379"
+        },
+        "test_550/runs/899eb112-5663-4c49-8494-5e521840a683/global/framework-knowledge-library.json": {
+            "bytes": 100,
+            "sha256": "cf462499f5c49ab55940b2a25b89c9b289ac68420b554b454c6904ef2bd36612"
+        },
+        "test_550/runs/899eb112-5663-4c49-8494-5e521840a683/info.md": {
+            "bytes": 280,
+            "sha256": "fc5d809690835797a2148a6a7e0738be7dce5d2b50771b5721784136106635cd"
+        },
+        "test_550/runs/899eb112-5663-4c49-8494-5e521840a683/scenarios/test_421/result.md": {
+            "bytes": 358,
+            "sha256": "9d336ce6e101136cf28380577ab2177728432d0dc5ec4f07c3ce35df4f5d9d39"
+        },
+        "test_550/runs/d93d1b1c-46d8-4e55-bbc7-452248a3f92c/campaign.json": {
+            "bytes": 212,
+            "sha256": "b8ca30256c563023d22eaa6de25683f9a40c086ecc1fafad3e898727884c611f"
+        },
+        "test_550/runs/d93d1b1c-46d8-4e55-bbc7-452248a3f92c/fixtures/system-451-FePYMx/ARAMF_WORKER/memory/framework-knowledge.json": {
+            "bytes": 1,
+            "sha256": "021fb596db81e6d02bf3d2586ee3981fe519f275c0ac9ca76bbcf2ebb4097d96"
+        },
+        "test_550/runs/d93d1b1c-46d8-4e55-bbc7-452248a3f92c/fixtures/system-451-FePYMx/project.aramf.json": {
+            "bytes": 44818,
+            "sha256": "b1eec4a5764032ad90aa43f1176430eaeb9774b0d516024f8b04a5c3cda2c90f"
+        },
+        "test_550/runs/d93d1b1c-46d8-4e55-bbc7-452248a3f92c/global/framework-knowledge-library.json": {
+            "bytes": 100,
+            "sha256": "cf462499f5c49ab55940b2a25b89c9b289ac68420b554b454c6904ef2bd36612"
+        },
+        "test_550/runs/d93d1b1c-46d8-4e55-bbc7-452248a3f92c/info.md": {
+            "bytes": 280,
+            "sha256": "fc5d809690835797a2148a6a7e0738be7dce5d2b50771b5721784136106635cd"
+        },
+        "test_550/runs/d93d1b1c-46d8-4e55-bbc7-452248a3f92c/scenarios/test_451/result.md": {
+            "bytes": 304,
+            "sha256": "d17ef4c7a25cd8dffab439066e412466f04f323f67edf5c69d62685ac8494084"
+        },
+        "test_550/runs/e4a92cae-2da7-422c-bc7b-2c066424a01e/campaign.json": {
+            "bytes": 211,
+            "sha256": "b167b920c5274b718e5249af3813889a38766520a82d57470eddf25248347c3e"
+        },
+        "test_550/runs/e4a92cae-2da7-422c-bc7b-2c066424a01e/global/framework-knowledge-library.json": {
+            "bytes": 100,
+            "sha256": "cf462499f5c49ab55940b2a25b89c9b289ac68420b554b454c6904ef2bd36612"
+        },
+        "test_550/runs/e4a92cae-2da7-422c-bc7b-2c066424a01e/info.md": {
+            "bytes": 280,
+            "sha256": "59365df73c3e7870e05e7c8b90519eafc4a394242feb90c2dee35612a31e529d"
+        },
+        "test_550/runs/e4a92cae-2da7-422c-bc7b-2c066424a01e/scenarios/test_261/result.md": {
+            "bytes": 366,
+            "sha256": "ab488cd6bab8065f26288ffdcf4b103622d78b106387a64e0cdad2695fe2df06"
+        }
+    }
+}

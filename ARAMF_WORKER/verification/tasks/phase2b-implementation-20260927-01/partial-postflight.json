@@ -1,0 +1,69 @@
+{
+    "acceptedEvidence": [
+    ],
+    "authority": "DERIVED",
+    "certificateId": null,
+    "certification": "CERTIFIED is issued only by the canonical CertificationService; physical evidence is never inferred.",
+    "completionState": "IMPLEMENTED_UNVERIFIED",
+    "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+    "errors": [
+        {
+            "code": "REQUIRED_EVIDENCE_MISSING",
+            "message": "Required evidence has not been verified: acceptance-criteria, affected-workflow-tests, application-startup, aramf-worker-migration, aramf_core_tests::--p3-execution, aramf_core_tests::--worker-tasks, cold-start, ctest, git-diff-check, impacted-validation, memory-consistency, persistence-regression, production-build, targeted-regression, test_250, test_550-automated, worker-topology",
+            "path": "",
+            "severity": "WARNING"
+        }
+    ],
+    "evidenceFingerprints": {
+        "acceptance-criteria": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "affected-workflow-tests": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "application-startup": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "aramf-worker-migration": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "aramf_core_tests::--p3-execution": "bec14c15f174f8e6e840a93e01824bc41f8da55b3fb9beeb74af435e303b8a1b",
+        "aramf_core_tests::--worker-tasks": "24415cee0b1df98a5ff3dcbf28dc9961ceb770ee5197634fc04cc9531ac0cd40",
+        "cold-start": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "ctest": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "diff-boundary": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "git-diff-check": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "impacted-validation": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "memory-consistency": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "persistence-regression": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "production-build": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "targeted-regression": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "test_250": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "test_550-automated": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+        "worker-topology": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869"
+    },
+    "missingEvidence": [
+        "acceptance-criteria",
+        "affected-workflow-tests",
+        "application-startup",
+        "aramf-worker-migration",
+        "aramf_core_tests::--p3-execution",
+        "aramf_core_tests::--worker-tasks",
+        "cold-start",
+        "ctest",
+        "git-diff-check",
+        "impacted-validation",
+        "memory-consistency",
+        "persistence-regression",
+        "production-build",
+        "targeted-regression",
+        "test_250",
+        "test_550-automated",
+        "worker-topology"
+    ],
+    "modifiedFiles": [
+        "src/core/ProjectMemory.cpp",
+        "src/core/ProjectMemory.h",
+        "src/core/Services.cpp",
+        "tests/ConfigurationUpdateTests.cpp"
+    ],
+    "relocations": [
+    ],
+    "resultFingerprint": "0152d12ae2678fed18e56f5e49e18d1ed79c90c5dfb5bea7d4e123c2faed9869",
+    "schemaVersion": 1,
+    "serviceChanges": [
+    ],
+    "status": "PASS"
+}

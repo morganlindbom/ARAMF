@@ -1,0 +1,92 @@
+{
+    "check": "evidence-index",
+    "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+    "evidence": [
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-acceptance-criteria.json",
+            "artifactFingerprint": "8046beaf0f99a1d2273ab1c2b3ce84447391313bd1295ceb845df90b3da42913",
+            "check": "acceptance-criteria"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-affected-workflow-tests.json",
+            "artifactFingerprint": "032dce60b2e728a1e55c548f842fdd0a16189195a96a84c74c294b1c01f4f211",
+            "check": "affected-workflow-tests"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-application-startup.json",
+            "artifactFingerprint": "a5173d265ea1a3d01e67e351828969b12f659f06ccb634ad3edb432593d117bf",
+            "check": "application-startup"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-aramf-worker-migration.json",
+            "artifactFingerprint": "13607df27b59243ccd31846311ab10b41b38826c943aaaccfc5faaa6680f3f15",
+            "check": "aramf-worker-migration"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-aramf_core_tests---p3-execution.json",
+            "artifactFingerprint": "4bf8c6a8953a7a662843ee616782588d9906e7c7c46e0960f98cd3d9459a9948",
+            "check": "aramf_core_tests::--p3-execution"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-aramf_core_tests---worker-tasks.json",
+            "artifactFingerprint": "446ab9485941cdca3a7d9b920d58f3a0527144c21eae4dcbc0015f1296336269",
+            "check": "aramf_core_tests::--worker-tasks"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-cold-start.json",
+            "artifactFingerprint": "aed1e1ecd66b54b5b482e81c53dec238828a2f7f0b5b048e5cc6bfe42f281798",
+            "check": "cold-start"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-ctest.json",
+            "artifactFingerprint": "38838c8d2fe360c2b375fb27e57b546c30cae18c3f2ba45e549ca9796037346c",
+            "check": "ctest"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-git-diff-check.json",
+            "artifactFingerprint": "8eafa31e0e65f1f502559c51f331433726def175c4e96fda5ff99bfc1125b040",
+            "check": "git-diff-check"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-impacted-validation.json",
+            "artifactFingerprint": "7805a00e63794d23026964bb9374dc888a90a99848c85af10dfd9d14b3684960",
+            "check": "impacted-validation"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-memory-consistency.json",
+            "artifactFingerprint": "de791a8f3c63586472603c0fd4d353e3752d7b20b3faa3e68401ab765acf2bb0",
+            "check": "memory-consistency"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-persistence-regression.json",
+            "artifactFingerprint": "3feee9f57207cf644ae911ff182a0d78caf1f90f4bb70b011e65a068bf28befd",
+            "check": "persistence-regression"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-production-build.json",
+            "artifactFingerprint": "9ebbee7077a04b81e638d0d670872bc04be2968f26b4d900c0421df2b51c3d01",
+            "check": "production-build"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-targeted-regression.json",
+            "artifactFingerprint": "1faecd966f67ebfdfdf8e41090c249c3fb6ae174e20881d10ca2092f95cf95e4",
+            "check": "targeted-regression"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-test_250.json",
+            "artifactFingerprint": "34ece6c8e2643a4305365a10d7f89828eb56c4c28920417e8cbcde7dea6f088e",
+            "check": "test_250"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-test_550-automated.json",
+            "artifactFingerprint": "4675e4bdd764efd0ec5844c9b8de8680ddbdab813cf72c55d7de725016e45d35",
+            "check": "test_550-automated"
+        },
+        {
+            "artifact": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-worker-topology.json",
+            "artifactFingerprint": "58919f2fccb52f24e78bb00530a35ae8e2b3ea471d1c680933b5451cecd1c900",
+            "check": "worker-topology"
+        }
+    ],
+    "status": "OBSERVED"
+}

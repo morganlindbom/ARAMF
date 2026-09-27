@@ -1,0 +1,108 @@
+{
+    "after": {
+        "duplicateIds": [
+        ],
+        "eventCount": 493,
+        "firstSequence": 1,
+        "lastSequence": 493,
+        "parseValid": true,
+        "sequenceContinuous": true,
+        "uniqueEventIds": 493,
+        "wholeFileHash": "c0d2089e94cbaa0c30a519c0183a4f69463ddf1796a4674eb359312077d0dafa"
+    },
+    "before": {
+        "duplicateIds": [
+        ],
+        "eventCount": 482,
+        "firstSequence": 1,
+        "lastSequence": 482,
+        "parseValid": true,
+        "sequenceContinuous": true,
+        "uniqueEventIds": 482,
+        "wholeFileHash": "e3e2b4dff530509fd2444c705f63787cbd0c4a9ae11dc793ad29767fcdedc288"
+    },
+    "check": "recorder-results",
+    "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+    "historicalPrefixBytes": 219716,
+    "historicalPrefixSHA256": "e3e2b4dff530509fd2444c705f63787cbd0c4a9ae11dc793ad29767fcdedc288",
+    "records": [
+        {
+            "eventId": "event-233e0073-39d4-487f-9473-ccd7e629c108",
+            "eventType": "TASK_STARTED",
+            "operation": "task-start",
+            "sequenceNumber": 483,
+            "status": "PASS"
+        },
+        {
+            "eventId": "event-445bfe7e-d21c-4df2-8761-c560af6f0cd7",
+            "eventType": "BUILD_RESULT",
+            "operation": "build-result",
+            "sequenceNumber": 484,
+            "status": "PASS"
+        },
+        {
+            "eventId": "event-d4130d6a-a538-490d-b47c-25f9e6050d7b",
+            "eventType": "BUILD_RESULT",
+            "operation": "build-result",
+            "sequenceNumber": 485,
+            "status": "PASS"
+        },
+        {
+            "eventId": "event-c9be1b86-b254-49a7-910e-dd088f74eb78",
+            "eventType": "TEST_RESULT",
+            "operation": "test-result",
+            "sequenceNumber": 486,
+            "status": "PASS"
+        },
+        {
+            "eventId": "event-dba94852-2708-4a2e-bb5b-496bb98f6595",
+            "eventType": "TEST_RESULT",
+            "operation": "test-result",
+            "sequenceNumber": 487,
+            "status": "PASS"
+        },
+        {
+            "eventId": "event-290a602f-4b9b-44b2-9aa3-dd05bfa75e92",
+            "eventType": "TEST_RESULT",
+            "operation": "test-result",
+            "sequenceNumber": 488,
+            "status": "PASS"
+        },
+        {
+            "eventId": "event-73993e9c-4037-48d4-a849-cfc2d23a7f41",
+            "eventType": "TEST_RESULT",
+            "operation": "test-result",
+            "sequenceNumber": 489,
+            "status": "PASS"
+        },
+        {
+            "eventId": "event-ef9ca1b9-91fd-4d09-9012-e712b1e5658d",
+            "eventType": "TEST_RESULT",
+            "operation": "test-result",
+            "sequenceNumber": 490,
+            "status": "PASS"
+        },
+        {
+            "eventId": "event-8997edcc-3b13-4fc1-8c19-afb128bae8e2",
+            "eventType": "TEST_RESULT",
+            "operation": "test-result",
+            "sequenceNumber": 491,
+            "status": "PASS"
+        },
+        {
+            "eventId": "event-62c779a5-aedd-47ef-87b3-3ddbec4c0274",
+            "eventType": "VALIDATION_RESULT",
+            "operation": "validation-result",
+            "sequenceNumber": 492,
+            "status": "PASS"
+        },
+        {
+            "eventId": "event-8101f261-dfe1-49e5-ae81-425a3c46d2a0",
+            "eventType": "TASK_COMPLETED",
+            "operation": "task-complete",
+            "sequenceNumber": 493,
+            "status": "PASS"
+        }
+    ],
+    "status": "PASS"
+}

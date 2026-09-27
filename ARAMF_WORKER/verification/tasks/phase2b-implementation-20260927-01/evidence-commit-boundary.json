@@ -1,0 +1,552 @@
+{
+  "check": "evidence-commit-boundary",
+  "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+  "status": "PASS",
+  "implementationCommit": "78a8040dc11af39b7633b1cd5d437b4a89c386f8",
+  "purpose": "Separate Phase 2B evidence and canonical revalidation only",
+  "classification": {
+    "taskEvidence": "Additive files exclusively in phase2b-implementation-20260927-01",
+    "revalidation": "Seven new canonical subject record/evidence pairs",
+    "currentState": "Only seven subject pointers differ from HEAD; F1 and S1-S6",
+    "excluded": "All earlier mixed metadata, event history, derived state and evidence packages; LICENSE; root test runs; HVD"
+  },
+  "files": [
+    {
+      "path": "ARAMF_WORKER/certification/current-freshness-state.json",
+      "bytes": 23541,
+      "sha256": "dc4529ff3e6c50543276f437702d11720a11e89bf2534188035f5f8e8e001ac9",
+      "gitBlob": "138e9d73d2b3c13f05b77339f21f24b2ef33073a"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/F1/reval-84e2734b-e340-4ab1-bcc9-fd00928add66/evidence.json",
+      "bytes": 8754,
+      "sha256": "2f5e581c84ea3d2cb47a7e305c68ef1e4d42da1c51a4e1e8b10b4ed38e597279",
+      "gitBlob": "4d34a91949097dee553e36bcf99fe1c89b210aaf"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/F1/reval-84e2734b-e340-4ab1-bcc9-fd00928add66/revalidation.json",
+      "bytes": 1125,
+      "sha256": "32e4d2c8f583726af407c01beaed79b1d9ab1ed9fd6599ac41525aae47109393",
+      "gitBlob": "c77b53dccbae5f48f9e813859a215a2ab6a48be3"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S1/reval-180a4bc8-b083-439f-a095-c393419c2581/evidence.json",
+      "bytes": 8754,
+      "sha256": "de426c7cf4d5bb1bbd31285c8b148f3b6a1ddeba1a88a9fab80b6c212f78f21f",
+      "gitBlob": "fdfb88452e37d62642509d8467510c27aaef54dd"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S1/reval-180a4bc8-b083-439f-a095-c393419c2581/revalidation.json",
+      "bytes": 1125,
+      "sha256": "bd4d5fcaf4d9812d1bc68dc21d41bd32bbe5174d527f2301db947d1eb1793619",
+      "gitBlob": "d67884e2ffe24f3839861104f71de2ed327cac90"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S2/reval-ace2399a-0866-4428-b5ab-fd266fdd09e2/evidence.json",
+      "bytes": 8936,
+      "sha256": "2e1a71ce77b750947d9cef9f843d993eb6d33aea43e38ad0842fed708708c686",
+      "gitBlob": "80e2e296d3cefbfdb086aa014cf310c0d6a11a1d"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S2/reval-ace2399a-0866-4428-b5ab-fd266fdd09e2/revalidation.json",
+      "bytes": 1216,
+      "sha256": "81eabbb47361678f07e81bfc0267c8b3b793b462cc118cb85d9403f838fa8b40",
+      "gitBlob": "b0e314b120449e023f19e1e01dc3f0d8c1f42724"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S3/reval-16559e0d-a944-41b5-899f-5d93959a6f26/evidence.json",
+      "bytes": 9118,
+      "sha256": "097ffb5a25c6004f8032e7a3b7350ad020ad4e0181abfc86394554fc60774d3f",
+      "gitBlob": "51c60f1b0938db8e11deaae861f507be6b4bd966"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S3/reval-16559e0d-a944-41b5-899f-5d93959a6f26/revalidation.json",
+      "bytes": 1307,
+      "sha256": "4686778a1bbf41ec4f9b354128c247989cd178bef822c0fd6d82892d7a0a3211",
+      "gitBlob": "12e99d4df78503c3e6656d4da015aa2813407144"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S4/reval-6096127e-3aa8-4b7a-ad6c-9fa48640338d/evidence.json",
+      "bytes": 9300,
+      "sha256": "4156eeac199e4b163733f1451ab3a5485ca2d49332b276ef12530fe3cf8376d1",
+      "gitBlob": "fe46cda43c642260be4aabc6e3fb0c9230ffd37e"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S4/reval-6096127e-3aa8-4b7a-ad6c-9fa48640338d/revalidation.json",
+      "bytes": 1398,
+      "sha256": "8533946e5156ac02db63d82cfc23502f078ed2361c9966a4687bf97c20ef7c5d",
+      "gitBlob": "b0fdaf31783ae1261f069986e8e9179b59578a62"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S5/reval-17f2040f-3263-417f-81a7-77f174038198/evidence.json",
+      "bytes": 9482,
+      "sha256": "4e3f1fc59a3afeaff98a12c2b9667813a701e4a9f5a6828f49a269d8d2747845",
+      "gitBlob": "f99ac63c327e7d5f85c729ddb4eb251e1ab141ac"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S5/reval-17f2040f-3263-417f-81a7-77f174038198/revalidation.json",
+      "bytes": 1489,
+      "sha256": "d04b860c9c458230c86fa66f2cd4b042ed161009f5823341d42eef7283ef5a7e",
+      "gitBlob": "2f686ea3be19d6573b4fd0f463a81ec29571c0a2"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S6/reval-469f2947-efcd-4007-a8f9-20316eb5d73b/evidence.json",
+      "bytes": 9664,
+      "sha256": "578e018a94a1edabf1d83de5917b40e6cee335fd8c4c581adaa663742c6ab74b",
+      "gitBlob": "d4123300568a7e022b39f7e531ae56fba62c6900"
+    },
+    {
+      "path": "ARAMF_WORKER/certification/revalidation/S6/reval-469f2947-efcd-4007-a8f9-20316eb5d73b/revalidation.json",
+      "bytes": 1580,
+      "sha256": "276418753ddf96be8a5892f5489f146a4ccecca8dba1a9004c9230b1bac79167",
+      "gitBlob": "55ae172b37b0d591c829b131d058fe9960db58e3"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/amended-ready-contract.json",
+      "bytes": 3096916,
+      "sha256": "e5d763e13a8ad5b6e7f700dbe494d9a99a8b162db33a5517f1413e3da8e473b4",
+      "gitBlob": "05cb60f812c204f19068dfabee060b52b45c6fc0"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/application-startup.json",
+      "bytes": 719,
+      "sha256": "9aa5d21164ee1f2bc26d7832d7a23a852eb46d636a685b85fbd817c046e1b295",
+      "gitBlob": "61f56d5e40e50564d80e1f77cd5e26d1cc055382"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/archived-campaign-evidence.json",
+      "bytes": 707375,
+      "sha256": "4385d1f30d5292f46d5d45415ab010a696e89a55e9af2d9f29cca20817298670",
+      "gitBlob": "62ad08d5aafd41cdcfa49c747067e1c29be67e22"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/baseline-and-scope-blocker.json",
+      "bytes": 22732,
+      "sha256": "dd57c22c8c4bca65fe99fd01d7906dd0a21f804e5c84aff69bb28c5f7f22d58b",
+      "gitBlob": "a24737db2db77a8cf85edccdfa39a6e2e3174acc"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/campaign-250.json",
+      "bytes": 613,
+      "sha256": "d82ab4f5e0197c76b71b0bda02c78970e1c8cf17746b62fb5a0414d41f01cb42",
+      "gitBlob": "f6124a7b8e30ad7efc122026a2508a95df6cfb91"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/campaign-550.json",
+      "bytes": 687,
+      "sha256": "adb4908ebf62794a9f96640d6854695acb5d9275e12b8ed68415c2105c135621",
+      "gitBlob": "96cde4f02dff5d7a8d8a30a7189d4c03a82f91d5"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-acceptance-criteria.json",
+      "bytes": 462,
+      "sha256": "8046beaf0f99a1d2273ab1c2b3ce84447391313bd1295ceb845df90b3da42913",
+      "gitBlob": "db0200ff8293d1bec279c88733f621c790e7dd70"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-affected-workflow-tests.json",
+      "bytes": 452,
+      "sha256": "032dce60b2e728a1e55c548f842fdd0a16189195a96a84c74c294b1c01f4f211",
+      "gitBlob": "b2df552e3474653fc354e60810acadcfdcd06df7"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-application-startup.json",
+      "bytes": 457,
+      "sha256": "a5173d265ea1a3d01e67e351828969b12f659f06ccb634ad3edb432593d117bf",
+      "gitBlob": "ebe033e2ba90d78c893d5652c42b184fdb715e17"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-aramf_core_tests---p3-execution.json",
+      "bytes": 461,
+      "sha256": "4bf8c6a8953a7a662843ee616782588d9906e7c7c46e0960f98cd3d9459a9948",
+      "gitBlob": "7b33d62d6ccbd3d4fddecd1cab5a25772d2eb517"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-aramf_core_tests---worker-tasks.json",
+      "bytes": 461,
+      "sha256": "446ab9485941cdca3a7d9b920d58f3a0527144c21eae4dcbc0015f1296336269",
+      "gitBlob": "62163c223712be2ce68f1889561b3466beafb326"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-aramf-worker-migration.json",
+      "bytes": 451,
+      "sha256": "13607df27b59243ccd31846311ab10b41b38826c943aaaccfc5faaa6680f3f15",
+      "gitBlob": "1ca5064e79c6ea194107b57f83218ea77d6ef6c6"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-cold-start.json",
+      "bytes": 448,
+      "sha256": "aed1e1ecd66b54b5b482e81c53dec238828a2f7f0b5b048e5cc6bfe42f281798",
+      "gitBlob": "c2719a115f30629933a20d19531068c583a320f8"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-ctest.json",
+      "bytes": 434,
+      "sha256": "38838c8d2fe360c2b375fb27e57b546c30cae18c3f2ba45e549ca9796037346c",
+      "gitBlob": "14f54fd63059a6148e6ada7b1a97762451a90b89"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-git-diff-check.json",
+      "bytes": 447,
+      "sha256": "8eafa31e0e65f1f502559c51f331433726def175c4e96fda5ff99bfc1125b040",
+      "gitBlob": "c18a5376e3347e448acf272c6cc3589ed6a3888a"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-impacted-validation.json",
+      "bytes": 448,
+      "sha256": "7805a00e63794d23026964bb9374dc888a90a99848c85af10dfd9d14b3684960",
+      "gitBlob": "84663db9d99dfeba9519b65e774a54360b66bc9c"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-memory-consistency.json",
+      "bytes": 456,
+      "sha256": "de791a8f3c63586472603c0fd4d353e3752d7b20b3faa3e68401ab765acf2bb0",
+      "gitBlob": "b9cd743dd93755765a8abcff060d52a10568966b"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-persistence-regression.json",
+      "bytes": 465,
+      "sha256": "3feee9f57207cf644ae911ff182a0d78caf1f90f4bb70b011e65a068bf28befd",
+      "gitBlob": "7676acb6b39f425e0addf866232e2dfb47410dae"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-production-build.json",
+      "bytes": 451,
+      "sha256": "9ebbee7077a04b81e638d0d670872bc04be2968f26b4d900c0421df2b51c3d01",
+      "gitBlob": "7d1317a53978d633d72e5930e3604f9d4ce673f5"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-targeted-regression.json",
+      "bytes": 462,
+      "sha256": "1faecd966f67ebfdfdf8e41090c249c3fb6ae174e20881d10ca2092f95cf95e4",
+      "gitBlob": "0266208aa4dac1e653da72ba7bba020742f8ed73"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-test_250.json",
+      "bytes": 439,
+      "sha256": "34ece6c8e2643a4305365a10d7f89828eb56c4c28920417e8cbcde7dea6f088e",
+      "gitBlob": "52b1762c057493c2519d71d10e62e76baa26be2d"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-test_550-automated.json",
+      "bytes": 449,
+      "sha256": "4675e4bdd764efd0ec5844c9b8de8680ddbdab813cf72c55d7de725016e45d35",
+      "gitBlob": "9f9c8c22d575531f14031408afb888f53bd3ecb5"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/check-worker-topology.json",
+      "bytes": 453,
+      "sha256": "58919f2fccb52f24e78bb00530a35ae8e2b3ea471d1c680933b5451cecd1c900",
+      "gitBlob": "072ac6f760eaac49658414b2505dc3aef49a58c1"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/clean-configure.json",
+      "bytes": 1718,
+      "sha256": "52667218d1f386783d5887c8a94fe06ac948a48ece413ecfdc828afc4c02c053",
+      "gitBlob": "71426141a594cd40e837ae23c4e7904de6915f6c"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/clean-full-build.json",
+      "bytes": 168053,
+      "sha256": "d6e68110b48392857cbaa5f7647f6222e77394e8e2d93a06257a8a38386fb0fd",
+      "gitBlob": "65ebe85cc72fdff27cc911943b62f52dacf3a9df"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/clean-runtime-staging.json",
+      "bytes": 5384,
+      "sha256": "bf5021bdfc30f17ab13330a593c78cdbb17fa154b62beca6edcdea527f06770c",
+      "gitBlob": "2ad1e32ed88406a596b5084d030172b0508fd95a"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/completed-worker-state.json",
+      "bytes": 31914,
+      "sha256": "06a30c2d28426a210253bcce4dd3bb97beff7685906ed3c61d8cbb1cff401a67",
+      "gitBlob": "c196292d6cf8fbcc52a78d471257c1c68904c9e7"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/completed-worker-state-cold-start.json",
+      "bytes": 3016,
+      "sha256": "c3ef4494dc50ad88289780666697f119d902dee52c7478658ca7efd48f75bafd",
+      "gitBlob": "e487195d17c26893278c9d18fb23a82f84279ff7"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/completed-worker-state-prior-cold-start.json",
+      "bytes": 4270,
+      "sha256": "edee193700b8538681b1075d43e1fb3702603a399d188968a255a538a8017cf2",
+      "gitBlob": "db124cda975053ad06ee48ef9e849faad5ec61e4"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/evidence-index.json",
+      "bytes": 5108,
+      "sha256": "c53deb16cafe593e884b14937a3ec76a9260e95584327c20f33f1051edb0998b",
+      "gitBlob": "3d79cd2e074a2b6ccf8837dc565547fb3cc9ae0d"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/final-context.json",
+      "bytes": 16352,
+      "sha256": "9b2241c6921c659549ad5b2f921bf281683888feea2bcdf6b17e627c761479b2",
+      "gitBlob": "a3b6afee2a4a4e45c98c991d0ede7340997189ba"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/final-current-state.json",
+      "bytes": 31911,
+      "sha256": "27b5a6a5e5aafe31e67508cff6ca065a23e34ac058e9b101f71643d8b54d7977",
+      "gitBlob": "8ca75094c0ae566b071b901d2bff7b465a5369f5"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/final-current-state-cold-start.json",
+      "bytes": 3013,
+      "sha256": "62e4b836f3dffdac8d85916915bdca3171aa7d0d89228a4895121dabcfb9d5cc",
+      "gitBlob": "cae974dfd565961e616b190247fd778b5ead8efd"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/final-current-state-prior-cold-start.json",
+      "bytes": 4267,
+      "sha256": "9ab0053326c6cc465f3a2510d9c500ff1b48c3a07b2734847cad5ac761b6221c",
+      "gitBlob": "c4c237a8b56e74fdf55a1a37a3e028763e0f6fc7"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/final-freshness.json",
+      "bytes": 155504,
+      "sha256": "eb524c2370b41b9f9f04122336c1d06f562c9eb323919f9fa9eceb3d494b4924",
+      "gitBlob": "40f6e9d761c251f3431cd9c0d5986f15c6854f8b"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/final-recorder.json",
+      "bytes": 1283,
+      "sha256": "f2c16492ed4c9d12f93203c6e580a93a1b5f9a0b59f75bf2f6000f4d455a5a47",
+      "gitBlob": "f2ffe085f0968bf9ddec361e40ff93ba728d2629"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/final-report.json",
+      "bytes": 8812,
+      "sha256": "f9f51d8141db89d579ce86e8ee1874cc53c3ac380dbebd5b823bf1ab5a7d550d",
+      "gitBlob": "773b3b32e115b01735f29d09410c9dfb23181d0b"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/focused-configuration-01.json",
+      "bytes": 3568,
+      "sha256": "ec593cd972b6f98ca8ea2e70e3b64d363abc4f2e5760b074bfe27a38117df044",
+      "gitBlob": "483c9ac8434f9a6ce1238d5379ef0efd1d13ba78"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/focused-template-01.json",
+      "bytes": 26767,
+      "sha256": "a0da3bc06ed902f90bf1ec44e4416a2319f6a80eae754c1104be43d4d9ca9bc4",
+      "gitBlob": "affe3aff5ac54356524cf3bc34f003f95141f053"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/freshness-after-source.json",
+      "bytes": 170899,
+      "sha256": "3adccb0ceca2246cb58669e230fbf208c5a42af393124c073e04a959c1c8cb81",
+      "gitBlob": "8169ec125ed8d9ff9c15d9e78d103c72d0d2bdca"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/full-ctest.json",
+      "bytes": 3306,
+      "sha256": "6e756ceb21d1b2f9ec8e647b71ebada7ca5ec22a872327f213d7adac83af945d",
+      "gitBlob": "c238d8a5008ac93531eaf0b1cefd83b3c048d2bf"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/git-diff-check.json",
+      "bytes": 2619,
+      "sha256": "e43ba29e8e68e57b28fcc2ef366632764920f95a8ce122faf1cecc60a6f741bf",
+      "gitBlob": "c1029a423c7ed91d83080df6d439050f8d1c56e2"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/implementation-postflight.json",
+      "bytes": 10004,
+      "sha256": "53dc3907af9970088a16eb638f2c65adf09e3d5742db3226ec2957bf28e20526",
+      "gitBlob": "88b1e82a80bf00aca92230affb8beaf2b7c60393"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/implementation-review.json",
+      "bytes": 68800,
+      "sha256": "754b9575704278bba1d8bda8c04f56f8399e3f02ac7fa92c4f38630da5d3519b",
+      "gitBlob": "bc49b71886a45452b49e61b937061f1f693191a8"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/memory-amended-contract.json",
+      "bytes": 1345405,
+      "sha256": "e96a853d9944c22846b7fb9a7cb054d7ea23a6f2761b9a1b2a8c1e2346c0fd8c",
+      "gitBlob": "862849a665c56e1d5ca85670cbac757a76ac1813"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/old-defect-negative-control.json",
+      "bytes": 608,
+      "sha256": "69c8df8a6e43e986c9432eb1b71a8d1a6589a965999f10954bec6a877f2ce0f5",
+      "gitBlob": "d596c538d831356052a02df51eff6e8c009d6c00"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/partial-postflight.json",
+      "bytes": 3638,
+      "sha256": "aef37600947cf585151888cb89947f6f70147388565e4b44b38f1413b1455e9c",
+      "gitBlob": "8d43030adac901ef40f6901f780d6d337a7911a1"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/protected-after-revalidation.json",
+      "bytes": 146711,
+      "sha256": "37eee32428656e4cb0fd1379fe83f1955c7df71b855b25ef328d161eab863839",
+      "gitBlob": "30ea75f8ab3659458d9047fb6b8bb381b752fe21"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/protected-before-closeout.json",
+      "bytes": 138438,
+      "sha256": "7aca03d410fdadb24b0d7aa7ed350df91e58b47b1d2813cf5213c115f0edff2d",
+      "gitBlob": "cd3b535f5f590ff556e4d96d56499296148e9c93"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/protected-complete-baseline.json",
+      "bytes": 146710,
+      "sha256": "e48ea18c3c20a828165baacbf0768c7225aac5b8dcf0868a141a2247fb504dfc",
+      "gitBlob": "d19994f10f45076cb61b7341331420062f4263eb"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/recorder-context-readback.json",
+      "bytes": 14806,
+      "sha256": "5ddb1d6e507edc19fc9105d2be83156eedb93ca0ca9e8fbbda24b2c3ef845db5",
+      "gitBlob": "36ca50c4a05a693893882cfe43ca5fdc1d32d13a"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/recorder-context-refresh.json",
+      "bytes": 500,
+      "sha256": "378c2d9ff233d6deefd2b9d697e8c72b4da25d248948eb01b319ea2f81309d0d",
+      "gitBlob": "8bd1757e6248e0d298e64f35ec11575b93613c92"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/recorder-prior-history.json",
+      "bytes": 293569,
+      "sha256": "4b29414ce50f45a6cb3cfa3b8458428e64752e627dcc806cdaef7b5eba822cff",
+      "gitBlob": "a320774918ff7837f2a582899681b2c6c9fbb89e"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/recorder-results.json",
+      "bytes": 3558,
+      "sha256": "4b0b0c1b19bc000fb2358c01c80ecb81fbaf4eeb2ffe5115fb6ee73b266bc65d",
+      "gitBlob": "4fcb05e6296990470ca154d3cadd5b0a0411f3df"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/regression-evidence.json",
+      "bytes": 9377,
+      "sha256": "650e0e7863ea2a5661585d23965983900099458c46a919aa0bc097e55028ba29",
+      "gitBlob": "2ebec8917b0a1148fb5ae8b9d23e2ece5ee1de73"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/revalidation-before.json",
+      "bytes": 170896,
+      "sha256": "25c5386df58e6c23f20b5e3a91fed80a05ba33e8254fee9ea3368be691aecef5",
+      "gitBlob": "0b56a7c6c7e876f6416b6e50cbe94914cb966490"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/revalidation-F1.json",
+      "bytes": 3970,
+      "sha256": "7d52b9826a4ff6d37ed32936be654bccb790928ba86c8505312bbbb389098e18",
+      "gitBlob": "da6c8727c20810f37e9ff7b77ef6a7f3ae537e27"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/revalidation-S1.json",
+      "bytes": 3970,
+      "sha256": "3ba45d372dd57d8f0c4ca86e923cdf8b575923b8ceb52cbed089b3685bc37b67",
+      "gitBlob": "4533625ae2e067704c2199d4f7e2963d97379280"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/revalidation-S2.json",
+      "bytes": 7218,
+      "sha256": "d5f401414eab8066cf7068886349d0d7ebb24e2e3066276400c6e5f6a61dbbc7",
+      "gitBlob": "fa1cfa06e59366d1d2fc5c27a7838ba52797653e"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/revalidation-S3.json",
+      "bytes": 14132,
+      "sha256": "c5a196442b5081956a37eb0ecb5e2ead10f02441e3aeafd8c5a3406eb94ff941",
+      "gitBlob": "dabadda4b34c35cd92247b4cee7243b53706d55f"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/revalidation-S4.json",
+      "bytes": 28792,
+      "sha256": "f22f87ab71e36d6c4c07d34db7946d019c0d2561f537fb519e9581765daa1d18",
+      "gitBlob": "51bdb57b7de6a20bba4db393c115bcc9079f57bd"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/revalidation-S5.json",
+      "bytes": 59776,
+      "sha256": "cd8c4646fd4098fced62005712b7db60412117b0323b6b8718a226d1193ed919",
+      "gitBlob": "533034dc196bf578930295ff19404525db3b69cd"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/revalidation-S6.json",
+      "bytes": 125072,
+      "sha256": "dd448205f5e10f9a6827068432478c8433fbe9b916eb3f73571ee79f0f2677b2",
+      "gitBlob": "b155ff575002693652764ba1df29b8b20bbf79b9"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/state-after-revalidation.json",
+      "bytes": 31916,
+      "sha256": "6d82f513a466a174b6dcd97cbe0895dcf83a43ebdbcfc7b10f93a9d832edf59c",
+      "gitBlob": "78cd7ee23741730e4a0998b60e49958a6f1fe06b"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/transaction-producer-scope-blocker.md",
+      "bytes": 5574,
+      "sha256": "c23d052967f718333b2961674fbd637e33e21242959ad4c2384eab2ba852c887",
+      "gitBlob": "49edb47bf3a9cfcc73b0f3c5af9266ac30a3ac00"
+    },
+    {
+      "path": "ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/verification-helper-corrections.json",
+      "bytes": 955,
+      "sha256": "76d7945a4ddadc18b99687313ca017d9626e28a708ea02c2a5354e2da09b4bd2",
+      "gitBlob": "22bbb07b8a5a16288b3d42bfd511e71758df7cff"
+    }
+  ],
+  "manifestSelf": "This boundary record is also included, but its own hash is verified through Git index/blob comparison rather than a self-referential hash.",
+  "statusBefore": [
+    " M ARAMF_WORKER.aramf.json",
+    " M ARAMF_WORKER/AGENTS.md",
+    " M ARAMF_WORKER/PROJECT_STATUS.md",
+    " M ARAMF_WORKER/certification/current-freshness-state.json",
+    " M ARAMF_WORKER/context/compressed-context.json",
+    " M ARAMF_WORKER/context/context-index.json",
+    " M ARAMF_WORKER/context/freshness.json",
+    " M ARAMF_WORKER/memory/cold-start-validation.json",
+    " M ARAMF_WORKER/memory/current-state.md",
+    " M ARAMF_WORKER/memory/event-log.jsonl",
+    " M ARAMF_WORKER/memory/memory-consistency-validation.json",
+    " M ARAMF_WORKER/memory/memory-manifest.json",
+    " M ARAMF_WORKER/memory/metrics.json",
+    " M ARAMF_WORKER/project.json",
+    " M ARAMF_WORKER/routing/scope-routes.json",
+    " M ARAMF_WORKER/routing/task-routes.json",
+    " M ARAMF_WORKER/update/update-plan.json",
+    " M ARAMF_WORKER/verification/generation-state.json",
+    " M ARAMF_WORKER/verification/latest-validation.json",
+    " M ARAMF_WORKER/verification/verification-result.json",
+    " M ARAMF_WORKER/worker-manifest.json",
+    " M LICENSE",
+    "?? ARAMF_WORKER/certification/revalidation/F1/reval-84e2734b-e340-4ab1-bcc9-fd00928add66/",
+    "?? ARAMF_WORKER/certification/revalidation/S1/reval-180a4bc8-b083-439f-a095-c393419c2581/",
+    "?? ARAMF_WORKER/certification/revalidation/S2/reval-ace2399a-0866-4428-b5ab-fd266fdd09e2/",
+    "?? ARAMF_WORKER/certification/revalidation/S3/reval-16559e0d-a944-41b5-899f-5d93959a6f26/",
+    "?? ARAMF_WORKER/certification/revalidation/S4/reval-6096127e-3aa8-4b7a-ad6c-9fa48640338d/",
+    "?? ARAMF_WORKER/certification/revalidation/S5/reval-17f2040f-3263-417f-81a7-77f174038198/",
+    "?? ARAMF_WORKER/certification/revalidation/S6/reval-469f2947-efcd-4007-a8f9-20316eb5d73b/",
+    "?? ARAMF_WORKER/verification/tasks/configuration-propagation-20260927-01/",
+    "?? ARAMF_WORKER/verification/tasks/evidence-directory-relocation-20260927-01/",
+    "?? ARAMF_WORKER/verification/tasks/memory-byte-reconstruction-20260927-01/",
+    "?? ARAMF_WORKER/verification/tasks/named-worker-update/",
+    "?? ARAMF_WORKER/verification/tasks/phase2b-implementation-20260927-01/",
+    "?? ARAMF_WORKER/verification/tasks/phase2b-scope-recovery-20260927-01/",
+    "?? ARAMF_WORKER/verification/tasks/preflight-recovery-20260927-01/",
+    "?? ARAMF_WORKER/verification/tasks/rollback-byte-audit-20260927-01/",
+    "?? ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/postcommit-protected-integrity.json",
+    "?? ARAMF_WORKER/verification/tasks/rollback-implementation-20260927-01/user-clarification-hvd-cleanup.json",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/PREFLIGHT-BLOCKED.md",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/baseline.json",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/before/",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/freshness-before.json",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/head-before.txt",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/implementation-contract.json",
+    "?? ARAMF_WORKER/verification/tasks/rollback-repair-20260927-01/status-before.txt",
+    "?? test_250/runs/",
+    "?? test_550/runs/"
+  ]
+}

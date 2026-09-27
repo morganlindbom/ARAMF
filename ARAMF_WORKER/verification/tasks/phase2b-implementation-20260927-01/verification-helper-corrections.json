@@ -1,0 +1,8 @@
+{
+  "check": "verification-helper-corrections",
+  "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+  "status": "OBSERVED",
+  "scope": "One-time verification tooling only; no product or historical evidence changes",
+  "protectedFiles": "First helper compared recursive enumeration with a git ls-files baseline, omitting ignored descendants. Retained failed result. Completed comparison using the preserved Phase 2A protected-after-revalidation.json hash inventory: PASS. No protected files were changed.",
+  "context": "Recorder returned successfully and context generation returned success=true. Context readback returned valid=true, indexValid=true, staleCount=0. The helper incorrectly expected status=PASS from this boolean-returning API. Retained both original results and corrected the helper assertion to valid=true. No additional recorder events or context regeneration were performed to correct that assertion."
+}

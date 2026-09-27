@@ -1,0 +1,14 @@
+{
+    "arguments": [
+    ],
+    "check": "old-defect-negative-control",
+    "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+    "cwd": ".",
+    "data": "b2xkIHVwZGF0ZS5zdWNjZXNzPTEgUXQvcmVzb3VyY2VzIHN5bmNocm9uaXplZD0wIGZpeHR1cmU9QzovVXNlcnMvbW9yZ2EvQXBwRGF0YS9Mb2NhbC9UZW1wL3BoYXNlMmItb2xkLXJlcHJvZHVjdGlvbi1LTmlIYXENCg==",
+    "encoding": "base64",
+    "exitCode": 42,
+    "program": "./build/phase2b-old-reproduction.exe",
+    "rawSha256": "1cb1f3f856fe24bb3f377a68d4061b9770150925054d1ac9a2aba9d6a0ade6df",
+    "status": "FAIL",
+    "timestamp": "2026-09-27T14:07:41Z"
+}

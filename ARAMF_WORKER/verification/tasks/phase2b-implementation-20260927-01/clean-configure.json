@@ -1,0 +1,24 @@
+{
+    "arguments": [
+        "-S",
+        ".",
+        "-B",
+        "build/phase2b-clean-20260927",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCMAKE_CXX_COMPILER=C:/msys64/ucrt64/bin/g++.exe",
+        "-DCMAKE_MAKE_PROGRAM=C:/msys64/ucrt64/bin/ninja.exe",
+        "-DQt6_DIR=C:/msys64/ucrt64/lib/cmake/Qt6"
+    ],
+    "check": "clean-configure",
+    "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+    "cwd": ".",
+    "data": "LS0gVGhlIENYWCBjb21waWxlciBpZGVudGlmaWNhdGlvbiBpcyBHTlUgMTYuMi4wCi0tIERldGVjdGluZyBDWFggY29tcGlsZXIgQUJJIGluZm8KLS0gRGV0ZWN0aW5nIENYWCBjb21waWxlciBBQkkgaW5mbyAtIGRvbmUKLS0gQ2hlY2sgZm9yIHdvcmtpbmcgQ1hYIGNvbXBpbGVyOiBDOi9tc3lzNjQvdWNydDY0L2Jpbi9nKysuZXhlIC0gc2tpcHBlZAotLSBEZXRlY3RpbmcgQ1hYIGNvbXBpbGUgZmVhdHVyZXMKLS0gRGV0ZWN0aW5nIENYWCBjb21waWxlIGZlYXR1cmVzIC0gZG9uZQotLSBQZXJmb3JtaW5nIFRlc3QgQ01BS0VfSEFWRV9MSUJDX1BUSFJFQUQKLS0gUGVyZm9ybWluZyBUZXN0IENNQUtFX0hBVkVfTElCQ19QVEhSRUFEIC0gU3VjY2VzcwotLSBGb3VuZCBUaHJlYWRzOiBUUlVFCi0tIFBlcmZvcm1pbmcgVGVzdCBIQVZFX1NUREFUT01JQwotLSBQZXJmb3JtaW5nIFRlc3QgSEFWRV9TVERBVE9NSUMgLSBTdWNjZXNzCi0tIEZvdW5kIFdyYXBBdG9taWM6IFRSVUUKLS0gQ291bGQgTk9UIGZpbmQgV3JhcFZ1bGthbkhlYWRlcnMgKG1pc3Npbmc6IFZ1bGthbl9JTkNMVURFX0RJUikgCi0tIENvbmZpZ3VyaW5nIGRvbmUgKDMuNXMpCi0tIEdlbmVyYXRpbmcgZG9uZSAoMC43cykKLS0gQnVpbGQgZmlsZXMgaGF2ZSBiZWVuIHdyaXR0ZW4gdG86IEQ6L09OIERFU0NUT1AvSEtSIEtVUlNFUi9DKysvQVJBTUYyL0FSQU1GL2J1aWxkL3BoYXNlMmItY2xlYW4tMjAyNjA5MjcK",
+    "encoding": "base64",
+    "exitCode": 0,
+    "program": "C:/Program Files/CMake/bin/cmake.exe",
+    "rawSha256": "a941304f5f0bc74223743e34e6c7996abffb87dae0830eddb7f510698c6ea03e",
+    "status": "PASS",
+    "timestamp": "2026-09-27T14:08:01Z"
+}

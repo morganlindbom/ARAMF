@@ -1,0 +1,13 @@
+{
+    "check": "recorder-context-refresh",
+    "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+    "fingerprint": "7327b6a33e75e1436823c6a8d1a8730a153963d275ef7dbd0cc89f55b86e43ff",
+    "generatedFiles": [
+        "ARAMF_WORKER/context/context-index.json",
+        "ARAMF_WORKER/context/compressed-context.json",
+        "ARAMF_WORKER/context/freshness.json",
+        "ARAMF_WORKER/context/agent-adapters.json"
+    ],
+    "status": "OBSERVED",
+    "success": true
+}

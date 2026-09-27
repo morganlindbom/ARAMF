@@ -1,0 +1,109 @@
+{
+    "check": "clean-runtime-staging",
+    "contractId": "0921fc6d94f376b3c34d839a99bff3663a22de1023687183d86136f577e47f8b",
+    "files": [
+        {
+            "cleanHash": "9d0dbb3aa4f4dfa6c44a77043712ca054ac96db18e6c3dbd3e6f013481528c53",
+            "file": "aramf.exe",
+            "oldHash": "06a952374ef16afdea8d9c0a84d585912e3d5a3bbf59d7e9afdcbb7134b58433"
+        },
+        {
+            "cleanHash": "8297eb87fd68a4c164553889a36998eba02660dd492e78ef1e87f47bba6313d8",
+            "file": "aramf_campaign_runner.exe",
+            "oldHash": "103007fb174cbf5e328745bb0f41e9cf43abbfb1be7c5843d3d2a411dc7faf99"
+        },
+        {
+            "cleanHash": "bebdea9acb8e848a0176d5b953707941388ab472cb1373bfcfd9a4dacbda0817",
+            "file": "aramf_configuration_update_tests.exe",
+            "oldHash": "7efcf3d0ec111424f174ac8727660e42b28f324120489f889e28aa8321623378"
+        },
+        {
+            "cleanHash": "f9ecf9b3f6a4909e69046a4e138708c65bb8b42cfa378958ff38731f25f63f2b",
+            "file": "aramf_core_tests.exe",
+            "oldHash": "2b7664907b62f3d487606a9129ea95aab0af09c42e7888d451281f165ad1c234"
+        },
+        {
+            "cleanHash": "09f1ffebbc86c9741b1510566a0e7eb25c6444a132ca431a0aa307d13fa51b20",
+            "file": "aramf_f1_independence.exe",
+            "oldHash": "83354da1112e9113f1ae4a73c0aee5af85ddb35b8640a09a69774186e2598a3d"
+        },
+        {
+            "cleanHash": "11515f68897efc6e6ad893e8fcb83feceb6facd969284afaf1dad9b7d7ff0f7c",
+            "file": "aramf_f2_independence.exe",
+            "oldHash": "b2f76b4e80a68b4f7cd0acccbec1c804a687c300aa82008ee8d982a804f19752"
+        },
+        {
+            "cleanHash": "0c18959aa76b598310ea9155fc7c10a7ffb2470e6ebec29263f09994b57a0869",
+            "file": "aramf_f3_independence.exe",
+            "oldHash": "e6592dd28b87e5fef77b2a4ba26a8c1973054a8acd82ed61f3d65b47d45b4f18"
+        },
+        {
+            "cleanHash": "9fde54c36440a0c8263915c52a28ff1b10922da17189ffadb0b68d4141889772",
+            "file": "aramf_f4_independence.exe",
+            "oldHash": "bc35aa7f5d044b83fa91d36e5e0f385c731e202be75ba0e7c7633c55ae91f9c3"
+        },
+        {
+            "cleanHash": "19dee74e03263a160428693c64e3067f4b3dce761e17aa90921188d3999613fc",
+            "file": "aramf_freshness_tests.exe",
+            "oldHash": "a24daad914fa608e2db3bbd0f758710f5436b37cd228aad562ef35ede573b6af"
+        },
+        {
+            "cleanHash": "6c6337142d2dda19b90b06ea6dc2a092b1d3b661f0e4bbf8db047463e85da4dd",
+            "file": "aramf_release_validation_runner.exe",
+            "oldHash": "27307e0954112261ee2a221accde751737b7cc1afa8d20a18ca14dd5aeda4c2c"
+        },
+        {
+            "cleanHash": "44d95e359d28ce954b258909e25ce64ce60cc47d35abceea78cd3e5195c84fee",
+            "file": "aramf_revalidation_tests.exe",
+            "oldHash": "20d882e332561d30a7b80cf5e5918927523d0a6b4bf44f6ae5ca8893ee5f31d5"
+        },
+        {
+            "cleanHash": "295b360cc3c21e48dc5ae4e3e5c9717ee4911a44db739c66ef6849a9cb18c0c0",
+            "file": "aramf_s1_tests.exe",
+            "oldHash": "45fdefc85296a2515d3f206247579175bc5c2f94442f66f36b52037c0fe6fdee"
+        },
+        {
+            "cleanHash": "e68ea7de589cc1cdb815f3cc6d6f35b11b6de37371ff0c06790f3d248f326908",
+            "file": "aramf_s2_tests.exe",
+            "oldHash": "e4593d702f4d1954e658e850b1e6e287201e9ead805da3bc172114e49ee68c05"
+        },
+        {
+            "cleanHash": "23158293e006981097c28fa1c48a5d457a8dea4d3326ed521d85fc155e127ace",
+            "file": "aramf_s3_tests.exe",
+            "oldHash": "c9bd5a3154de82ba00f9caa99d1fcb95834b35c80837918a16f27b11c602771a"
+        },
+        {
+            "cleanHash": "9073e19491c0adae137127765a0dc01e21b23aa092f856cf3641c499d57d27ad",
+            "file": "aramf_s4_tests.exe",
+            "oldHash": "043f69a5f6bb72336deb299fdcef752852086108010fa638d782e88713c40417"
+        },
+        {
+            "cleanHash": "d225a2989ceeaad3255cc978bd94811184d43e8d7c3f9dba4aba355d68f8312e",
+            "file": "aramf_s5_tests.exe",
+            "oldHash": "bb77456daa95fc11c753bb68347dabefdc9ae0020ee6f69b73cdc27d06919967"
+        },
+        {
+            "cleanHash": "0d5913297deed69a702ca6a83eaaed98f6ad6d75e386a5e538832656d99d2151",
+            "file": "aramf_s6_tests.exe",
+            "oldHash": "001ecd43848f90158beeccacf903ecbfe416f80c2207c0e089c48870279f9fb9"
+        },
+        {
+            "cleanHash": "ca2741fd1a62b31cc335151663ad34dc643ba241a65d7b6d3a106c4d6169af0b",
+            "file": "aramf_template_tests.exe",
+            "oldHash": "a80562dfad5e5179134d601a55e105d36c5c285a641f9d56dea3de24604b0502"
+        },
+        {
+            "cleanHash": "f4a2bfe5d60097ced21081949906604cee01e54ffa3039005aee849334618be9",
+            "file": "aramf_update_campaign_runner.exe",
+            "oldHash": "f66b1853841d7818cbc151da0945802cd271e9de152fdc1ea2b35c1fbcd151cb"
+        },
+        {
+            "cleanHash": "cbed9dd0dea03b8b56ce870c94af2894e26d4d0e46cf8160b6e9d8da1c039478",
+            "file": "aramf_workflow_tests.exe",
+            "oldHash": "51b9ee7a8bf2cd03fa7c1bb02ad499ec4556cc0de1f74bf50fb857f929886d67"
+        }
+    ],
+    "identicalRuntimeLibraries": 18,
+    "reason": "Unchanged test harnesses require canonical build executable location; preserve old binaries and stage clean binaries byte-identically",
+    "status": "PASS"
+}
