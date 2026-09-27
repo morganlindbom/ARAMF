@@ -30,6 +30,10 @@
 #include <QTemporaryDir>
 #include <QTextStream>
 #include <QElapsedTimer>
+#include <QCryptographicHash>
+#ifdef Q_OS_WIN
+#include <qt_windows.h>
+#endif
 #include <algorithm>
 #include <iostream>
 
@@ -52,6 +56,158 @@ QByteArray readTextFile(const QString& path)
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return {};
     return file.readAll();
+}
+
+bool runRollbackByteTests()
+{
+    bool ok = true;
+    for (const auto& representation : QStringList{"LF", "CRLF", "mixed", "UTF8-BOM"}) {
+        for (const auto& operation : QStringList{"decision", "supersede", "checkpoint", "task-complete"}) {
+            QTemporaryDir fixture;
+            fixture.setAutoRemove(false);
+            if (!require(fixture.isValid(), "rollback fixture must exist")) return false;
+            const auto path = [&](const QString& relative) { return QDir(fixture.path()).filePath(relative); };
+            const auto raw = [&](const QString& relative) {
+                QFile file(path(relative));
+                if (!file.open(QIODevice::ReadOnly)) { ok = false; return QByteArray(); }
+                return file.readAll();
+            };
+            const auto write = [&](const QString& relative, const QByteArray& contents) {
+                QFile file(path(relative));
+                return file.open(QIODevice::WriteOnly) && file.write(contents) == contents.size();
+            };
+            ProjectModel model;
+            model.setProjectPath(fixture.path());
+            MemoryConfiguration config;
+            config.maintenanceOptions = {"record-decisions", "record-checkpoints", "record-task-completion",
+                                         "update-current-state", "update-project-status"};
+            config.validationOptions = {"memory-consistency", "conflicting-decisions", "cold-start-validation"};
+            model.setMemoryConfiguration(config);
+            ProjectMemory memory;
+            QString error;
+            if (!require(memory.initialize(fixture.path(), &model, &error), qPrintable(error))) return false;
+            if (!require(memory.recordDecision(fixture.path(), "original", "topic", "Original decision", "current", {}, &error), qPrintable(error))) return false;
+            // Reject after mutation, not at argument validation. A conflicting decision
+            // exercises a valid baseline; the other operations exercise fail-closed validation.
+            if (operation != "decision") {
+                auto object = QJsonDocument::fromJson(raw(AramfPaths::MemoryConfiguration)).object();
+                auto options = object.value("validationOptions").toArray();
+                options.append("forced-invalid-validation");
+                object.insert("validationOptions", options);
+                if (!require(write(AramfPaths::MemoryConfiguration, QJsonDocument(object).toJson()), "configure rejection")) return false;
+            }
+            const QStringList files{AramfPaths::Decisions, AramfPaths::Checkpoints, AramfPaths::EventLog,
+                AramfPaths::Manifest, AramfPaths::CurrentState, AramfPaths::Metrics,
+                AramfPaths::ConsistencyValidation, AramfPaths::ColdStartValidation, AramfPaths::ProjectStatus};
+            for (const auto& relative : files) {
+                auto contents = raw(relative);
+                contents.replace("\r\n", "\n");
+                if (representation == "CRLF") contents.replace("\n", "\r\n");
+                if (representation == "mixed") {
+                    const auto first = contents.indexOf('\n');
+                    if (first >= 0) contents.insert(first, '\r');
+                }
+                // Preserve UTF-8, BOM and trailing whitespace in Markdown without
+                // imposing a new BOM requirement on the JSONL parser.
+                if (relative.endsWith(".md")) {
+                    contents += "\nLegacy UTF-8: \xc3\xa5  \t\n";
+                    if (representation == "UTF8-BOM") contents.prepend(QByteArray::fromHex("efbbbf"));
+                }
+                if (!require(write(relative, contents), "write raw rollback fixture")) return false;
+            }
+            memory.validateColdStart(fixture.path(), &error);
+            if (!require(error.isEmpty(), qPrintable(error))) return false;
+            if (operation == "decision")
+                ok &= require(memory.validate(fixture.path(), nullptr, false).value("status") == "PASS", "baseline must validate");
+            QMap<QString, QByteArray> before;
+            for (const auto& relative : files) before.insert(relative, raw(relative));
+            const auto events = memory.events(fixture.path());
+            QSet<QString> eventIds;
+            int sequence = 0;
+            for (const auto& event : events) {
+                eventIds.insert(event.value("eventId").toString());
+                ok &= require(event.value("sequenceNumber").toInt() == ++sequence, "fixture sequence is continuous");
+            }
+            ok &= require(events.size() == 2 && eventIds.size() == events.size(), "fixture has two unique historical events");
+            error.clear();
+            bool accepted = false;
+            if (operation == "decision") accepted = memory.recordDecision(fixture.path(), "conflict", "topic", "Reject conflicting decision", "current", {}, &error);
+            else if (operation == "supersede") accepted = memory.supersedeDecision(fixture.path(), "original", "replacement", &error);
+            else if (operation == "checkpoint") accepted = memory.recordCheckpoint(fixture.path(), "Rejected checkpoint", "No partial state", {}, {}, "PASS", nullptr, &error);
+            else accepted = memory.recordOperation(fixture.path(), operation,
+                {{"task", "Rejected task"}, {"status", "PASS"}, {"actor", "human"}, {"agentId", "none"}, {"tool", "rollback-regression"}}, nullptr, &error);
+            ok &= require(!accepted, "operation must be rejected");
+            for (const auto& relative : files) {
+                const auto after = raw(relative);
+                ok &= require(after == before.value(relative)
+                    && QCryptographicHash::hash(after, QCryptographicHash::Sha256)
+                        == QCryptographicHash::hash(before.value(relative), QCryptographicHash::Sha256),
+                    qPrintable(representation + " " + operation + " exact rollback: " + relative));
+            }
+            ok &= require(events == memory.events(fixture.path()), "rollback preserves every event, ID, sequence and order");
+            if (operation == "decision") {
+                ok &= require(memory.validate(fixture.path(), nullptr, false).value("status") == "PASS", "rollback preserves memory consistency");
+                error.clear();
+                ok &= require(memory.recordDecision(fixture.path(), "accepted", "different-topic", "Accepted decision", "current", {}, &error), qPrintable(error));
+                ok &= require(memory.events(fixture.path()).size() == events.size() + 1, "successful operation persists normally");
+                // A target that is absent before rejection must remain absent.
+                for (const auto& relative : QStringList{AramfPaths::ColdStartValidation, AramfPaths::ConsistencyValidation})
+                    ok &= require(QFile::rename(path(relative), path(relative + ".preserved")), "preserve optional file outside mutation set");
+                QMap<QString, QByteArray> existing;
+                for (const auto& relative : files)
+                    if (QFile::exists(path(relative))) existing.insert(relative, raw(relative));
+                error.clear();
+                ok &= require(!memory.recordDecision(fixture.path(), "conflict-absent", "topic", "Reject with absent derived files", "current", {}, &error), "reject absent-file case");
+                for (const auto& relative : files) {
+                    ok &= require(QFile::exists(path(relative)) == existing.contains(relative), "rollback preserves original existence");
+                    if (existing.contains(relative)) ok &= require(raw(relative) == existing.value(relative), "absent-file rollback preserves other bytes");
+                }
+                // Late snapshot failure must abort before the first write. A
+                // directory at a file target is not an empty or absent snapshot.
+                ok &= require(QDir().mkpath(path(AramfPaths::ColdStartValidation)), "non-file snapshot fixture");
+                const auto ledgerTime = QFileInfo(path(AramfPaths::EventLog)).lastModified();
+                const auto decisionTime = QFileInfo(path(AramfPaths::Decisions)).lastModified();
+                error.clear();
+                ok &= require(!memory.recordDecision(fixture.path(), "capture-failure", "new-topic", "Must not mutate", "current", {}, &error)
+                    && error.contains("Snapshot requires a regular file"), "incomplete snapshot aborts before mutation");
+                for (auto it = existing.cbegin(); it != existing.cend(); ++it)
+                    ok &= require(raw(it.key()) == it.value(), "snapshot failure preserves every existing file");
+                ok &= require(ledgerTime == QFileInfo(path(AramfPaths::EventLog)).lastModified()
+                    && decisionTime == QFileInfo(path(AramfPaths::Decisions)).lastModified(), "snapshot failure does not write and undo history");
+            }
+#ifdef Q_OS_WIN
+            if (operation == "task-complete") {
+                // A sharing violation must not be mistaken for captured empty bytes.
+                const QString lockedPath = QDir::toNativeSeparators(path(AramfPaths::ColdStartValidation));
+                const HANDLE handle = CreateFileW(reinterpret_cast<LPCWSTR>(lockedPath.utf16()), GENERIC_READ, 0,
+                    nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+                if (!require(handle != INVALID_HANDLE_VALUE, "exclusive snapshot fixture lock")) return false;
+                const auto ledgerTime = QFileInfo(path(AramfPaths::EventLog)).lastModified();
+                error.clear();
+                const bool recorded = memory.recordOperation(fixture.path(), operation,
+                    {{"task", "Unreadable snapshot"}, {"status", "PASS"}, {"actor", "human"}, {"agentId", "none"}, {"tool", "rollback-regression"}}, nullptr, &error);
+                CloseHandle(handle);
+                ok &= require(!recorded && error.contains("Could not snapshot"), "unreadable snapshot aborts before mutation");
+                for (const auto& relative : files) ok &= require(raw(relative) == before.value(relative), "unreadable snapshot preserves all bytes");
+                ok &= require(ledgerTime == QFileInfo(path(AramfPaths::EventLog)).lastModified(), "unreadable snapshot never mutates ledger");
+                const QString metricsPath = QDir::toNativeSeparators(path(AramfPaths::Metrics));
+                const HANDLE readOnlyHandle = CreateFileW(reinterpret_cast<LPCWSTR>(metricsPath.utf16()), GENERIC_READ,
+                    FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+                if (!require(readOnlyHandle != INVALID_HANDLE_VALUE, "readable but non-replaceable metrics fixture")) return false;
+                error.clear();
+                const bool partial = memory.recordDecision(fixture.path(), "partial-write", "new-topic", "Fail after ledger and manifest writes", "current", {}, &error);
+                CloseHandle(readOnlyHandle);
+                ok &= require(!partial && !error.isEmpty() && !error.contains("Could not snapshot")
+                    && !error.contains("Rollback incomplete") && !error.contains("Memory consistency validation failed"),
+                    "I/O failure after snapshot and partial writes must roll back successfully");
+                for (const auto& relative : files) ok &= require(raw(relative) == before.value(relative), "partial-write rollback preserves all bytes");
+            }
+#endif
+            std::cout << "Rollback case " << representation.toStdString() << '/' << operation.toStdString()
+                      << " fixture " << fixture.path().toStdString() << '\n';
+        }
+    }
+    return ok;
 }
 }
 
@@ -89,6 +245,7 @@ int main(int argc, char** argv)
     QCoreApplication app(argc, argv);
     QTemporaryDir globalData;
     FrameworkKnowledgeService::setGlobalLibraryPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")));
+    if (app.arguments().contains(QStringLiteral("--rollback-bytes"))) return runRollbackByteTests() ? 0 : 1;
     if (app.arguments().contains(QStringLiteral("--foundation-certification"))) {
         extern bool runFoundationCertificationTests();
         return runFoundationCertificationTests() ? 0 : 1;
@@ -120,7 +277,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    bool ok = true;
+    bool ok = runRollbackByteTests();
     GitIgnoreService gitIgnore;
     QTemporaryDir privacyProject;
     const auto createdIgnore = gitIgnore.ensureProjectGitIgnore(privacyProject.path());

@@ -197,41 +197,48 @@ struct FileSnapshot {
     QString path;
     bool existed = false;
     QByteArray contents;
+    QByteArray hash;
 };
 
-QList<FileSnapshot> snapshotFiles(const QString& projectRoot, const QStringList& relativePaths)
+bool snapshotFiles(const QString& projectRoot, const QStringList& relativePaths,
+                   QList<FileSnapshot>* result, QString* error)
 {
     QList<FileSnapshot> snapshots;
     for (const auto& relative : relativePaths) {
         FileSnapshot snapshot;
         snapshot.path = absolutePath(projectRoot, relative);
-        snapshot.existed = QFile::exists(snapshot.path);
+        const QFileInfo info(snapshot.path);
+        snapshot.existed = info.exists();
+        if (info.isSymLink() || (snapshot.existed && !info.isFile())) {
+            if (error) *error = QStringLiteral("Snapshot requires a regular file: %1").arg(snapshot.path);
+            return false;
+        }
         if (snapshot.existed) {
             QFile file(snapshot.path);
-            if (file.open(QIODevice::ReadOnly)) snapshot.contents = file.readAll();
-        }
-        snapshots.append(snapshot);
-    }
-    return snapshots;
-}
-
-bool restoreSnapshots(const QList<FileSnapshot>& snapshots, QString* error)
-{
-    for (const auto& snapshot : snapshots) {
-        if (!snapshot.existed) {
-            if (QFile::exists(snapshot.path) && !QFile::remove(snapshot.path)) {
-                if (error) *error = QStringLiteral("Could not roll back %1").arg(snapshot.path);
+            if (!file.open(QIODevice::ReadOnly)) {
+                if (error) *error = QStringLiteral("Could not snapshot %1: %2").arg(snapshot.path, file.errorString());
                 return false;
             }
-            continue;
+            snapshot.contents = file.readAll();
+            if (file.error() != QFileDevice::NoError || snapshot.contents.size() != info.size()
+                || file.size() != info.size()) {
+                if (error) *error = QStringLiteral("Incomplete snapshot: %1").arg(snapshot.path);
+                return false;
+            }
         }
-        if (!writeTextFile(snapshot.path, snapshot.contents, error)) return false;
+        snapshot.hash = QCryptographicHash::hash(snapshot.contents, QCryptographicHash::Sha256);
+        snapshots.append(snapshot);
     }
+    *result = snapshots;
     return true;
 }
 
 bool restoreSnapshot(const FileSnapshot& snapshot, QString* error)
 {
+    if (QCryptographicHash::hash(snapshot.contents, QCryptographicHash::Sha256) != snapshot.hash) {
+        if (error) *error = QStringLiteral("Snapshot hash mismatch: %1").arg(snapshot.path);
+        return false;
+    }
     if (!snapshot.existed) {
         if (QFile::exists(snapshot.path) && !QFile::remove(snapshot.path)) {
             if (error) *error = QStringLiteral("Could not roll back %1").arg(snapshot.path);
@@ -239,7 +246,14 @@ bool restoreSnapshot(const FileSnapshot& snapshot, QString* error)
         }
         return true;
     }
-    QDir().mkpath(QFileInfo(snapshot.path).absolutePath());
+    // Never convert a captured snapshot through text mode or reserialization.
+    QFile current(snapshot.path);
+    if (current.open(QIODevice::ReadOnly)) {
+        const auto contents = current.readAll();
+        const bool unchanged = current.error() == QFileDevice::NoError && contents == snapshot.contents;
+        current.close();
+        if (unchanged) return true;
+    }
     QSaveFile file(snapshot.path);
     if (!file.open(QIODevice::WriteOnly)) {
         if (error) *error = file.errorString();
@@ -249,7 +263,32 @@ bool restoreSnapshot(const FileSnapshot& snapshot, QString* error)
         if (error) *error = file.errorString();
         return false;
     }
+    QFile restored(snapshot.path);
+    if (!restored.open(QIODevice::ReadOnly)) {
+        if (error) *error = QStringLiteral("Could not verify rollback: %1").arg(snapshot.path);
+        return false;
+    }
+    const auto contents = restored.readAll();
+    if (restored.error() != QFileDevice::NoError || contents != snapshot.contents
+        || QCryptographicHash::hash(contents, QCryptographicHash::Sha256) != snapshot.hash) {
+        if (error) *error = QStringLiteral("Rollback byte verification failed: %1").arg(snapshot.path);
+        return false;
+    }
     return true;
+}
+
+bool restoreSnapshots(const QList<FileSnapshot>& snapshots, QString* error)
+{
+    QStringList failures;
+    for (const auto& snapshot : snapshots) {
+        QString failure;
+        if (!restoreSnapshot(snapshot, &failure)) failures.append(failure);
+    }
+    if (!failures.isEmpty() && error) {
+        if (!error->isEmpty()) *error += QLatin1Char('\n');
+        *error += QStringLiteral("Rollback incomplete: %1").arg(failures.join(QStringLiteral("; ")));
+    }
+    return failures.isEmpty();
 }
 
 struct DecisionRecord {
@@ -960,10 +999,12 @@ bool ProjectMemory::recordDecision(const QString& projectRoot,
     }
     const QByteArray previous = original.readAll();
     original.close();
-    const auto snapshots = snapshotFiles(projectRoot, {
+    QList<FileSnapshot> snapshots;
+    if (!snapshotFiles(projectRoot, {
         AramfPaths::Decisions, AramfPaths::EventLog, AramfPaths::Manifest,
-        AramfPaths::CurrentState, AramfPaths::ConsistencyValidation
-    });
+        AramfPaths::CurrentState, AramfPaths::ConsistencyValidation,
+        AramfPaths::Metrics, AramfPaths::ColdStartValidation
+    }, &snapshots, error)) return false;
     QString scopeMarkdown;
     if (!scope.trimmed().isEmpty()) {
         scopeMarkdown = QStringLiteral("- Scope: %1\n").arg(scope.trimmed());
@@ -980,7 +1021,10 @@ bool ProjectMemory::recordDecision(const QString& projectRoot,
         "<!-- /ARAMF-DECISION -->\n")
                                   .arg(decisionId, topic, scopeMarkdown, status, supersededBy.isEmpty() ? QStringLiteral("none") : supersededBy, summary)
                                   .toUtf8();
-    if (!writeTextFile(decisionsPath, previous + block, error)) return false;
+    if (!writeTextFile(decisionsPath, previous + block, error)) {
+        restoreSnapshots(snapshots, error);
+        return false;
+    }
 
     QJsonObject fields {
         {QStringLiteral("decisionId"), decisionId},
@@ -1000,13 +1044,18 @@ bool ProjectMemory::recordDecision(const QString& projectRoot,
     fields.insert(QStringLiteral("provenance"), prov);
 
     if (!appendEvent(projectRoot, QStringLiteral("DECISION_RECORDED"), summary, fields, error)) {
-        restoreSnapshots(snapshots, nullptr);
+        restoreSnapshots(snapshots, error);
         return false;
     }
-    generateColdStartValidation(projectRoot, error);
-    const auto report = validate(projectRoot, error);
-    if (report.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
-        restoreSnapshots(snapshots, nullptr);
+    if (!generateColdStartValidation(projectRoot, error)) {
+        restoreSnapshots(snapshots, error);
+        return false;
+    }
+    QString validationError;
+    const auto report = validate(projectRoot, &validationError);
+    if (!validationError.isEmpty() || report.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
+        if (error) *error = validationError.isEmpty() ? QStringLiteral("Memory consistency validation failed.") : validationError;
+        restoreSnapshots(snapshots, error);
         return false;
     }
     return true;
@@ -1045,10 +1094,15 @@ bool ProjectMemory::supersedeDecision(const QString& projectRoot,
     record.replace(QStringLiteral("- Status: current"), QStringLiteral("- Status: superseded"));
     record.replace(QStringLiteral("- Superseded-By: none"), QStringLiteral("- Superseded-By: %1").arg(replacementId));
     content.replace(start, end - start, record);
-    const auto snapshots = snapshotFiles(projectRoot, {AramfPaths::Decisions, AramfPaths::EventLog,
+    QList<FileSnapshot> snapshots;
+    if (!snapshotFiles(projectRoot, {AramfPaths::Decisions, AramfPaths::EventLog,
                                                         AramfPaths::Manifest, AramfPaths::CurrentState,
-                                                        AramfPaths::ConsistencyValidation});
-    if (!writeTextFile(decisionsPath, content.toUtf8(), error)) return false;
+                                                        AramfPaths::ConsistencyValidation, AramfPaths::Metrics,
+                                                        AramfPaths::ColdStartValidation}, &snapshots, error)) return false;
+    if (!writeTextFile(decisionsPath, content.toUtf8(), error)) {
+        restoreSnapshots(snapshots, error);
+        return false;
+    }
 
     QJsonObject fields{{QStringLiteral("decisionId"), decisionId}, {QStringLiteral("supersededBy"), replacementId}};
     QJsonObject prov = normalizeProvenance(provenance);
@@ -1062,13 +1116,18 @@ bool ProjectMemory::supersedeDecision(const QString& projectRoot,
     if (!appendEvent(projectRoot, QStringLiteral("DECISION_SUPERSEDED"),
                      QStringLiteral("Durable decision superseded"),
                      fields, error)) {
-        restoreSnapshots(snapshots, nullptr);
+        restoreSnapshots(snapshots, error);
         return false;
     }
-    generateColdStartValidation(projectRoot, error);
-    const auto report = validate(projectRoot, error);
-    if (report.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
-        restoreSnapshots(snapshots, nullptr);
+    if (!generateColdStartValidation(projectRoot, error)) {
+        restoreSnapshots(snapshots, error);
+        return false;
+    }
+    QString validationError;
+    const auto report = validate(projectRoot, &validationError);
+    if (!validationError.isEmpty() || report.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
+        if (error) *error = validationError.isEmpty() ? QStringLiteral("Memory consistency validation failed.") : validationError;
+        restoreSnapshots(snapshots, error);
         return false;
     }
     return true;
@@ -1150,18 +1209,20 @@ bool ProjectMemory::recordCheckpoint(const QString& projectRoot,
     }
     fields.insert(QStringLiteral("provenance"), prov);
 
-    const auto snapshots = snapshotFiles(projectRoot, {
+    QList<FileSnapshot> snapshots;
+    if (!snapshotFiles(projectRoot, {
         AramfPaths::Checkpoints, AramfPaths::EventLog, AramfPaths::Manifest,
-        AramfPaths::CurrentState, AramfPaths::ConsistencyValidation, AramfPaths::ColdStartValidation
-    });
+        AramfPaths::CurrentState, AramfPaths::ConsistencyValidation, AramfPaths::ColdStartValidation,
+        AramfPaths::Metrics
+    }, &snapshots, error)) return false;
     if (!appendEvent(projectRoot, QStringLiteral("CHECKPOINT_CREATED"), summary, fields, error)) {
-        restoreSnapshots(snapshots, nullptr);
+        restoreSnapshots(snapshots, error);
         return false;
     }
 
     const QList<QJsonObject> updatedEvents = readEvents(absolutePath(projectRoot, AramfPaths::EventLog), error);
     if (error && !error->isEmpty()) {
-        restoreSnapshots(snapshots, nullptr);
+        restoreSnapshots(snapshots, error);
         return false;
     }
     QString checkpointEventId;
@@ -1173,8 +1234,8 @@ bool ProjectMemory::recordCheckpoint(const QString& projectRoot,
         }
     }
     if (checkpointEventId.isEmpty()) {
-        restoreSnapshots(snapshots, nullptr);
         if (error) *error = QStringLiteral("Checkpoint event was not written.");
+        restoreSnapshots(snapshots, error);
         return false;
     }
 
@@ -1198,13 +1259,18 @@ bool ProjectMemory::recordCheckpoint(const QString& projectRoot,
     checkpointFile.insert(QStringLiteral("_file"), QStringLiteral("checkpoints.json"));
     if (!withinConfiguredLimit(projectRoot, QJsonDocument(checkpoint).toJson(QJsonDocument::Compact).size(), error)
         || !writeJsonFile(absolutePath(projectRoot, AramfPaths::Checkpoints), checkpointFile, error)) {
-        restoreSnapshots(snapshots, nullptr);
+        restoreSnapshots(snapshots, error);
         return false;
     }
-    generateColdStartValidation(projectRoot, error);
-    const auto report = validate(projectRoot, error);
-    if (report.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
-        restoreSnapshots(snapshots, nullptr);
+    if (!generateColdStartValidation(projectRoot, error)) {
+        restoreSnapshots(snapshots, error);
+        return false;
+    }
+    QString validationError;
+    const auto report = validate(projectRoot, &validationError);
+    if (!validationError.isEmpty() || report.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
+        if (error) *error = validationError.isEmpty() ? QStringLiteral("Memory consistency validation failed.") : validationError;
+        restoreSnapshots(snapshots, error);
         return false;
     }
     if (result) {
@@ -1307,15 +1373,15 @@ bool ProjectMemory::recordOperation(const QString& projectRoot,
         AramfPaths::Metrics, AramfPaths::ConsistencyValidation, AramfPaths::ColdStartValidation,
         AramfPaths::ProjectStatus
     };
-    const auto snapshots = snapshotFiles(projectRoot, protectedFiles);
+    QList<FileSnapshot> snapshots;
+    if (!snapshotFiles(projectRoot, protectedFiles, &snapshots, error)) return false;
     QJsonObject eventFields = fields;
     eventFields.insert(QStringLiteral("task"), task);
     eventFields.insert(QStringLiteral("provenance"), prov);
     eventFields.remove(QStringLiteral("operation"));
     const QString eventType = eventTypeFor(operation);
     if (!appendEvent(projectRoot, eventType, task, eventFields, error)) {
-        QString rollbackError;
-        restoreSnapshots(snapshots, &rollbackError);
+        restoreSnapshots(snapshots, error);
         return false;
     }
 
@@ -1328,8 +1394,8 @@ bool ProjectMemory::recordOperation(const QString& projectRoot,
         if (currentStateSnapshot != snapshots.cend()) {
             QString restoreError;
             if (!restoreSnapshot(*currentStateSnapshot, &restoreError)) {
-                restoreSnapshots(snapshots, nullptr);
                 if (error) *error = restoreError;
+                restoreSnapshots(snapshots, error);
                 return false;
             }
         }
@@ -1337,8 +1403,7 @@ bool ProjectMemory::recordOperation(const QString& projectRoot,
 
     QJsonObject metrics = readJsonObject(absolutePath(projectRoot, AramfPaths::Metrics), error);
     if (metrics.isEmpty()) {
-        QString rollbackError;
-        restoreSnapshots(snapshots, &rollbackError);
+        restoreSnapshots(snapshots, error);
         if (error && error->isEmpty()) *error = QStringLiteral("Metrics file is unavailable.");
         return false;
     }
@@ -1350,8 +1415,7 @@ bool ProjectMemory::recordOperation(const QString& projectRoot,
     if (operation == QStringLiteral("test-result")) increment(QStringLiteral("testAttempts"));
     if (fields.value(QStringLiteral("status")).toString() == QStringLiteral("FAIL")) increment(QStringLiteral("failures"));
     if (!writeJsonFile(absolutePath(projectRoot, AramfPaths::Metrics), metrics, error)) {
-        QString rollbackError;
-        restoreSnapshots(snapshots, &rollbackError);
+        restoreSnapshots(snapshots, error);
         return false;
     }
 
@@ -1359,9 +1423,8 @@ bool ProjectMemory::recordOperation(const QString& projectRoot,
         && config.value(QStringLiteral("maintenanceOptions")).toArray().contains(QStringLiteral("update-project-status"))) {
         QFile statusFile(absolutePath(projectRoot, AramfPaths::ProjectStatus));
         if (!statusFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            QString rollbackError;
-            restoreSnapshots(snapshots, &rollbackError);
             if (error) *error = statusFile.errorString();
+            restoreSnapshots(snapshots, error);
             return false;
         }
         QString status = QString::fromUtf8(statusFile.readAll());
@@ -1375,23 +1438,20 @@ bool ProjectMemory::recordOperation(const QString& projectRoot,
         if (markerAt >= 0) status.truncate(markerAt);
         status += QLatin1Char('\n') + section;
         if (!writeTextFile(absolutePath(projectRoot, AramfPaths::ProjectStatus), status.toUtf8(), error)) {
-            QString rollbackError;
-            restoreSnapshots(snapshots, &rollbackError);
+            restoreSnapshots(snapshots, error);
             return false;
         }
     }
 
     if (!generateColdStartValidation(projectRoot, error)) {
-        QString rollbackError;
-        restoreSnapshots(snapshots, &rollbackError);
+        restoreSnapshots(snapshots, error);
         return false;
     }
     QString validationError;
     const auto validation = validate(projectRoot, &validationError);
     if (!validationError.isEmpty() || validation.value(QStringLiteral("status")).toString() != QStringLiteral("PASS")) {
-        QString rollbackError;
-        restoreSnapshots(snapshots, &rollbackError);
         if (error) *error = validationError.isEmpty() ? QStringLiteral("Memory consistency validation failed.") : validationError;
+        restoreSnapshots(snapshots, error);
         return false;
     }
     if (result) {
