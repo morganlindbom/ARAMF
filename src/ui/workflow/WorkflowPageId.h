@@ -6,6 +6,8 @@ enum class WorkflowPageId {
     Setup,
     ProjectIdentity,
     ProjectModulesTemplates,
+    ProjectCommunication,
+    ProjectCompatibility,
     Academic,
     Languages,
     Frameworks,
@@ -46,6 +48,8 @@ inline QString workflowPageKey(WorkflowPageId page)
     case WorkflowPageId::Setup: return QStringLiteral("project.overview");
     case WorkflowPageId::ProjectIdentity: return QStringLiteral("project.file-worker");
     case WorkflowPageId::ProjectModulesTemplates: return QStringLiteral("project.modules-templates");
+    case WorkflowPageId::ProjectCommunication: return QStringLiteral("project.communication");
+    case WorkflowPageId::ProjectCompatibility: return QStringLiteral("project.compatibility");
     case WorkflowPageId::Academic: return QStringLiteral("project.academic");
     case WorkflowPageId::Languages: return QStringLiteral("project.languages");
     case WorkflowPageId::Frameworks: return QStringLiteral("project.frameworks");

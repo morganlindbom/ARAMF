@@ -103,8 +103,9 @@ Project navigation layout V1 now gives PROJECT a reusable soft blue section
 header and an always-expanded hierarchy: page 1 is a small overview parent,
 1.1 owns project file/path/Worker identity controls, and 1.2 owns the existing
 modules/templates selector. Stable page IDs keep direct navigation and
-Back/Forward independent of visible row positions; older page-1 Setup routes
-to the parent overview.
+Back/Forward independent of visible row positions; 1.3 owns cross-target
+communication settings and 1.4 owns compatibility/migration review. Older
+page-1 Setup routes to the parent overview.
 
 ## Checkpoint Status
 
@@ -145,7 +146,7 @@ managed projects.
 
 ## Current Workflow
 
-The application has 28 clickable pages in seven unnumbered groups. Numbers are
+The application has 37 clickable pages in eight unnumbered groups. Numbers are
 user-facing references only; internal navigation uses stable `WorkflowPageId`
 values and explicit page registration.
 
@@ -154,6 +155,8 @@ values and explicit page registration.
 1. What is the project?
 1.1. Project file, path & Worker
 1.2. Project modules & templates
+1.3. Project communication
+1.4. Project compatibility & migration
 2. Academic
 3. Which languages are used?
 4. Which frameworks / SDKs are used?
@@ -313,12 +316,13 @@ changes only the project path and does not save.
   idempotence.
 
 - Build: PASS — `cmake --build build --config Debug --parallel 4`.
-- CTest: PASS — `aramf_core_tests` and `aramf_workflow_tests` both passed.
+- Focused post-change CTest: PASS — `aramf_workflow_tests` and
+  `aramf_template_tests` both passed after adding pages 1.3 and 1.4.
 - Application startup: PASS — normal Windows platform startup smoke test
   completed and the process was stopped cleanly.
-- Workflow navigation tests cover all 28 clickable IDs and non-clickable
+- Workflow navigation tests cover all 37 clickable IDs and non-clickable
   headings.
-- Project layout tests cover the always-expanded 1/1.1/1.2 hierarchy, shared
+- Project layout tests cover the always-expanded 1/1.1/1.2/1.3/1.4 hierarchy, shared
   section-header presentation, active child selection, page ownership split,
   current-project loading, and responsive viewport boundaries.
 - Core persistence tests cover structured resource authority, scopes, policy,

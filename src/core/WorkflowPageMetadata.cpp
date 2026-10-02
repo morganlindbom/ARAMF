@@ -6,6 +6,8 @@ bool isSetupPage(const QString& stablePageId)
 {
     return stablePageId == QStringLiteral("project.file-worker")
         || stablePageId == QStringLiteral("project.modules-templates")
+        || stablePageId == QStringLiteral("project.communication")
+        || stablePageId == QStringLiteral("project.compatibility")
         || stablePageId == QStringLiteral("project.academic")
         || stablePageId == QStringLiteral("project.languages")
         || stablePageId == QStringLiteral("project.frameworks")

@@ -7,6 +7,8 @@
 #include "ui/workflows/project/setup/ProjectSetupPage.h"
 #include "ui/workflows/project/overview/ProjectOverviewPage.h"
 #include "ui/workflows/project/modulestemplates/ProjectModulesTemplatesPage.h"
+#include "ui/workflows/project/communication/ProjectCommunicationPage.h"
+#include "ui/workflows/project/compatibility/ProjectCompatibilityPage.h"
 #include "ui/workflows/project/academic/ProjectAcademicPage.h"
 #include "ui/workflows/project/languages/ProjectLanguagesPage.h"
 #include "ui/workflows/project/frameworks/ProjectFrameworksPage.h"
@@ -101,6 +103,8 @@ namespace
             WorkflowPageId::Setup,
             WorkflowPageId::ProjectIdentity,
             WorkflowPageId::ProjectModulesTemplates,
+            WorkflowPageId::ProjectCommunication,
+            WorkflowPageId::ProjectCompatibility,
             WorkflowPageId::Academic,
             WorkflowPageId::Languages,
             WorkflowPageId::Frameworks,
@@ -261,6 +265,8 @@ MainWindow::MainWindow(
 
     projectModulesTemplatesPage_ = new ProjectModulesTemplatesPage(
         &projectModel_, &templateManager_, stack_);
+    projectCommunicationPage_ = new ProjectCommunicationPage(&projectModel_, stack_);
+    projectCompatibilityPage_ = new ProjectCompatibilityPage(&projectModel_, stack_);
 
     academicPage_ = new ProjectAcademicPage(&projectModel_, stack_);
 
@@ -354,6 +360,8 @@ MainWindow::MainWindow(
     registerPage(WorkflowPageId::Setup, projectOverviewPage_);
     registerPage(WorkflowPageId::ProjectIdentity, projectPage_);
     registerPage(WorkflowPageId::ProjectModulesTemplates, projectModulesTemplatesPage_);
+    registerPage(WorkflowPageId::ProjectCommunication, projectCommunicationPage_);
+    registerPage(WorkflowPageId::ProjectCompatibility, projectCompatibilityPage_);
     registerPage(WorkflowPageId::Academic, academicPage_);
     registerPage(WorkflowPageId::Languages, languagesPage_);
     registerPage(WorkflowPageId::Frameworks, frameworksPage_);
@@ -428,6 +436,10 @@ MainWindow::MainWindow(
                     setWorkflowPage(WorkflowPageId::ProjectIdentity);
                 else if (id == QStringLiteral("project.modules-templates"))
                     setWorkflowPage(WorkflowPageId::ProjectModulesTemplates);
+                else if (id == QStringLiteral("project.communication"))
+                    setWorkflowPage(WorkflowPageId::ProjectCommunication);
+                else if (id == QStringLiteral("project.compatibility"))
+                    setWorkflowPage(WorkflowPageId::ProjectCompatibility);
             });
 
     workflow_->setCurrentPage(currentPage_);

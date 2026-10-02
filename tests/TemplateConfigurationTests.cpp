@@ -11,6 +11,7 @@
 #include "core/DocumentTemplateInspector.h"
 #include "ui/workflows/project/setup/ProjectSetupPage.h"
 #include "ui/workflows/project/modulestemplates/ProjectModulesTemplatesPage.h"
+#include "ui/workflows/project/communication/ProjectCommunicationPage.h"
 #include "ui/workflows/output/review/ReviewPage.h"
 #include "ui/workflows/output/generate/GeneratePage.h"
 #include "ui/workflows/output/verify/VerifyPage.h"
@@ -532,9 +533,9 @@ int main(int argc, char** argv)
         ProjectModel addressModel;
         check(manager.applyTemplate(&addressModel, combinedId), "endpoint default template applies");
         addressModel.setProjectPath(fixture.filePath("endpoint-defaults"));
-        ProjectSetupPage setup(&addressModel, &manager, &persistence);
-        auto* addressA = setup.findChild<QLineEdit*>("communicationEndpointAAddress");
-        auto* addressB = setup.findChild<QLineEdit*>("communicationEndpointBAddress");
+        ProjectCommunicationPage communicationPage(&addressModel);
+        auto* addressA = communicationPage.findChild<QLineEdit*>("communicationEndpointAAddress");
+        auto* addressB = communicationPage.findChild<QLineEdit*>("communicationEndpointBAddress");
         check(addressA && addressB && addressA->text() == QStringLiteral("android.local")
                   && addressB->text() == QStringLiteral("ws://pico.local:8080"),
               "Setup displays default endpoint addresses");
@@ -1206,8 +1207,8 @@ int main(int argc, char** argv)
     check(reopenedCompletion.completedPageIds() == persistedPageIds
               && reopenedList->item(2)->data(Qt::UserRole + 2).toBool()
               && reopenedList->item(3)->data(Qt::UserRole + 2).toBool()
-              && reopenedList->item(4)->data(Qt::UserRole + 2).toBool()
-              && reopenedList->item(1)->background().color() == QColor(204, 238, 211)
+              && reopenedList->item(6)->data(Qt::UserRole + 2).toBool()
+              && reopenedList->item(1)->background().color() == QColor(255, 251, 224)
               && reopenedWorkflow.completionPercentage() == expectedCompletionPercentage,
           "fresh reload restores checkmarks, parent aggregate, and derived progress");
 

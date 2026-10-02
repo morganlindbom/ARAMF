@@ -21,6 +21,8 @@ class FooterProgressDisplay;
 class ProjectSetupPage;
 class ProjectOverviewPage;
 class ProjectModulesTemplatesPage;
+class ProjectCommunicationPage;
+class ProjectCompatibilityPage;
 class ProjectAcademicPage;
 class ProjectLanguagesPage;
 class ProjectFrameworksPage;
@@ -113,6 +115,8 @@ private:
     ProjectSetupPage* projectPage_ = nullptr;
     ProjectOverviewPage* projectOverviewPage_ = nullptr;
     ProjectModulesTemplatesPage* projectModulesTemplatesPage_ = nullptr;
+    ProjectCommunicationPage* projectCommunicationPage_ = nullptr;
+    ProjectCompatibilityPage* projectCompatibilityPage_ = nullptr;
     ProjectAcademicPage* academicPage_ = nullptr;
     ProjectLanguagesPage* languagesPage_ = nullptr;
     ProjectFrameworksPage* frameworksPage_ = nullptr;

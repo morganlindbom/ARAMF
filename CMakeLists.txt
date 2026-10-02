@@ -172,6 +172,10 @@ set(ARAMF_UI_SOURCES
     src/ui/workflows/project/overview/ProjectOverviewPage.cpp
     src/ui/workflows/project/modulestemplates/ProjectModulesTemplatesPage.h
     src/ui/workflows/project/modulestemplates/ProjectModulesTemplatesPage.cpp
+    src/ui/workflows/project/communication/ProjectCommunicationPage.h
+    src/ui/workflows/project/communication/ProjectCommunicationPage.cpp
+    src/ui/workflows/project/compatibility/ProjectCompatibilityPage.h
+    src/ui/workflows/project/compatibility/ProjectCompatibilityPage.cpp
     src/ui/workflows/project/academic/ProjectAcademicPage.h
     src/ui/workflows/project/academic/ProjectAcademicPage.cpp
     src/ui/workflows/project/template/TemplateSelector.h

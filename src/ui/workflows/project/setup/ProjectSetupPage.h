@@ -7,9 +7,6 @@
 class QLineEdit;
 class QTextEdit;
 class QPushButton;
-class QComboBox;
-class QCheckBox;
-class QGroupBox;
 class QLabel;
 
 class ProjectSetupPage final : public QWidget {
@@ -54,25 +51,6 @@ private:
     QLineEdit* workerNameSuffix_ = nullptr;
     QLabel* workerNamePreview_ = nullptr;
     QLineEdit* workerPath_ = nullptr;
-    QLabel* migrationStatus_ = nullptr;
-    QLabel* migrationDetails_ = nullptr;
     QString workerNameRawInput_;
     bool workerNameEditing_ = false;
-    QGroupBox* communicationGroup_ = nullptr;
-    QComboBox* communicationProtocol_ = nullptr;
-    QComboBox* communicationSourceTarget_ = nullptr;
-    QComboBox* communicationDestinationTarget_ = nullptr;
-    QComboBox* communicationSourceRole_ = nullptr;
-    QComboBox* communicationDestinationRole_ = nullptr;
-    QComboBox* communicationDirection_ = nullptr;
-    QComboBox* communicationTransport_ = nullptr;
-    QComboBox* communicationFrameType_ = nullptr;
-    QComboBox* communicationLogicalModel_ = nullptr;
-    QComboBox* communicationWireEncoding_ = nullptr;
-    QComboBox* communicationByteOrder_ = nullptr;
-    QLineEdit* communicationEndpointAAddress_ = nullptr;
-    QLineEdit* communicationEndpointBAddress_ = nullptr;
-    QLineEdit* communicationVersion_ = nullptr;
-    QCheckBox* communicationAuthentication_ = nullptr;
-    QCheckBox* communicationEncryption_ = nullptr;
 };

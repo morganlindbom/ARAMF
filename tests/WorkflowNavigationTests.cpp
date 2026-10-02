@@ -68,12 +68,14 @@ int main(int argc, char** argv)
     QObject::connect(&workflow, &WorkflowWidget::pageSelected,
                      [&selected](WorkflowPageId page) { selected << page; });
 
-    const QList<int> rows{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 21, 22, 24, 25,
-                         27, 28, 29, 30, 31, 32, 34, 35, 36, 37, 39, 40, 41};
+    const QList<int> rows{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 19, 20, 21, 23, 24, 26, 27,
+                         29, 30, 31, 32, 33, 34, 36, 37, 38, 39, 41, 42, 43, 44};
     const QList<WorkflowPageId> expected{
         WorkflowPageId::Setup,
         WorkflowPageId::ProjectIdentity,
         WorkflowPageId::ProjectModulesTemplates,
+        WorkflowPageId::ProjectCommunication,
+        WorkflowPageId::ProjectCompatibility,
         WorkflowPageId::Academic,
         WorkflowPageId::Languages,
         WorkflowPageId::Frameworks,
@@ -123,10 +125,10 @@ int main(int argc, char** argv)
     ok &= require(list->item(0)->flags() == Qt::NoItemFlags,
                   "heading rows must not be selectable");
     ok &= require(list->item(0)->text() == QStringLiteral("PROJECT")
-                      && list->item(11)->text() == QStringLiteral("AI")
-                      && list->item(16)->text() == QStringLiteral("RESOURCES")
-                      && list->item(26)->text() == QStringLiteral("RELEASE")
-                      && list->item(33)->text() == QStringLiteral("GENERATE"),
+                      && list->item(13)->text() == QStringLiteral("AI")
+                      && list->item(18)->text() == QStringLiteral("RESOURCES")
+                      && list->item(28)->text() == QStringLiteral("RELEASE")
+                      && list->item(35)->text() == QStringLiteral("GENERATE"),
                   "main sections use canonical heading labels");
     ok &= require(list->item(0)->textAlignment() == Qt::AlignCenter
                       && list->item(0)->background().color() == QColor(199, 221, 239)
@@ -136,6 +138,8 @@ int main(int argc, char** argv)
     ok &= require(list->item(1)->text().contains(QStringLiteral("1  What is the project?"))
                       && list->item(2)->text().contains(QStringLiteral("1.1  Project file, path & Worker"))
                       && list->item(3)->text().contains(QStringLiteral("1.2  Project modules & templates"))
+                      && list->item(4)->text().contains(QStringLiteral("1.3  Project communication"))
+                      && list->item(5)->text().contains(QStringLiteral("1.4  Project compatibility & migration"))
                       && list->item(2)->text().size() > list->item(1)->text().size(),
                   "Project hierarchy is always expanded with distinct child indentation");
     list->setCurrentRow(2);
@@ -154,7 +158,9 @@ int main(int argc, char** argv)
     auto* parentItem = completionList->item(1);
     auto* firstChild = completionList->item(2);
     auto* secondChild = completionList->item(3);
-    auto* academicItem = completionList->item(4);
+    auto* thirdChild = completionList->item(4);
+    auto* fourthChild = completionList->item(5);
+    auto* academicItem = completionList->item(6);
     int expectedSetupProgressPages = 0;
     int expectedUserCheckablePages = 0;
     for (const auto page : completionWorkflow.workflowPageIds()) {
@@ -166,8 +172,8 @@ int main(int argc, char** argv)
                       && completionWorkflow.completedPageCount() == 0
                       && completionWorkflow.completionPercentage() == 0,
                   "setup progress counts metadata-eligible workflow pages");
-    ok &= require(!completionList->item(28)->data(Qt::UserRole + 1).toBool()
-                      && !completionList->item(28)->data(Qt::UserRole + 3).toBool()
+    ok &= require(!completionList->item(29)->data(Qt::UserRole + 1).toBool()
+                      && !completionList->item(29)->data(Qt::UserRole + 3).toBool()
                       && completionWorkflow.completablePageCount() == expectedSetupProgressPages,
                   "RELEASE child pages have no manual marker and stay outside setup progress");
     completionModel.setTargetRelease(1);
@@ -211,6 +217,13 @@ int main(int argc, char** argv)
     ok &= require(completionModel.isPageCompleted(workflowPageKey(WorkflowPageId::ProjectModulesTemplates))
                       && completionWorkflow.completedPageCount() == 2
                       && completionWorkflow.completionPercentage() == derivedPercentage(2)
+                      && parentItem->background().color() == QColor(255, 251, 224),
+                  "partially completed children keep the parent yellow");
+    clickCompletion(firstChild);
+    clickCompletion(firstChild);
+    clickCompletion(thirdChild);
+    clickCompletion(fourthChild);
+    ok &= require(completionWorkflow.completedPageCount() == 4
                       && parentItem->background().color() == QColor(204, 238, 211),
                   "all completed children turn the parent noticeably light green");
     clickCompletion(firstChild);
@@ -253,7 +266,7 @@ int main(int argc, char** argv)
     staleUiWorkflow.setStepCount(28);
     staleUiWorkflow.setCompletionModel(&staleUiModel);
     ok &= require(staleUiModel.completedPageIds().isEmpty()
-                      && !staleUiWorkflow.findChild<QListWidget*>()->item(28)->data(Qt::UserRole + 2).toBool()
+                      && !staleUiWorkflow.findChild<QListWidget*>()->item(30)->data(Qt::UserRole + 2).toBool()
                       && staleUiWorkflow.completedPageCount() == 0,
                   "stale non-SETUP completion state cannot re-enable UI completion");
 
@@ -274,7 +287,7 @@ int main(int argc, char** argv)
     overview.show();
     QApplication::processEvents();
     const auto cards = overview.findChildren<ParentOverviewCard*>();
-    ok &= require(cards.size() == 2 && overview.findChildren<QCheckBox*>().isEmpty(),
+    ok &= require(cards.size() == 4 && overview.findChildren<QCheckBox*>().isEmpty(),
                   "parent overview has reusable child cards and no completion status");
     QSet<QString> cardDestinations;
     QObject::connect(&overview, &ParentOverviewPage::cardActivated,
@@ -284,6 +297,10 @@ int main(int argc, char** argv)
                           Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
         QCoreApplication::sendEvent(card, &event);
     }
+    ok &= require(cardDestinations.contains(QStringLiteral("project.communication"))
+                      && cardDestinations.contains(QStringLiteral("project.compatibility")),
+                  "parent overview routes to the new project child IDs");
+
     ok &= require(cardDestinations.contains(QStringLiteral("project.file-worker"))
                       && cardDestinations.contains(QStringLiteral("project.modules-templates")),
                   "parent overview cards route directly to both child IDs");

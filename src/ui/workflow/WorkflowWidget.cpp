@@ -192,6 +192,8 @@ void WorkflowWidget::setStepCount(int)
             {QStringLiteral("1"), tr("What is the project?"), WorkflowPageId::Setup, 1},
             {QStringLiteral("1.1"), tr("Project file, path & Worker"), WorkflowPageId::ProjectIdentity, 2},
             {QStringLiteral("1.2"), tr("Project modules & templates"), WorkflowPageId::ProjectModulesTemplates, 2},
+            {QStringLiteral("1.3"), tr("Project communication"), WorkflowPageId::ProjectCommunication, 2},
+            {QStringLiteral("1.4"), tr("Project compatibility & migration"), WorkflowPageId::ProjectCompatibility, 2},
             {QStringLiteral("2"), tr("Academic"), WorkflowPageId::Academic, 1},
             {QStringLiteral("3"), tr("Which languages are used?"), WorkflowPageId::Languages, 1},
             {QStringLiteral("4"), tr("Which frameworks / SDKs are used?"), WorkflowPageId::Frameworks, 1},
@@ -252,7 +254,8 @@ void WorkflowWidget::setStepCount(int)
         }
     }
     parentChildren_.insert(WorkflowPageId::Setup,
-                           {WorkflowPageId::ProjectIdentity, WorkflowPageId::ProjectModulesTemplates});
+                           {WorkflowPageId::ProjectIdentity, WorkflowPageId::ProjectModulesTemplates,
+                            WorkflowPageId::ProjectCommunication, WorkflowPageId::ProjectCompatibility});
     refreshCompletionState();
 }
 
