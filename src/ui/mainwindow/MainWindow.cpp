@@ -10,6 +10,7 @@
 #include "ui/workflows/project/communication/ProjectCommunicationPage.h"
 #include "ui/workflows/project/compatibility/ProjectCompatibilityPage.h"
 #include "ui/workflows/project/academic/ProjectAcademicPage.h"
+#include "ui/shared/ParentOverview.h"
 #include "ui/workflows/project/languages/ProjectLanguagesPage.h"
 #include "ui/workflows/project/frameworks/ProjectFrameworksPage.h"
 #include "ui/workflows/project/developmenttools/ProjectDevelopmentToolsPage.h"
@@ -106,12 +107,29 @@ namespace
             WorkflowPageId::ProjectCommunication,
             WorkflowPageId::ProjectCompatibility,
             WorkflowPageId::Academic,
+            WorkflowPageId::AcademicDocumentation,
+            WorkflowPageId::AcademicResearch,
+            WorkflowPageId::AcademicInformation,
+            WorkflowPageId::AcademicStandards,
+            WorkflowPageId::AcademicDeliverables,
             WorkflowPageId::Languages,
             WorkflowPageId::Frameworks,
             WorkflowPageId::DevelopmentTools,
+            WorkflowPageId::DevelopmentToolsIde,
+            WorkflowPageId::DevelopmentToolsVersionControl,
+            WorkflowPageId::DevelopmentToolsSupport,
             WorkflowPageId::Platforms,
+            WorkflowPageId::PlatformsHosts,
+            WorkflowPageId::PlatformsTargets,
             WorkflowPageId::HardwareArchitecture,
+            WorkflowPageId::HardwareArchitectures,
+            WorkflowPageId::HardwareProcessors,
+            WorkflowPageId::HardwareTargets,
             WorkflowPageId::BuildDelivery,
+            WorkflowPageId::BuildDeliveryToolchains,
+            WorkflowPageId::BuildDeliveryBuildSystems,
+            WorkflowPageId::BuildDeliveryTesting,
+            WorkflowPageId::BuildDeliveryAutomation,
             WorkflowPageId::AiAgents,
             WorkflowPageId::AiResponsibilities,
             WorkflowPageId::AiAutonomy,
@@ -268,7 +286,23 @@ MainWindow::MainWindow(
     projectCommunicationPage_ = new ProjectCommunicationPage(&projectModel_, stack_);
     projectCompatibilityPage_ = new ProjectCompatibilityPage(&projectModel_, stack_);
 
-    academicPage_ = new ProjectAcademicPage(&projectModel_, stack_);
+    academicPage_ = new ParentOverviewPage(
+        tr("Academic"), tr("Configure academic documents, research and delivery requirements."),
+        {{QStringLiteral("project.academic.documentation"), QStringLiteral("2.1"), tr("Documentation"),
+          tr("Choose which academic documents this project produces.")},
+         {QStringLiteral("project.academic.research"), QStringLiteral("2.2"), tr("Thesis & research"),
+          tr("Set the thesis level, approach and research methods.")},
+         {QStringLiteral("project.academic.information"), QStringLiteral("2.3"), tr("Academic information"),
+          tr("Record the institution, programme, supervisor and examiner.")},
+         {QStringLiteral("project.academic.standards"), QStringLiteral("2.4"), tr("Standards & languages"),
+          tr("Choose a citation style and document languages.")},
+         {QStringLiteral("project.academic.deliverables"), QStringLiteral("2.5"), tr("Requirements & deliverables"),
+          tr("Select academic requirements and outputs.")}}, stack_);
+    academicDocumentationPage_ = new ProjectAcademicPage(&projectModel_, stack_, ProjectAcademicPage::Section::Documentation);
+    academicResearchPage_ = new ProjectAcademicPage(&projectModel_, stack_, ProjectAcademicPage::Section::Research);
+    academicInformationPage_ = new ProjectAcademicPage(&projectModel_, stack_, ProjectAcademicPage::Section::Information);
+    academicStandardsPage_ = new ProjectAcademicPage(&projectModel_, stack_, ProjectAcademicPage::Section::Standards);
+    academicDeliverablesPage_ = new ProjectAcademicPage(&projectModel_, stack_, ProjectAcademicPage::Section::Deliverables);
 
     languagesPage_ =
         new ProjectLanguagesPage(
@@ -280,25 +314,65 @@ MainWindow::MainWindow(
             &projectModel_,
             stack_);
 
-    developmentToolsPage_ =
-        new ProjectDevelopmentToolsPage(
-            &projectModel_,
-            stack_);
+    developmentToolsPage_ = new ParentOverviewPage(
+        tr("Development tools"), tr("Configure the editors, version control and support tools used by the project."),
+        {{QStringLiteral("project.development-tools.ide"), QStringLiteral("5.1"), tr("IDE & editors"),
+          tr("Select the editors used to develop the project.")},
+         {QStringLiteral("project.development-tools.version-control"), QStringLiteral("5.2"), tr("Version control"),
+          tr("Choose how project history and source changes are managed.")},
+         {QStringLiteral("project.development-tools.support"), QStringLiteral("5.3"), tr("Development support"),
+          tr("Select debuggers, analyzers, SDKs and related tools.")}}, stack_);
+    developmentToolsIdePage_ = new ProjectDevelopmentToolsPage(
+        &projectModel_, stack_, ProjectDevelopmentToolsPage::Section::Ide);
+    developmentToolsVersionControlPage_ = new ProjectDevelopmentToolsPage(
+        &projectModel_, stack_, ProjectDevelopmentToolsPage::Section::VersionControl);
+    developmentToolsSupportPage_ = new ProjectDevelopmentToolsPage(
+        &projectModel_, stack_, ProjectDevelopmentToolsPage::Section::Support);
 
-    platformsPage_ =
-        new ProjectPlatformsPage(
-            &projectModel_,
-            stack_);
+    platformsPage_ = new ParentOverviewPage(
+        tr("Platforms"), tr("Define where the project is developed and where it runs."),
+        {{QStringLiteral("project.platforms.hosts"), QStringLiteral("6.1"), tr("Host operating systems"),
+          tr("Select the operating systems used to develop or build the project.")},
+         {QStringLiteral("project.platforms.targets"), QStringLiteral("6.2"), tr("Target platforms"),
+          tr("Select the platforms supported by the finished project.")}}, stack_);
+    platformsHostsPage_ = new ProjectPlatformsPage(
+        &projectModel_, stack_, ProjectPlatformsPage::Section::Hosts);
+    platformsTargetsPage_ = new ProjectPlatformsPage(
+        &projectModel_, stack_, ProjectPlatformsPage::Section::Targets);
 
-    hardwareArchitecturePage_ =
-        new ProjectHardwareArchitecturePage(
-            &projectModel_,
-            stack_);
+    hardwareArchitecturePage_ = new ParentOverviewPage(
+        tr("Hardware & architecture"), tr("Describe processor architecture and physical deployment targets."),
+        {{QStringLiteral("project.hardware-architecture.architectures"), QStringLiteral("7.1"), tr("Target architectures"),
+          tr("Choose the instruction-set architectures targeted by the project.")},
+         {QStringLiteral("project.hardware-architecture.processors"), QStringLiteral("7.2"), tr("Processor families"),
+          tr("Choose MCU or processor families used by the project.")},
+         {QStringLiteral("project.hardware-architecture.targets"), QStringLiteral("7.3"), tr("Hardware & deployment targets"),
+          tr("Select boards and physical deployment targets.")}}, stack_);
+    hardwareArchitecturesPage_ = new ProjectHardwareArchitecturePage(
+        &projectModel_, stack_, ProjectHardwareArchitecturePage::Section::Architectures);
+    hardwareProcessorsPage_ = new ProjectHardwareArchitecturePage(
+        &projectModel_, stack_, ProjectHardwareArchitecturePage::Section::Processors);
+    hardwareTargetsPage_ = new ProjectHardwareArchitecturePage(
+        &projectModel_, stack_, ProjectHardwareArchitecturePage::Section::Targets);
 
-    buildDeliveryPage_ =
-        new ProjectBuildDeliveryPage(
-            &projectModel_,
-            stack_);
+    buildDeliveryPage_ = new ParentOverviewPage(
+        tr("Build, test & delivery"), tr("Configure the toolchain, build process, testing and delivery pipeline."),
+        {{QStringLiteral("project.build-delivery.toolchains"), QStringLiteral("8.1"), tr("Compiler & toolchain"),
+          tr("Select the compiler, toolchain and runtime used to build the project.")},
+         {QStringLiteral("project.build-delivery.build-systems"), QStringLiteral("8.2"), tr("Build systems & dependencies"),
+          tr("Choose build systems, package management and build configurations.")},
+         {QStringLiteral("project.build-delivery.testing"), QStringLiteral("8.3"), tr("Testing & quality"),
+          tr("Select testing and quality analysis capabilities.")},
+         {QStringLiteral("project.build-delivery.automation"), QStringLiteral("8.4"), tr("Automation & delivery"),
+          tr("Configure automation and the formats used to deliver releases.")}}, stack_);
+    buildDeliveryToolchainsPage_ = new ProjectBuildDeliveryPage(
+        &projectModel_, stack_, ProjectBuildDeliveryPage::Section::Toolchains);
+    buildDeliveryBuildSystemsPage_ = new ProjectBuildDeliveryPage(
+        &projectModel_, stack_, ProjectBuildDeliveryPage::Section::BuildSystems);
+    buildDeliveryTestingPage_ = new ProjectBuildDeliveryPage(
+        &projectModel_, stack_, ProjectBuildDeliveryPage::Section::Testing);
+    buildDeliveryAutomationPage_ = new ProjectBuildDeliveryPage(
+        &projectModel_, stack_, ProjectBuildDeliveryPage::Section::Automation);
 
     aiAgentsPage_ = new AiAgentsPage(&projectModel_, stack_);
     aiResponsibilitiesPage_ = new AiResponsibilitiesPage(&projectModel_, stack_);
@@ -363,12 +437,29 @@ MainWindow::MainWindow(
     registerPage(WorkflowPageId::ProjectCommunication, projectCommunicationPage_);
     registerPage(WorkflowPageId::ProjectCompatibility, projectCompatibilityPage_);
     registerPage(WorkflowPageId::Academic, academicPage_);
+    registerPage(WorkflowPageId::AcademicDocumentation, academicDocumentationPage_);
+    registerPage(WorkflowPageId::AcademicResearch, academicResearchPage_);
+    registerPage(WorkflowPageId::AcademicInformation, academicInformationPage_);
+    registerPage(WorkflowPageId::AcademicStandards, academicStandardsPage_);
+    registerPage(WorkflowPageId::AcademicDeliverables, academicDeliverablesPage_);
     registerPage(WorkflowPageId::Languages, languagesPage_);
     registerPage(WorkflowPageId::Frameworks, frameworksPage_);
     registerPage(WorkflowPageId::DevelopmentTools, developmentToolsPage_);
+    registerPage(WorkflowPageId::DevelopmentToolsIde, developmentToolsIdePage_);
+    registerPage(WorkflowPageId::DevelopmentToolsVersionControl, developmentToolsVersionControlPage_);
+    registerPage(WorkflowPageId::DevelopmentToolsSupport, developmentToolsSupportPage_);
     registerPage(WorkflowPageId::Platforms, platformsPage_);
+    registerPage(WorkflowPageId::PlatformsHosts, platformsHostsPage_);
+    registerPage(WorkflowPageId::PlatformsTargets, platformsTargetsPage_);
     registerPage(WorkflowPageId::HardwareArchitecture, hardwareArchitecturePage_);
+    registerPage(WorkflowPageId::HardwareArchitectures, hardwareArchitecturesPage_);
+    registerPage(WorkflowPageId::HardwareProcessors, hardwareProcessorsPage_);
+    registerPage(WorkflowPageId::HardwareTargets, hardwareTargetsPage_);
     registerPage(WorkflowPageId::BuildDelivery, buildDeliveryPage_);
+    registerPage(WorkflowPageId::BuildDeliveryToolchains, buildDeliveryToolchainsPage_);
+    registerPage(WorkflowPageId::BuildDeliveryBuildSystems, buildDeliveryBuildSystemsPage_);
+    registerPage(WorkflowPageId::BuildDeliveryTesting, buildDeliveryTestingPage_);
+    registerPage(WorkflowPageId::BuildDeliveryAutomation, buildDeliveryAutomationPage_);
     registerPage(WorkflowPageId::AiAgents, aiAgentsPage_);
     registerPage(WorkflowPageId::AiResponsibilities, aiResponsibilitiesPage_);
     registerPage(WorkflowPageId::AiAutonomy, aiAutonomyPage_);
@@ -441,6 +532,43 @@ MainWindow::MainWindow(
                 else if (id == QStringLiteral("project.compatibility"))
                     setWorkflowPage(WorkflowPageId::ProjectCompatibility);
             });
+    connect(academicPage_, &ParentOverviewPage::cardActivated, this,
+            [this](const QString& id) {
+                if (id == QStringLiteral("project.academic.documentation"))
+                    setWorkflowPage(WorkflowPageId::AcademicDocumentation);
+                else if (id == QStringLiteral("project.academic.research"))
+                    setWorkflowPage(WorkflowPageId::AcademicResearch);
+                else if (id == QStringLiteral("project.academic.information"))
+                    setWorkflowPage(WorkflowPageId::AcademicInformation);
+                else if (id == QStringLiteral("project.academic.standards"))
+                    setWorkflowPage(WorkflowPageId::AcademicStandards);
+                else if (id == QStringLiteral("project.academic.deliverables"))
+                    setWorkflowPage(WorkflowPageId::AcademicDeliverables);
+            });
+    const auto connectOverview = [this](ParentOverviewPage* overview,
+                                        const QMap<QString, WorkflowPageId>& destinations) {
+        connect(overview, &ParentOverviewPage::cardActivated, this,
+                [this, destinations](const QString& id) {
+                    const auto target = destinations.constFind(id);
+                    if (target != destinations.constEnd()) setWorkflowPage(target.value());
+                });
+    };
+    connectOverview(developmentToolsPage_, {
+        {QStringLiteral("project.development-tools.ide"), WorkflowPageId::DevelopmentToolsIde},
+        {QStringLiteral("project.development-tools.version-control"), WorkflowPageId::DevelopmentToolsVersionControl},
+        {QStringLiteral("project.development-tools.support"), WorkflowPageId::DevelopmentToolsSupport}});
+    connectOverview(platformsPage_, {
+        {QStringLiteral("project.platforms.hosts"), WorkflowPageId::PlatformsHosts},
+        {QStringLiteral("project.platforms.targets"), WorkflowPageId::PlatformsTargets}});
+    connectOverview(hardwareArchitecturePage_, {
+        {QStringLiteral("project.hardware-architecture.architectures"), WorkflowPageId::HardwareArchitectures},
+        {QStringLiteral("project.hardware-architecture.processors"), WorkflowPageId::HardwareProcessors},
+        {QStringLiteral("project.hardware-architecture.targets"), WorkflowPageId::HardwareTargets}});
+    connectOverview(buildDeliveryPage_, {
+        {QStringLiteral("project.build-delivery.toolchains"), WorkflowPageId::BuildDeliveryToolchains},
+        {QStringLiteral("project.build-delivery.build-systems"), WorkflowPageId::BuildDeliveryBuildSystems},
+        {QStringLiteral("project.build-delivery.testing"), WorkflowPageId::BuildDeliveryTesting},
+        {QStringLiteral("project.build-delivery.automation"), WorkflowPageId::BuildDeliveryAutomation}});
 
     workflow_->setCurrentPage(currentPage_);
     refreshCompletionProgress();

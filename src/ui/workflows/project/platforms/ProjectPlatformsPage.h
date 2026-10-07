@@ -5,9 +5,11 @@ class CapabilityCheckGroup;
 class ProjectPlatformsPage final : public QWidget
 {
 public:
-    explicit ProjectPlatformsPage(ProjectModel* model, QWidget* parent = nullptr);
+    enum class Section { All, Hosts, Targets };
+    explicit ProjectPlatformsPage(ProjectModel* model, QWidget* parent = nullptr, Section section = Section::All);
 private:
     ProjectModel* model_;
+    Section section_;
     CapabilityCheckGroup* hosts_;
     CapabilityCheckGroup* targets_;
     void refresh();

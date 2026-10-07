@@ -22,19 +22,30 @@ void addComboOptions(QComboBox* combo, const QList<EnvironmentOption>& options)
 
 }
 
-ProjectAcademicPage::ProjectAcademicPage(ProjectModel* model, QWidget* parent)
+ProjectAcademicPage::ProjectAcademicPage(ProjectModel* model, QWidget* parent, Section section)
     : QWidget(parent),
-      model_(model)
+      model_(model),
+      section_(section)
 {
     auto* layout = new QVBoxLayout(this);
-    layout->addWidget(new QLabel(
-        tr("<h2>Academic</h2>Configure academic, research and thesis requirements for this project."), this));
+    const QString title = section_ == Section::Documentation ? tr("Documentation")
+        : section_ == Section::Research ? tr("Thesis & research")
+        : section_ == Section::Information ? tr("Academic information")
+        : section_ == Section::Standards ? tr("Standards & languages")
+        : section_ == Section::Deliverables ? tr("Requirements & deliverables") : tr("Academic");
+    auto* heading = new QLabel(QStringLiteral("<h2>%1</h2>").arg(title.toHtmlEscaped()), this);
+    layout->addWidget(heading);
+    if (section_ != Section::All && section_ != Section::Documentation) {
+        activationHint_ = new QLabel(tr("Select an academic document type on page 2.1 to enable these settings."), this);
+        activationHint_->setWordWrap(true);
+        layout->addWidget(activationHint_);
+    }
 
-    auto* modeSection = new QGroupBox(tr("Documentation"), this);
-    auto* modeLayout = new QVBoxLayout(modeSection);
-    projectTypes_ = new CapabilityCheckGroup(tr("Documentation"), EnvironmentCatalog::academicModes(), 2, modeSection);
+    modeSection_ = new QGroupBox(tr("Documentation"), this);
+    auto* modeLayout = new QVBoxLayout(modeSection_);
+    projectTypes_ = new CapabilityCheckGroup(tr("Documentation"), EnvironmentCatalog::academicModes(), 2, modeSection_);
     modeLayout->addWidget(projectTypes_);
-    layout->addWidget(modeSection);
+    layout->addWidget(modeSection_);
 
     details_ = new QGroupBox(this);
     details_->setFlat(true);
@@ -58,23 +69,25 @@ ProjectAcademicPage::ProjectAcademicPage(ProjectModel* model, QWidget* parent)
     detailsLayout->addWidget(thesisApproaches_);
     detailsLayout->addWidget(researchMethods_);
 
-    auto* information = new QGroupBox(tr("Academic Information"), details_);
-    auto* informationLayout = new QFormLayout(information);
-    institution_ = new QLineEdit(information);
-    programme_ = new QLineEdit(information);
-    supervisor_ = new QLineEdit(information);
-    examiner_ = new QLineEdit(information);
+    information_ = new QGroupBox(tr("Academic Information"), details_);
+    auto* informationLayout = new QFormLayout(information_);
+    institution_ = new QLineEdit(information_);
+    programme_ = new QLineEdit(information_);
+    supervisor_ = new QLineEdit(information_);
+    examiner_ = new QLineEdit(information_);
     informationLayout->addRow(tr("Institution"), institution_);
     informationLayout->addRow(tr("Programme / Course"), programme_);
     informationLayout->addRow(tr("Supervisor"), supervisor_);
     informationLayout->addRow(tr("Examiner"), examiner_);
-    detailsLayout->addWidget(information);
+    detailsLayout->addWidget(information_);
 
-    auto* standards = new QGroupBox(tr("Academic Standards"), details_);
-    auto* standardsLayout = new QFormLayout(standards);
-    citationStyle_ = new QComboBox(standards);
+    standards_ = new QGroupBox(tr("Academic Standards"), details_);
+    auto* standardsLayout = new QFormLayout(standards_);
+    citationStyle_ = new QComboBox(standards_);
+    citationStyle_->setObjectName(QStringLiteral("academicCitationStyle"));
     addComboOptions(citationStyle_, EnvironmentCatalog::citationStyles());
-    citationCustom_ = new QLineEdit(standards);
+    citationCustom_ = new QLineEdit(standards_);
+    citationCustom_->setObjectName(QStringLiteral("academicCitationCustom"));
     citationCustom_->setPlaceholderText(tr("Custom citation style"));
     citationCustom_->setVisible(false);
     auto* citationLayout = new QVBoxLayout;
@@ -82,13 +95,13 @@ ProjectAcademicPage::ProjectAcademicPage(ProjectModel* model, QWidget* parent)
     citationLayout->addWidget(citationCustom_);
     standardsLayout->addRow(tr("Citation Style"), citationLayout);
 
-    academicLanguages_ = new CapabilityCheckGroup(tr("Academic Languages"), EnvironmentCatalog::academicLanguages(), 3, standards);
+    academicLanguages_ = new CapabilityCheckGroup(tr("Academic Languages"), EnvironmentCatalog::academicLanguages(), 3, standards_);
     academicLanguages_->setObjectName(QStringLiteral("academicLanguages"));
     standardsLayout->addRow(academicLanguages_);
-    auto* languageHint = new QLabel(tr("Select one or more languages. Each selected document gets a separate version in each language."), standards);
+    auto* languageHint = new QLabel(tr("Select one or more languages. Each selected document gets a separate version in each language."), standards_);
     languageHint->setWordWrap(true);
     standardsLayout->addRow(languageHint);
-    detailsLayout->addWidget(standards);
+    detailsLayout->addWidget(standards_);
 
     requirements_ = new CapabilityCheckGroup(
         tr("Academic Requirements"), EnvironmentCatalog::academicRequirements(), 3, details_);
@@ -109,7 +122,7 @@ ProjectAcademicPage::ProjectAcademicPage(ProjectModel* model, QWidget* parent)
     for (auto* field : {institution_, programme_, supervisor_, examiner_, citationCustom_}) {
         connect(field, &QLineEdit::textChanged, this, [this] { persist(); });
     }
-    connect(citationStyle_, &QComboBox::currentIndexChanged, this, [this] { persist(); });
+    connect(citationStyle_, &QComboBox::currentIndexChanged, this, [this] { persist(); updateVisibility(); });
     connect(academicLanguages_, &CapabilityCheckGroup::selectionChanged, this, [this] { persist(); });
     connect(model_, &ProjectModel::modelChanged, this, &ProjectAcademicPage::refresh);
     refresh();
@@ -169,10 +182,18 @@ void ProjectAcademicPage::updateVisibility()
     const auto value = model_->academicConfiguration();
     const bool thesis = value.projectTypes.contains(QStringLiteral("thesis-project")) || value.thesisDocumentation.enabled;
     const bool research = value.projectTypes.contains(QStringLiteral("research-project")) || thesis;
-    details_->setVisible(value.enabled || !value.projectTypes.isEmpty());
-    thesisLevelSection_->setVisible(thesis);
-    thesisApproaches_->setVisible(thesis);
-    researchMethods_->setVisible(research);
+    const bool all = section_ == Section::All;
+    if (activationHint_) activationHint_->setVisible(!value.enabled && value.projectTypes.isEmpty());
+    modeSection_->setVisible(all || section_ == Section::Documentation);
+    details_->setVisible((value.enabled || !value.projectTypes.isEmpty()) && section_ != Section::Documentation);
+    thesisLevelSection_->setVisible((all || section_ == Section::Research) && thesis);
+    thesisApproaches_->setVisible((all || section_ == Section::Research) && thesis);
+    researchMethods_->setVisible((all || section_ == Section::Research) && research);
+    information_->setVisible(all || section_ == Section::Information);
+    standards_->setVisible(all || section_ == Section::Standards);
+    citationCustom_->setVisible(citationStyle_->currentData().toString() == QStringLiteral("custom"));
+    requirements_->setVisible(all || section_ == Section::Deliverables);
+    deliverables_->setVisible(all || section_ == Section::Deliverables);
 }
 
 void ProjectAcademicPage::refresh()

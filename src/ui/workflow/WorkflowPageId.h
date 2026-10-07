@@ -9,12 +9,29 @@ enum class WorkflowPageId {
     ProjectCommunication,
     ProjectCompatibility,
     Academic,
+    AcademicDocumentation,
+    AcademicResearch,
+    AcademicInformation,
+    AcademicStandards,
+    AcademicDeliverables,
     Languages,
     Frameworks,
     DevelopmentTools,
+    DevelopmentToolsIde,
+    DevelopmentToolsVersionControl,
+    DevelopmentToolsSupport,
     Platforms,
+    PlatformsHosts,
+    PlatformsTargets,
     HardwareArchitecture,
+    HardwareArchitectures,
+    HardwareProcessors,
+    HardwareTargets,
     BuildDelivery,
+    BuildDeliveryToolchains,
+    BuildDeliveryBuildSystems,
+    BuildDeliveryTesting,
+    BuildDeliveryAutomation,
     AiAgents,
     AiResponsibilities,
     AiAutonomy,
@@ -51,12 +68,29 @@ inline QString workflowPageKey(WorkflowPageId page)
     case WorkflowPageId::ProjectCommunication: return QStringLiteral("project.communication");
     case WorkflowPageId::ProjectCompatibility: return QStringLiteral("project.compatibility");
     case WorkflowPageId::Academic: return QStringLiteral("project.academic");
+    case WorkflowPageId::AcademicDocumentation: return QStringLiteral("project.academic.documentation");
+    case WorkflowPageId::AcademicResearch: return QStringLiteral("project.academic.research");
+    case WorkflowPageId::AcademicInformation: return QStringLiteral("project.academic.information");
+    case WorkflowPageId::AcademicStandards: return QStringLiteral("project.academic.standards");
+    case WorkflowPageId::AcademicDeliverables: return QStringLiteral("project.academic.deliverables");
     case WorkflowPageId::Languages: return QStringLiteral("project.languages");
     case WorkflowPageId::Frameworks: return QStringLiteral("project.frameworks");
     case WorkflowPageId::DevelopmentTools: return QStringLiteral("project.development-tools");
+    case WorkflowPageId::DevelopmentToolsIde: return QStringLiteral("project.development-tools.ide");
+    case WorkflowPageId::DevelopmentToolsVersionControl: return QStringLiteral("project.development-tools.version-control");
+    case WorkflowPageId::DevelopmentToolsSupport: return QStringLiteral("project.development-tools.support");
     case WorkflowPageId::Platforms: return QStringLiteral("project.platforms");
+    case WorkflowPageId::PlatformsHosts: return QStringLiteral("project.platforms.hosts");
+    case WorkflowPageId::PlatformsTargets: return QStringLiteral("project.platforms.targets");
     case WorkflowPageId::HardwareArchitecture: return QStringLiteral("project.hardware-architecture");
+    case WorkflowPageId::HardwareArchitectures: return QStringLiteral("project.hardware-architecture.architectures");
+    case WorkflowPageId::HardwareProcessors: return QStringLiteral("project.hardware-architecture.processors");
+    case WorkflowPageId::HardwareTargets: return QStringLiteral("project.hardware-architecture.targets");
     case WorkflowPageId::BuildDelivery: return QStringLiteral("project.build-delivery");
+    case WorkflowPageId::BuildDeliveryToolchains: return QStringLiteral("project.build-delivery.toolchains");
+    case WorkflowPageId::BuildDeliveryBuildSystems: return QStringLiteral("project.build-delivery.build-systems");
+    case WorkflowPageId::BuildDeliveryTesting: return QStringLiteral("project.build-delivery.testing");
+    case WorkflowPageId::BuildDeliveryAutomation: return QStringLiteral("project.build-delivery.automation");
     case WorkflowPageId::AiAgents: return QStringLiteral("ai.agents");
     case WorkflowPageId::AiResponsibilities: return QStringLiteral("ai.responsibilities");
     case WorkflowPageId::AiAutonomy: return QStringLiteral("ai.autonomy");

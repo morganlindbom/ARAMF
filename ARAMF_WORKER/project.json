@@ -1,14 +1,47 @@
 {
-    "_file": "project.json",
     "academic": {
+        "academicDeliverables": [
+        ],
+        "academicLanguage": "swedish",
         "academicLanguages": [
             "swedish"
         ],
+        "academicMode": "disabled",
+        "academicRequirements": [
+        ],
+        "citationStyle": "",
         "enabled": false,
+        "examiner": "",
+        "institution": "",
+        "programmeOrCourse": "",
         "projectTypes": [
         ],
-        "report": false,
-        "thesis": false
+        "reportDocumentation": {
+            "enabled": false,
+            "instructionId": "aramf-report-instruction",
+            "instructionVersion": 1,
+            "language": "sv",
+            "templateId": "aramf-default-report",
+            "templateMode": "aramf-default",
+            "templateSourceId": "",
+            "templateVersion": 1
+        },
+        "researchMethods": [
+        ],
+        "supervisor": "",
+        "thesisApproaches": [
+        ],
+        "thesisDocumentation": {
+            "enabled": false,
+            "instructionId": "aramf-thesis-instruction",
+            "instructionVersion": 1,
+            "language": "sv",
+            "templateId": "aramf-default-thesis",
+            "templateMode": "aramf-default",
+            "templateSourceId": "",
+            "templateVersion": 1
+        },
+        "thesisLevel": ""
     },
     "ai": {
         "additionalAgents": [
@@ -16,25 +49,222 @@
             "gemini",
             "openai-codex"
         ],
-        "primaryAgent": "chatgpt"
+        "aramfIntegrations": [
+        ],
+        "autonomyPreset": "custom",
+        "customAgentName": "",
+        "permissions": [
+        ],
+        "primaryAgent": "chatgpt",
+        "responsibilities": [
+        ]
     },
-    "architectures": [
-        "x86_64"
+    "aiPlatforms": [
+        "chatgpt",
+        "github-copilot",
+        "gemini",
+        "openai-codex"
     ],
-    "canonicalPaths": {
-        "currentState": "ARAMF_WORKER/memory/current-state.md",
-        "routing": "ARAMF_WORKER/routing/task-routes.json",
-        "status": "ARAMF_WORKER/PROJECT_STATUS.md",
-        "validation": "ARAMF_WORKER/memory/cold-start-validation.json",
-        "worker": "ARAMF_WORKER"
+    "androidConstraints": {
+        "analysisDispatcher": "",
+        "analysisDispatcherSource": "",
+        "applicationStateFields": [
+        ],
+        "applicationStateFieldsSource": "",
+        "applicationStateSource": "",
+        "applicationStateSourceSource": "",
+        "architecture": "",
+        "architectureSource": "",
+        "buildConfigRequired": false,
+        "buildConfigSource": "",
+        "classicPatRequired": false,
+        "classicPatSource": "",
+        "collectAsStateRequired": false,
+        "collectAsStateSource": "",
+        "composeAllowed": true,
+        "composeAvailable": true,
+        "composeRequired": false,
+        "composeRequiredSource": "",
+        "composeSelected": true,
+        "composeSource": "",
+        "confidenceMaxPercent": -1,
+        "confidenceMinPercent": -1,
+        "confidenceRangeSource": "",
+        "courseName": "",
+        "courseNameSource": "",
+        "deceptionDetectorRequired": false,
+        "deceptionDetectorSource": "",
+        "declaredTechnologies": [
+        ],
+        "declaredTechnologiesSource": "",
+        "domainAgentDistinction": "",
+        "domainAgentDistinctionSource": "",
+        "domainAgents": [
+        ],
+        "domainAgentsSource": "",
+        "githubApiRequired": false,
+        "githubApiSource": "",
+        "githubPatRequired": false,
+        "githubPatSource": "",
+        "gsonRequired": false,
+        "gsonSource": "",
+        "hardcodedTokenProhibited": false,
+        "hardcodedTokenSource": "",
+        "humanInTheLoopRequired": false,
+        "humanInTheLoopSource": "",
+        "initialBranch": "",
+        "initialBranchSource": "",
+        "instructorCollaboratorRequired": false,
+        "instructorCollaboratorSource": "",
+        "internetPermissionRequired": false,
+        "internetPermissionSource": "",
+        "kotlinRequired": false,
+        "kotlinSource": "",
+        "lintRequired": false,
+        "lintSource": "",
+        "localPropertiesRequired": false,
+        "localPropertiesSource": "",
+        "minSdk": 0,
+        "minSdkSource": "",
+        "minSdkSpecified": false,
+        "networkDispatcher": "",
+        "networkDispatcherSource": "",
+        "normalGreenRequired": false,
+        "normalGreenSource": "",
+        "patScope": "",
+        "patScopeSource": "",
+        "pollingExecutionLocation": "",
+        "pollingExecutionLocationSource": "",
+        "pollingIntervalSeconds": 0,
+        "pollingIntervalSource": "",
+        "pollingRequired": false,
+        "pollingSource": "",
+        "primaryIde": "android-studio",
+        "primaryIdeSource": "",
+        "privateRepositoryRequired": false,
+        "privateRepositorySource": "",
+        "projectDomain": "",
+        "projectDomainSource": "",
+        "rawAdversarialTextRequired": false,
+        "rawAdversarialTextSource": "",
+        "regexOrHeuristicsRequired": false,
+        "regexOrHeuristicsSource": "",
+        "repositoryName": "",
+        "repositoryNameSource": "",
+        "requiredInitialFile": "",
+        "requiredInitialFileSource": "",
+        "retrofitRequired": false,
+        "retrofitSource": "",
+        "roomRequired": false,
+        "roomSource": "",
+        "securityAlertRedRequired": false,
+        "securityAlertRedSource": "",
+        "sourceOfTruthResource": "",
+        "sourceOfTruthTitle": "",
+        "stateFlowRequired": false,
+        "stateFlowSource": "",
+        "stateModel": "",
+        "stateModelSource": "",
+        "submissionRequirements": [
+        ],
+        "submissionRequirementsSource": "",
+        "submissionSegments": [
+        ],
+        "submissionSegmentsSource": "",
+        "submissionVideoDuration": "",
+        "submissionVideoDurationSource": "",
+        "uiTechnology": "compose",
+        "uiTechnologySource": "",
+        "unitTestsRequired": false,
+        "unitTestsSource": "",
+        "unresolvedRequirements": [
+        ],
+        "unresolvedRequirementsSource": "",
+        "validationRequirements": [
+        ],
+        "validationRequirementsSource": "",
+        "workflow": "",
+        "workflowSource": "",
+        "xmlRequired": false
+    },
+    "capabilities": {
+        "automationCapabilities": [
+        ],
+        "buildConfigurations": [
+            "debug",
+            "release"
+        ],
+        "buildSystems": [
+            "cmake"
+        ],
+        "deliveryCapabilities": [
+        ],
+        "dependencyManagers": [
+        ],
+        "developmentTools": [
+        ],
+        "frameworks": [
+            "qt"
+        ],
+        "hardwareTargets": [
+        ],
+        "hostOperatingSystems": [
+            "windows"
+        ],
+        "ides": [
+            "visual-studio-code"
+        ],
+        "languages": [
+            "cpp"
+        ],
+        "processorFamilies": [
+        ],
+        "qualityCapabilities": [
+        ],
+        "targetArchitectures": [
+            "x86_64"
+        ],
+        "targetPlatforms": [
+            "desktop"
+        ],
+        "testingCapabilities": [
+        ],
+        "toolchains": [
+            "msys2-ucrt64-gcc"
+        ],
+        "versionControlSystems": [
+        ]
+    },
+    "certification": {
+        "defaultVerificationLevel": "HOST_TEST",
+        "enabled": false
     },
     "communication": {
+        "authenticationRequired": false,
+        "dataFormat": "",
+        "destinationRole": "",
+        "destinationTarget": "",
         "enabled": false,
+        "encryptionRequired": false,
+        "endpoint": "",
+        "endpoints": [
+        ],
+        "errorHandling": "",
+        "integrationRequirements": [
+        ],
+        "links": [
+        ],
+        "messages": [
+        ],
         "protocol": "",
+        "protocolVersion": "1",
+        "reconnectPolicy": "",
+        "sourceRole": "",
+        "sourceTarget": "",
         "transport": ""
     },
-    "configurationFingerprint": "25ee1a03a5d3f24b60eecbbf30319069a034a0c87ffee517b9e8ef73a52fa8c6",
     "context": "desktop-application",
+    "description": "",
     "environment": {
         "buildSystem": "cmake",
         "compiler": "msys2-ucrt64-gcc",
@@ -47,15 +277,38 @@
         "targetPlatform": "desktop",
         "versionControl": "none"
     },
-    "frameworks": [
-        "qt"
+    "generationOptions": {
+        "agentRules": true,
+        "memory": true,
+        "platforms": true,
+        "provenance": true,
+        "resources": true,
+        "routing": true
+    },
+    "hardwareResources": [
     ],
-    "hardware": [
-    ],
-    "languages": [
-        "cpp"
-    ],
-    "orchestration": {
+    "memory": {
+        "captureCategories": [
+        ],
+        "historyOptions": [
+        ],
+        "maintenanceOptions": [
+        ],
+        "maximumSizeBytes": 10737418240,
+        "retentionLevel": "standard",
+        "updateStrategy": "meaningful-task",
+        "validationOptions": [
+        ],
+        "writerMode": "agent-direct"
+    },
+    "migration": {
+        "currentSchemaVersion": 2,
+        "notices": [
+        ],
+        "sourceSchemaVersion": 1,
+        "status": "MIGRATION_OK"
+    },
+    "options": {
     },
     "processVersion": {
         "active": null,
@@ -249,9 +502,48 @@
             }
         ]
     },
+    "profileSelections": [
+    ],
+    "projectFilePath": "ARAMF_WORKER/project.json",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "projectName": "ARAMF_WORKER",
-    "schemaVersion": 1,
+    "projectPath": "",
+    "releaseManagement": {
+        "targetRelease": null
+    },
+    "resourcePolicy": {
+        "loadingStrategy": "relevant",
+        "options": [
+            "read-relevant",
+            "prefer-authoritative",
+            "respect-scope",
+            "ignore-disabled",
+            "warn-conflicts"
+        ]
+    },
+    "resources": [
+    ],
+    "rules": {
+        "activeCategories": [
+        ],
+        "conflictPolicy": "prefer-user-instruction",
+        "contextPolicies": [
+        ],
+        "enforcementLevel": "standard",
+        "loadingStrategy": "relevant",
+        "projectScopes": [
+        ],
+        "scopeMetadata": {
+        },
+        "workScopes": [
+        ]
+    },
+    "runtimeOwnership": {
+        "claims": [
+        ],
+        "schemaVersion": 1
+    },
+    "schemaVersion": 2,
     "structure": {
         "s1ResponsibilityOwnership": {
             "artifacts": [
@@ -524,17 +816,14 @@
             ]
         }
     },
-    "targetPlatforms": [
-        "desktop",
-        "windows-desktop"
-    ],
     "templateId": "",
     "templateModules": [
     ],
-    "tools": [
-        "debugger",
-        "memory-analysis"
-    ],
-    "workerIdentity": "ARAMF_WORKER",
-    "workerSchemaVersion": 1
+    "templateState": {
+    },
+    "workerNameSuffix": "",
+    "workflowProgress": {
+        "completedPages": [
+        ]
+    }
 }

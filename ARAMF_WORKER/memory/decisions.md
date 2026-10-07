@@ -330,3 +330,14 @@ creating parallel lessons.
 - Superseded-By: none
 - Summary: Explicit approved identity repair: project UUID, saved logical project name, worker suffix/directory and project root are distinct. Worker setters/load/UI refresh do not replace a saved name. Legacy names remain literal; missing-name legacy input retains its historical worker-name fallback. UUID/root scope anchors remain unchanged. No source-tree migration, P6 or existing HVD Components target mutation.
 <!-- /ARAMF-DECISION -->
+
+## Decision Record: p6-scoped-folder-and-build-grant
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: p6-scoped-folder-and-build-grant
+- Topic: p6-preparation-governance
+- Scope: project
+- Status: current
+- Superseded-By: none
+- Summary: User-approved ADMIN_OVERRIDE event-cc8303ac-6577-45e1-9986-57a0a4c52d5f authorizes this narrow repair. Folder manifest v1 includes every typed entry and raw content hash, with only exact explicitly declared canonical generated-output markers. Default protection remains. P6 CMake grants bind verified administrator, project, full request, exact path/operation/base/result, expiry and one verified consumption; preparation and postflight enforce them. No Foundation dependencies, certification gates or historical evidence are changed.
+<!-- /ARAMF-DECISION -->

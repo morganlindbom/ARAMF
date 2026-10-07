@@ -1,3 +1,4 @@
+// WorkerTaskTests.cpp
 #include "core/WorkerTaskServices.h"
 #include "core/ContextCoordinationService.h"
 #include "core/WorkerContextResolver.h"
@@ -16,6 +17,7 @@
 #include <QMap>
 #include <QProcess>
 #include <QTemporaryDir>
+#include <QDateTime>
 #include <atomic>
 #include <iostream>
 #include <thread>
@@ -54,6 +56,10 @@ bool ready(const QJsonObject& contract) { return contract.value("preflight").toO
 
 bool runWorkerTaskTests()
 {
+    // Verify task permission and evidence boundaries using isolated fixtures.
+
+    // Grant PASS records below are synthetic test evidence only; they cannot
+    // certify the live repository or authorize its protected CMake file.
     int checks = 0, failed = 0;
     const auto check = [&](bool pass, const QString& name) {
         ++checks;
@@ -509,6 +515,105 @@ bool runWorkerTaskTests()
             check(observed.value("relocations").toArray().first().toObject().value("contractId") == prepared.value("contractId"), "relocation bound to task identity");
         } else check(observed.value("status") == "FAIL" && hasCode(observed, "FORBIDDEN_FILE_MODIFICATION"), "reject " + scenario + " as unauthorized deletion");
     }
+    QTemporaryDir folderTaskFixture; folderTaskFixture.setAutoRemove(false);
+    ProjectModel folderTask; folderTask.setProjectPath(folderTaskFixture.path()); folderTask.setAiConfiguration(ai);
+    auto folderRules = folderTask.ruleConfiguration(); folderRules.projectScopes = {"source-code"};
+    folderRules.scopeMetadata = {{"source-code", QJsonObject{{"files", QJsonArray{"bundle/allowed.cpp"}}, {"tests", QJsonArray{"folder-tests"}},
+        {"generatedArtifacts", QJsonArray{"ARAMF_WORKER/verification/latest-validation.json", "ARAMF_WORKER/verification/verification-result.json"}}}}};
+    folderTask.setRuleConfiguration(folderRules);
+    write(folderTaskFixture.path() + "/bundle/allowed.cpp", "before\n");
+    write(folderTaskFixture.path() + "/bundle/protected.cpp", "protected\n");
+    ProjectResource bundle; bundle.id = "folder-task"; bundle.type = "folder"; bundle.location = "bundle"; bundle.scopes = {"source-code"};
+    folderTask.setResources({bundle}); generate(folderTask);
+    WorkerTaskRequest folderRequest; folderRequest.goal = "Modify one mapped folder child"; folderRequest.type = "coding";
+    folderRequest.scopes = {"source-code"}; folderRequest.files = {"bundle/allowed.cpp"}; folderRequest.definitionOfDone = {"Only mapped child changes"};
+    const auto folderContract = WorkerTaskServices::prepare(folderTask, folderRequest);
+    check(ready(folderContract), "folder preflight accepts supported folder type");
+    write(folderTaskFixture.path() + "/bundle/allowed.cpp", "after\n");
+    ContextCoordinationService::generate(folderTask); VerificationServices().verify(folderTask, folderTask.generationOptions());
+    const auto folderPostflight = WorkerTaskServices::postflight(folderTask, folderContract);
+    if (folderPostflight.value("status") != "PASS") std::cerr << QJsonDocument(folderPostflight.value("errors").toArray()).toJson().toStdString();
+    check(folderPostflight.value("status") == "PASS", "authorized child passes folder aggregate boundary");
+    write(folderTaskFixture.path() + "/bundle/protected.cpp", "unauthorized\n");
+    ContextCoordinationService::generate(folderTask); VerificationServices().verify(folderTask, folderTask.generationOptions());
+    check(WorkerTaskServices::postflight(folderTask, folderContract).value("status") == "FAIL", "unauthorized folder child remains blocked");
+
+    QTemporaryDir grantFixture; grantFixture.setAutoRemove(false);
+    ProjectModel grantModel; grantModel.setProjectPath(grantFixture.path()); grantModel.setAiConfiguration(ai);
+    WorkerTaskRequest grantTask;
+    grantTask.goal = "Implement P6 Canonical Code Bank"; grantTask.type = "coding"; grantTask.scopes = {"source-code"};
+    grantTask.files = {"CMakeLists.txt", "src/processes/P6/CodeBank.h", "src/processes/P6/CodeBank.cpp",
+        "src/processes/P6/CodeBankStorage.cpp", "src/processes/P6/CodeBankVerification.cpp", "src/processes/P6/README.md", "tests/P6CodeBankTests.cpp"};
+    grantTask.definitionOfDone = {"Exact approved P6 build registration"};
+    auto grantRules = grantModel.ruleConfiguration(); grantRules.projectScopes = {"source-code"};
+    grantRules.scopeMetadata = {{"source-code", QJsonObject{{"files", QJsonArray::fromStringList(grantTask.files)}, {"tests", QJsonArray{"grant-tests"}},
+        {"generatedArtifacts", QJsonArray{"ARAMF_WORKER/verification/latest-validation.json", "ARAMF_WORKER/verification/verification-result.json"}}}}};
+    grantModel.setRuleConfiguration(grantRules);
+    write(grantFixture.path() + "/CMakeLists.txt", "# CMakeLists.txt\n");
+    ProjectResource cmakeResource; cmakeResource.id = "cmake"; cmakeResource.location = "CMakeLists.txt";
+    cmakeResource.role = "source-of-truth"; cmakeResource.scopes = {"source-code"}; grantModel.setResources({cmakeResource});
+    generate(grantModel);
+    const QString instruction = "Admin Morgan Lindbom explicitly authorizes override for isolated P6 grant test";
+    const QString expires = QDateTime::currentDateTimeUtc().addSecs(3600).toString(Qt::ISODate);
+    check(!ready(WorkerTaskServices::prepare(grantModel, grantTask)), "CMake mapping alone never grants protected write");
+    check(WorkerTaskServices::issueP6BuildGrant(grantModel, grantTask, "unverified override", expires).value("status") == "BLOCKED", "unverified admin rejected");
+    check(WorkerTaskServices::issueP6BuildGrant(grantModel, grantTask, instruction, "2000-01-01T00:00:00Z").value("status") == "BLOCKED", "expired issuance rejected");
+    grantModel.setWorkerNameSuffix("other");
+    check(WorkerTaskServices::issueP6BuildGrant(grantModel, grantTask, instruction, expires).value("status") == "BLOCKED", "named-worker authority cannot borrow default-worker grant");
+    grantModel.setWorkerNameSuffix({});
+    const auto issuedGrant = WorkerTaskServices::issueP6BuildGrant(grantModel, grantTask, instruction, expires);
+    check(issuedGrant.value("status") == "PASS", "scoped grant issued through administrative workflow");
+    const auto grant = issuedGrant.value("grant").toObject();
+    grantTask.protectedGrantId = grant.value("grantId").toString();
+    ContextCoordinationService::generate(grantModel); VerificationServices().verify(grantModel, grantModel.generationOptions());
+    const auto grantContract = WorkerTaskServices::prepare(grantModel, grantTask);
+    check(ready(grantContract), "valid exact grant permits protected CMake in preparation");
+    auto forgedTask = grantTask; forgedTask.protectedGrantId = "forged-id";
+    check(hasCode(WorkerTaskServices::prepare(grantModel, forgedTask), "PROTECTED_GRANT_INVALID"), "forged grant rejected");
+    auto wrongTask = grantTask; wrongTask.goal += " unrelated";
+    check(hasCode(WorkerTaskServices::prepare(grantModel, wrongTask), "PROTECTED_GRANT_INVALID"), "wrong task rejected");
+    auto wrongPath = grantTask; wrongPath.files.append("LICENSE");
+    check(hasCode(WorkerTaskServices::prepare(grantModel, wrongPath), "PROTECTED_GRANT_INVALID"), "wrong path set rejected");
+    for (const auto& scenario : QStringList{"expired", "wrong-path", "wrong-operation", "wrong-worker"}) {
+        auto invalidGrant = grant;
+        const QString testId = "negative-" + scenario;
+        invalidGrant.insert("grantId", testId);
+        if (scenario == "expired") invalidGrant.insert("expiresAt", "2000-01-01T00:00:00Z");
+        if (scenario == "wrong-path") invalidGrant.insert("path", "LICENSE");
+        if (scenario == "wrong-operation") invalidGrant.insert("operation", "DELETE");
+        if (scenario == "wrong-worker") invalidGrant.insert("workerIdentity", "ARAMF_WORKER_other");
+        QString authorityError;
+        check(ProjectMemory().recordAdministrativeOverride(grantFixture.path(), instruction, "isolated negative grant fixture",
+            "Exercise fail-closed validation", "project", "test", {"CMakeLists.txt"}, {"P6"}, false,
+            {{"protectedPathGrant", invalidGrant}}, nullptr, &authorityError), "negative audit fixture " + scenario);
+        auto invalidTask = grantTask; invalidTask.protectedGrantId = testId;
+        const auto invalidContract = WorkerTaskServices::prepare(grantModel, invalidTask);
+        check(hasCode(invalidContract, "PROTECTED_GRANT_INVALID"), "reject " + scenario + " grant");
+        check(hasCode(WorkerTaskServices::postflight(grantModel, invalidContract), "PROTECTED_GRANT_INVALID"), "postflight rejects " + scenario + " grant");
+    }
+    write(grantFixture.path() + "/CMakeLists.txt", "unapproved replacement\n");
+    check(hasCode(WorkerTaskServices::prepare(grantModel, grantTask), "PROTECTED_GRANT_INVALID"), "grant cannot authorize arbitrary CMake bytes");
+    check(hasCode(WorkerTaskServices::postflight(grantModel, grantContract), "PROTECTED_GRANT_INVALID"), "postflight rejects arbitrary CMake bytes");
+    write(grantFixture.path() + "/CMakeLists.txt", "# CMakeLists.txt\n" + issuedGrant.value("registration").toString().toUtf8());
+    ContextCoordinationService::generate(grantModel); VerificationServices().verify(grantModel, grantModel.generationOptions());
+    const auto grantPostflight = WorkerTaskServices::postflight(grantModel, grantContract);
+    if (grantPostflight.value("status") != "PASS") std::cerr << QJsonDocument(grantPostflight.value("errors").toArray()).toJson().toStdString();
+    check(grantPostflight.value("status") == "PASS", "exact CMake edit accepted by postflight");
+    check(WorkerTaskServices::consumeP6BuildGrant(grantModel, grantContract, {}).value("status") == "BLOCKED", "incomplete evidence cannot consume grant");
+    QJsonArray grantEvidence;
+    for (const auto& value : grantContract.value("requiredEvidence").toArray()) {
+        if (value == "diff-boundary") continue;
+        const QString path = "ARAMF_WORKER/verification/tasks/grant-" + value.toString() + ".json";
+        const QJsonObject record{{"check", value}, {"contractId", grantContract.value("contractId")}, {"status", "PASS"},
+            {"dependencyFingerprint", grantPostflight.value("evidenceFingerprints").toObject().value(value.toString())}};
+        const auto content = QJsonDocument(record).toJson(); write(grantFixture.path() + '/' + path, content);
+        grantEvidence.append(QJsonObject{{"check", value}, {"artifact", path},
+            {"artifactFingerprint", QString::fromLatin1(QCryptographicHash::hash(content, QCryptographicHash::Sha256).toHex())}});
+    }
+    check(WorkerTaskServices::consumeP6BuildGrant(grantModel, grantContract, grantEvidence).value("status") == "PASS", "verified fixture consumes grant once");
+    check(hasCode(WorkerTaskServices::prepare(grantModel, grantTask), "PROTECTED_GRANT_INVALID"), "consumed grant rejected in preparation");
+    check(hasCode(WorkerTaskServices::postflight(grantModel, grantContract), "PROTECTED_GRANT_INVALID"), "consumed grant rejected in postflight");
+    check(WorkerTaskServices::consumeP6BuildGrant(grantModel, grantContract, grantEvidence).value("status") == "BLOCKED", "replay consumption rejected");
     std::cout << "WORKER-TASK checks=" << checks << " failed=" << failed << " matrix=" << matrix.size() << '\n';
     return failed == 0;
 }

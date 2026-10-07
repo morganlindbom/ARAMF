@@ -1,3 +1,4 @@
+// WorkerTaskServices.cpp
 #include "WorkerTaskServices.h"
 #include "AramfPaths.h"
 #include "CertificationService.h"
@@ -16,6 +17,9 @@
 #include <QJsonParseError>
 #include <QProcess>
 #include <QSet>
+#include <QDateTime>
+#include <QLockFile>
+#include <QUuid>
 #include <algorithm>
 
 namespace {
@@ -184,7 +188,13 @@ QJsonObject snapshot(const ProjectModel& model, QJsonArray& errors)
     // Protect external authoritative sources too. Their identity is read-only.
     for (const auto& resource : model.resources()) {
         if (resource.type == "url" || resource.location.contains("://")) continue;
-        if (!resource.location.isEmpty()) result.insert(QStringLiteral("external:") + resource.id, fileHash(pathFor(model, resource.location)));
+        if (!resource.location.isEmpty()) {
+            const auto observed = WorkerContextResolver::resourceSnapshot(model, resource.id);
+            result.insert(QStringLiteral("external:") + resource.id,
+                observed.value("valid").toBool() ? observed.value("fingerprint").toString() : QStringLiteral("UNREADABLE"));
+            if (resource.type == "folder") result.insert(QStringLiteral("external-manifest:") + resource.id, observed);
+            if (!observed.value("valid").toBool()) issue(errors, "RESOURCE_INSPECTION_FAILED", observed.value("error").toString(), resource.location);
+        }
     }
     return result;
 }
@@ -320,12 +330,148 @@ QJsonObject WorkerTaskRequest::toJson() const
     QJsonObject result{{"goal", goal}, {"type", type}, {"scopes", array(scopes)}, {"files", array(files)},
         {"definitionOfDone", array(definitionOfDone)}, {"history", history}, {"destructive", destructive}};
     if (!relocations.isEmpty()) result.insert("relocations", relocations);
+    if (!protectedGrantId.isEmpty()) result.insert("protectedGrantId", protectedGrantId);
     return result;
 }
 WorkerTaskRequest WorkerTaskRequest::fromJson(const QJsonObject& value)
 {
     return {value.value("goal").toString(), value.value("type").toString(), strings(value.value("scopes")),
-        strings(value.value("files")), strings(value.value("definitionOfDone")), value.value("history").toBool(), value.value("destructive").toBool(), value.value("relocations").toArray()};
+        strings(value.value("files")), strings(value.value("definitionOfDone")), value.value("history").toBool(), value.value("destructive").toBool(), value.value("relocations").toArray(), value.value("protectedGrantId").toString()};
+}
+
+namespace {
+// Bind the complete task intent independently of its grant reference.
+
+// A grant cannot be carried to a different goal, file set, scope or acceptance
+// contract by copying its ID into another serialized request.
+QString grantRequestFingerprint(const WorkerTaskRequest& task)
+{
+    auto intent = task.toJson(); intent.remove("protectedGrantId");
+    return fingerprint(intent);
+}
+
+// Define the sole build edit supported by this narrowly scoped grant.
+
+// Appending this exact registration block leaves all existing CMake bytes
+// intact. The grant authorizes neither arbitrary replacement nor other paths.
+QByteArray p6Registration()
+{
+    return "\n# P6 Canonical Code Bank build and test registration.\n"
+        "target_sources(aramf PRIVATE src/processes/P6/CodeBank.h src/processes/P6/CodeBank.cpp src/processes/P6/CodeBankStorage.cpp src/processes/P6/CodeBankVerification.cpp)\n"
+        "if(BUILD_TESTING)\n"
+        "    add_executable(aramf_p6_tests tests/P6CodeBankTests.cpp ${ARAMF_CORE_SOURCES} src/processes/P6/CodeBank.cpp src/processes/P6/CodeBankStorage.cpp src/processes/P6/CodeBankVerification.cpp)\n"
+        "    target_include_directories(aramf_p6_tests PRIVATE src)\n"
+        "    target_link_libraries(aramf_p6_tests PRIVATE Qt6::Core)\n"
+        "    add_test(NAME aramf_p6_tests COMMAND aramf_p6_tests)\n"
+        "endif()\n";
+}
+
+// Recover and validate a live grant from canonical append-only authority.
+
+// Forged references, mismatched project/task/path/operation, expired grants and
+// successful prior consumption fail closed. Both prepare and postflight use
+// this check; serialized permission fields are never sufficient authority.
+QJsonObject checkedGrant(const ProjectModel& model, const WorkerTaskRequest& task, QString* error)
+{
+    if (task.protectedGrantId.isEmpty()) return {};
+    if (!model.workerNameSuffix().isEmpty() || AramfPaths::runtimeWorkerDirectoryName() != worker(model)) {
+        *error = "Protected P6 grants require the default project-local authority store"; return {};
+    }
+    QString readError;
+    const auto events = ProjectMemory().events(root(model), &readError);
+    QJsonObject grant, authority;
+    for (const auto& event : events) {
+        if (event.value("eventType") == "PROTECTED_GRANT_CONSUMED" && event.value("grantId") == task.protectedGrantId) {
+            *error = "Protected grant was already consumed"; return {};
+        }
+        const auto candidate = event.value("protectedPathGrant").toObject();
+        if (candidate.value("grantId") != task.protectedGrantId) continue;
+        if (!grant.isEmpty()) { *error = "Duplicate grant identity"; return {}; }
+        grant = candidate; authority = event;
+    }
+    const auto expires = QDateTime::fromString(grant.value("expiresAt").toString(), Qt::ISODate);
+    const auto issued = QDateTime::fromString(grant.value("issuedAt").toString(), Qt::ISODate);
+    if (!readError.isEmpty() || grant.isEmpty() || authority.value("eventType") != "ADMIN_OVERRIDE"
+        || authority.value("authority") != "ADMIN_OVERRIDE" || authority.value("administrator") != "Admin Morgan Lindbom"
+        || !ProjectMemory().isVerifiedAdministrativeOverride(authority.value("instruction").toString())
+        || authority.value("provenance").toObject().value("actor") != "human"
+        || authority.value("preColdStartValidation").toObject().value("status") != "PASS"
+        || authority.value("preMemoryValidation").toObject().value("status") != "PASS"
+        || grant.value("schemaVersion").toInt() != 1 || grant.value("projectId") != model.projectId()
+        || grant.value("projectRoot") != root(model) || grant.value("workerIdentity") != worker(model)
+        || grant.value("requestFingerprint") != grantRequestFingerprint(task)
+        || grant.value("path") != "CMakeLists.txt" || grant.value("operation") != "MODIFY"
+        || grant.value("purpose") != "P6_BUILD_TEST_REGISTRATION" || !expires.isValid() || !issued.isValid()
+        || issued > QDateTime::currentDateTimeUtc() || expires <= QDateTime::currentDateTimeUtc()
+        || issued.secsTo(expires) <= 0 || issued.secsTo(expires) > 86400
+        || grant.value("registrationFingerprint") != digest(p6Registration())) {
+        *error = "Protected grant authority, binding or lifetime is invalid"; return {};
+    }
+    const auto hash = fileHash(pathFor(model, "CMakeLists.txt"));
+    if (hash != grant.value("baseFingerprint") && hash != grant.value("resultFingerprint")) {
+        *error = "Protected CMake content is outside the exact approved edit"; return {};
+    }
+    QFile cmake(pathFor(model, "CMakeLists.txt"));
+    if (!cmake.open(QIODevice::ReadOnly)) { *error = "Cannot inspect protected content"; return {}; }
+    const auto bytes = cmake.readAll();
+    const bool baseMatches = hash == grant.value("baseFingerprint") && digest(bytes + p6Registration()) == grant.value("resultFingerprint");
+    const bool resultMatches = hash == grant.value("resultFingerprint") && bytes.endsWith(p6Registration())
+        && digest(bytes.left(bytes.size() - p6Registration().size())) == grant.value("baseFingerprint");
+    if (cmake.error() != QFileDevice::NoError || (!baseMatches && !resultMatches)) {
+        *error = "Protected grant does not describe the exact registration edit"; return {};
+    }
+    grant.insert("authorityEventId", authority.value("eventId"));
+    return grant;
+}
+}
+
+// Persist an administrator-approved, request-bound P6 build grant.
+
+// This operation is separate from read-only preparation. Only the exact seven
+// P6 paths are accepted, and a pending grant blocks duplicate issuance for the
+// same request. All permissions remain default-deny until normal preparation.
+QJsonObject WorkerTaskServices::issueP6BuildGrant(const ProjectModel& model, const WorkerTaskRequest& task,
+                                                const QString& instruction, const QString& expiresAt)
+{
+    const QStringList exact{"CMakeLists.txt", "src/processes/P6/CodeBank.h", "src/processes/P6/CodeBank.cpp",
+        "src/processes/P6/CodeBankStorage.cpp", "src/processes/P6/CodeBankVerification.cpp",
+        "src/processes/P6/README.md", "tests/P6CodeBankTests.cpp"};
+    const auto expires = QDateTime::fromString(expiresAt, Qt::ISODate);
+    const auto now = QDateTime::currentDateTimeUtc();
+    if (!model.workerNameSuffix().isEmpty() || AramfPaths::runtimeWorkerDirectoryName() != worker(model)
+        || !ProjectMemory().isVerifiedAdministrativeOverride(instruction) || !task.protectedGrantId.isEmpty()
+        || array(task.files) != array(exact) || task.destructive || !task.relocations.isEmpty()
+        || !task.goal.contains("P6") || task.definitionOfDone.isEmpty() || !expires.isValid()
+        || now.secsTo(expires) <= 0 || now.secsTo(expires) > 86400 || !safePath(root(model), "CMakeLists.txt"))
+        return {{"status", "BLOCKED"}, {"error", "Explicit admin authority, exact P6 request and bounded lifetime required"}};
+    QLockFile lock(QDir::tempPath() + "/aramf-protected-grant-" + digest(root(model).toUtf8()) + ".lock");
+    lock.setStaleLockTime(0);
+    if (!lock.tryLock(0)) return {{"status", "BLOCKED"}, {"error", "Grant authority is busy"}};
+    QString error;
+    const auto events = ProjectMemory().events(root(model), &error);
+    if (!error.isEmpty()) return {{"status", "BLOCKED"}, {"error", error}};
+    for (const auto& event : events) {
+        const auto existing = event.value("protectedPathGrant").toObject();
+        if (existing.value("requestFingerprint") == grantRequestFingerprint(task))
+            return {{"status", "BLOCKED"}, {"error", "This exact task already has a grant; automatic replacement is forbidden"}};
+    }
+    QFile cmake(pathFor(model, "CMakeLists.txt"));
+    if (!cmake.open(QIODevice::ReadOnly)) return {{"status", "BLOCKED"}, {"error", "Cannot read CMake baseline"}};
+    const auto bytes = cmake.readAll();
+    if (cmake.error() != QFileDevice::NoError || bytes.contains("aramf_p6_tests"))
+        return {{"status", "BLOCKED"}, {"error", "Incomplete or already registered CMake baseline"}};
+    const QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    const QJsonObject grant{{"schemaVersion", 1}, {"grantId", id}, {"projectId", model.projectId()},
+        {"projectRoot", root(model)}, {"workerIdentity", worker(model)}, {"requestFingerprint", grantRequestFingerprint(task)},
+        {"path", "CMakeLists.txt"}, {"operation", "MODIFY"}, {"purpose", "P6_BUILD_TEST_REGISTRATION"},
+        {"issuedAt", now.toString(Qt::ISODate)}, {"expiresAt", expiresAt}, {"baseFingerprint", digest(bytes)},
+        {"resultFingerprint", digest(bytes + p6Registration())}, {"registrationFingerprint", digest(p6Registration())}};
+    QJsonObject audit;
+    if (!ProjectMemory().recordAdministrativeOverride(root(model), instruction, "CMakeLists.txt READ NEVER_TOUCH",
+        "Exact P6 build/test registration only", "P6-build-registration", "MODIFY CMakeLists.txt with exact approved registration bytes",
+        {"CMakeLists.txt"}, {"P6", "build-system"}, false, {{"protectedPathGrant", grant}}, &audit, &error))
+        return {{"status", "BLOCKED"}, {"error", error}};
+    return {{"status", "PASS"}, {"grant", grant}, {"registration", QString::fromUtf8(p6Registration())}};
 }
 
 QJsonObject ChangeImpactResolver::resolve(const ProjectModel& model, const WorkerTaskRequest& task)
@@ -386,6 +532,7 @@ QJsonObject WorkerTaskServices::mutationPolicy(const ProjectModel& model)
 
 QJsonObject WorkerTaskServices::prepare(const ProjectModel& model, const WorkerTaskRequest& task)
 {
+    WorkerResourceObservation observation;
     QJsonArray errors;
     if (!QDir(model.projectPath()).exists() || model.projectPath().isEmpty()) {
         issue(errors, "REPOSITORY_MISSING", "Select an existing project root.", {}, "FATAL");
@@ -411,6 +558,9 @@ QJsonObject WorkerTaskServices::prepare(const ProjectModel& model, const WorkerT
         }
     }
     const auto policy = mutationPolicy(model);
+    QString grantError;
+    const auto protectedGrant = checkedGrant(model, task, &grantError);
+    if (!grantError.isEmpty()) issue(errors, "PROTECTED_GRANT_INVALID", grantError, "CMakeLists.txt");
     const auto impact = ChangeImpactResolver::resolve(model, task);
     const auto context = impact.value("context").toObject();
     if (!context.value("valid").toBool()) {
@@ -428,7 +578,7 @@ QJsonObject WorkerTaskServices::prepare(const ProjectModel& model, const WorkerT
             && ownership.value("owner").toString() == "user" && !strings(ownership.value("actions")).contains("NEVER_TOUCH");
         if (!safePath(root(model), file)) issue(errors, "UNSAFE_PATH", "Proposed path is unsafe or escapes the project.", file, "FATAL");
         else if (!potential.contains(file)) { issue(errors, "FILE_OWNERSHIP_UNKNOWN", "Proposed file has no ownership mapping in the active task scopes.", file); issue(errors, "TASK_SCOPE_VIOLATION", "Proposed file is not mapped to an affected canonical scope.", file); }
-        else if (!source) issue(errors, "FORBIDDEN_FILE_MODIFICATION", "File must be changed by its canonical owner/service, not the agent.", file);
+        else if (!source && !(file == "CMakeLists.txt" && !protectedGrant.isEmpty())) issue(errors, "FORBIDDEN_FILE_MODIFICATION", "File must be changed by its canonical owner/service, not the agent.", file);
         else {
             const bool exists = QFileInfo::exists(pathFor(model, file));
             if (!exists && !permissionsConfigured.contains("create-files")) issue(errors, "AGENT_PERMISSION_MISSING", "Creating a new source file requires create-files permission.", file);
@@ -484,9 +634,12 @@ QJsonObject WorkerTaskServices::prepare(const ProjectModel& model, const WorkerT
         const QString location = resource.value("location").toString();
         const QString resourceId = resource.value("id").toString();
         const bool remote = location.contains("://");
-        const QString hash = remote ? QStringLiteral("UNVERIFIED_REMOTE") : fileHash(pathFor(model, location));
+        const auto observed = remote ? QJsonObject{} : WorkerContextResolver::resourceSnapshot(model, resourceId);
+        const QString hash = remote ? QStringLiteral("UNVERIFIED_REMOTE") : observed.value("valid").toBool()
+            ? observed.value("fingerprint").toString() : QStringLiteral("UNREADABLE");
         if (remote || hash == "MISSING" || hash == "UNREADABLE") issue(errors, resource.value("role").toString() == "source-of-truth" ? "SOURCE_OF_TRUTH_MISSING" : "USER_SOURCE_MISSING", "Relevant source must be locally available and readable; remote sources require explicit verified local evidence.", location);
-        sourceDependencies.append(QJsonObject{{"id", resourceId}, {"source", location}, {"fingerprint", hash}, {"authority", resource.value("authority")}});
+        sourceDependencies.append(QJsonObject{{"id", resourceId}, {"source", location}, {"type", resource.value("type")},
+            {"fingerprint", hash}, {"authority", resource.value("authority")}, {"manifest", observed}});
         if (resource.value("role").toString() == "source-of-truth") {
             auto scopes = strings(resource.value("scopes"));
             if (scopes.isEmpty() || scopes.contains("all")) scopes = strings(impact.value("affectedScopes"));
@@ -549,6 +702,7 @@ QJsonObject WorkerTaskServices::prepare(const ProjectModel& model, const WorkerT
         historyLengths.insert(workerPath(model, relative), static_cast<double>(QFileInfo(pathFor(model, workerPath(model, relative))).size()));
     parallelState(model, baseline, errors);
     QJsonObject contract{{"schemaVersion", 1}, {"authority", "DERIVED"}, {"request", task.toJson()}, {"binding", binding(model)},
+        {"protectedGrant", protectedGrant},
         {"impact", impact}, {"permittedFiles", array(permitted)}, {"protectedFiles", array(protectedFiles)}, {"mutationPolicy", policy},
         {"filePermissions", permissions}, {"negativeConstraints", array(constraints)}, {"instructions", instructions},
         {"resources", sourceDependencies}, {"decisions", decisions}, {"decisionSource", workerPath(model, "memory/decisions.md")},
@@ -564,6 +718,7 @@ QJsonObject WorkerTaskServices::prepare(const ProjectModel& model, const WorkerT
 
 QJsonObject WorkerTaskServices::postflight(const ProjectModel& model, const QJsonObject& contract, const QJsonArray& evidence)
 {
+    WorkerResourceObservation observation;
     QJsonArray errors;
     auto unsignedContract = contract;
     unsignedContract.remove("contractId");
@@ -577,11 +732,14 @@ QJsonObject WorkerTaskServices::postflight(const ProjectModel& model, const QJso
     // A recomputed checksum is not authority. Re-derive the authorization fields
     // from canonical inputs so an agent cannot widen a serialized contract.
     const auto authoritative = prepare(model, WorkerTaskRequest::fromJson(contract.value("request").toObject()));
-    for (const QString& field : {QStringLiteral("permittedFiles"), QStringLiteral("requiredEvidence"), QStringLiteral("risk"), QStringLiteral("impact"), QStringLiteral("evidenceDependencies"), QStringLiteral("taskDependencies")})
+    for (const QString& field : {QStringLiteral("permittedFiles"), QStringLiteral("requiredEvidence"), QStringLiteral("risk"), QStringLiteral("impact"), QStringLiteral("evidenceDependencies"), QStringLiteral("taskDependencies"), QStringLiteral("protectedGrant")})
         if (semantic(contract.value(field)) != semantic(authoritative.value(field))) issue(errors, "TASK_CONTRACT_INVALID", "Contract authorization differs from canonical derivation.", field);
     validateCanonical(model, errors);
     const auto current = snapshot(model, errors);
     const auto before = contract.value("baseline").toObject();
+    QString grantError;
+    const auto protectedGrant = checkedGrant(model, WorkerTaskRequest::fromJson(contract.value("request").toObject()), &grantError);
+    if (!grantError.isEmpty()) issue(errors, "PROTECTED_GRANT_INVALID", grantError, "CMakeLists.txt");
     QSet<QString> relocatedSources, relocationEndpoints;
     QJsonArray observedRelocations;
     const auto requested = contract.value("request").toObject().value("relocations").toArray();
@@ -669,10 +827,53 @@ QJsonObject WorkerTaskServices::postflight(const ProjectModel& model, const QJso
     const bool orchestrationStatePresent = !model.orchestrationState().isEmpty();
     QJsonArray serviceChanges;
     for (const auto& path : paths) {
+        if (path.startsWith("external-manifest:")) continue;
         if (before.value(path) == current.value(path)) continue;
+        if (path.startsWith("external:")) {
+            const QString id = path.mid(9);
+            const auto oldManifest = before.value("external-manifest:" + id).toObject();
+            const auto newManifest = current.value("external-manifest:" + id).toObject();
+            if (!oldManifest.isEmpty() && !newManifest.isEmpty()) {
+                bool covered = oldManifest.value("valid").toBool() && newManifest.value("valid").toBool()
+                    && oldManifest.value("policy") == newManifest.value("policy");
+                QString resourceRoot;
+                for (const auto& resource : model.resources()) if (resource.id == id) resourceRoot = pathFor(model, resource.location);
+                const auto oldEntries = oldManifest.value("entries").toObject();
+                const auto newEntries = newManifest.value("entries").toObject();
+                QStringList children = oldEntries.keys() + newEntries.keys(); children.removeDuplicates();
+                for (const auto& child : children) {
+                    if (oldEntries.value(child) == newEntries.value(child)) continue;
+                    const QString relative = QDir(root(model)).relativeFilePath(QDir(resourceRoot).filePath(child));
+                    const auto oldEntry = oldEntries.value(child).toObject(), newEntry = newEntries.value(child).toObject();
+                    if (newEntry.value("type") == "folder" && oldEntry.isEmpty()) {
+                        bool authorizedChild = false;
+                        for (const auto& permitted : strings(contract.value("permittedFiles")))
+                            authorizedChild |= permitted.startsWith(relative + '/');
+                        covered &= authorizedChild;
+                    } else {
+                        covered &= safePath(root(model), relative) && current.contains(relative)
+                            && before.value(relative).toString("MISSING") == oldEntry.value("sha256").toString("MISSING")
+                            && current.value(relative).toString("MISSING") == newEntry.value("sha256").toString("MISSING");
+                    }
+                }
+                if (covered) continue; // Each changed child is still checked by the ordinary permission loop.
+                issue(errors, "RESOURCE_CHILD_UNAUTHORIZED", "Folder changes lack complete child-level baseline coverage", path);
+            }
+            if (!protectedGrant.isEmpty()) {
+                bool cmake = false;
+                for (const auto& resource : model.resources())
+                    cmake |= resource.id == id && pathFor(model, resource.location) == pathFor(model, "CMakeLists.txt");
+                if (cmake && before.value(path) == protectedGrant.value("baseFingerprint")
+                    && current.value(path) == protectedGrant.value("resultFingerprint")) continue;
+            }
+        }
         if (path.startsWith(workerPath(model, "context/handoffs/")) && path.endsWith(".json")) continue;
         modified.append(path);
         const auto ownership = fileRole(model, path, mutationPolicy(model));
+        if (path == "CMakeLists.txt" && !protectedGrant.isEmpty()
+            && strings(contract.value("permittedFiles")).contains(path)
+            && before.value(path) == protectedGrant.value("baseFingerprint")
+            && current.value(path) == protectedGrant.value("resultFingerprint")) continue;
         bool delegated = false;
         if (ownership.value("writer").toString() == "ProjectMemory recorder") {
             delegated = checkMemory() && appendIntact(workerPath(model, "memory/event-log.jsonl"));
@@ -748,6 +949,36 @@ QJsonObject WorkerTaskServices::postflight(const ProjectModel& model, const QJso
         {"certification", "CERTIFIED is issued only by the canonical CertificationService; physical evidence is never inferred."}};
 }
 
+// Commit single-use consumption only after the exact task is fully verified.
+
+// A lock serializes issuance/consumption. Failed or incomplete postflight leaves
+// the grant unconsumed but cannot authorize another task. Future preparation and
+// postflight reject the persisted consumption event rather than trusting flags.
+QJsonObject WorkerTaskServices::consumeP6BuildGrant(const ProjectModel& model, const QJsonObject& contract, const QJsonArray& evidence)
+{
+    QLockFile lock(QDir::tempPath() + "/aramf-protected-grant-" + digest(root(model).toUtf8()) + ".lock");
+    lock.setStaleLockTime(0);
+    if (!lock.tryLock(0)) return {{"status", "BLOCKED"}, {"error", "Grant authority is busy"}};
+    const auto request = WorkerTaskRequest::fromJson(contract.value("request").toObject());
+    QString error;
+    const auto grant = checkedGrant(model, request, &error);
+    if (grant.isEmpty() || fileHash(pathFor(model, "CMakeLists.txt")) != grant.value("resultFingerprint"))
+        return {{"status", "BLOCKED"}, {"error", error.isEmpty() ? "Approved CMake edit is not present" : error}};
+    const auto validation = postflight(model, contract, evidence);
+    if (validation.value("completionState") != "VERIFIED" || validation.value("status") != "PASS")
+        return {{"status", "BLOCKED"}, {"validation", validation}};
+    const QJsonObject fields{{"grantId", request.protectedGrantId}, {"contractId", contract.value("contractId")},
+        {"resultFingerprint", validation.value("resultFingerprint")}, {"authorityEventId", grant.value("authorityEventId")},
+        {"provenance", QJsonObject{{"actor", "system"}, {"agentId", "none"}, {"tool", "WorkerTaskServices"}}}};
+    if (!ProjectMemory().appendEvent(root(model), "PROTECTED_GRANT_CONSUMED", "P6 build-registration grant consumed", fields, &error))
+        return {{"status", "BLOCKED"}, {"error", error}};
+    return {{"status", "PASS"}, {"grantId", request.protectedGrantId}, {"validation", validation}};
+}
+
+// Dispatch task operations without implicit authority or lifecycle changes.
+
+// Grant issuance and consumption are explicit mutating commands; prepare and
+// postflight retain their inspection-only authorization semantics.
 int runWorkerTaskCommand(const QStringList& arguments, QTextStream& output, QTextStream& error)
 {
     const auto option = [&arguments](const QString& key) { const int index = arguments.indexOf(key); return index >= 0 ? arguments.value(index + 1) : QString{}; };
@@ -755,6 +986,19 @@ int runWorkerTaskCommand(const QStringList& arguments, QTextStream& output, QTex
     QString failure;
     if (!ProjectPersistence().load(&model, option("--config"), &failure)) { error << failure << '\n'; return 2; }
     QJsonObject result;
+    if (arguments.value(1) == "grant-p6-build") {
+        result = WorkerTaskServices::issueP6BuildGrant(model, WorkerTaskRequest::fromJson(readObject(option("--request"))),
+            option("--instruction"), option("--expires-at"));
+        output << QJsonDocument(result).toJson();
+        return result.value("status") == "PASS" ? 0 : 2;
+    }
+    if (arguments.value(1) == "consume-p6-build-grant") {
+        auto contract = readObject(option("--contract"));
+        if (contract.contains("contract")) contract = contract.value("contract").toObject();
+        result = WorkerTaskServices::consumeP6BuildGrant(model, contract, readObject(option("--evidence")).value("evidence").toArray());
+        output << QJsonDocument(result).toJson();
+        return result.value("status") == "PASS" ? 0 : 2;
+    }
     if (arguments.value(1) == "prepare") {
         const auto request = readObject(option("--request"));
         result = WorkerTaskServices::prepare(model, WorkerTaskRequest::fromJson(request));

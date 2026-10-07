@@ -1,3 +1,4 @@
+// ContextCoordinationService.cpp
 #include "ContextCoordinationService.h"
 
 #include "AramfPaths.h"
@@ -48,8 +49,15 @@ QByteArray fileBytes(const QString& path)
 
 QString fileFingerprint(const QString& path)
 {
+    // Reject failed reads instead of certifying empty content.
+
+    // Context JSON retains its existing semantic normalization, while folder
+    // resources use the shared typed manifest rather than this file reader.
     if (!QFileInfo::exists(path)) return QStringLiteral("MISSING");
-    const auto bytes = fileBytes(path);
+    QFile readable(path);
+    if (!QFileInfo(path).isFile() || !readable.open(QIODevice::ReadOnly)) return QStringLiteral("INVALID");
+    const auto bytes = readable.readAll();
+    if (readable.error() != QFileDevice::NoError || bytes.size() != readable.size()) return QStringLiteral("INVALID");
     if (QFileInfo(path).suffix().compare(QStringLiteral("json"), Qt::CaseInsensitive) == 0) {
         QJsonParseError parseError;
         const auto document = QJsonDocument::fromJson(bytes, &parseError);
@@ -57,6 +65,24 @@ QString fileFingerprint(const QString& path)
             return hashBytes(document.toJson(QJsonDocument::Compact));
     }
     return hashBytes(bytes);
+}
+
+// Route folder context through the same manifest used by task governance.
+
+// Both generation and freshness inspection resolve the current canonical
+// resource policy. A policy/content change therefore invalidates old context.
+QString contextFingerprint(const ProjectModel& model, const QString& source, const QString& path)
+{
+    if (source.startsWith("external:")) {
+        const QString id = source.mid(9);
+        for (const auto& resource : model.resources()) {
+            if (resource.id == id && resource.type == "folder") {
+                const auto snapshot = WorkerContextResolver::resourceSnapshot(model, id);
+                return snapshot.value("valid").toBool() ? snapshot.value("fingerprint").toString() : QStringLiteral("INVALID");
+            }
+        }
+    }
+    return fileFingerprint(path);
 }
 
 bool readJson(const QString& path, QJsonObject* object)
@@ -108,10 +134,14 @@ QString entryId(const QString& projectId, const QString& source,
 
 QJsonObject sourceEntry(const ProjectModel& model, const QString& source,
                         const QString& section, const QString& scope,
-                        const QString& provenance = {})
+                        const QString& provenance = {}, const QString& observedFingerprint = {})
 {
+    // Bind a routed entry to its canonical source observation.
+
+    // Reuse only an observation supplied by this single indexing operation;
+    // no cross-operation cache can hide subsequent resource changes.
     const QString path = source.startsWith(QStringLiteral("external:")) ? provenance : absolute(model, source);
-    const QString fingerprint = fileFingerprint(path);
+    const QString fingerprint = observedFingerprint.isEmpty() ? contextFingerprint(model, source, path) : observedFingerprint;
     QJsonObject result{
         {QStringLiteral("id"), entryId(model.projectId(), source, section, scope)},
         {QStringLiteral("projectId"), model.projectId()},
@@ -123,7 +153,7 @@ QJsonObject sourceEntry(const ProjectModel& model, const QString& source,
         {QStringLiteral("dependencies"), QJsonArray{source}},
         {QStringLiteral("fingerprint"), fingerprint},
         {QStringLiteral("version"), 1},
-        {QStringLiteral("status"), fingerprint == QStringLiteral("MISSING") ? QStringLiteral("INVALID") : QStringLiteral("CURRENT")}
+        {QStringLiteral("status"), (fingerprint == "MISSING" || fingerprint == "INVALID") ? QStringLiteral("INVALID") : QStringLiteral("CURRENT")}
     };
     return result;
 }
@@ -137,13 +167,20 @@ QJsonObject loadIndex(const ProjectModel& model)
 
 QJsonObject freshnessFor(const ProjectModel& model, const QJsonObject& index)
 {
+    // Compare every indexed binding against one current observation per source.
+
+    // Multiple scope projections of the same resource share a snapshot within
+    // this call, avoiding repeated full directory reads without persistent caching.
     QJsonArray states;
+    QHash<QString, QString> observed;
     int stale = 0;
     for (const auto& value : index.value(QStringLiteral("entries")).toArray()) {
         const auto entry = value.toObject();
-        const QString current = fileFingerprint(entry.value(QStringLiteral("path")).toString());
+        const QString source = entry.value("source").toString();
+        if (!observed.contains(source)) observed.insert(source, contextFingerprint(model, source, entry.value("path").toString()));
+        const QString current = observed.value(source);
         const QString recorded = entry.value(QStringLiteral("fingerprint")).toString();
-        const QString status = current == QStringLiteral("MISSING") ? QStringLiteral("INVALID") : current == recorded ? QStringLiteral("CURRENT") : QStringLiteral("STALE");
+        const QString status = (current == "MISSING" || current == "INVALID") ? QStringLiteral("INVALID") : current == recorded ? QStringLiteral("CURRENT") : QStringLiteral("STALE");
         if (status != QStringLiteral("CURRENT")) ++stale;
         states.append(QJsonObject{{QStringLiteral("id"), entry.value(QStringLiteral("id"))},
                                   {QStringLiteral("source"), entry.value(QStringLiteral("source"))},
@@ -212,10 +249,18 @@ QStringList ContextCoordinationService::derivedPaths()
 
 QJsonObject ContextCoordinationService::buildIndex(const ProjectModel& model)
 {
+    WorkerResourceObservation observation;
+    // Build derived scope projections from current canonical observations.
+
+    // Each resource is inspected once per index operation, even when it serves
+    // several scopes. The index never supplies its own source authority.
     WorkerScope scope(model.workerNameSuffix());
     QJsonArray entries;
+    QHash<QString, QString> observed;
     const auto add = [&](const QString& source, const QString& section, const QString& entryScope, const QString& provenance = QString()) {
-        const auto entry = sourceEntry(model, source, section, entryScope, provenance);
+        const QString path = source.startsWith("external:") ? provenance : absolute(model, source);
+        if (!observed.contains(source)) observed.insert(source, contextFingerprint(model, source, path));
+        const auto entry = sourceEntry(model, source, section, entryScope, provenance, observed.value(source));
         if (entry.value(QStringLiteral("fingerprint")).toString() != QStringLiteral("MISSING")) entries.append(entry);
     };
     add(AramfPaths::AgentInstructions, QStringLiteral("governance"), QStringLiteral("all"));
@@ -460,6 +505,7 @@ QJsonObject ContextCoordinationService::adaptContract(const QJsonObject& contrac
 
 QJsonObject ContextCoordinationService::generate(const ProjectModel& model)
 {
+    WorkerResourceObservation observation;
     WorkerScope scope(model.workerNameSuffix());
     QJsonObject result{{QStringLiteral("success"), false}, {QStringLiteral("generatedFiles"), QJsonArray{}}};
     if (!QDir(workerRoot(model)).exists()) { result.insert(QStringLiteral("error"), QStringLiteral("ARAMF_WORKER does not exist.")); return result; }
@@ -492,6 +538,7 @@ QJsonObject ContextCoordinationService::generate(const ProjectModel& model)
 
 QJsonObject ContextCoordinationService::validate(const ProjectModel& model)
 {
+    WorkerResourceObservation observation;
     WorkerScope scope(model.workerNameSuffix());
     const auto index = loadIndex(model);
     const auto fresh = freshness(model);

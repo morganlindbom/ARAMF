@@ -7,6 +7,7 @@
 class QComboBox;
 class QGroupBox;
 class QLineEdit;
+class QLabel;
 class CapabilityCheckGroup;
 
 class ProjectAcademicPage final : public QWidget
@@ -14,7 +15,8 @@ class ProjectAcademicPage final : public QWidget
     Q_OBJECT
 
 public:
-    explicit ProjectAcademicPage(ProjectModel* model, QWidget* parent = nullptr);
+    enum class Section { All, Documentation, Research, Information, Standards, Deliverables };
+    explicit ProjectAcademicPage(ProjectModel* model, QWidget* parent = nullptr, Section section = Section::All);
 
 private:
     void refresh();
@@ -24,6 +26,9 @@ private:
     static void setComboValue(QComboBox* combo, QLineEdit* customEdit, const QString& value);
 
     ProjectModel* model_ = nullptr;
+    Section section_ = Section::All;
+    QLabel* activationHint_ = nullptr;
+    QGroupBox* modeSection_ = nullptr;
     CapabilityCheckGroup* projectTypes_ = nullptr;
     QGroupBox* details_ = nullptr;
     QGroupBox* thesisLevelSection_ = nullptr;
@@ -31,10 +36,12 @@ private:
     QLineEdit* thesisLevelCustom_ = nullptr;
     CapabilityCheckGroup* thesisApproaches_ = nullptr;
     CapabilityCheckGroup* researchMethods_ = nullptr;
+    QGroupBox* information_ = nullptr;
     QLineEdit* institution_ = nullptr;
     QLineEdit* programme_ = nullptr;
     QLineEdit* supervisor_ = nullptr;
     QLineEdit* examiner_ = nullptr;
+    QGroupBox* standards_ = nullptr;
     QComboBox* citationStyle_ = nullptr;
     QLineEdit* citationCustom_ = nullptr;
     CapabilityCheckGroup* academicLanguages_ = nullptr;

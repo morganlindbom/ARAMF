@@ -68,8 +68,9 @@ int main(int argc, char** argv)
     QObject::connect(&workflow, &WorkflowWidget::pageSelected,
                      [&selected](WorkflowPageId page) { selected << page; });
 
-    const QList<int> rows{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 19, 20, 21, 23, 24, 26, 27,
-                         29, 30, 31, 32, 33, 34, 36, 37, 38, 39, 41, 42, 43, 44};
+    QList<int> rows;
+    for (int row = 0; row < list->count(); ++row)
+        if (list->item(row)->flags() != Qt::NoItemFlags) rows.append(row);
     const QList<WorkflowPageId> expected{
         WorkflowPageId::Setup,
         WorkflowPageId::ProjectIdentity,
@@ -77,12 +78,29 @@ int main(int argc, char** argv)
         WorkflowPageId::ProjectCommunication,
         WorkflowPageId::ProjectCompatibility,
         WorkflowPageId::Academic,
+        WorkflowPageId::AcademicDocumentation,
+        WorkflowPageId::AcademicResearch,
+        WorkflowPageId::AcademicInformation,
+        WorkflowPageId::AcademicStandards,
+        WorkflowPageId::AcademicDeliverables,
         WorkflowPageId::Languages,
         WorkflowPageId::Frameworks,
         WorkflowPageId::DevelopmentTools,
+        WorkflowPageId::DevelopmentToolsIde,
+        WorkflowPageId::DevelopmentToolsVersionControl,
+        WorkflowPageId::DevelopmentToolsSupport,
         WorkflowPageId::Platforms,
+        WorkflowPageId::PlatformsHosts,
+        WorkflowPageId::PlatformsTargets,
         WorkflowPageId::HardwareArchitecture,
+        WorkflowPageId::HardwareArchitectures,
+        WorkflowPageId::HardwareProcessors,
+        WorkflowPageId::HardwareTargets,
         WorkflowPageId::BuildDelivery,
+        WorkflowPageId::BuildDeliveryToolchains,
+        WorkflowPageId::BuildDeliveryBuildSystems,
+        WorkflowPageId::BuildDeliveryTesting,
+        WorkflowPageId::BuildDeliveryAutomation,
         WorkflowPageId::AiAgents,
         WorkflowPageId::AiResponsibilities,
         WorkflowPageId::AiAutonomy,
@@ -124,11 +142,16 @@ int main(int argc, char** argv)
                   "heading rows must not emit page selection");
     ok &= require(list->item(0)->flags() == Qt::NoItemFlags,
                   "heading rows must not be selectable");
-    ok &= require(list->item(0)->text() == QStringLiteral("PROJECT")
-                      && list->item(13)->text() == QStringLiteral("AI")
-                      && list->item(18)->text() == QStringLiteral("RESOURCES")
-                      && list->item(28)->text() == QStringLiteral("RELEASE")
-                      && list->item(35)->text() == QStringLiteral("GENERATE"),
+    const auto headingRow = [list](const QString& heading) {
+        for (int row = 0; row < list->count(); ++row)
+            if (list->item(row)->text() == heading) return row;
+        return -1;
+    };
+    ok &= require(headingRow(QStringLiteral("PROJECT")) == 0
+                      && headingRow(QStringLiteral("AI")) > headingRow(QStringLiteral("PROJECT"))
+                      && headingRow(QStringLiteral("RESOURCES")) > headingRow(QStringLiteral("AI"))
+                      && headingRow(QStringLiteral("RELEASE")) > headingRow(QStringLiteral("MEMORY"))
+                      && headingRow(QStringLiteral("GENERATE")) > headingRow(QStringLiteral("RELEASE")),
                   "main sections use canonical heading labels");
     ok &= require(list->item(0)->textAlignment() == Qt::AlignCenter
                       && list->item(0)->background().color() == QColor(199, 221, 239)
@@ -140,6 +163,12 @@ int main(int argc, char** argv)
                       && list->item(3)->text().contains(QStringLiteral("1.2  Project modules & templates"))
                       && list->item(4)->text().contains(QStringLiteral("1.3  Project communication"))
                       && list->item(5)->text().contains(QStringLiteral("1.4  Project compatibility & migration"))
+                      && list->item(7)->text().contains(QStringLiteral("2.1  Documentation"))
+                      && list->item(11)->text().contains(QStringLiteral("2.5  Requirements & deliverables"))
+                      && list->item(rows.at(expected.indexOf(WorkflowPageId::DevelopmentToolsIde)))->text().contains(QStringLiteral("5.1  IDE & editors"))
+                      && list->item(rows.at(expected.indexOf(WorkflowPageId::PlatformsTargets)))->text().contains(QStringLiteral("6.2  Target platforms"))
+                      && list->item(rows.at(expected.indexOf(WorkflowPageId::HardwareProcessors)))->text().contains(QStringLiteral("7.2  Processor families"))
+                      && list->item(rows.at(expected.indexOf(WorkflowPageId::BuildDeliveryAutomation)))->text().contains(QStringLiteral("8.4  Automation & delivery"))
                       && list->item(2)->text().size() > list->item(1)->text().size(),
                   "Project hierarchy is always expanded with distinct child indentation");
     list->setCurrentRow(2);
@@ -161,6 +190,7 @@ int main(int argc, char** argv)
     auto* thirdChild = completionList->item(4);
     auto* fourthChild = completionList->item(5);
     auto* academicItem = completionList->item(6);
+    auto* academicFirstChild = completionList->item(7);
     int expectedSetupProgressPages = 0;
     int expectedUserCheckablePages = 0;
     for (const auto page : completionWorkflow.workflowPageIds()) {
@@ -172,8 +202,9 @@ int main(int argc, char** argv)
                       && completionWorkflow.completedPageCount() == 0
                       && completionWorkflow.completionPercentage() == 0,
                   "setup progress counts metadata-eligible workflow pages");
-    ok &= require(!completionList->item(29)->data(Qt::UserRole + 1).toBool()
-                      && !completionList->item(29)->data(Qt::UserRole + 3).toBool()
+    auto* releaseChild = completionWorkflow.navigationItem(WorkflowPageId::ProductVersion);
+    ok &= require(!releaseChild->data(Qt::UserRole + 1).toBool()
+                      && !releaseChild->data(Qt::UserRole + 3).toBool()
                       && completionWorkflow.completablePageCount() == expectedSetupProgressPages,
                   "RELEASE child pages have no manual marker and stay outside setup progress");
     completionModel.setTargetRelease(1);
@@ -182,8 +213,9 @@ int main(int argc, char** argv)
                   "selecting a target release does not alter setup progress");
     ok &= require(!parentItem->data(Qt::UserRole + 1).toBool()
                       && firstChild->data(Qt::UserRole + 1).toBool()
-                      && academicItem->data(Qt::UserRole + 1).toBool(),
-                  "parent has no completion marker while child and normal pages do");
+                      && !academicItem->data(Qt::UserRole + 1).toBool()
+                      && academicFirstChild->data(Qt::UserRole + 1).toBool(),
+                  "academic parent has no completion marker while its child does");
     int setupCompletionMarkerCount = 0;
     for (int row = 0; row < completionList->count(); ++row) {
         if (completionList->item(row)->data(Qt::UserRole + 1).toBool()) ++setupCompletionMarkerCount;
@@ -266,7 +298,7 @@ int main(int argc, char** argv)
     staleUiWorkflow.setStepCount(28);
     staleUiWorkflow.setCompletionModel(&staleUiModel);
     ok &= require(staleUiModel.completedPageIds().isEmpty()
-                      && !staleUiWorkflow.findChild<QListWidget*>()->item(30)->data(Qt::UserRole + 2).toBool()
+                      && !staleUiWorkflow.navigationItem(WorkflowPageId::ProductVersion)->data(Qt::UserRole + 2).toBool()
                       && staleUiWorkflow.completedPageCount() == 0,
                   "stale non-SETUP completion state cannot re-enable UI completion");
 

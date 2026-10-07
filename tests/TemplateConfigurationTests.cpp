@@ -19,8 +19,14 @@
 #include "ui/workflows/project/languages/ProjectLanguagesPage.h"
 #include "ui/workflows/project/frameworks/ProjectFrameworksPage.h"
 #include "ui/workflows/project/academic/ProjectAcademicPage.h"
+#include "ui/workflows/project/developmenttools/ProjectDevelopmentToolsPage.h"
+#include "ui/workflows/project/platforms/ProjectPlatformsPage.h"
+#include "ui/workflows/project/hardwarearchitecture/ProjectHardwareArchitecturePage.h"
+#include "ui/workflows/project/builddelivery/ProjectBuildDeliveryPage.h"
 #include "ui/workflows/ai/autonomy/AiAutonomyPage.h"
 #include "ui/mainwindow/MainWindow.h"
+#include "ui/shared/ParentOverview.h"
+#include "ui/shared/CapabilityCheckGroup.h"
 #include "ui/shared/FooterProgressDisplay.h"
 #include "ui/workflow/WorkflowWidget.h"
 #include "ui/workflows/release/overview/ReleaseOverviewPage.h"
@@ -1155,7 +1161,7 @@ int main(int argc, char** argv)
     const QStringList expectedCompletedPages{
         workflowPageKey(WorkflowPageId::ProjectIdentity),
         workflowPageKey(WorkflowPageId::ProjectModulesTemplates),
-        workflowPageKey(WorkflowPageId::Academic)};
+        workflowPageKey(WorkflowPageId::AcademicDocumentation)};
     for (const auto& pageId : expectedCompletedPages) completionModel.setPageCompleted(pageId, true);
     ProjectSetupPage completionSavePage(&completionModel, &manager, &persistence);
     QString completionError;
@@ -1207,12 +1213,12 @@ int main(int argc, char** argv)
     check(reopenedCompletion.completedPageIds() == persistedPageIds
               && reopenedList->item(2)->data(Qt::UserRole + 2).toBool()
               && reopenedList->item(3)->data(Qt::UserRole + 2).toBool()
-              && reopenedList->item(6)->data(Qt::UserRole + 2).toBool()
+              && reopenedList->item(7)->data(Qt::UserRole + 2).toBool()
               && reopenedList->item(1)->background().color() == QColor(255, 251, 224)
               && reopenedWorkflow.completionPercentage() == expectedCompletionPercentage,
           "fresh reload restores checkmarks, parent aggregate, and derived progress");
 
-    reopenedCompletion.setPageCompleted(workflowPageKey(WorkflowPageId::Academic), false);
+    reopenedCompletion.setPageCompleted(workflowPageKey(WorkflowPageId::AcademicDocumentation), false);
     check(reopenedCompletion.isModified(), "clearing a completion marker marks the project dirty");
     ProjectSetupPage secondCompletionSave(&reopenedCompletion, &manager, &persistence);
     check(secondCompletionSave.saveCurrentProject(&completionError),
@@ -1222,7 +1228,7 @@ int main(int argc, char** argv)
           "project reloads after the completion clear is saved");
     check(reopenedAfterClear.isPageCompleted(workflowPageKey(WorkflowPageId::ProjectIdentity))
               && reopenedAfterClear.isPageCompleted(workflowPageKey(WorkflowPageId::ProjectModulesTemplates))
-              && !reopenedAfterClear.isPageCompleted(workflowPageKey(WorkflowPageId::Academic)),
+              && !reopenedAfterClear.isPageCompleted(workflowPageKey(WorkflowPageId::AcademicDocumentation)),
           "an unchecked completion does not return after Save Work and reload");
 
     // Stale completion IDs from a non-SETUP domain must be ignored both by
@@ -1487,6 +1493,136 @@ int main(int argc, char** argv)
     check(hasExactText(QStringLiteral("Enabled")) == 0, "Academic UI has no redundant Enabled checkbox");
     check(hasExactText(QStringLiteral("Thesis Project")) == 0 && hasExactText(QStringLiteral("Report Project")) == 0, "Academic UI hides internal project-type labels");
     academicPage.close();
+
+    ProjectAcademicPage academicDocuments(&academicUiModel, nullptr, ProjectAcademicPage::Section::Documentation);
+    ProjectAcademicPage academicResearch(&academicUiModel, nullptr, ProjectAcademicPage::Section::Research);
+    ProjectAcademicPage academicInformation(&academicUiModel, nullptr, ProjectAcademicPage::Section::Information);
+    ProjectAcademicPage academicStandards(&academicUiModel, nullptr, ProjectAcademicPage::Section::Standards);
+    ProjectAcademicPage academicDeliverables(&academicUiModel, nullptr, ProjectAcademicPage::Section::Deliverables);
+    academicDocuments.show();
+    academicResearch.show();
+    academicInformation.show();
+    academicStandards.show();
+    academicDeliverables.show();
+    QApplication::processEvents();
+    const auto checkboxFor = [](QWidget& page, const QString& id) {
+        for (auto* box : page.findChildren<QCheckBox*>())
+            if (box->property("capabilityId").toString() == id) return box;
+        return static_cast<QCheckBox*>(nullptr);
+    };
+    auto* thesisDocument = checkboxFor(academicDocuments, QStringLiteral("thesis-project"));
+    auto* researchMethod = checkboxFor(academicResearch, QStringLiteral("qualitative"));
+    auto* englishLanguage = checkboxFor(academicStandards, QStringLiteral("english"));
+    if (thesisDocument && !thesisDocument->isChecked()) thesisDocument->click();
+    QApplication::processEvents();
+    check(thesisDocument && !academicDocuments.findChild<QGroupBox*>(QStringLiteral("academicLanguages"))->isVisible()
+              && academicStandards.findChild<QGroupBox*>(QStringLiteral("academicLanguages"))->isVisible(),
+          "Academic child pages expose their own controls and hide unrelated sections");
+    check(academicUiModel.academicConfiguration().thesisDocumentation.enabled
+              && researchMethod && researchMethod->isVisible(),
+          "document selection enables research controls across academic pages");
+    if (englishLanguage && !englishLanguage->isChecked()) englishLanguage->click();
+    check(academicUiModel.academicConfiguration().academicLanguages.contains(QStringLiteral("english")),
+          "standards child page writes selected language to the shared project model");
+    auto* citation = academicStandards.findChild<QComboBox*>(QStringLiteral("academicCitationStyle"));
+    auto* customCitation = academicStandards.findChild<QLineEdit*>(QStringLiteral("academicCitationCustom"));
+    if (citation) citation->setCurrentIndex(citation->findData(QStringLiteral("custom")));
+    check(citation && customCitation && customCitation->isVisible(),
+          "custom citation style reveals its text field on the standards child page");
+
+    MainWindow academicWindow(0, 1000, 600);
+    academicWindow.show();
+    QApplication::processEvents();
+    auto* academicWorkflow = academicWindow.findChild<WorkflowWidget*>();
+    auto* academicStack = academicWindow.findChild<QStackedWidget*>();
+    if (academicWorkflow) academicWorkflow->setCurrentPage(WorkflowPageId::Academic);
+    QApplication::processEvents();
+    auto* academicOverview = academicStack ? qobject_cast<ParentOverviewPage*>(academicStack->currentWidget()) : nullptr;
+    auto academicCards = academicOverview ? academicOverview->findChildren<ParentOverviewCard*>() : QList<ParentOverviewCard*>{};
+    check(academicOverview && academicCards.size() == 5,
+          "main workflow opens Academic as a five-card parent overview");
+    if (!academicCards.isEmpty()) {
+        QMouseEvent cardClick(QEvent::MouseButtonPress, QPointF(8, 8),
+                              Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        QCoreApplication::sendEvent(academicCards.first(), &cardClick);
+        QApplication::processEvents();
+    }
+    check(academicWorkflow && academicWorkflow->currentPage() == WorkflowPageId::AcademicDocumentation
+              && academicStack && qobject_cast<ProjectAcademicPage*>(academicStack->currentWidget()),
+          "Academic overview card opens its functional documentation child page");
+
+    const auto checkOverview = [&](WorkflowPageId parentId, int cardCount, WorkflowPageId childId,
+                                   const QString& description) {
+        if (academicWorkflow) academicWorkflow->setCurrentPage(parentId);
+        QApplication::processEvents();
+        auto* overview = academicStack
+            ? qobject_cast<ParentOverviewPage*>(academicStack->currentWidget()) : nullptr;
+        const auto cards = overview ? overview->findChildren<ParentOverviewCard*>() : QList<ParentOverviewCard*>{};
+        check(overview && cards.size() == cardCount, description + " overview exposes its specific cards");
+        if (!cards.isEmpty()) {
+            QMouseEvent click(QEvent::MouseButtonPress, QPointF(8, 8),
+                              Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+            QCoreApplication::sendEvent(cards.first(), &click);
+            QApplication::processEvents();
+        }
+        check(academicWorkflow->currentPage() == childId,
+              description + " overview card opens its child page");
+    };
+    checkOverview(WorkflowPageId::DevelopmentTools, 3, WorkflowPageId::DevelopmentToolsIde,
+                  QStringLiteral("Development tools"));
+    check(academicStack && dynamic_cast<ProjectDevelopmentToolsPage*>(academicStack->currentWidget()),
+          "IDE child opens the corresponding development tool controls");
+    checkOverview(WorkflowPageId::Platforms, 2, WorkflowPageId::PlatformsHosts,
+                  QStringLiteral("Platforms"));
+    check(academicStack && dynamic_cast<ProjectPlatformsPage*>(academicStack->currentWidget()),
+          "host platform child opens its dedicated controls");
+    checkOverview(WorkflowPageId::HardwareArchitecture, 3, WorkflowPageId::HardwareArchitectures,
+                  QStringLiteral("Hardware and architecture"));
+    check(academicStack && dynamic_cast<ProjectHardwareArchitecturePage*>(academicStack->currentWidget()),
+          "architecture child opens its dedicated controls");
+    checkOverview(WorkflowPageId::BuildDelivery, 4, WorkflowPageId::BuildDeliveryToolchains,
+                  QStringLiteral("Build and delivery"));
+    check(academicStack && dynamic_cast<ProjectBuildDeliveryPage*>(academicStack->currentWidget()),
+          "toolchain child opens its dedicated controls");
+    academicWindow.close();
+
+    ProjectModel sectionModel;
+    ProjectDevelopmentToolsPage ideSection(&sectionModel, nullptr, ProjectDevelopmentToolsPage::Section::Ide);
+    ProjectPlatformsPage hostSection(&sectionModel, nullptr, ProjectPlatformsPage::Section::Hosts);
+    ProjectHardwareArchitecturePage processorSection(&sectionModel, nullptr, ProjectHardwareArchitecturePage::Section::Processors);
+    ProjectBuildDeliveryPage testingSection(&sectionModel, nullptr, ProjectBuildDeliveryPage::Section::Testing);
+    ideSection.show(); hostSection.show(); processorSection.show(); testingSection.show();
+    QApplication::processEvents();
+    auto* gitCapability = checkboxFor(ideSection, QStringLiteral("visual-studio-code"));
+    auto* windowsHost = checkboxFor(hostSection, QStringLiteral("windows"));
+    auto* processorCapability = checkboxFor(processorSection, QStringLiteral("rp2040"));
+    auto* unitTesting = checkboxFor(testingSection, QStringLiteral("unit-testing"));
+    // RP2040 appears in both architecture and processor catalogs. Resolve the
+    // processor checkbox from its owning group so the test exercises the
+    // visible control on this child page.
+    if (auto* processorGroup = processorSection.findChild<CapabilityCheckGroup*>(QStringLiteral("processorFamilies"))) {
+        processorCapability = nullptr;
+        for (auto* box : processorGroup->findChildren<QCheckBox*>())
+            if (box->property("capabilityId").toString() == QStringLiteral("rp2040")) processorCapability = box;
+    }
+    check(ideSection.findChild<CapabilityCheckGroup*>(QStringLiteral("developmentToolsIde"))->isVisible()
+              && !ideSection.findChild<CapabilityCheckGroup*>(QStringLiteral("developmentToolsVersionControl"))->isVisible(),
+          "IDE child shows its own selector and hides version control");
+    check(gitCapability && windowsHost && processorCapability && unitTesting,
+          "each child page creates the expected capability controls");
+    if (gitCapability) gitCapability->setChecked(true);
+    if (windowsHost) windowsHost->setChecked(true);
+    if (processorCapability) processorCapability->setChecked(true);
+    if (unitTesting) unitTesting->setChecked(true);
+    const auto sectionCapabilities = sectionModel.developmentCapabilities();
+    check(sectionCapabilities.ides.contains(QStringLiteral("visual-studio-code"))
+              && sectionCapabilities.hostOperatingSystems.contains(QStringLiteral("windows"))
+              && sectionCapabilities.processorFamilies.contains(QStringLiteral("rp2040"))
+              && sectionCapabilities.testingCapabilities.contains(QStringLiteral("unit-testing")),
+          "selections on child pages update the shared project model: ides="
+              + sectionCapabilities.ides.join(',') + " hosts=" + sectionCapabilities.hostOperatingSystems.join(',')
+              + " processors=" + sectionCapabilities.processorFamilies.join(',')
+              + " testing=" + sectionCapabilities.testingCapabilities.join(','));
 
     // Exercise the visible language controls, disk reload, and the actual
     // generator. Selection persistence alone does not prove consumption.

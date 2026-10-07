@@ -195,12 +195,29 @@ void WorkflowWidget::setStepCount(int)
             {QStringLiteral("1.3"), tr("Project communication"), WorkflowPageId::ProjectCommunication, 2},
             {QStringLiteral("1.4"), tr("Project compatibility & migration"), WorkflowPageId::ProjectCompatibility, 2},
             {QStringLiteral("2"), tr("Academic"), WorkflowPageId::Academic, 1},
+            {QStringLiteral("2.1"), tr("Documentation"), WorkflowPageId::AcademicDocumentation, 2},
+            {QStringLiteral("2.2"), tr("Thesis & research"), WorkflowPageId::AcademicResearch, 2},
+            {QStringLiteral("2.3"), tr("Academic information"), WorkflowPageId::AcademicInformation, 2},
+            {QStringLiteral("2.4"), tr("Standards & languages"), WorkflowPageId::AcademicStandards, 2},
+            {QStringLiteral("2.5"), tr("Requirements & deliverables"), WorkflowPageId::AcademicDeliverables, 2},
             {QStringLiteral("3"), tr("Which languages are used?"), WorkflowPageId::Languages, 1},
             {QStringLiteral("4"), tr("Which frameworks / SDKs are used?"), WorkflowPageId::Frameworks, 1},
             {QStringLiteral("5"), tr("Which development tools are used?"), WorkflowPageId::DevelopmentTools, 1},
+            {QStringLiteral("5.1"), tr("IDE & editors"), WorkflowPageId::DevelopmentToolsIde, 2},
+            {QStringLiteral("5.2"), tr("Version control"), WorkflowPageId::DevelopmentToolsVersionControl, 2},
+            {QStringLiteral("5.3"), tr("Development support"), WorkflowPageId::DevelopmentToolsSupport, 2},
             {QStringLiteral("6"), tr("Where does the project run?"), WorkflowPageId::Platforms, 1},
+            {QStringLiteral("6.1"), tr("Host operating systems"), WorkflowPageId::PlatformsHosts, 2},
+            {QStringLiteral("6.2"), tr("Target platforms"), WorkflowPageId::PlatformsTargets, 2},
             {QStringLiteral("7"), tr("Which hardware / architecture is used?"), WorkflowPageId::HardwareArchitecture, 1},
-            {QStringLiteral("8"), tr("How is it built, tested and delivered?"), WorkflowPageId::BuildDelivery, 1}}},
+            {QStringLiteral("7.1"), tr("Target architectures"), WorkflowPageId::HardwareArchitectures, 2},
+            {QStringLiteral("7.2"), tr("Processor families"), WorkflowPageId::HardwareProcessors, 2},
+            {QStringLiteral("7.3"), tr("Hardware & deployment targets"), WorkflowPageId::HardwareTargets, 2},
+            {QStringLiteral("8"), tr("How is it built, tested and delivered?"), WorkflowPageId::BuildDelivery, 1},
+            {QStringLiteral("8.1"), tr("Compiler & toolchain"), WorkflowPageId::BuildDeliveryToolchains, 2},
+            {QStringLiteral("8.2"), tr("Build systems & dependencies"), WorkflowPageId::BuildDeliveryBuildSystems, 2},
+            {QStringLiteral("8.3"), tr("Testing & quality"), WorkflowPageId::BuildDeliveryTesting, 2},
+            {QStringLiteral("8.4"), tr("Automation & delivery"), WorkflowPageId::BuildDeliveryAutomation, 2}}},
         {tr("AI"), {
             {QStringLiteral("9"), tr("Which AI agents are used?"), WorkflowPageId::AiAgents, 1},
             {QStringLiteral("10"), tr("What may AI work on?"), WorkflowPageId::AiResponsibilities, 1},
@@ -256,6 +273,21 @@ void WorkflowWidget::setStepCount(int)
     parentChildren_.insert(WorkflowPageId::Setup,
                            {WorkflowPageId::ProjectIdentity, WorkflowPageId::ProjectModulesTemplates,
                             WorkflowPageId::ProjectCommunication, WorkflowPageId::ProjectCompatibility});
+    parentChildren_.insert(WorkflowPageId::Academic,
+                           {WorkflowPageId::AcademicDocumentation, WorkflowPageId::AcademicResearch,
+                            WorkflowPageId::AcademicInformation, WorkflowPageId::AcademicStandards,
+                            WorkflowPageId::AcademicDeliverables});
+    parentChildren_.insert(WorkflowPageId::DevelopmentTools,
+                           {WorkflowPageId::DevelopmentToolsIde, WorkflowPageId::DevelopmentToolsVersionControl,
+                            WorkflowPageId::DevelopmentToolsSupport});
+    parentChildren_.insert(WorkflowPageId::Platforms,
+                           {WorkflowPageId::PlatformsHosts, WorkflowPageId::PlatformsTargets});
+    parentChildren_.insert(WorkflowPageId::HardwareArchitecture,
+                           {WorkflowPageId::HardwareArchitectures, WorkflowPageId::HardwareProcessors,
+                            WorkflowPageId::HardwareTargets});
+    parentChildren_.insert(WorkflowPageId::BuildDelivery,
+                           {WorkflowPageId::BuildDeliveryToolchains, WorkflowPageId::BuildDeliveryBuildSystems,
+                            WorkflowPageId::BuildDeliveryTesting, WorkflowPageId::BuildDeliveryAutomation});
     refreshCompletionState();
 }
 

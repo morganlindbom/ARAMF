@@ -5,9 +5,11 @@ class CapabilityCheckGroup;
 class ProjectBuildDeliveryPage final : public QWidget
 {
 public:
-    explicit ProjectBuildDeliveryPage(ProjectModel* model, QWidget* parent = nullptr);
+    enum class Section { All, Toolchains, BuildSystems, Testing, Automation };
+    explicit ProjectBuildDeliveryPage(ProjectModel* model, QWidget* parent = nullptr, Section section = Section::All);
 private:
     ProjectModel* model_;
+    Section section_;
     CapabilityCheckGroup* toolchains_;
     CapabilityCheckGroup* buildSystems_;
     CapabilityCheckGroup* dependencies_;

@@ -5,9 +5,11 @@ class CapabilityCheckGroup;
 class ProjectHardwareArchitecturePage final : public QWidget
 {
 public:
-    explicit ProjectHardwareArchitecturePage(ProjectModel* model, QWidget* parent = nullptr);
+    enum class Section { All, Architectures, Processors, Targets };
+    explicit ProjectHardwareArchitecturePage(ProjectModel* model, QWidget* parent = nullptr, Section section = Section::All);
 private:
     ProjectModel* model_;
+    Section section_;
     CapabilityCheckGroup* architectures_;
     CapabilityCheckGroup* processors_;
     CapabilityCheckGroup* hardware_;

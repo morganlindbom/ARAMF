@@ -1,25 +1,83 @@
 {
     "added": [
         {
-            "current": "src/core/ConfigurationUpdateService.h",
+            "current": {
+                "files": [
+                    "CMakeLists.txt"
+                ]
+            },
             "operation": "ADD",
-            "path": "/rules/scopeMetadata/source-code/files/[\"src~1core~1ConfigurationUpdateService.h\"]",
-            "previous": null
-        },
-        {
-            "current": "src/core/Services.h",
-            "operation": "ADD",
-            "path": "/rules/scopeMetadata/source-code/files/[\"src~1core~1Services.h\"]",
+            "path": "/rules/scopeMetadata/build-system",
             "previous": null
         },
         {
             "current": {
                 "files": [
-                    "src/ui/workflows/update/configuration/UpdateConfigurationPage.cpp"
+                    "src/processes/P6/README.md"
                 ]
             },
             "operation": "ADD",
-            "path": "/rules/scopeMetadata/ui-ux",
+            "path": "/rules/scopeMetadata/documentation",
+            "previous": null
+        },
+        {
+            "current": "src/processes/P6/CodeBank.cpp",
+            "operation": "ADD",
+            "path": "/rules/scopeMetadata/source-code/files/[\"src~1processes~1P6~1CodeBank.cpp\"]",
+            "previous": null
+        },
+        {
+            "current": "src/processes/P6/CodeBank.h",
+            "operation": "ADD",
+            "path": "/rules/scopeMetadata/source-code/files/[\"src~1processes~1P6~1CodeBank.h\"]",
+            "previous": null
+        },
+        {
+            "current": "src/processes/P6/CodeBankStorage.cpp",
+            "operation": "ADD",
+            "path": "/rules/scopeMetadata/source-code/files/[\"src~1processes~1P6~1CodeBankStorage.cpp\"]",
+            "previous": null
+        },
+        {
+            "current": "src/processes/P6/CodeBankVerification.cpp",
+            "operation": "ADD",
+            "path": "/rules/scopeMetadata/source-code/files/[\"src~1processes~1P6~1CodeBankVerification.cpp\"]",
+            "previous": null
+        },
+        {
+            "current": "verification/generation-state.json",
+            "operation": "ADD",
+            "path": "/rules/scopeMetadata/source-code/folderResourcePolicies/04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3/generatedPaths/[\"verification~1generation-state.json\"]",
+            "previous": null
+        },
+        {
+            "current": "ARAMF_WORKER/verification/latest-validation.json",
+            "operation": "ADD",
+            "path": "/rules/scopeMetadata/source-code/generatedArtifacts/[\"ARAMF_WORKER~1verification~1latest-validation.json\"]",
+            "previous": null
+        },
+        {
+            "current": "ARAMF_WORKER/verification/verification-result.json",
+            "operation": "ADD",
+            "path": "/rules/scopeMetadata/source-code/generatedArtifacts/[\"ARAMF_WORKER~1verification~1verification-result.json\"]",
+            "previous": null
+        },
+        {
+            "current": "tests/P6CodeBankTests.cpp",
+            "operation": "ADD",
+            "path": "/rules/scopeMetadata/tests/files/[\"tests~1P6CodeBankTests.cpp\"]",
+            "previous": null
+        },
+        {
+            "current": "ARAMF_WORKER/verification/latest-validation.json",
+            "operation": "ADD",
+            "path": "/rules/scopeMetadata/tests/generatedArtifacts/[\"ARAMF_WORKER~1verification~1latest-validation.json\"]",
+            "previous": null
+        },
+        {
+            "current": "ARAMF_WORKER/verification/verification-result.json",
+            "operation": "ADD",
+            "path": "/rules/scopeMetadata/tests/generatedArtifacts/[\"ARAMF_WORKER~1verification~1verification-result.json\"]",
             "previous": null
         }
     ],
@@ -987,6 +1045,8 @@
                         "src/core/CertificationRevalidation.cpp",
                         "src/core/CertificationRevalidation.h",
                         "src/core/ConfigurationUpdateService.cpp",
+                        "src/core/ConfigurationUpdateService.h",
+                        "src/core/ContextCoordinationService.cpp",
                         "src/core/DocumentTemplate.cpp",
                         "src/core/DocumentTemplate.h",
                         "src/core/FoundationCertificationCampaign.cpp",
@@ -1005,8 +1065,11 @@
                         "src/core/ProjectModel.h",
                         "src/core/ProjectPersistence.cpp",
                         "src/core/Services.cpp",
+                        "src/core/Services.h",
                         "src/core/TemplateManager.cpp",
                         "src/core/TemplateValidation.cpp",
+                        "src/core/WorkerContextResolver.cpp",
+                        "src/core/WorkerContextResolver.h",
                         "src/core/WorkerTaskServices.cpp",
                         "src/core/WorkerTaskServices.h",
                         "src/foundations/F1/EvidenceStorage.cpp",
@@ -1027,6 +1090,22 @@
                         "src/ui/workflows/project/academic/ProjectAcademicPage.h",
                         "src/ui/workflows/project/setup/ProjectSetupPage.cpp"
                     ],
+                    "folderResourcePolicies": {
+                        "04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3": {
+                            "authorityEventId": "event-cc8303ac-6577-45e1-9986-57a0a4c52d5f",
+                            "generatedPaths": [
+                                "context/context-index.json",
+                                "context/compressed-context.json",
+                                "context/freshness.json",
+                                "context/agent-adapters.json",
+                                "verification/latest-validation.json",
+                                "verification/verification-result.json",
+                                "memory/cold-start-validation.json",
+                                "memory/memory-consistency-validation.json"
+                            ],
+                            "schemaVersion": 1
+                        }
+                    },
                     "generatedArtifacts": [
                     ],
                     "riskTraits": [
@@ -1034,6 +1113,7 @@
                         "persistence"
                     ],
                     "tests": [
+                        "aramf_core_tests::--context-coordination",
                         "aramf_core_tests::--worker-tasks"
                     ]
                 },
@@ -1047,6 +1127,7 @@
                         "tests/CertificationFreshnessTests.cpp",
                         "tests/CertificationRevalidationTests.cpp",
                         "tests/ConfigurationUpdateTests.cpp",
+                        "tests/ContextCoordinationTests.cpp",
                         "tests/FoundationCertificationTests.cpp",
                         "tests/FoundationIndependenceTests.cpp",
                         "tests/FoundationTests.cpp",
@@ -1062,8 +1143,14 @@
                         "persistence"
                     ],
                     "tests": [
+                        "aramf_core_tests::--context-coordination",
                         "aramf_core_tests::--p3-execution",
                         "aramf_core_tests::--worker-tasks"
+                    ]
+                },
+                "ui-ux": {
+                    "files": [
+                        "src/ui/workflows/update/configuration/UpdateConfigurationPage.cpp"
                     ]
                 }
             },
@@ -2329,6 +2416,16 @@
                 "ui-ux"
             ],
             "scopeMetadata": {
+                "build-system": {
+                    "files": [
+                        "CMakeLists.txt"
+                    ]
+                },
+                "documentation": {
+                    "files": [
+                        "src/processes/P6/README.md"
+                    ]
+                },
                 "source-code": {
                     "affects": [
                         "tests"
@@ -2339,6 +2436,7 @@
                         "src/core/CertificationRevalidation.h",
                         "src/core/ConfigurationUpdateService.cpp",
                         "src/core/ConfigurationUpdateService.h",
+                        "src/core/ContextCoordinationService.cpp",
                         "src/core/DocumentTemplate.cpp",
                         "src/core/DocumentTemplate.h",
                         "src/core/FoundationCertificationCampaign.cpp",
@@ -2360,6 +2458,8 @@
                         "src/core/Services.h",
                         "src/core/TemplateManager.cpp",
                         "src/core/TemplateValidation.cpp",
+                        "src/core/WorkerContextResolver.cpp",
+                        "src/core/WorkerContextResolver.h",
                         "src/core/WorkerTaskServices.cpp",
                         "src/core/WorkerTaskServices.h",
                         "src/foundations/F1/EvidenceStorage.cpp",
@@ -2374,19 +2474,43 @@
                         "src/foundations/F4/LifecycleCertificationFoundation.h",
                         "src/foundations/F4/ProcessVersion.cpp",
                         "src/foundations/F4/ProcessVersion.h",
+                        "src/processes/P6/CodeBank.cpp",
+                        "src/processes/P6/CodeBank.h",
+                        "src/processes/P6/CodeBankStorage.cpp",
+                        "src/processes/P6/CodeBankVerification.cpp",
                         "src/ui/workflows/ai/autonomy/AiAutonomyPage.cpp",
                         "src/ui/workflows/output/review/ReviewPage.cpp",
                         "src/ui/workflows/project/academic/ProjectAcademicPage.cpp",
                         "src/ui/workflows/project/academic/ProjectAcademicPage.h",
                         "src/ui/workflows/project/setup/ProjectSetupPage.cpp"
                     ],
+                    "folderResourcePolicies": {
+                        "04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3": {
+                            "authorityEventId": "event-cc8303ac-6577-45e1-9986-57a0a4c52d5f",
+                            "generatedPaths": [
+                                "context/context-index.json",
+                                "context/compressed-context.json",
+                                "context/freshness.json",
+                                "context/agent-adapters.json",
+                                "verification/latest-validation.json",
+                                "verification/verification-result.json",
+                                "verification/generation-state.json",
+                                "memory/cold-start-validation.json",
+                                "memory/memory-consistency-validation.json"
+                            ],
+                            "schemaVersion": 1
+                        }
+                    },
                     "generatedArtifacts": [
+                        "ARAMF_WORKER/verification/latest-validation.json",
+                        "ARAMF_WORKER/verification/verification-result.json"
                     ],
                     "riskTraits": [
                         "governance",
                         "persistence"
                     ],
                     "tests": [
+                        "aramf_core_tests::--context-coordination",
                         "aramf_core_tests::--worker-tasks"
                     ]
                 },
@@ -2400,21 +2524,26 @@
                         "tests/CertificationFreshnessTests.cpp",
                         "tests/CertificationRevalidationTests.cpp",
                         "tests/ConfigurationUpdateTests.cpp",
+                        "tests/ContextCoordinationTests.cpp",
                         "tests/FoundationCertificationTests.cpp",
                         "tests/FoundationIndependenceTests.cpp",
                         "tests/FoundationTests.cpp",
                         "tests/P2ExecutionTests.cpp",
+                        "tests/P6CodeBankTests.cpp",
                         "tests/ProjectMemoryTests.cpp",
                         "tests/TemplateConfigurationTests.cpp",
                         "tests/WorkerTaskTests.cpp"
                     ],
                     "generatedArtifacts": [
+                        "ARAMF_WORKER/verification/latest-validation.json",
+                        "ARAMF_WORKER/verification/verification-result.json"
                     ],
                     "riskTraits": [
                         "governance",
                         "persistence"
                     ],
                     "tests": [
+                        "aramf_core_tests::--context-coordination",
                         "aramf_core_tests::--p3-execution",
                         "aramf_core_tests::--worker-tasks"
                     ]
@@ -2768,10 +2897,14 @@
         "/rules/loadingStrategy",
         "/rules/projectScopes",
         "/rules/scopeMetadata/source-code/affects",
-        "/rules/scopeMetadata/source-code/generatedArtifacts",
+        "/rules/scopeMetadata/source-code/folderResourcePolicies/04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3/authorityEventId",
+        "/rules/scopeMetadata/source-code/folderResourcePolicies/04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3/schemaVersion",
         "/rules/scopeMetadata/source-code/riskTraits",
         "/rules/scopeMetadata/source-code/tests",
-        "/rules/scopeMetadata/tests",
+        "/rules/scopeMetadata/tests/affects",
+        "/rules/scopeMetadata/tests/riskTraits",
+        "/rules/scopeMetadata/tests/tests",
+        "/rules/scopeMetadata/ui-ux",
         "/rules/workScopes",
         "/runtimeOwnership",
         "/schemaVersion",
@@ -2781,5 +2914,5 @@
         "/templateState",
         "/workerNameSuffix"
     ],
-    "validationFingerprint": "3629058ab97ef7d6bc404a5e6ab3c1af6456bc30880de526c4651d678dfb469a"
+    "validationFingerprint": "f61617696283c07f767e2385007407bb0fb1275e925c213436d92648f90fba0c"
 }

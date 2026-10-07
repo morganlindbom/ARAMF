@@ -1,6 +1,6 @@
 {
     "_file": "scope-routes.json",
-    "inputFingerprint": "25ee1a03a5d3f24b60eecbbf30319069a034a0c87ffee517b9e8ef73a52fa8c6",
+    "inputFingerprint": "b17df54a72cc5c84d9ac1f52f1bb08f6aaf23b3771dfb3a46139727569debe4b",
     "schemaVersion": 1,
     "scopes": [
         {
@@ -17,6 +17,9 @@
                 "ARAMF_WORKER/memory/current-state.md"
             ],
             "taskMetadata": {
+                "files": [
+                    "CMakeLists.txt"
+                ]
             }
         },
         {
@@ -65,6 +68,9 @@
                 "ARAMF_WORKER/memory/current-state.md"
             ],
             "taskMetadata": {
+                "files": [
+                    "src/processes/P6/README.md"
+                ]
             }
         },
         {
@@ -138,6 +144,7 @@
                     "src/core/CertificationRevalidation.h",
                     "src/core/ConfigurationUpdateService.cpp",
                     "src/core/ConfigurationUpdateService.h",
+                    "src/core/ContextCoordinationService.cpp",
                     "src/core/DocumentTemplate.cpp",
                     "src/core/DocumentTemplate.h",
                     "src/core/FoundationCertificationCampaign.cpp",
@@ -159,8 +166,11 @@
                     "src/core/Services.h",
                     "src/core/TemplateManager.cpp",
                     "src/core/TemplateValidation.cpp",
+                    "src/core/WorkerContextResolver.cpp",
+                    "src/core/WorkerContextResolver.h",
                     "src/core/WorkerTaskServices.cpp",
                     "src/core/WorkerTaskServices.h",
+                    "src/core/WorkflowPageMetadata.cpp",
                     "src/foundations/F1/EvidenceStorage.cpp",
                     "src/foundations/F1/EvidenceStorage.h",
                     "src/foundations/F1/MemoryEvidenceFoundation.cpp",
@@ -173,19 +183,55 @@
                     "src/foundations/F4/LifecycleCertificationFoundation.h",
                     "src/foundations/F4/ProcessVersion.cpp",
                     "src/foundations/F4/ProcessVersion.h",
+                    "src/processes/P6/CodeBank.cpp",
+                    "src/processes/P6/CodeBank.h",
+                    "src/processes/P6/CodeBankStorage.cpp",
+                    "src/processes/P6/CodeBankVerification.cpp",
+                    "src/ui/mainwindow/MainWindow.cpp",
+                    "src/ui/mainwindow/MainWindow.h",
+                    "src/ui/workflow/WorkflowPageId.h",
+                    "src/ui/workflow/WorkflowWidget.cpp",
                     "src/ui/workflows/ai/autonomy/AiAutonomyPage.cpp",
                     "src/ui/workflows/output/review/ReviewPage.cpp",
                     "src/ui/workflows/project/academic/ProjectAcademicPage.cpp",
                     "src/ui/workflows/project/academic/ProjectAcademicPage.h",
+                    "src/ui/workflows/project/builddelivery/ProjectBuildDeliveryPage.cpp",
+                    "src/ui/workflows/project/builddelivery/ProjectBuildDeliveryPage.h",
+                    "src/ui/workflows/project/developmenttools/ProjectDevelopmentToolsPage.cpp",
+                    "src/ui/workflows/project/developmenttools/ProjectDevelopmentToolsPage.h",
+                    "src/ui/workflows/project/hardwarearchitecture/ProjectHardwareArchitecturePage.cpp",
+                    "src/ui/workflows/project/hardwarearchitecture/ProjectHardwareArchitecturePage.h",
+                    "src/ui/workflows/project/platforms/ProjectPlatformsPage.cpp",
+                    "src/ui/workflows/project/platforms/ProjectPlatformsPage.h",
                     "src/ui/workflows/project/setup/ProjectSetupPage.cpp"
                 ],
+                "folderResourcePolicies": {
+                    "04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3": {
+                        "authorityEventId": "event-cc8303ac-6577-45e1-9986-57a0a4c52d5f",
+                        "generatedPaths": [
+                            "context/context-index.json",
+                            "context/compressed-context.json",
+                            "context/freshness.json",
+                            "context/agent-adapters.json",
+                            "verification/latest-validation.json",
+                            "verification/verification-result.json",
+                            "verification/generation-state.json",
+                            "memory/cold-start-validation.json",
+                            "memory/memory-consistency-validation.json"
+                        ],
+                        "schemaVersion": 1
+                    }
+                },
                 "generatedArtifacts": [
+                    "ARAMF_WORKER/verification/latest-validation.json",
+                    "ARAMF_WORKER/verification/verification-result.json"
                 ],
                 "riskTraits": [
                     "governance",
                     "persistence"
                 ],
                 "tests": [
+                    "aramf_core_tests::--context-coordination",
                     "aramf_core_tests::--worker-tasks"
                 ]
             }
@@ -213,21 +259,27 @@
                     "tests/CertificationFreshnessTests.cpp",
                     "tests/CertificationRevalidationTests.cpp",
                     "tests/ConfigurationUpdateTests.cpp",
+                    "tests/ContextCoordinationTests.cpp",
                     "tests/FoundationCertificationTests.cpp",
                     "tests/FoundationIndependenceTests.cpp",
                     "tests/FoundationTests.cpp",
                     "tests/P2ExecutionTests.cpp",
+                    "tests/P6CodeBankTests.cpp",
                     "tests/ProjectMemoryTests.cpp",
                     "tests/TemplateConfigurationTests.cpp",
-                    "tests/WorkerTaskTests.cpp"
+                    "tests/WorkerTaskTests.cpp",
+                    "tests/WorkflowNavigationTests.cpp"
                 ],
                 "generatedArtifacts": [
+                    "ARAMF_WORKER/verification/latest-validation.json",
+                    "ARAMF_WORKER/verification/verification-result.json"
                 ],
                 "riskTraits": [
                     "governance",
                     "persistence"
                 ],
                 "tests": [
+                    "aramf_core_tests::--context-coordination",
                     "aramf_core_tests::--p3-execution",
                     "aramf_core_tests::--worker-tasks"
                 ]

@@ -1,3 +1,4 @@
+// main.cpp
 #include "core/AramfPaths.h"
 #include "core/ProjectModel.h"
 #include "core/TemplateValidation.h"
@@ -47,6 +48,11 @@ QString markdown(int n, const QString& purpose, const QString& root, const QStri
 }
 }
 
+// Execute isolated, resource-complete regression scenarios.
+
+// Every declared local resource is materialized with its actual type before
+// generation. Each invocation retains its own artifacts, including failures;
+// missing folders must fail validation rather than masquerade as empty files.
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     QStandardPaths::setTestModeEnabled(true);
@@ -83,7 +89,28 @@ int main(int argc, char** argv) {
         caps.toolchains.removeDuplicates(); model.setDevelopmentCapabilities(caps);
         auto academic = model.academicConfiguration(); if (n >= 26 && n <= 45) { academic.academicMode = n % 3 == 0 ? "thesis" : (n % 2 ? "academic-assignment" : "research-project"); academic.thesisLevel = n % 3 == 0 ? "doctoral" : "master"; academic.academicLanguage = n % 2 ? "english" : "swedish"; academic.citationStyle = n % 2 ? "apa" : "harvard"; academic.researchMethods = {"qualitative", "literature-review"}; } model.setAcademicConfiguration(academic);
         auto ai = model.aiConfiguration(); ai.primaryAgent = agents.at(n % agents.size()); ai.additionalAgents = n % 5 == 0 ? QStringList{"claude-code", "github-copilot"} : QStringList{}; ai.additionalAgents.removeAll(ai.primaryAgent); ai.responsibilities = {"planning", "coding", "testing"}; ai.permissions = {"read-project-files", "modify-files", "create-files", "run-tests"}; ai.aramfIntegrations = {"rules", "project-memory", "validation-verification"}; model.setAiConfiguration(ai);
-        if (n >= 116 && n <= 145) { QList<ProjectResource> rs; for (int k = 0; k < 1 + n % 4; ++k) { ProjectResource r; r.id = QString("resource-%1-%2").arg(n).arg(k); r.name = QString("Resource %1").arg(k); r.type = k % 3 == 0 ? "file" : (k % 3 == 1 ? "folder" : "url"); r.location = k % 3 == 2 ? "https://example.com/reference" : QDir(root).filePath(QString("input_%1.txt").arg(k)); r.authorityLevel = k == 0 ? "primary-source-of-truth" : "supporting-reference"; r.scopes = {"requirements", "implementation"}; r.locationMode = k % 2 ? "project-local-copy" : "referenced"; rs << r; } model.setResources(rs); }
+        if (n >= 116 && n <= 145) {
+            QList<ProjectResource> rs;
+            for (int k = 0; k < 1 + n % 4; ++k) {
+                ProjectResource r;
+                r.id = QString("resource-%1-%2").arg(n).arg(k);
+                r.name = QString("Resource %1").arg(k);
+                r.type = k % 3 == 0 ? "file" : (k % 3 == 1 ? "folder" : "url");
+                r.location = r.type == "url" ? "https://example.com/reference"
+                    : QDir(root).filePath(QString(r.type == "folder" ? "input_%1" : "input_%1.txt").arg(k));
+                if (r.type == "folder") {
+                    if (!QDir().mkpath(r.location + "/empty")) qFatal("Cannot create folder-resource fixture");
+                    writeText(r.location + "/nested/source.txt", "Typed folder resource fixture.\n");
+                } else if (r.type == "file") {
+                    writeText(r.location, "Typed file resource fixture.\n");
+                }
+                r.authorityLevel = k == 0 ? "primary-source-of-truth" : "supporting-reference";
+                r.scopes = {"requirements", "implementation"};
+                r.locationMode = k % 2 ? "project-local-copy" : "referenced";
+                rs << r;
+            }
+            model.setResources(rs);
+        }
         auto rules = model.ruleConfiguration(); rules.activeCategories = n % 4 == 0 ? QStringList{} : QStringList{"data-protection", "protected-files", "verification-before-completion"}; rules.enforcementLevel = n % 3 == 0 ? "strict" : (n % 2 ? "advisory" : "standard"); rules.workScopes = {"coding", "testing"}; rules.projectScopes = {"source-code", "tests"}; model.setRuleConfiguration(rules);
         auto memory = model.memoryConfiguration(); memory.maximumSizeBytes = (n % 8 == 0 ? 750LL * 1024 * 1024 : (1LL + n % 5) * 1024 * 1024 * 1024); memory.retentionLevel = n % 3 == 0 ? "minimal" : (n % 3 == 1 ? "standard" : "detailed"); memory.captureCategories = {"durable-decisions", "completed-tasks", "validation-results"}; memory.maintenanceOptions = {"preserve-append-only", "record-validation"}; memory.validationOptions = {"memory-consistency", "cold-start-validation"}; model.setMemoryConfiguration(memory);
         GenerationOptions options; if (n >= 196 && n <= 215) { options.generateAgentRules = n % 2; options.generateRouting = n % 3 != 0; options.generatePlatforms = n % 4 != 0; options.generateResources = n % 5 != 0; options.generateMemory = n % 6 != 0; options.generateProvenance = n % 7 != 0; if (!(options.generateAgentRules || options.generateRouting || options.generatePlatforms || options.generateResources || options.generateMemory || options.generateProvenance)) options.generateMemory = true; } model.setGenerationOptions(options);

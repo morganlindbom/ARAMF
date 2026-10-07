@@ -1,4 +1,6 @@
+// ContextCoordinationTests.cpp
 #include "core/ContextCoordinationService.h"
+#include "core/WorkerContextResolver.h"
 #include "core/ProjectPersistence.h"
 #include "core/Services.h"
 #include "core/WorkerTaskServices.h"
@@ -9,6 +11,9 @@
 #include <QJsonDocument>
 #include <QTemporaryDir>
 #include <iostream>
+#ifdef Q_OS_WIN
+#include <qt_windows.h>
+#endif
 
 namespace {
 bool writeFile(const QString& path, const QByteArray& value)
@@ -53,6 +58,10 @@ void configureModel(ProjectModel& model, const QString& path, const QString& id)
 
 bool runContextCoordinationTests()
 {
+    // Exercise canonical context and typed-resource boundaries in isolated projects.
+
+    // New fixtures are retained, and successful hashes are never substituted for
+    // missing, unreadable, linked or incorrectly classified resource contents.
     int checks = 0;
     int failures = 0;
     const auto check = [&](bool condition, const QString& name) {
@@ -135,6 +144,124 @@ bool runContextCoordinationTests()
     check(persistence.load(&reloaded, saved, &error) && reloaded.projectId() == model.projectId(), QStringLiteral("P1 project reload preserves identity"));
     check(ContextCoordinationService::validate(reloaded).value(QStringLiteral("valid")).toBool(), QStringLiteral("reloaded P0 project can use P1 derived state"));
 
+    QTemporaryDir folderFixture;
+    folderFixture.setAutoRemove(false);
+    ProjectModel folderModel;
+    configureModel(folderModel, folderFixture.path(), "typed-folder-context");
+    QDir().mkpath(folderFixture.path() + "/bundle/empty");
+    writeFile(folderFixture.path() + "/bundle/a.cpp", "// a\n");
+    writeFile(folderFixture.path() + "/bundle/.hidden", "hidden\n");
+    ProjectResource folder;
+    folder.id = "bundle"; folder.type = "folder"; folder.location = "bundle"; folder.scopes = {"ui"};
+    folderModel.setResources({folder});
+    const auto firstFolder = WorkerContextResolver::resourceSnapshot(folderModel, "bundle");
+    check(firstFolder.value("valid").toBool(), "folder manifest readable");
+    check(firstFolder == WorkerContextResolver::resourceSnapshot(folderModel, "bundle"), "folder manifests deterministic");
+    check(firstFolder.value("entries").toObject().contains("empty"), "empty directories represented");
+    check(firstFolder.value("entries").toObject().contains(".hidden"), "hidden files included");
+#ifdef Q_OS_WIN
+    const QString lockedPath = folderFixture.path() + "/bundle/a.cpp";
+    HANDLE lockedResource = CreateFileW(reinterpret_cast<LPCWSTR>(lockedPath.utf16()), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+    check(lockedResource != INVALID_HANDLE_VALUE, "exclusive unreadable-resource fixture opened");
+    if (lockedResource != INVALID_HANDLE_VALUE) {
+        check(!WorkerContextResolver::resourceSnapshot(folderModel, "bundle").value("valid").toBool(), "locked child cannot be hashed as empty content");
+        CloseHandle(lockedResource);
+    }
+#endif
+    check(GenerationServices().generate(folderModel, folderModel.generationOptions()).success, "folder context generation");
+    check(ContextCoordinationService::validate(folderModel).value("valid").toBool(), "folder context current");
+    writeFile(folderFixture.path() + "/bundle/a.cpp", "// changed\n");
+    check(!ContextCoordinationService::validate(folderModel).value("valid").toBool(), "nested content invalidates context");
+    check(ContextCoordinationService::generate(folderModel).value("success").toBool(), "canonical folder reindex");
+    check(ContextCoordinationService::validate(folderModel).value("valid").toBool(), "reindexed folder is current");
+    QDir().mkpath(folderFixture.path() + "/bundle/new/deep");
+    check(!ContextCoordinationService::validate(folderModel).value("valid").toBool(), "nested addition invalidates context");
+    check(QFile::rename(folderFixture.path() + "/bundle/a.cpp", folderFixture.path() + "/bundle/renamed.cpp"), "rename preserved fixture file");
+    const auto renamedFolder = WorkerContextResolver::resourceSnapshot(folderModel, "bundle");
+    check(!renamedFolder.value("entries").toObject().contains("a.cpp") && renamedFolder.value("entries").toObject().contains("renamed.cpp"), "rename changes manifest keys");
+    check(QFile::rename(folderFixture.path() + "/bundle/renamed.cpp", folderFixture.path() + "/preserved.cpp"), "move fixture file without deletion");
+    check(!WorkerContextResolver::resourceSnapshot(folderModel, "bundle").value("entries").toObject().contains("renamed.cpp"), "removal from resource detected");
+    folder.type = "file"; folderModel.setResources({folder});
+    check(!WorkerContextResolver::resourceSnapshot(folderModel, "bundle").value("valid").toBool(), "directory cannot become a file hash");
+    folder.type = "folder"; folderModel.setResources({folder});
+    QJsonObject firstOperation;
+    {
+        WorkerResourceObservation operation;
+        firstOperation = WorkerContextResolver::resourceSnapshot(folderModel, "bundle");
+        check(firstOperation == WorkerContextResolver::resourceSnapshot(folderModel, "bundle"), "one operation reuses a coherent resource observation");
+    }
+    writeFile(folderFixture.path() + "/bundle/next-operation.txt", "changed between operations\n");
+    {
+        WorkerResourceObservation operation;
+        check(firstOperation.value("fingerprint") != WorkerContextResolver::resourceSnapshot(folderModel, "bundle").value("fingerprint"), "next operation never reuses stale observations");
+    }
+    folder.type = "folder"; folder.location = "absent"; folderModel.setResources({folder});
+    check(!WorkerContextResolver::resourceSnapshot(folderModel, "bundle").value("valid").toBool(), "missing folder invalid");
+    folder.location = "bundle"; folderModel.setResources({folder});
+    auto policyRules = folderModel.ruleConfiguration();
+    auto policyMetadata = policyRules.scopeMetadata.value("ui").toObject();
+    policyMetadata.insert("folderResourcePolicies", QJsonObject{{"bundle", QJsonObject{{"schemaVersion", 1}, {"generatedPaths", QJsonArray{".hidden"}}}}});
+    policyRules.scopeMetadata.insert("ui", policyMetadata); folderModel.setRuleConfiguration(policyRules);
+    check(!WorkerContextResolver::resourceSnapshot(folderModel, "bundle").value("valid").toBool(), "arbitrary generated exclusion rejected");
+
+    QTemporaryDir selfFixture; selfFixture.setAutoRemove(false);
+    ProjectModel selfModel; configureModel(selfModel, selfFixture.path(), "self-referencing-worker");
+    check(GenerationServices().generate(selfModel, selfModel.generationOptions()).success, "self-reference fixture generated");
+    ProjectResource selfResource; selfResource.id = "worker"; selfResource.type = "folder";
+    selfResource.location = "ARAMF_WORKER"; selfResource.scopes = {"ui"}; selfModel.setResources({selfResource});
+    auto selfRules = selfModel.ruleConfiguration(); auto selfMetadata = selfRules.scopeMetadata.value("ui").toObject();
+    selfMetadata.insert("folderResourcePolicies", QJsonObject{{"worker", QJsonObject{{"schemaVersion", 1},
+        {"generatedPaths", QJsonArray{"context/context-index.json", "context/compressed-context.json", "context/freshness.json",
+            "context/agent-adapters.json", "verification/latest-validation.json", "verification/verification-result.json",
+            "memory/cold-start-validation.json", "memory/memory-consistency-validation.json"}}}}});
+    selfRules.scopeMetadata.insert("ui", selfMetadata); selfModel.setRuleConfiguration(selfRules);
+    check(GenerationServices().generate(selfModel, selfModel.generationOptions()).success, "self-reference policy generated canonically");
+    check(!ContextCoordinationService::validate(selfModel).value("valid").toBool(), "undeclared generation-state change is not silently excluded");
+    auto selfPolicies = selfMetadata.value("folderResourcePolicies").toObject();
+    auto selfPolicy = selfPolicies.value("worker").toObject();
+    auto selfGenerated = selfPolicy.value("generatedPaths").toArray();
+    selfGenerated.append("verification/generation-state.json");
+    selfPolicy.insert("generatedPaths", selfGenerated); selfPolicies.insert("worker", selfPolicy);
+    selfMetadata.insert("folderResourcePolicies", selfPolicies); selfRules.scopeMetadata.insert("ui", selfMetadata);
+    selfModel.setRuleConfiguration(selfRules);
+    check(GenerationServices().regenerateConfiguration(selfModel, selfModel.generationOptions()).success, "self-host configuration regenerated through production writer");
+    check(ContextCoordinationService::validate(selfModel).value("valid").toBool(), "generation-state producer marker prevents late-write self-staleness");
+    bool matchingReadback = true;
+    const auto expectedOutputs = GenerationServices::derivedTaskArtifacts(selfModel, selfModel.generationOptions());
+    for (auto it = expectedOutputs.begin(); it != expectedOutputs.end(); ++it) {
+        auto actual = QJsonDocument::fromJson(readFile(selfFixture.path() + '/' + it.key())).object();
+        actual.remove("_file");
+        auto expected = it.value().toObject(); expected.remove("_file");
+        matchingReadback &= actual == expected;
+    }
+    check(matchingReadback, "configuration update readback agrees without a second context generation");
+    check(VerificationServices().verify(selfModel, selfModel.generationOptions()).overallStatus == VerificationStatus::Pass, "self-host configuration update verification PASS");
+    // Index the first verification products after their canonical creation.
+
+    // Generated paths remain explicit manifest entries: creating a previously
+    // absent producer output legitimately changes the folder's entry set.
+    ContextCoordinationService::generate(selfModel);
+    const QString statePath = selfFixture.path() + "/ARAMF_WORKER/verification/generation-state.json";
+    const auto intactState = readFile(statePath);
+    writeFile(statePath, "{}\n");
+    check(VerificationServices().verify(selfModel, selfModel.generationOptions(), false).overallStatus != VerificationStatus::Pass, "generation-state policy cannot hide corrupt producer evidence");
+    writeFile(statePath, intactState);
+    const auto restoredVerification = VerificationServices().verify(selfModel, selfModel.generationOptions());
+    check(restoredVerification.overallStatus == VerificationStatus::Pass, "restored producer evidence revalidates");
+    ContextCoordinationService::generate(selfModel);
+    const auto selfSnapshot = WorkerContextResolver::resourceSnapshot(selfModel, "worker");
+    ContextCoordinationService::generate(selfModel);
+    check(selfSnapshot == WorkerContextResolver::resourceSnapshot(selfModel, "worker"), "explicit producer markers prevent recursive self-staleness");
+    check(ContextCoordinationService::validate(selfModel).value("valid").toBool(), "self-referencing context remains fresh");
+    writeFile(selfFixture.path() + "/ARAMF_WORKER/context/context-index.json", "{}\n");
+    check(!ContextCoordinationService::validate(selfModel).value("valid").toBool(), "generated exclusions do not authorize corrupt indexes");
+    ContextCoordinationService::generate(selfModel);
+    writeFile(selfFixture.path() + "/ARAMF_WORKER/custom/unmapped.txt", "unmapped\n");
+    check(selfSnapshot.value("fingerprint") != WorkerContextResolver::resourceSnapshot(selfModel, "worker").value("fingerprint"), "user-owned children are never excluded");
+    const QString linkPath = selfFixture.path() + "/ARAMF_WORKER/unsafe.lnk";
+    if (QFile::link(selfFixture.path() + "/source/ui.cpp", linkPath) && QFileInfo(linkPath).isSymLink())
+        check(!WorkerContextResolver::resourceSnapshot(selfModel, "worker").value("valid").toBool(), "unsafe linked child rejected");
+    else std::cout << "NOT_RUN: platform cannot create the unsafe-link fixture\n";
     std::cout << "P1-CONTEXT checks=" << checks << " failures=" << failures << '\n';
     return failures == 0;
 }
