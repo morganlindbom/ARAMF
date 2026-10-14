@@ -29,7 +29,9 @@ public:
                            const QString& subject,
                            const QJsonObject& regressionEvidence,
                            CertificationRevalidationResult* result = nullptr,
-                           QString* error = nullptr);
+                           QString* error = nullptr,
+                           const QString& plannedId = {},
+                           const QJsonObject& operationBinding = {});
 
     static bool latest(const QString& projectRoot,
                        const QString& subject,

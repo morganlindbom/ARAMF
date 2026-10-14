@@ -17,8 +17,20 @@ struct WorkerTaskRequest {
     bool destructive = false;
     QJsonArray relocations; // Explicit oldPath/newPath pairs; never inferred.
     QString protectedGrantId;
+    QString reauthorizationId;
+    bool internalReauthorizationPreparation = false;
+    QString acceptanceProfile;
     QJsonObject toJson() const;
     static WorkerTaskRequest fromJson(const QJsonObject& value);
+};
+
+struct TaskReauthorizationRequest {
+    WorkerTaskRequest task;
+    QStringList canonicalInputs;
+    QJsonObject operations;
+    int validityMinutes = 0;
+    QJsonObject toJson() const;
+    static TaskReauthorizationRequest fromJson(const QJsonObject& value);
 };
 
 class ChangeImpactResolver final {
@@ -49,6 +61,13 @@ public:
     // issuance does not automatically replace any grant for the same intent.
     static QJsonObject consumeP6BuildGrant(const ProjectModel& model, const QJsonObject& contract,
                                           const QJsonArray& evidence);
+    static QJsonObject authorizeReauthorization(const ProjectModel& model, const QJsonObject& originalContract,
+                                               const QJsonObject& originalPostflight,
+                                               const TaskReauthorizationRequest& request,
+                                               const QString& instruction);
+    static QJsonObject prepareReauthorized(const ProjectModel& model, const QString& authorizationId,
+                                           const QJsonObject& originalContract,
+                                           const QJsonObject& originalPostflight);
     static QJsonObject mutationPolicy(const ProjectModel& model);
     // Read-only. Includes an observed repository baseline and a gated preflight.
     static QJsonObject prepare(const ProjectModel& model, const WorkerTaskRequest& task);
@@ -56,6 +75,26 @@ public:
     // Evidence is bound to both contractId and current resultFingerprint.
     static QJsonObject postflight(const ProjectModel& model, const QJsonObject& contract,
                                  const QJsonArray& evidence = {});
+    // Execute one fixed, supported software check. The service observes the
+    // result and derives both dependency and artifact hashes; no caller PASS,
+    // command, baseline or fingerprint is accepted. Records are immutable.
+    static QJsonObject runCheck(const ProjectModel& model, const QJsonObject& contract,
+                               const QString& check, const QString& buildDirectory = {},
+                               int timeoutMilliseconds = 3600000);
+    // Read the latest immutable producer record for each check. Historical
+    // failures remain on disk; new observations explicitly supersede them.
+    static QJsonObject checkEvidence(const ProjectModel& model, const QJsonObject& contract,
+                                    bool acceptancePrerequisitesOnly = false);
+    // Fixed domain acceptance requirements. Selecting a profile never proves
+    // them: current producer reports must satisfy every named assertion.
+    static QJsonObject acceptanceProfile(const QString& id);
+    // Operation contracts authorize only the fixed canonical producers and
+    // exact create-only artifacts derived during read-only preparation.
+    static QJsonObject prepareCertificationOperation(const ProjectModel& model, const QJsonObject& intent,
+                                                     const QJsonObject& verifiedContract);
+    static QJsonObject applyCertificationOperation(const ProjectModel& model, const QJsonObject& contract);
+    static QJsonObject recoverCertificationOperation(const ProjectModel& model, const QJsonObject& contract);
+    static QJsonObject postflightCertificationOperation(const ProjectModel& model, const QJsonObject& contract);
 };
 
 // aramf task prepare|postflight --config <saved-project> --request/--contract <json>

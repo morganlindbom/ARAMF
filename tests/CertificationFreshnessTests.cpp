@@ -1,10 +1,12 @@
 #include "core/CertificationFreshness.h"
 #include "core/CertificationRevalidation.h"
+#include "core/AramfPaths.h"
 
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
 #include <QJsonDocument>
+#include <QTemporaryDir>
 #include <iostream>
 
 namespace {
@@ -45,14 +47,18 @@ int main(int argc, char** argv)
 
     QString rootFingerprint;
     const QString originalDirectory = QDir::currentPath();
-    QString projectRoot = QDir(originalDirectory).absolutePath();
-    if (QFileInfo(projectRoot).fileName().compare(QStringLiteral("build"), Qt::CaseInsensitive) == 0)
-        projectRoot = QDir(projectRoot).absoluteFilePath("..");
-    projectRoot = QDir(projectRoot).absolutePath();
-    const bool changedDirectory = QDir::setCurrent(projectRoot);
+    const QString projectRoot = AramfPaths::programRoot();
+    ok &= check(AramfPaths::isDevelopmentRoot(projectRoot), "freshness test resolves its source checkout independently of build-directory name");
+    QString originalFingerprint;
+    ok &= check(CertificationSourceManifestProvider::fingerprint(projectRoot, "S1", &originalFingerprint),
+                "source manifest fingerprints the resolved checkout before changing caller CWD");
+    QTemporaryDir unrelatedCaller;
+    const bool changedDirectory = unrelatedCaller.isValid() && QDir::setCurrent(unrelatedCaller.path());
+    ok &= check(changedDirectory, "source-root regression uses an unrelated caller CWD");
     const bool rootedFingerprint = CertificationSourceManifestProvider::fingerprint(projectRoot, "S1", &rootFingerprint);
-    if (changedDirectory) QDir::setCurrent(originalDirectory);
-    ok &= check(rootedFingerprint && !rootFingerprint.isEmpty(), "source manifest uses supplied project root, not caller CWD");
+    if (changedDirectory) ok &= check(QDir::setCurrent(originalDirectory), "source-root regression restores caller CWD");
+    ok &= check(rootedFingerprint && !rootFingerprint.isEmpty() && rootFingerprint == originalFingerprint,
+                "source manifest uses supplied project root, not caller CWD");
 
     auto staleDependency = fresh;
     staleDependency.status = CertificationFreshnessStatus::DependencyStale;

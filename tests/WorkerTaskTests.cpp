@@ -14,13 +14,18 @@
 #include <QDirIterator>
 #include <QFile>
 #include <QJsonDocument>
+#include <QLockFile>
 #include <QMap>
 #include <QProcess>
 #include <QTemporaryDir>
 #include <QDateTime>
 #include <atomic>
+#include <algorithm>
+#include <functional>
 #include <iostream>
 #include <thread>
+
+QJsonObject canonicalCertificationOperationAssertions();
 
 namespace {
 bool write(const QString& path, const QByteArray& bytes)
@@ -52,6 +57,34 @@ bool hasCode(const QJsonObject& value, const QString& code)
     return false;
 }
 bool ready(const QJsonObject& contract) { return contract.value("preflight").toObject().value("status").toString().startsWith("READY"); }
+
+// Adversarial fixture contracts need valid checksums so the tested authority
+// boundary, rather than an unrelated checksum failure, decides the result.
+QJsonValue canonicalValue(const QJsonValue& value)
+{
+    if (value.isObject()) {
+        QJsonObject result;
+        const auto object = value.toObject();
+        for (auto it = object.begin(); it != object.end(); ++it) result.insert(it.key(), canonicalValue(it.value()));
+        return result;
+    }
+    if (value.isArray()) {
+        QList<QByteArray> values;
+        for (const auto& entry : value.toArray())
+            values.append(QJsonDocument(QJsonArray{canonicalValue(entry)}).toJson(QJsonDocument::Compact));
+        std::sort(values.begin(), values.end());
+        QJsonArray result;
+        for (const auto& entry : values) result.append(QJsonDocument::fromJson(entry).array().first());
+        return result;
+    }
+    return value;
+}
+void checksumFixtureContract(QJsonObject& contract)
+{
+    contract.remove("contractId");
+    contract.insert("contractId", QString::fromLatin1(QCryptographicHash::hash(
+        QJsonDocument(canonicalValue(contract).toObject()).toJson(QJsonDocument::Compact), QCryptographicHash::Sha256).toHex()));
+}
 }
 
 bool runWorkerTaskTests()
@@ -61,9 +94,17 @@ bool runWorkerTaskTests()
     // Grant PASS records below are synthetic test evidence only; they cannot
     // certify the live repository or authorize its protected CMake file.
     int checks = 0, failed = 0;
+    QJsonObject acceptanceAssertions;
+    QSet<QString> requiredAssertions;
+    const QStringList acceptanceProfiles{"task-reauthorization-security/v1", "task-certification-operations/v1"};
+    for (const auto& id : acceptanceProfiles)
+        for (const auto& criterion : WorkerTaskServices::acceptanceProfile(id).value("criteria").toArray())
+            for (const auto& assertion : criterion.toObject().value("assertions").toArray()) requiredAssertions.insert(assertion.toString());
     const auto check = [&](bool pass, const QString& name) {
         ++checks;
         if (!pass) { ++failed; std::cerr << "TASK FAIL: " << name.toStdString() << '\n'; }
+        if (requiredAssertions.contains(name))
+            acceptanceAssertions.insert(name, !pass || acceptanceAssertions.value(name) == "FAIL" ? "FAIL" : "PASS");
     };
     const auto generate = [&](ProjectModel& model) {
         const auto result = GenerationServices().generate(model, model.generationOptions());
@@ -129,6 +170,21 @@ bool runWorkerTaskTests()
     for (const auto& path : protectedContextArtifacts)
         freshContextBefore.insert(path, bytes(QDir(project.path()).filePath(path)));
     const auto freshPrepare = WorkerTaskServices::prepare(model, requestFor({"ui"}));
+    const auto originalRequestBytes = freshPrepare.value("request").toObject();
+    check(WorkerTaskRequest::fromJson(originalRequestBytes).toJson() == originalRequestBytes
+          && !originalRequestBytes.contains("acceptanceProfile"), "optional acceptance profile preserves original request serialization byte shape");
+    auto arbitraryProfileRequest = requestFor({"ui"});
+    arbitraryProfileRequest.acceptanceProfile = "task-reauthorization-security/v1";
+    check(hasCode(WorkerTaskServices::prepare(model, arbitraryProfileRequest), "ACCEPTANCE_PROFILE_INVALID"),
+          "arbitrary freeform requirements and unrelated scope cannot inherit canonical profile acceptance");
+    auto forgedProfileContract = freshPrepare;
+    auto forgedProfileRequest = forgedProfileContract.value("request").toObject();
+    forgedProfileRequest.insert("acceptanceProfile", arbitraryProfileRequest.acceptanceProfile);
+    forgedProfileContract.insert("request", forgedProfileRequest);
+    checksumFixtureContract(forgedProfileContract);
+    check(hasCode(WorkerTaskServices::postflight(model, forgedProfileContract), "TASK_PREFLIGHT_BLOCKED")
+          && WorkerTaskServices::runCheck(model, forgedProfileContract, "acceptance-criteria").value("status") == "BLOCKED",
+          "recomputed contract checksum cannot bypass exact acceptance-profile requirements");
     check(ready(freshPrepare), "fresh PREPARE is ready");
     check(treeBytes(project.path()) == freshTreeBefore, "fresh PREPARE changes no repository file");
     for (const auto& path : protectedContextArtifacts)
@@ -509,6 +565,8 @@ bool runWorkerTaskTests()
         if (scenario == "fake") write(target, "unrelated replacement\n");
         const auto observed = WorkerTaskServices::postflight(relocated, prepared);
         if (scenario == "exact") {
+            if (observed.value("status") != "PASS")
+                QTextStream(stderr) << "Relocation postflight diagnostics: " << QJsonDocument(observed).toJson(QJsonDocument::Compact) << '\n';
             check(observed.value("status") == "PASS" && observed.value("relocations").toArray().size() == 1,
                   "authorized exact relocation accepted with audit record");
             check(observed.value("completionState") != "VERIFIED", "relocation alone cannot replace required test evidence");
@@ -614,6 +672,426 @@ bool runWorkerTaskTests()
     check(hasCode(WorkerTaskServices::prepare(grantModel, grantTask), "PROTECTED_GRANT_INVALID"), "consumed grant rejected in preparation");
     check(hasCode(WorkerTaskServices::postflight(grantModel, grantContract), "PROTECTED_GRANT_INVALID"), "consumed grant rejected in postflight");
     check(WorkerTaskServices::consumeP6BuildGrant(grantModel, grantContract, grantEvidence).value("status") == "BLOCKED", "replay consumption rejected");
+
+    // Exercise an approved reauthorization from immutable origin records through successor postflight.
+    QTemporaryDir reauthFixture;
+    ProjectModel reauthModel;
+    reauthModel.setProjectPath(reauthFixture.path());
+    reauthModel.setProjectId("reauthorization-test");
+    auto reauthAi = reauthModel.aiConfiguration();
+    reauthAi.permissions = {"read-project-files", "modify-files", "create-files", "run-project-tools", "run-tests", "run-builds"};
+    reauthModel.setAiConfiguration(reauthAi);
+    auto reauthMemory = reauthModel.memoryConfiguration();
+    reauthMemory.maintenanceOptions = {"record-test-results", "update-current-state"};
+    reauthModel.setMemoryConfiguration(reauthMemory);
+    check(write(reauthFixture.path() + "/source/ui.cpp", "before ui\n"), "write reauthorization ui source");
+    check(write(reauthFixture.path() + "/source/other.cpp", "before other\n"), "write reauthorization other source");
+    auto reauthRules = reauthModel.ruleConfiguration();
+    reauthRules.projectScopes = {"ui", "other"};
+    reauthRules.scopeMetadata = {
+        {"ui", QJsonObject{{"files", QJsonArray{"source/ui.cpp"}}, {"tests", QJsonArray{"ui-tests"}}}},
+        {"other", QJsonObject{{"files", QJsonArray{"source/other.cpp"}}, {"tests", QJsonArray{"other-tests"}}}}};
+    reauthModel.setRuleConfiguration(reauthRules);
+    check(write(reauthFixture.path() + "/.gitignore", "build/\n"), "ignore isolated immutable check artifacts");
+    generate(reauthModel);
+    const auto git = [&](const QStringList& args) {
+        QProcess process;
+        process.start("git", QStringList{"-C", reauthFixture.path()} + args);
+        return process.waitForStarted() && process.waitForFinished() && process.exitCode() == 0;
+    };
+    check(git({"init"}), "initialize isolated reauthorization repository");
+    check(git({"config", "user.email", "worker-task-tests@example.invalid"}), "configure isolated git email");
+    check(git({"config", "user.name", "Worker Task Tests"}), "configure isolated git name");
+    check(git({"add", "-A"}) && git({"commit", "-m", "fixture baseline"}), "commit isolated reauthorization baseline");
+    WorkerTaskRequest originTask;
+    originTask.goal = "Implement the ui workflow change";
+    originTask.type = "coding";
+    originTask.scopes = {"ui"};
+    originTask.files = {"source/ui.cpp"};
+    originTask.definitionOfDone = {"The ui behavior is implemented and validated."};
+    const auto originContract = WorkerTaskServices::prepare(reauthModel, originTask);
+    check(ready(originContract), "reauthorization origin contract is READY");
+    check(write(reauthFixture.path() + "/source/ui.cpp", "after ui\n"), "edit authorized source for origin report");
+    check(write(reauthFixture.path() + "/source/other.cpp", "after other\n"), "edit out-of-scope source for origin report");
+    const auto originReport = WorkerTaskServices::postflight(reauthModel, originContract);
+    check(originReport.value("status") == "FAIL", "origin postflight records scope failure");
+    const QByteArray originContractBytes = QJsonDocument(originContract).toJson(QJsonDocument::Indented);
+    const QByteArray originReportBytes = QJsonDocument(originReport).toJson(QJsonDocument::Indented);
+    const QByteArray originBaselineBytes = QJsonDocument(originContract.value("baseline").toObject()).toJson(QJsonDocument::Indented);
+    const QByteArray originEvidenceBytes = QJsonDocument(originReport.value("acceptedEvidence").toArray()).toJson(QJsonDocument::Indented);
+    QTemporaryDir reauthArchive;
+    const QString originContractPath = reauthArchive.path() + "/origin-contract-record.json";
+    const QString originReportPath = reauthArchive.path() + "/origin-postflight-record.json";
+    const QString originBaselinePath = reauthArchive.path() + "/origin-baseline-record.json";
+    const QString originEvidencePath = reauthArchive.path() + "/origin-evidence-record.json";
+    check(write(originContractPath, originContractBytes) && write(originReportPath, originReportBytes)
+          && write(originBaselinePath, originBaselineBytes) && write(originEvidencePath, originEvidenceBytes),
+          "persist byte-stability test copies of original records");
+    const QJsonObject grantOutputs{{"ARAMF_WORKER/project.json", "REGENERATE"},
+        {"ARAMF_WORKER/worker-manifest.json", "REGENERATE"},
+        {"ARAMF_WORKER/routing/scope-routes.json", "REGENERATE"},
+        {"ARAMF_WORKER/routing/task-routes.json", "REGENERATE"},
+        {"ARAMF_WORKER/context/context-index.json", "REGENERATE"},
+        {"ARAMF_WORKER/context/compressed-context.json", "REGENERATE"},
+        {"ARAMF_WORKER/context/freshness.json", "REGENERATE"},
+        {"ARAMF_WORKER/context/agent-adapters.json", "REGENERATE"},
+        {"ARAMF_WORKER/context/task-dag.json", "REGENERATE"},
+        {"ARAMF_WORKER/verification/latest-validation.json", "REGENERATE"},
+        {"ARAMF_WORKER/verification/verification-result.json", "REGENERATE"},
+        {"ARAMF_WORKER/verification/generation-state.json", "REGENERATE"}};
+    TaskReauthorizationRequest reauthRequest;
+    reauthRequest.task.goal = "Reauthorize the exact existing ui and other source edits";
+    reauthRequest.task.type = "coding";
+    reauthRequest.task.scopes = {"ui", "other"};
+    reauthRequest.task.files = {"source/ui.cpp", "source/other.cpp"};
+    reauthRequest.task.definitionOfDone = {"Only the reviewed source edits and canonical refreshes are accepted."};
+    for (auto it = grantOutputs.begin(); it != grantOutputs.end(); ++it) {
+        reauthRequest.canonicalInputs.append(it.key());
+        reauthRequest.operations.insert(it.key(), it.value());
+    }
+    reauthRequest.operations.insert("source/ui.cpp", "MODIFY");
+    reauthRequest.operations.insert("source/other.cpp", "MODIFY");
+    reauthRequest.validityMinutes = 60;
+    const QString reauthInstruction = "Admin Morgan Lindbom explicitly authorizes override for the isolated reauthorization test";
+    auto reauthApproval = WorkerTaskServices::authorizeReauthorization(reauthModel, originContract, originReport,
+        reauthRequest, reauthInstruction);
+    check(reauthApproval.value("status") == "PASS", "exact reauthorization authority is appended");
+    auto wrongPreparationOrigin = originContract;
+    wrongPreparationOrigin.insert("completionState", "different-origin");
+    check(hasCode(WorkerTaskServices::prepareReauthorized(reauthModel,
+          reauthApproval.value("authorizationId").toString(), wrongPreparationOrigin, originReport),
+          "REAUTHORIZATION_BINDING_MISMATCH"), "unused approval rejects a different original contract");
+    auto wrongPreparationReport = originReport;
+    wrongPreparationReport.insert("completionState", "different-report");
+    check(hasCode(WorkerTaskServices::prepareReauthorized(reauthModel,
+          reauthApproval.value("authorizationId").toString(), originContract, wrongPreparationReport),
+          "REAUTHORIZATION_BINDING_MISMATCH"), "unused approval rejects a different original report");
+    check(write(reauthFixture.path() + "/source/ui.cpp", "changed after approval\n"), "alter reviewed source fixture");
+    check(hasCode(WorkerTaskServices::prepareReauthorized(reauthModel,
+          reauthApproval.value("authorizationId").toString(), originContract, originReport),
+          "REAUTHORIZATION_SOURCE_CHANGED"), "unused approval rejects a changed source fingerprint");
+    check(write(reauthFixture.path() + "/source/ui.cpp", "after ui\n"), "restore reviewed fixture bytes");
+    QLockFile heldBindingLock(QDir::tempPath() + "/aramf-reauthorization-"
+        + QString::fromLatin1(QCryptographicHash::hash(QDir(reauthFixture.path()).canonicalPath().toUtf8(),
+            QCryptographicHash::Sha256).toHex()) + ".lock");
+    check(heldBindingLock.tryLock(0), "hold the independent reauthorization binding lock");
+    const auto beforeBusyPreparation = treeBytes(reauthFixture.path());
+    check(hasCode(WorkerTaskServices::prepareReauthorized(reauthModel,
+          reauthApproval.value("authorizationId").toString(), originContract, originReport), "REAUTHORIZATION_BUSY")
+          && treeBytes(reauthFixture.path()) == beforeBusyPreparation, "concurrent binding is blocked without consuming authority");
+    heldBindingLock.unlock();
+    auto reauthContract = WorkerTaskServices::prepareReauthorized(reauthModel,
+        reauthApproval.value("authorizationId").toString(), originContract, originReport);
+    if (!ready(reauthContract))
+        std::cerr << "REAUTH PREFLIGHT: " << QJsonDocument(reauthContract.value("preflight").toObject().value("errors").toArray()).toJson().toStdString() << '\n';
+    check(ready(reauthContract), "authorized successor contract is READY");
+    const auto approvedEventList = ProjectMemory().events(reauthFixture.path());
+    QJsonObject persistedGrant;
+    for (const auto& event : approvedEventList)
+        if (event.value("taskReauthorizationGrant").toObject().value("authorizationId") == reauthApproval.value("authorizationId"))
+            persistedGrant = event.value("taskReauthorizationGrant").toObject();
+    check(persistedGrant.value("originContractSnapshot") == originContract
+          && persistedGrant.value("originPostflightSnapshot") == originReport
+          && persistedGrant.value("originEvidenceSnapshot") == originReport.value("acceptedEvidence"),
+          "grant retains byte-stable origin contract, baseline, report and evidence snapshots");
+    check(QJsonDocument(originContract).toJson(QJsonDocument::Indented) == originContractBytes
+          && QJsonDocument(originReport).toJson(QJsonDocument::Indented) == originReportBytes
+          && bytes(originContractPath) == originContractBytes && bytes(originReportPath) == originReportBytes
+          && bytes(originBaselinePath) == originBaselineBytes && bytes(originEvidencePath) == originEvidenceBytes,
+          "authorization and preparation preserve original contract, baseline, report, and evidence bytes");
+    check(hasCode(WorkerTaskServices::prepareReauthorized(reauthModel,
+          reauthApproval.value("authorizationId").toString(), originContract, originReport), "REAUTHORIZATION_INVALID"),
+          "consumed approval cannot be replayed for preparation");
+    const auto refreshed = GenerationServices().generate(reauthModel, reauthModel.generationOptions());
+    check(refreshed.success, "governance fixture canonical Generate succeeds: " + refreshed.error);
+    const auto refreshedContext = ContextCoordinationService::generate(reauthModel);
+    check(refreshedContext.value("success").toBool(), "governance fixture context refresh succeeds");
+    const auto refreshedVerification = VerificationServices().verify(reauthModel, reauthModel.generationOptions());
+    check(refreshedVerification.overallStatus == VerificationStatus::Pass, "governance fixture Verify succeeds");
+    const auto acceptedReauthPostflight = WorkerTaskServices::postflight(reauthModel, reauthContract);
+    if (acceptedReauthPostflight.value("status") != "PASS")
+        std::cerr << "REAUTH POSTFLIGHT: " << QJsonDocument(acceptedReauthPostflight.value("errors").toArray()).toJson().toStdString() << '\n';
+    check(acceptedReauthPostflight.value("status") == "PASS",
+          "unique audit-bound reauthorization is accepted by postflight");
+    const auto stableReauthTree = treeBytes(reauthFixture.path());
+    check(WorkerTaskServices::postflight(reauthModel, reauthContract) == acceptedReauthPostflight
+          && WorkerTaskServices::postflight(reauthModel, reauthContract) == acceptedReauthPostflight
+          && treeBytes(reauthFixture.path()) == stableReauthTree,
+          "repeated valid postflight is read-only and never consumes the bound approval again");
+
+    const auto producerPass = WorkerTaskServices::runCheck(reauthModel, reauthContract, "git-diff-check");
+    if (producerPass.value("status") != "PASS")
+        std::cerr << "PRODUCER: " << QJsonDocument(producerPass).toJson().toStdString() << '\n';
+    check(producerPass.value("status") == "PASS", "canonical producer executes real git whitespace checks");
+    const auto producedEntries = producerPass.value("evidence").toArray();
+    const auto producedEntry = producedEntries.isEmpty() ? QJsonObject{} : producedEntries.first().toObject();
+    const QString producedPath = reauthFixture.path() + '/' + producedEntry.value("artifact").toString();
+    const QByteArray producedBytes = bytes(producedPath);
+    check(!producedBytes.isEmpty() && producerPass.value("record").toObject().value("observations").toArray().size() == 2
+          && producerPass.value("record").toObject().value("dependencyFingerprint")
+              == acceptedReauthPostflight.value("evidenceFingerprints").toObject().value("git-diff-check"),
+          "producer persists command observations and internally derived dependency binding");
+    check(WorkerTaskServices::postflight(reauthModel, reauthContract, producedEntries).value("acceptedEvidence").toArray() == producedEntries,
+          "read-back producer evidence satisfies only its actual check");
+    const auto producerTree = treeBytes(reauthFixture.path());
+    check(WorkerTaskServices::runCheck(reauthModel, reauthContract, "acceptance-criteria").value("status") == "BLOCKED"
+          && WorkerTaskServices::runCheck(reauthModel, reauthContract, "arbitrary-exit-zero").value("status") == "BLOCKED"
+          && WorkerTaskServices::runCheck(reauthModel, reauthContract, "git-diff-check", {}, 0).value("status") == "BLOCKED"
+          && treeBytes(reauthFixture.path()) == producerTree,
+          "unsupported semantic acceptance, arbitrary checks and invalid timeout cannot create PASS evidence");
+    auto tamperedProducerContract = reauthContract;
+    tamperedProducerContract.insert("completionState", "forged");
+    check(WorkerTaskServices::runCheck(reauthModel, tamperedProducerContract, "git-diff-check").value("status") == "BLOCKED"
+          && treeBytes(reauthFixture.path()) == producerTree, "tampered contract cannot start evidence execution");
+    const auto producerAgain = WorkerTaskServices::runCheck(reauthModel, reauthContract, "git-diff-check");
+    const auto collected = WorkerTaskServices::checkEvidence(reauthModel, reauthContract);
+    check(producerAgain.value("status") == "PASS" && producerAgain.value("index") != producerPass.value("index")
+          && bytes(producedPath) == producedBytes && collected.value("status") == "PASS"
+          && collected.value("evidence") == producerAgain.value("evidence"),
+          "latest immutable observation is selected while previous exact bytes remain intact");
+    check(write(producedPath, producedBytes + " "), "alter isolated producer record for integrity negative");
+    check(WorkerTaskServices::checkEvidence(reauthModel, reauthContract).value("status") == "BLOCKED"
+          && hasCode(WorkerTaskServices::postflight(reauthModel, reauthContract, producedEntries), "EVIDENCE_INTEGRITY_INVALID"),
+          "tampered artifact is rejected by collector and postflight independently");
+    check(write(producedPath, producedBytes), "restore isolated producer fixture bytes");
+    check(write(reauthFixture.path() + "/source/ui.cpp", "after ui \n"), "introduce isolated actual whitespace failure");
+    check(ContextCoordinationService::generate(reauthModel).value("success").toBool()
+          && VerificationServices().verify(reauthModel, reauthModel.generationOptions()).overallStatus == VerificationStatus::Pass,
+          "refresh fixture governance independently of whitespace validation");
+    check(hasCode(WorkerTaskServices::postflight(reauthModel, reauthContract, producedEntries), "STALE_EVIDENCE"),
+          "changing covered source stales previously real producer evidence");
+    const auto producerFailure = WorkerTaskServices::runCheck(reauthModel, reauthContract, "git-diff-check");
+    check(producerFailure.value("status") == "FAIL" && !producerFailure.value("evidence").toArray().isEmpty(),
+          "actual command failure is persisted as FAIL with evidence rather than discarded or promoted");
+    const auto failureRecord = producerFailure.value("record").toObject();
+    check(failureRecord.value("observations").toArray().first().toObject().value("exitCode").toInt() != 0
+          && !failureRecord.value("observations").toArray().first().toObject().value("stdoutBase64").toString().isEmpty(),
+          "failed command retains real nonzero exit and raw output bytes");
+    check(write(reauthFixture.path() + "/source/ui.cpp", "after ui\n"), "correct isolated whitespace regression");
+    check(ContextCoordinationService::generate(reauthModel).value("success").toBool()
+          && VerificationServices().verify(reauthModel, reauthModel.generationOptions()).overallStatus == VerificationStatus::Pass,
+          "refresh fixture after actual correction");
+    const auto correctedProducer = WorkerTaskServices::runCheck(reauthModel, reauthContract, "git-diff-check");
+    check(correctedProducer.value("status") == "PASS" && bytes(producedPath) == producedBytes
+          && WorkerTaskServices::checkEvidence(reauthModel, reauthContract).value("evidence") == correctedProducer.value("evidence"),
+          "corrected check has a new observation while original pass and failure artifacts remain retained");
+    const QString coldPath = reauthFixture.path() + "/ARAMF_WORKER/memory/cold-start-validation.json";
+    auto historicalColdReport = QJsonDocument::fromJson(bytes(coldPath)).object();
+    historicalColdReport.insert("checkedAt", "2000-01-01T00:00:00Z");
+    check(write(coldPath, QJsonDocument(historicalColdReport).toJson()), "retain old PASS cold-start timestamp in isolated fixture");
+    const auto liveColdCheck = WorkerTaskServices::runCheck(reauthModel, reauthContract, "cold-start");
+    const auto liveColdObservations = liveColdCheck.value("record").toObject().value("observations").toArray();
+    check(liveColdCheck.value("status") == "PASS" && !liveColdObservations.isEmpty()
+          && liveColdObservations.first().toObject().value("report").toObject().value("checkedAt") != "2000-01-01T00:00:00Z",
+          "cold-start producer reconstructs current state rather than republishing historical PASS");
+    const QString disabledBuild = reauthFixture.path() + "/build/disabled";
+    check(write(disabledBuild + "/CMakeCache.txt", ("CMAKE_HOME_DIRECTORY:INTERNAL=" + reauthFixture.path()
+          + "\nBUILD_TESTING:BOOL=OFF\n").toUtf8()) && write(disabledBuild + "/aramf_core_tests.exe", "stale executable sentinel"),
+          "create isolated disabled test configuration with leftover executable");
+    const auto beforeDisabled = treeBytes(reauthFixture.path());
+    const auto disabledEvidence = WorkerTaskServices::runCheck(reauthModel, reauthContract, "ctest", "build/disabled");
+    check(disabledEvidence.value("status") == "BLOCKED" && disabledEvidence.value("error").toString().contains("enable tests")
+          && treeBytes(reauthFixture.path()) == beforeDisabled,
+          "disabled test configuration cannot run or attest leftover test binaries");
+    const QString orphanDirectory = QFileInfo(producedPath).absolutePath() + "/../orphan-failure";
+    check(write(orphanDirectory + "/record.json", QJsonDocument(failureRecord).toJson()), "retain isolated unindexed failure observation");
+    check(WorkerTaskServices::checkEvidence(reauthModel, reauthContract).value("status") == "BLOCKED",
+          "collector cannot skip an orphan failure to select an older PASS");
+    // This negative fixture remains retained. Subsequent audit tests do not
+    // collect its evidence and therefore cannot mistake it for a valid index.
+
+    // Every case gets new append-only fixture events and a unique authorization.
+    // Start from a complete valid audit chain, changing exactly the field under
+    // test. No original contract, baseline, report or audit event is rewritten.
+    using Mutation = std::function<void(QJsonObject&)>;
+    const Mutation unchanged = [](QJsonObject&) {};
+    struct AuditChain { QJsonObject contract, grant, approval, validation, bound; QString id; };
+    int chainNumber = 0;
+    const auto appendFixtureEvent = [&](const QString& type, QJsonObject fields) {
+        for (const auto& key : {"eventId", "sequenceNumber", "timestamp", "eventType", "task"}) fields.remove(key);
+        QString error;
+        check(ProjectMemory().appendEvent(reauthFixture.path(), type, "isolated reauthorization negative fixture", fields, &error),
+              "append isolated " + type + " fixture: " + error);
+        return ProjectMemory().events(reauthFixture.path()).last();
+    };
+    QJsonObject approvalTemplate, validationTemplate, boundTemplate;
+    for (const auto& event : approvedEventList) {
+        if (event.value("taskReauthorizationGrant").toObject().value("authorizationId") == reauthApproval.value("authorizationId"))
+            approvalTemplate = event;
+        if (event.value("authorizationId") != reauthApproval.value("authorizationId")) continue;
+        if (event.value("eventType") == "TASK_REAUTHORIZATION_AUTHORIZED") validationTemplate = event;
+        if (event.value("eventType") == "TASK_REAUTHORIZATION_BOUND") boundTemplate = event;
+    }
+    const auto auditChain = [&](const Mutation& mutateGrant, const Mutation& mutateApproval,
+                               const Mutation& mutateValidation, const Mutation& mutateContract,
+                               const Mutation& mutateBinding, bool bind = true, bool approve = true) {
+        AuditChain chain;
+        chain.id = "independent-reauthorization-" + QString::number(++chainNumber);
+        chain.grant = persistedGrant;
+        chain.grant.insert("authorizationId", chain.id);
+        mutateGrant(chain.grant);
+        chain.approval = approvalTemplate;
+        chain.approval.insert("taskReauthorizationGrant", chain.grant);
+        mutateApproval(chain.approval);
+        if (approve) chain.approval = appendFixtureEvent("ADMIN_OVERRIDE", chain.approval);
+        else chain.approval.insert("eventId", "missing-approval-event");
+        chain.validation = validationTemplate;
+        chain.validation.insert("authorizationId", chain.id);
+        chain.validation.insert("authorityEventId", chain.approval.value("eventId"));
+        mutateValidation(chain.validation);
+        chain.validation = appendFixtureEvent("TASK_REAUTHORIZATION_AUTHORIZED", chain.validation);
+        chain.contract = reauthContract;
+        auto link = chain.contract.value("reauthorization").toObject();
+        link.insert("authorizationId", chain.id);
+        link.insert("authorityEventId", chain.approval.value("eventId"));
+        chain.contract.insert("reauthorization", link);
+        auto request = chain.contract.value("request").toObject();
+        request.insert("reauthorizationId", chain.id);
+        chain.contract.insert("request", request);
+        mutateContract(chain.contract);
+        checksumFixtureContract(chain.contract);
+        chain.bound = boundTemplate;
+        chain.bound.insert("authorizationId", chain.id);
+        chain.bound.insert("authorityEventId", chain.approval.value("eventId"));
+        chain.bound.insert("contractId", chain.contract.value("contractId"));
+        mutateBinding(chain.bound);
+        if (bind) chain.bound = appendFixtureEvent("TASK_REAUTHORIZATION_BOUND", chain.bound);
+        return chain;
+    };
+    const auto validChain = [&] { return auditChain(unchanged, unchanged, unchanged, unchanged, unchanged); };
+    const auto auditPostflight = [&](const QJsonObject& contract) {
+        // Audit appends legitimately change current-state context. Refresh its
+        // canonical producers so stale derived state cannot mask this case.
+        check(ContextCoordinationService::generate(reauthModel).value("success").toBool(),
+              "refresh isolated audit fixture context");
+        check(VerificationServices().verify(reauthModel, reauthModel.generationOptions()).overallStatus
+                  == VerificationStatus::Pass, "verify isolated audit fixture canonical state");
+        return WorkerTaskServices::postflight(reauthModel, contract);
+    };
+    const auto rejectedChain = [&](const AuditChain& chain, const QString& code, const QString& name) {
+        const auto report = auditPostflight(chain.contract);
+        check(report.value("status") == "FAIL" && hasCode(report, code)
+              && !hasCode(report, "TASK_CONTRACT_TAMPERED"), name);
+    };
+    const auto controlChain = validChain();
+    const auto controlReport = auditPostflight(controlChain.contract);
+    if (controlReport.value("status") != "PASS")
+        std::cerr << "CONTROL POSTFLIGHT: " << QJsonDocument(controlReport.value("errors").toArray()).toJson().toStdString() << '\n';
+    check(controlReport.value("status") == "PASS",
+          "independent audit-chain fixture control passes postflight");
+
+    const auto unusedRevokedChain = auditChain(unchanged, unchanged, unchanged, unchanged, unchanged, false);
+    appendFixtureEvent("TASK_REAUTHORIZATION_REVOKED", QJsonObject{{"authorizationId", unusedRevokedChain.id}});
+    const auto revokedPreparation = WorkerTaskServices::prepareReauthorized(reauthModel,
+        unusedRevokedChain.id, originContract, originReport);
+    check(hasCode(revokedPreparation, "REAUTHORIZATION_INVALID")
+          && revokedPreparation.value("preflight").toObject().value("errors").toArray().first().toObject()
+              .value("message").toString().contains("revoked"), "revoked unused grant is independently rejected before preparation");
+
+    const auto unboundChain = auditChain(unchanged, unchanged, unchanged, unchanged, unchanged, false);
+    rejectedChain(unboundChain, "REAUTHORIZATION_AUDIT_INVALID", "missing unique binding is independently rejected");
+    const auto unapprovedChain = auditChain(unchanged, unchanged, unchanged, unchanged, unchanged, true, false);
+    rejectedChain(unapprovedChain, "REAUTHORIZATION_AUDIT_INVALID", "missing approval for an unknown grant is independently rejected");
+    const auto expiredChain = auditChain([](QJsonObject& grant) {
+        grant.insert("issuedAt", "2000-01-01T00:00:00Z");
+        grant.insert("expiresAt", "2000-01-01T01:00:00Z");
+    }, unchanged, unchanged, unchanged, unchanged);
+    rejectedChain(expiredChain, "REAUTHORIZATION_AUDIT_INVALID", "complete expired audit chain is independently rejected");
+    for (const auto& field : {"originContractId", "originContractFingerprint", "originPostflightFingerprint", "authorityEventId"}) {
+        const auto chain = auditChain(unchanged, unchanged, [&](QJsonObject& validation) {
+            validation.insert(field, "wrong-original-record");
+        }, unchanged, unchanged);
+        rejectedChain(chain, "REAUTHORIZATION_AUDIT_INVALID", "authorization event independently rejects wrong " + QString(field));
+    }
+    const auto identityChain = auditChain(unchanged, [](QJsonObject& approval) {
+        approval.insert("administrator", "Different Administrator");
+    }, unchanged, unchanged, unchanged);
+    rejectedChain(identityChain, "REAUTHORIZATION_AUDIT_INVALID", "wrong administrator is independently rejected");
+    const auto projectChain = auditChain([](QJsonObject& grant) {
+        grant.insert("projectId", "different-project");
+    }, unchanged, unchanged, unchanged, unchanged);
+    rejectedChain(projectChain, "REAUTHORIZATION_AUDIT_INVALID", "grant for a different project is independently rejected");
+    for (const auto& field : {"originContractId", "originContractFingerprint", "originPostflightFingerprint", "contractId"}) {
+        const auto chain = auditChain(unchanged, unchanged, unchanged, unchanged, [&](QJsonObject& binding) {
+            binding.insert(field, "wrong-bound-record");
+        });
+        rejectedChain(chain, "REAUTHORIZATION_AUDIT_INVALID", "binding event independently rejects wrong " + QString(field));
+    }
+    ProjectModel wrongProjectModel;
+    wrongProjectModel.setProjectPath(reauthFixture.path());
+    wrongProjectModel.setProjectId("different-project");
+    check(hasCode(WorkerTaskServices::postflight(wrongProjectModel, reauthContract), "REAUTHORIZATION_AUDIT_INVALID"),
+          "wrong project is rejected at successor postflight");
+    const auto originChain = auditChain(unchanged, unchanged, unchanged, [](QJsonObject& contract) {
+        auto link = contract.value("reauthorization").toObject();
+        link.insert("originContractId", "different-origin");
+        contract.insert("reauthorization", link);
+    }, unchanged);
+    rejectedChain(originChain, "REAUTHORIZATION_AUDIT_INVALID", "wrong origin contract link is independently rejected");
+    auto wrongSuccessor = reauthContract;
+    wrongSuccessor.insert("completionState", "TAMPERED");
+    check(hasCode(WorkerTaskServices::postflight(reauthModel, wrongSuccessor), "TASK_CONTRACT_TAMPERED"),
+          "wrong successor contract is rejected");
+    for (const auto& field : {"sourceFiles", "canonicalInputs", "operations", "baseline"}) {
+        const auto chain = auditChain(unchanged, unchanged, unchanged, [&](QJsonObject& contract) {
+            auto link = contract.value("reauthorization").toObject();
+            if (QString(field) == "sourceFiles") link.insert(field, QJsonArray{"source/unapproved.cpp"});
+            else if (QString(field) == "canonicalInputs") link.insert(field, QJsonArray{"ARAMF_WORKER/custom/unapproved.json"});
+            else if (QString(field) == "operations") {
+                auto operations = link.value(field).toObject(); operations.insert("source/ui.cpp", "DELETE");
+                link.insert(field, operations);
+            } else link.insert(field, QJsonObject{});
+            contract.insert("reauthorization", link);
+        }, unchanged);
+        rejectedChain(chain, "REAUTHORIZATION_SCOPE_INVALID", "independent exact-scope rejection for " + QString(field));
+    }
+    const auto revokedChain = validChain();
+    appendFixtureEvent("TASK_REAUTHORIZATION_REVOKED", QJsonObject{{"authorizationId", revokedChain.id},
+        {"provenance", QJsonObject{{"actor", "system"}, {"agentId", "none"}, {"tool", "WorkerTaskServices"}}}});
+    rejectedChain(revokedChain, "REAUTHORIZATION_AUDIT_INVALID", "revocation independently rejects a previously valid bound grant");
+    const auto duplicateGrantChain = validChain();
+    appendFixtureEvent("ADMIN_OVERRIDE", duplicateGrantChain.approval);
+    rejectedChain(duplicateGrantChain, "REAUTHORIZATION_AUDIT_INVALID", "duplicate approval independently rejects its chain");
+    const auto duplicateBindingChain = validChain();
+    appendFixtureEvent("TASK_REAUTHORIZATION_BOUND", duplicateBindingChain.bound);
+    rejectedChain(duplicateBindingChain, "REAUTHORIZATION_AUDIT_INVALID", "duplicate binding independently rejects its chain");
+    const auto duplicateValidationChain = validChain();
+    appendFixtureEvent("TASK_REAUTHORIZATION_AUTHORIZED", duplicateValidationChain.validation);
+    rejectedChain(duplicateValidationChain, "REAUTHORIZATION_AUDIT_INVALID", "duplicate authorization independently rejects its chain");
+    const auto consumedChain = validChain();
+    appendFixtureEvent("TASK_REAUTHORIZATION_CONSUMED", consumedChain.bound);
+    rejectedChain(consumedChain, "REAUTHORIZATION_AUDIT_INVALID", "extra consumption independently rejects a bound chain");
+    check(auditPostflight(controlChain.contract).value("status") == "PASS",
+          "unrelated negative chains do not revoke or contaminate the valid control");
+    QString configError;
+    const QString commandConfig = reauthFixture.path() + "/reauthorization-test.aramf.json";
+    check(ProjectPersistence().save(reauthModel, commandConfig, &configError), "save reauthorization command fixture");
+    for (const auto& forbidden : QStringList{"--command", "--status", "--dependency-fingerprint", "--baseline"}) {
+        QString commandOutput, commandError;
+        QTextStream outputStream(&commandOutput), errorStream(&commandError);
+        check(runWorkerTaskCommand({"task", "run-check", "--config", commandConfig, "--contract", originContractPath,
+              "--check", "git-diff-check", forbidden, "caller-authority"}, outputStream, errorStream) == 2
+              && commandError.contains("caller commands"), "producer rejects caller evidence authority option " + forbidden);
+    }
+    const QString requestFile = reauthFixture.path() + "/reauthorization-request.json";
+    for (const auto& forbidden : QStringList{"baseline", "sourceFingerprint", "authorizationId", "grantId", "contractId"}) {
+        QJsonObject requestJson = reauthRequest.toJson(); requestJson.insert(forbidden, QJsonObject{});
+        write(requestFile, QJsonDocument(requestJson).toJson());
+        QString commandOutput, commandError;
+        QTextStream outputStream(&commandOutput), errorStream(&commandError);
+        check(runWorkerTaskCommand({"task", "reauthorize-approve", "--config", commandConfig,
+              "--request", requestFile, "--instruction", reauthInstruction}, outputStream, errorStream) == 2,
+              "client supplied " + forbidden + " is rejected");
+    }
+    QJsonObject badPostflight = originReport; badPostflight.insert("completionState", "VERIFIED");
+    check(WorkerTaskServices::authorizeReauthorization(reauthModel, originContract, badPostflight,
+          reauthRequest, reauthInstruction).value("status") == "BLOCKED", "mismatched origin report is rejected");
+    const auto operationAssertions = canonicalCertificationOperationAssertions();
+    for (auto it = operationAssertions.begin(); it != operationAssertions.end(); ++it) check(it.value().toBool(), it.key());
+    check(requiredAssertions.size() == acceptanceAssertions.size(), "acceptance profile has observations for every exact named assertion");
+    for (const auto& id : acceptanceProfiles)
+        std::cout << "WORKER-TASK-ACCEPTANCE " << QJsonDocument(QJsonObject{{"profile", id},
+            {"assertions", acceptanceAssertions}}).toJson(QJsonDocument::Compact).toStdString() << '\n';
     std::cout << "WORKER-TASK checks=" << checks << " failed=" << failed << " matrix=" << matrix.size() << '\n';
     return failed == 0;
 }

@@ -151,6 +151,10 @@ int main(int argc, char** argv)
 
     CertificationRevalidationResult revalidation;
     QString error;
+    ok &= check(writeBytes(QDir(projectRoot).filePath(historicalReference), historicalBytes + " "), "isolated historical evidence tamper introduced");
+    ok &= check(!CertificationRevalidationService::revalidate(projectRoot, QStringLiteral("F1"),
+        QJsonObject{{"status", "PASS"}}, &revalidation, &error), "revalidation rejects altered historical bytes independently of JSON validity");
+    ok &= check(writeBytes(QDir(projectRoot).filePath(historicalReference), historicalBytes), "original historical fixture evidence restored");
     ok &= check(CertificationRevalidationService::revalidate(projectRoot, QStringLiteral("F1"),
             QJsonObject{{QStringLiteral("status"), QStringLiteral("PASS")}, {QStringLiteral("suite"), QStringLiteral("fixture")},
                         {QStringLiteral("semanticChange"), true}},
@@ -181,5 +185,25 @@ int main(int argc, char** argv)
     ok &= check(persistedEvidence.value(QStringLiteral("regressionEvidence")).toObject()
                     .value(QStringLiteral("implementationRevision")).toString() == revalidation.sourceRevision,
                 "caller implementation revision is replaced by canonical runtime revision");
+    const QString plannedId = "reval-5c6a1c21-835f-4a0f-9371-5e38a721ac24";
+    const QJsonObject operation{{"contractId", QString(64, 'a')}, {"subject", "F1"},
+        {"sourceFingerprint", sourceFingerprint}, {"contractFingerprint", contractFingerprint}};
+    const auto historicalBefore = [&]() { QFile f(QDir(projectRoot).filePath(historicalReference));
+        return f.open(QIODevice::ReadOnly) ? f.readAll() : QByteArray{}; }();
+    ok &= check(CertificationRevalidationService::revalidate(projectRoot, "F1", {{"status", "PASS"}},
+        &revalidation, &error, plannedId, operation), "planned revalidation creates exact immutable ID");
+    const QString plannedPath = QDir(projectRoot).filePath(revalidation.evidenceArtifact);
+    QFile plannedFile(plannedPath); plannedFile.open(QIODevice::ReadOnly); const auto plannedBytes = plannedFile.readAll(); plannedFile.close();
+    ok &= check(!CertificationRevalidationService::revalidate(projectRoot, "F1", {{"status", "PASS"}},
+        nullptr, &error, plannedId, operation), "planned revalidation rejects replay without replacing evidence");
+    plannedFile.open(QIODevice::ReadOnly);
+    ok &= check(plannedFile.readAll() == plannedBytes, "planned replay preserves exact immutable evidence bytes"); plannedFile.close();
+    auto wrongBinding = operation; wrongBinding.insert("sourceFingerprint", "wrong");
+    ok &= check(!CertificationRevalidationService::revalidate(projectRoot, "F1", {{"status", "PASS"}},
+        nullptr, &error, "reval-8f9494cb-431e-4d56-bb3d-290eeafc2444", wrongBinding), "planned revalidation rejects independent source mismatch");
+    ok &= check(!CertificationRevalidationService::revalidate(projectRoot, "F1", {{"status", "PASS"}},
+        nullptr, &error, "../../escape", operation), "planned revalidation rejects path traversal ID");
+    QFile original(QDir(projectRoot).filePath(historicalReference)); original.open(QIODevice::ReadOnly);
+    ok &= check(original.readAll() == historicalBefore, "planned revalidation preserves original historical evidence");
     return ok ? 0 : 1;
 }
