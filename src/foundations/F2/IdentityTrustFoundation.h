@@ -36,6 +36,12 @@ public:
     // Verifies whether an instruction meets administrative override identity criteria.
     static bool isVerifiedAdministrativeOverride(const QString& instruction);
 
+    // Recognizes an explicit, constrained temporary governance repair directive.
+    // This is a distinct intent predicate, not authentication or a file grant.
+    // The external coordinator must bind current project, exact scope, origins,
+    // lifetime and actual recording provenance before issuing any permission.
+    static bool isExplicitTemporaryGovernanceRepairAuthority(const QString& instruction);
+
     // Checks whether text contains prohibited destructive shell command patterns.
     static bool containsDestructivePattern(const QString& text);
 
