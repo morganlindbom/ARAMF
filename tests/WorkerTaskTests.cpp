@@ -6,6 +6,8 @@
 #include "core/ProjectMemory.h"
 #include "core/ProjectPersistence.h"
 #include "core/ProjectModel.h"
+#include "core/WorkflowPageMetadata.h"
+#include "ui/workflow/WorkflowPageId.h"
 #include "core/AramfPaths.h"
 #include "core/WorkerTaskServices.h"
 #include "core/ContextCoordinationService.h"
@@ -2273,8 +2275,198 @@ QJsonObject scopeRegistrationAssertions()
 }
 }
 
+
+namespace {
+QJsonObject androidProfileAssertions()
+// Brief: Measure Android/member acceptance against real core services in an isolated project.
+{
+    QJsonObject observed;
+    const auto expect = [&](bool pass, const QString& name) { observed.insert(name, pass); };
+    QTemporaryDir fixture;
+    ProjectModel model;
+    QString error;
+    const auto lifecycle = processVersionStateToJson(model.processVersionState());
+    const bool selected = model.selectProjectProfile("storepath-android", &error);
+    const auto settings = model.projectProfile().value("settings").toObject();
+    const auto facts = model.projectProfileSummary().value("reference").toObject();
+    const auto states = model.projectProfile().value("features").toObject();
+    expect(selected && settings.value("minSdk") == "24" && settings.value("targetSdk") == "36"
+        && settings.value("compileSdk") == "37" && settings.value("androidGradlePlugin") == "9.2.1"
+        && settings.value("kotlinComposePlugin") == "2.2.10" && settings.value("gradleWrapper") == "9.4.1",
+        "android StorePath observed toolchain defaults");
+    expect(settings.value("gradleRuntimeJdk") == "21" && settings.value("javaTarget") == "11"
+        && settings.value("ciBootstrapJdk") == "Temurin 17" && settings.value("installedJdk").toString().contains("25.0.3"),
+        "android StorePath runtime and targets remain separate");
+    expect(facts.value("features").toObject().value("a-star").toObject().value("category").toString().isEmpty()
+        && states.value("walkable-graph").toObject().value("selected").toBool()
+        && !model.developmentCapabilities().developmentTools.contains("a-star"),
+        "android StorePath capabilities are not external tools");
+    expect(!model.androidConstraints().githubApiRequired && !model.developmentCapabilities().frameworks.contains("retrofit")
+        && states.value("backend").toObject().value("availability") == "planned"
+        && !states.value("backend").toObject().value("selected").toBool()
+        && !model.setProjectProfileFeature("wifi-rtt", true, true, "available", &error),
+        "android StorePath excludes future dependencies and RTT");
+    expect(model.developmentCapabilities().frameworks.contains("android-sdk") && model.developmentCapabilities().languages == QStringList{"kotlin"}
+        && model.developmentEnvironment().buildSystem == "gradle" && model.developmentEnvironment().targetPlatform == "android",
+        "android profiles configure capabilities and environment");
+    const auto ai = model.aiConfiguration();
+    expect(ai.primaryAgent == "openai-codex" && ai.permissions.contains("read-project-files") && ai.permissions.contains("run-tests")
+        && ai.permissions.contains("run-builds") && !ai.permissions.contains("git-push") && !ai.permissions.contains("merge-pull-requests"),
+        "android profiles configure safe local AI defaults");
+    auto capabilities = model.developmentCapabilities(); capabilities.languages << "python";
+    capabilities.frameworkVersions.insert("jetpack-compose", "user-bom"); model.setDevelopmentCapabilities(capabilities);
+    expect(model.projectProfile().value("settings").toObject().value("composeBom") == "user-bom", "android profile generic edits synchronize");
+    model.setDescription("Keep unrelated project intent");
+    model.selectProjectProfile("android-application-lab-2", &error);
+    const auto lab = model.projectProfileSummary().value("reference").toObject();
+    expect(model.developmentCapabilities().frameworks.contains("retrofit") && model.androidConstraints().githubApiRequired
+        && model.androidConstraints().humanInTheLoopRequired && model.androidConstraints().privateRepositoryRequired,
+        "android Lab 2 requirements remain distinct");
+    expect(lab.value("settings").toObject().value("forceMerge").toString().contains("temperature=17.0")
+        && lab.value("settings").toObject().value("forceMerge").toString().contains("close PR")
+        && lab.value("settings").toObject().value("forceReject").toString().contains("PATCH")
+        && lab.value("features").toObject().value("defensive-errors").toObject().value("label").toString().contains("401 / 403 / 422")
+        && lab.value("source").toString().contains("738bcc4e"), "android Lab 2 incident closure and errors retain provenance");
+    model.selectProjectProfile("storepath-android", &error);
+    expect(!model.developmentCapabilities().frameworks.contains("retrofit") && !model.androidConstraints().githubApiRequired,
+        "android profile switching removes owned course requirements");
+    expect(model.developmentCapabilities().languages.contains("python") && model.description() == "Keep unrelated project intent"
+        && model.developmentCapabilities().frameworkVersions.value("jetpack-compose") == "user-bom",
+        "android profiles preserve unrelated user choices");
+    ProjectModel hardware; hardware.selectProjectProfile("keyestudio-smart-home-kit", &error);
+    expect(hardware.developmentCapabilities().frameworks.contains("arduino") && !hardware.developmentCapabilities().targetPlatforms.contains("android")
+        && !model.developmentCapabilities().frameworks.contains("arduino"), "android hardware stays optional and separate");
+    QList<ProjectMember> members{{"Synthetic participant", "Developer", "Review and tests", "Synthetic organization", "fixture@example.invalid", "fixture-only"}};
+    model.setProjectMembers(members); members[0].role = "Reviewer"; model.setProjectMembers(members);
+    const bool edited = model.projectMembers() == members; model.setProjectMembers({});
+    expect(edited && model.projectMembers().isEmpty(), "android members model supports add edit remove"); model.setProjectMembers(members);
+    const auto page = workflowPageCapabilities(workflowPageKey(WorkflowPageId::ProjectMembers));
+    expect(workflowPageKey(WorkflowPageId::ProjectMembers) == "project.members" && page.userCheckableCompletion && page.countsTowardSetupProgress,
+        "android members stable page belongs to project setup");
+    model.setProjectName("Android acceptance fixture"); model.setProjectPath(fixture.path());
+    const auto config = fixture.filePath("profile.aramf.json"); model.setProjectFilePath(config);
+    ProjectPersistence persistence; ProjectModel loaded;
+    const bool persisted = fixture.isValid() && persistence.save(model, config, &error) && persistence.load(&loaded, config, &error);
+    expect(persisted && loaded.projectProfile() == model.projectProfile() && loaded.projectMembers() == model.projectMembers(),
+        "android profile persistence round trip");
+    TemplateManager templates(nullptr, fixture.filePath("templates.json")); QString templateId; ProjectModel restored;
+    const bool templated = templates.saveCustomTemplate(loaded, "Reusable role slots", &templateId, &error)
+        && templates.applyTemplate(&restored, templateId, &error);
+    bool anonymous = templated && restored.projectMembers().size() == 1;
+    if (anonymous) { const auto slot = restored.projectMembers().first(); anonymous = slot.name.isEmpty() && slot.email.isEmpty()
+        && slot.githubUsername.isEmpty() && slot.affiliation.isEmpty() && slot.role == "Reviewer" && slot.responsibilities == "Review and tests"; }
+    expect(anonymous && restored.projectProfile() == loaded.projectProfile(), "android templates preserve roles without identities");
+    const auto generated = GenerationServices().generate(loaded, loaded.generationOptions());
+    const bool verified = generated.success && VerificationServices().verify(loaded, loaded.generationOptions()).overallStatus == VerificationStatus::Pass;
+    expect(verified, "android profile generation and verification pass");
+    const auto project = QJsonDocument::fromJson(bytes(fixture.filePath("ARAMF_WORKER/project.json"))).object();
+    expect(project.value("projectMembers") == persistence.toJson(loaded).value("projectMembers")
+        && project.value("projectProfile").toObject().value("id") == "storepath-android", "android generated information retains members and profile");
+    expect(processVersionStateToJson(model.processVersionState()) == lifecycle && processVersionStateToJson(loaded.processVersionState()) == lifecycle,
+        "android profile operations preserve lifecycle");
+    auto invalid = persistence.toJson(model); invalid.insert("projectMembers", QJsonArray{QJsonObject{{"password", "not-a-real-secret"}}});
+    const auto before = persistence.toJson(model);
+    expect(!model.setProjectProfileSetting("token", "not-a-real-secret", &error)
+        && !model.setProjectProfileSetting("minSdk", "invalid", &error)
+        && !persistence.fromJson(&model, invalid, &error) && persistence.toJson(model) == before,
+        "android profile rejects unknown credentials and malformed input");
+    ProjectModel legacy;
+    expect(persistence.fromJson(&loaded, persistence.toJson(legacy), &error) && loaded.projectProfile().isEmpty() && loaded.projectMembers().isEmpty()
+        && !persistence.toJson(legacy).contains("projectProfile"), "android profile legacy configuration clears optional fields");
+    const auto profile = WorkerTaskServices::acceptanceProfile("task-android-profiles-members/v1");
+    const auto checks = profile.value("checks").toArray();
+    expect(checks.size() == 3 && checks.contains("aramf_core_tests::--worker-tasks") && checks.contains("production-build") && checks.contains("ctest"),
+        "android profile acceptance requires current full validation");
+    QSet<QString> assertions; bool bounded = profile.value("files").toArray().size() == 22;
+    for (const auto& file : profile.value("files").toArray()) bounded &= file.toString().startsWith("src/") || file.toString().startsWith("tests/");
+    for (const auto& criterion : profile.value("criteria").toArray()) {
+        bounded &= criterion.toObject().value("check") == "aramf_core_tests::--worker-tasks";
+        for (const auto& assertion : criterion.toObject().value("assertions").toArray()) assertions.insert(assertion.toString());
+    }
+    expect(bounded && profile.value("requirements").toArray().size() == 7 && assertions.size() == 23,
+        "android profile registered acceptance is exact");
+    return observed;
+}
+}
+
+namespace {
+QJsonObject recorderReauthorizationAssertions()
+// Brief: Keep canonical append-only memory delegation separate from exact human-authorized repair scope.
+{
+    QJsonObject observed;
+    const auto expect = [&](bool value, const QString& name) { observed.insert(name, value); return value; };
+    QTemporaryDir fixture; fixture.setAutoRemove(false);
+    const QString root = fixture.path(); QString error;
+    ProjectModel model; model.setProjectPath(root); model.setProjectId("isolated-recorder-reauthorization-test");
+    auto memory = model.memoryConfiguration(); memory.maintenanceOptions = {"record-test-results", "update-current-state"}; model.setMemoryConfiguration(memory);
+    auto ai = model.aiConfiguration(); ai.permissions = {"read-project-files", "modify-files", "create-files", "run-tests", "run-builds", "run-project-tools"}; model.setAiConfiguration(ai);
+    auto rules = model.ruleConfiguration(); rules.projectScopes = {"source-code"};
+    rules.scopeMetadata = {{"source-code", QJsonObject{{"files", QJsonArray{"source/a.cpp", "source/b.cpp"}}, {"tests", QJsonArray{"aramf_core_tests::--worker-tasks"}}}}}; model.setRuleConfiguration(rules);
+    const auto git = [&](const QStringList& args) { QProcess process; process.start("git", QStringList{"-C", root} + args); return process.waitForStarted() && process.waitForFinished() && process.exitCode() == 0; };
+    if (!expect(write(root + "/source/a.cpp", "before a\n") && write(root + "/source/b.cpp", "before b\n")
+        && GenerationServices().generate(model, model.generationOptions()).success
+        && ContextCoordinationService::generate(model).value("success").toBool()
+        && VerificationServices().verify(model, model.generationOptions()).overallStatus == VerificationStatus::Pass
+        && git({"init"}) && git({"config", "user.email", "fixture@example.invalid"}) && git({"config", "user.name", "Isolated Test Fixture"})
+        && git({"add", "-A"}) && git({"commit", "-m", "isolated fixture baseline"}), "recorder reauthorization isolated fixture")) return observed;
+    WorkerTaskRequest task; task.goal = "Isolated source edit"; task.type = "coding"; task.scopes = {"source-code"}; task.files = {"source/a.cpp"}; task.definitionOfDone = {"Exact fixture boundary is verified"};
+    const auto origin = WorkerTaskServices::prepare(model, task);
+    if (!expect(ready(origin), "recorder reauthorization starts from READY")) return observed;
+    write(root + "/source/a.cpp", "after a\n"); write(root + "/source/b.cpp", "after b\n");
+    QJsonObject record;
+    if (!expect(ProjectMemory().recordOperation(root, "test-result", {{"task", "isolated recorder fixture"}, {"status", "PASS"}, {"summary", "Synthetic fixture event; not live repository evidence"},
+        {"provenance", QJsonObject{{"actor", "agent"}, {"agentId", "test-fixture"}, {"tool", "WorkerTaskTests"}}}}, &record, &error), "recorder reauthorization records through canonical service")) return observed;
+    const auto report = WorkerTaskServices::postflight(model, origin);
+    bool delegated = false;
+    for (const auto& value : report.value("serviceChanges").toArray()) delegated |= value.toObject().value("path") == "ARAMF_WORKER/memory/event-log.jsonl" && value.toObject().value("service") == "ProjectMemory recorder";
+    expect(report.value("status") == "FAIL" && delegated, "recorder reauthorization retains real failed scope and validated memory");
+    TaskReauthorizationRequest request; request.task = task; request.task.files.append("source/b.cpp"); request.validityMinutes = 60;
+    request.canonicalInputs = {"ARAMF_WORKER/project.json", "ARAMF_WORKER/worker-manifest.json",
+        "ARAMF_WORKER/routing/scope-routes.json", "ARAMF_WORKER/routing/task-routes.json",
+        "ARAMF_WORKER/context/context-index.json", "ARAMF_WORKER/context/compressed-context.json", "ARAMF_WORKER/context/freshness.json",
+        "ARAMF_WORKER/context/agent-adapters.json", "ARAMF_WORKER/context/task-dag.json",
+        "ARAMF_WORKER/verification/latest-validation.json", "ARAMF_WORKER/verification/verification-result.json", "ARAMF_WORKER/verification/generation-state.json"};
+    request.operations = {{"source/a.cpp", "MODIFY"}, {"source/b.cpp", "MODIFY"}};
+    for (const auto& path : request.canonicalInputs) request.operations.insert(path, "REGENERATE");
+    const QString instruction = "Admin Morgan Lindbom override for isolated recorder regression fixture only";
+    expect(WorkerTaskServices::authorizeReauthorization(model, origin, report, request, "ordinary agent request").value("status") == "BLOCKED", "recorder delegation does not replace Admin authority");
+    auto missing = request; missing.task.files.removeAll("source/b.cpp"); missing.operations.remove("source/b.cpp");
+    expect(WorkerTaskServices::authorizeReauthorization(model, origin, report, missing, instruction).value("status") == "BLOCKED", "recorder delegation never hides ordinary out-of-scope source");
+    auto forged = report; auto changes = forged.value("serviceChanges").toArray(); changes.append(QJsonObject{{"path", "source/b.cpp"}, {"service", "ProjectMemory recorder"}, {"validation", "canonical-producer-and-boundary"}}); forged.insert("serviceChanges", changes);
+    expect(WorkerTaskServices::authorizeReauthorization(model, origin, forged, missing, instruction).value("status") == "BLOCKED", "recorder delegation rejects forged report claims");
+    const auto approval = WorkerTaskServices::authorizeReauthorization(model, origin, report, request, instruction);
+    if (!expect(approval.value("status") == "PASS", "recorder delegation permits exact approved successor: " + approval.value("error").toString())) return observed;
+    const auto successor = WorkerTaskServices::prepareReauthorized(model, approval.value("authorizationId").toString(), origin, report);
+    const auto beforeRefresh = ready(successor) ? WorkerTaskServices::postflight(model, successor) : QJsonObject{};
+    expect(ready(successor) && beforeRefresh.value("status") == "FAIL" && hasCode(beforeRefresh, "STALE_DERIVED_ARTIFACT"),
+        "recorder successor still requires current canonical context");
+    const bool refreshed = ready(successor) && ContextCoordinationService::generate(model).value("success").toBool()
+        && VerificationServices().verify(model, model.generationOptions()).overallStatus == VerificationStatus::Pass;
+    const auto successorReport = refreshed ? WorkerTaskServices::postflight(model, successor) : beforeRefresh;
+    if (!ready(successor) || successorReport.value("status") != "PASS")
+        std::cerr << "RECORDER SUCCESSOR GATE " << QJsonDocument(QJsonObject{{"preflight", successor.value("preflight")}, {"errors", successorReport.value("errors")}}).toJson(QJsonDocument::Compact).toStdString() << '\n';
+    expect(ready(successor) && successorReport.value("status") == "PASS", "recorder delegation successor preserves ordinary boundary checks");
+    return observed;
+}
+}
+
 bool runWorkerTaskTests()
 {
+    if (QCoreApplication::arguments().contains("--worker-tasks") && QCoreApplication::arguments().contains("--recorder-reauthorization-only")) {
+        const auto observed = recorderReauthorizationAssertions(); int failed = 0;
+        for (auto it = observed.begin(); it != observed.end(); ++it) if (!it.value().toBool()) ++failed;
+        std::cout << "RECORDER-REAUTHORIZATION-DIAGNOSTIC " << QJsonDocument(QJsonObject{{"diagnosticOnly", true}, {"assertions", observed}, {"failed", failed}}).toJson(QJsonDocument::Compact).toStdString() << '\n';
+        return observed.size() == 10 && failed == 0;
+    }
+
+    if (QCoreApplication::arguments().contains("--worker-tasks") && QCoreApplication::arguments().contains("--android-profile-only")) {
+        const auto observed = androidProfileAssertions();
+        int failed = 0;
+        for (auto it = observed.begin(); it != observed.end(); ++it) if (!it.value().toBool()) { ++failed; std::cerr << "ANDROID PROFILE FAIL: " << it.key().toStdString() << '\n'; }
+        std::cout << "ANDROID-PROFILE-DIAGNOSTIC " << QJsonDocument(QJsonObject{{"diagnosticOnly", true}, {"checks", observed.size()}, {"failed", failed}, {"assertions", observed}}).toJson(QJsonDocument::Compact).toStdString() << '\n';
+        return observed.size() == 23 && failed == 0;
+    }
+
     if (QCoreApplication::arguments().contains("--worker-tasks") && QCoreApplication::arguments().contains("--scope-registration-only")) {
         // Diagnostic selection cannot emit whole-worker acceptance evidence.
         // The canonical producer invokes the unchanged --worker-tasks command.
@@ -2303,7 +2495,7 @@ bool runWorkerTaskTests()
     int checks = 0, failed = 0;
     QJsonObject acceptanceAssertions;
     QSet<QString> requiredAssertions;
-    const QStringList acceptanceProfiles{"task-reauthorization-security/v1", "task-certification-operations/v1", "task-p6-requirements-operations/v1", "task-p6-build-registration/v1", "task-p6-prerequisite-closure/v1", "task-p6-activation-governance/v1", "task-p6-activation-campaign-isolation/v1", "task-p6-activation-campaign-isolation/v2", "task-scope-registration-operations/v1"};
+    const QStringList acceptanceProfiles{"task-reauthorization-security/v1", "task-certification-operations/v1", "task-p6-requirements-operations/v1", "task-p6-build-registration/v1", "task-p6-prerequisite-closure/v1", "task-p6-activation-governance/v1", "task-p6-activation-campaign-isolation/v1", "task-p6-activation-campaign-isolation/v2", "task-scope-registration-operations/v1", "task-android-profiles-members/v1"};
     for (const auto& id : acceptanceProfiles)
         for (const auto& criterion : WorkerTaskServices::acceptanceProfile(id).value("criteria").toArray())
             if (criterion.toObject().value("check") == "aramf_core_tests::--worker-tasks")
@@ -3344,6 +3536,10 @@ bool runWorkerTaskTests()
     QJsonObject badPostflight = originReport; badPostflight.insert("completionState", "VERIFIED");
     check(WorkerTaskServices::authorizeReauthorization(reauthModel, originContract, badPostflight,
           reauthRequest, reauthInstruction).value("status") == "BLOCKED", "mismatched origin report is rejected");
+    const auto recorderAssertions = recorderReauthorizationAssertions();
+    for (auto it = recorderAssertions.begin(); it != recorderAssertions.end(); ++it) check(it.value().toBool(), it.key());
+    const auto androidAssertions = androidProfileAssertions();
+    for (auto it = androidAssertions.begin(); it != androidAssertions.end(); ++it) check(it.value().toBool(), it.key());
     const auto requirements = p6RequirementsOperationAssertions();
     for (auto it = requirements.begin(); it != requirements.end(); ++it) check(it.value().toBool(), it.key());
     const auto successorAssertions = repairSuccessorAssertions();

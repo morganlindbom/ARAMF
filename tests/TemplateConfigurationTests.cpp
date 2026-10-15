@@ -1,4 +1,6 @@
 #include "core/Services.h"
+#include "ui/workflows/project/members/ProjectMembersPage.h"
+#include "ui/workflows/project/frameworks/mobile/ProjectFrameworkMobilePage.h"
 #include "core/ComponentVersion.h"
 #include "core/TemplateValidation.h"
 #include "core/ProjectPersistence.h"
@@ -220,6 +222,174 @@ void identityRegression(TemplateManager& manager, ProjectPersistence& persistenc
 }
 }
 
+
+void androidMembersRegression(ProjectPersistence& persistence, const QTemporaryDir& fixture)
+// Brief: Exercise independent profiles and member lifecycle through real model, UI, persistence and producers.
+{
+    TemplateManager manager(nullptr, fixture.filePath("android-member-templates.json"));
+    ProjectModel model;
+    QString error;
+    const auto originalProcess = processVersionStateToJson(model.processVersionState());
+    check(model.selectProjectProfile("storepath-android", &error), "select StorePath: " + error);
+    const auto settings = model.projectProfile().value("settings").toObject();
+    check(settings.value("minSdk") == "24" && settings.value("targetSdk") == "36" && settings.value("compileSdk") == "37", "StorePath observed SDK levels");
+    check(settings.value("androidGradlePlugin") == "9.2.1" && settings.value("kotlinComposePlugin") == "2.2.10" && settings.value("gradleWrapper") == "9.4.1", "StorePath observed plugin and wrapper versions");
+    check(settings.value("gradleRuntimeJdk") == "21" && settings.value("javaTarget") == "11" && settings.value("ciBootstrapJdk") == "Temurin 17", "runtime JDK, app target and CI bootstrap remain distinct");
+    check(model.developmentEnvironment().language == "kotlin" && model.developmentEnvironment().buildSystem == "gradle" && model.context() == "android-application", "profile updates environment mirrors and context");
+    check(!model.developmentCapabilities().languages.contains("cpp") && !model.developmentCapabilities().frameworks.contains("none"), "implicit desktop defaults are replaced");
+    check(!model.developmentCapabilities().frameworks.contains("retrofit") && !model.androidConstraints().githubApiRequired && !model.androidConstraints().roomRequired, "StorePath excludes course networking and persistence requirements");
+    check(!model.setProjectProfileFeature("wifi-rtt", true, true, "available", &error), "unsupported phone RTT cannot be selected");
+    check(!model.setProjectProfileSetting("token", "test-secret", &error), "unknown credential field is rejected");
+    const auto beforeInvalidSdk = model.projectProfile();
+    check(!model.setProjectProfileSetting("minSdk", "invalid", &error) && model.projectProfile() == beforeInvalidSdk, "invalid SDK edit rejects atomically");
+    check(model.setProjectProfileSetting("gradleRuntimeJdk", "22", &error) && model.developmentCapabilities().toolchainVersions.value("java-jdk") == "22", "editable runtime maps into toolchain metadata");
+    auto capabilities = model.developmentCapabilities(); capabilities.languages << "python"; capabilities.frameworkVersions.insert("jetpack-compose", "user-bom");
+    model.setDevelopmentCapabilities(capabilities);
+    check(model.projectProfile().value("settings").toObject().value("composeBom") == "user-bom", "generic version edits read back in the profile");
+    auto ai = model.aiConfiguration(); ai.primaryAgent = "openai-codex"; model.setAiConfiguration(ai);
+    ProjectResource course; course.id = "unrelated-lab"; course.name = "Other lab"; course.role = "source-of-truth"; course.description = "Retrofit GitHub REST API Room SQLite";
+    course.location = fixture.filePath("unrelated-lab.txt");
+    { QFile file(course.location); check(file.open(QIODevice::WriteOnly), "write separate course fixture"); file.write(course.description.toUtf8()); }
+    model.setResources({course});
+    check(!model.androidConstraints().retrofitRequired && !model.androidConstraints().roomRequired, "unselected coursework resource does not leak through legacy Android resolver");
+    check(model.selectProjectProfile("storepath-android") && model.projectProfile().value("settings").toObject().value("gradleRuntimeJdk") == "22", "same profile selection retains edits");
+    check(model.selectProjectProfile("android-application-lab-2", &error) && model.androidConstraints().retrofitRequired && model.androidConstraints().githubApiRequired, "Lab 2 explicitly selects Retrofit and GitHub writes");
+    const auto lab = model.projectProfileSummary().value("reference").toObject();
+    check(lab.value("settings").toObject().value("forceMerge").toString().contains("temperature=17.0") && lab.value("settings").toObject().value("forceMerge").toString().contains("close PR"), "Lab 2 merge operator flow updates content and closes incident");
+    check(lab.value("settings").toObject().value("alertDetectionDeadlineSeconds") == "30" && lab.value("features").toObject().value("defensive-errors").toObject().value("label").toString().contains("401 / 403 / 422"), "Lab 2 timing and defensive errors retain source requirements");
+    check(model.selectProjectProfile("storepath-android", &error) && !model.developmentCapabilities().frameworks.contains("retrofit"), "switching back removes owned Lab 2 contributions");
+    check(model.developmentCapabilities().languages.contains("python") && model.aiConfiguration().primaryAgent == "openai-codex" && model.resources().first().id == "unrelated-lab", "profile switching preserves unrelated user configuration");
+    check(model.developmentCapabilities().frameworkVersions.value("jetpack-compose") == "user-bom", "profile switching preserves generic framework version override");
+    check(processVersionStateToJson(model.processVersionState()) == originalProcess, "profile selection preserves process lifecycle");
+    ProjectModel readOnly;
+    auto readOnlyAi = readOnly.aiConfiguration(); readOnlyAi.primaryAgent = "chatgpt";
+    readOnlyAi.permissions = {"read-project-files"}; readOnlyAi.responsibilities = {"code-review"}; readOnly.setAiConfiguration(readOnlyAi);
+    check(readOnly.selectProjectProfile("storepath-android", &error) && readOnly.aiConfiguration().permissions == readOnlyAi.permissions
+        && readOnly.aiConfiguration().responsibilities == readOnlyAi.responsibilities && readOnly.aiConfiguration().primaryAgent == "chatgpt",
+        "profile does not expand an existing AI autonomy choice");
+    ProjectModel customized;
+    auto customCapabilities = customized.developmentCapabilities();
+    customCapabilities.frameworks = {"qt"}; customCapabilities.targetArchitectures = {"arm64"};
+    customized.setDevelopmentCapabilities(customCapabilities);
+    check(customized.selectProjectProfile("storepath-android", &error)
+        && customized.developmentCapabilities().languages.contains("cpp") && customized.developmentCapabilities().frameworks.contains("qt")
+        && customized.developmentCapabilities().buildSystems.contains("cmake") && !customized.developmentCapabilities().targetArchitectures.contains("auto"),
+        "profile preserves an existing stack and explicit architecture without conflicting fallback selections");
+    ProjectModel labOverrides;
+    check(labOverrides.selectProjectProfile("android-application-lab-2", &error)
+        && labOverrides.setProjectProfileSetting("alertDetectionDeadlineSeconds", "45", &error)
+        && QJsonDocument(labOverrides.projectProfileSummary()).toJson().contains("within 45 seconds"), "Lab 2 validation routes reflect configured timing");
+    check(labOverrides.setProjectProfileFeature("incident-closure", false, false, "available", &error)
+        && !labOverrides.androidConstraints().pollingRequired && !labOverrides.androidConstraints().normalGreenRequired,
+        "Lab 2 requirement edits update compatibility constraints");
+    ProjectModel hardware;
+    check(hardware.selectProjectProfile("keyestudio-smart-home-kit", &error) && hardware.developmentCapabilities().frameworks.contains("arduino") && !hardware.developmentCapabilities().targetPlatforms.contains("android"), "hardware profile is independently optional");
+    check(!model.developmentCapabilities().frameworks.contains("arduino"), "hardware does not leak into StorePath");
+    ProjectMembersPage members(&model);
+    auto* table = members.findChild<QTableWidget*>("projectMembersTable");
+    members.findChild<QPushButton*>("addProjectMember")->click();
+    check(table && table->rowCount() == 1 && model.projectMembers().first().name.isEmpty(), "add starts with a blank member, no invented identity");
+    table->item(0, 0)->setText("Synthetic test participant"); table->item(0, 1)->setText("Developer"); table->item(0, 2)->setText("Review and tests");
+    table->item(0, 3)->setText("Synthetic test organization"); table->item(0, 4)->setText("fixture@example.invalid"); table->item(0, 5)->setText("fixture-only");
+    check(model.projectMembers().first().role == "Developer", "member UI edits canonical model");
+    ProjectFrameworkMobilePage mobile(&model);
+    check(mobile.findChild<QComboBox*>("projectProfileSelector")->currentData() == "storepath-android", "profile editor reads selected model");
+    auto* selector = mobile.findChild<QComboBox*>("projectProfileSelector");
+    selector->setCurrentIndex(selector->findData("android-application-lab-2")); QApplication::processEvents();
+    check(model.projectProfile().value("id") == "android-application-lab-2" && model.projectMembers().first().name == "Synthetic test participant", "profile UI selection preserves project members");
+    selector->setCurrentIndex(selector->findData("storepath-android")); QApplication::processEvents();
+    auto* profileSettings = mobile.findChild<QTableWidget*>("projectProfileSettings");
+    for (int row = 0; row < profileSettings->rowCount(); ++row)
+        if (profileSettings->item(row, 0)->data(Qt::UserRole) == "gradleRuntimeJdk") profileSettings->item(row, 1)->setText("23");
+    QApplication::processEvents();
+    check(model.projectProfile().value("settings").toObject().value("gradleRuntimeJdk") == "23"
+        && model.developmentCapabilities().toolchainVersions.value("java-jdk") == "23", "profile UI setting edit updates model and toolchain");
+
+    model.setProjectName("Android profile lifecycle fixture"); model.setProjectPath(fixture.filePath("android-members-project"));
+    QDir().mkpath(model.projectPath());
+    const auto configPath = fixture.filePath("android-members.aramf.json"); model.setProjectFilePath(configPath);
+    check(persistence.save(model, configPath, &error), "save profile and members: " + error);
+    ProjectModel reopened;
+    check(persistence.load(&reopened, configPath, &error), "reopen profile and members: " + error);
+    check(reopened.projectMembers() == model.projectMembers() && reopened.projectProfile() == model.projectProfile(), "profile and member exact disk readback");
+    ReviewPage review(&reopened);
+    const auto reviewText = review.findChild<QPlainTextEdit*>()->toPlainText();
+    check(reviewText.contains("Synthetic test participant") && reviewText.contains("storepath-android") && !reviewText.contains("Applied\n"), "review includes profile and members without merge bookkeeping");
+    QString templateId;
+    check(manager.saveCustomTemplate(reopened, "Android role slots", &templateId, &error), "save reusable named-profile template without modules: " + error);
+    ProjectModel restored;
+    check(manager.applyTemplate(&restored, templateId, &error), "restore reusable profile template: " + error);
+    check(restored.projectProfile() == reopened.projectProfile() && restored.projectMembers().size() == 1, "template restores profile and role structure");
+    check(restored.aiConfiguration().primaryAgent == reopened.aiConfiguration().primaryAgent
+        && restored.aiConfiguration().additionalAgents == reopened.aiConfiguration().additionalAgents, "profile template restores AI choices without adding agents");
+    if (!restored.projectMembers().isEmpty()) {
+        const auto slot = restored.projectMembers().first();
+        check(slot.name.isEmpty() && slot.email.isEmpty() && slot.githubUsername.isEmpty() && slot.affiliation.isEmpty()
+            && slot.role == "Developer" && slot.responsibilities == "Review and tests", "template strips personal identity and contacts while preserving role slots");
+    }
+    const auto generated = GenerationServices().generate(reopened, reopened.generationOptions());
+    check(generated.success, "generate profile and members: " + generated.error);
+    if (generated.success) {
+        const auto project = readIdentityJson(QDir(reopened.projectPath()).filePath("ARAMF_WORKER/project.json"));
+        check(project.value("projectMembers") == persistence.toJson(reopened).value("projectMembers") && project.value("projectProfile").toObject().value("id") == "storepath-android", "generated project information agrees with configuration");
+        const auto effective = readIdentityJson(QDir(reopened.projectPath()).filePath(AramfPaths::AndroidEffectiveConfig));
+        check(effective.value("settings") == reopened.projectProfile().value("settings"), "generated Android settings reflect user edits");
+        const auto verified = VerificationServices().verify(reopened, reopened.generationOptions());
+        check(verified.overallStatus == VerificationStatus::Pass, "generated profile Worker verification");
+    }
+    ProjectModel transition;
+    check(persistence.fromJson(&transition, persistence.toJson(reopened), &error), "initialize profile transition fixture");
+    transition.setProjectPath(fixture.filePath("profile-transition")); QDir().mkpath(transition.projectPath());
+    transition.setProjectFilePath(QDir(transition.projectPath()).filePath("transition.aramf.json"));
+    check(persistence.save(transition, transition.projectFilePath(), &error)
+        && GenerationServices().generate(transition, transition.generationOptions()).success, "generate initial Android transition profile");
+    const auto androidOutput = QDir(transition.projectPath()).filePath(AramfPaths::AndroidEffectiveConfig);
+    check(transition.selectProjectProfile("android-application-lab-2", &error)
+        && persistence.save(transition, transition.projectFilePath(), &error)
+        && GenerationServices().regenerateConfiguration(transition, transition.generationOptions()).success
+        && readIdentityJson(androidOutput).value("id") == "android-application-lab-2", "Android profile switch replaces effective requirements");
+    check(transition.selectProjectProfile("keyestudio-smart-home-kit", &error)
+        && persistence.save(transition, transition.projectFilePath(), &error)
+        && GenerationServices().regenerateConfiguration(transition, transition.generationOptions()).success
+        && !QFileInfo::exists(androidOutput), "hardware profile removes only the prior generated Android output");
+    check(VerificationServices().verify(transition, transition.generationOptions()).overallStatus == VerificationStatus::Pass,
+        "hardware transition cross-file verification");
+    check(transition.selectProjectProfile("storepath-android", &error)
+        && GenerationServices().regenerateConfiguration(transition, transition.generationOptions()).success, "restore Android before ownership guard test");
+    auto editedAndroid = readIdentityJson(androidOutput); editedAndroid.insert("userNote", "Preserve this user edit");
+    { QFile edited(androidOutput); check(edited.open(QIODevice::WriteOnly | QIODevice::Truncate), "open generated output tamper fixture"); edited.write(QJsonDocument(editedAndroid).toJson()); }
+    check(transition.selectProjectProfile("keyestudio-smart-home-kit", &error)
+        && !GenerationServices().regenerateConfiguration(transition, transition.generationOptions()).success
+        && readIdentityJson(androidOutput).value("userNote") == "Preserve this user edit", "profile switch preserves edited inactive output and fails closed");
+    model.setTemplateState(QJsonObject{{"manualBaseline", QJsonObject{{"projectMembers", persistence.toJson(model).value("projectMembers")}}}});
+    table->selectRow(0); members.findChild<QPushButton*>("removeProjectMember")->click();
+    check(model.projectMembers().isEmpty() && table->rowCount() == 0, "remove member updates model and UI");
+    check(!QJsonDocument(persistence.toJson(model)).toJson().contains("Synthetic test participant"), "removed members are not retained in persisted template caches");
+    model.setTemplateState({});
+    auto invalid = persistence.toJson(reopened);
+    invalid.insert("projectMembers", QJsonArray{QJsonObject{{"password", "forbidden"}}});
+    const auto before = persistence.toJson(reopened);
+    check(!persistence.fromJson(&reopened, invalid, &error) && persistence.toJson(reopened) == before, "invalid member credentials reject atomically");
+    for (const auto& id : {QStringLiteral("android-application-lab-2"), QStringLiteral("keyestudio-smart-home-kit")}) {
+        ProjectModel separate;
+        check(separate.selectProjectProfile(id, &error), "select independent lifecycle profile: " + id);
+        separate.setProjectName(id); separate.setProjectPath(fixture.filePath(id)); QDir().mkpath(separate.projectPath());
+        separate.setProjectFilePath(fixture.filePath(id + ".aramf.json"));
+        check(persistence.save(separate, separate.projectFilePath(), &error), "save independent profile: " + id);
+        ProjectModel loaded;
+        check(persistence.load(&loaded, separate.projectFilePath(), &error) && loaded.projectProfile() == separate.projectProfile(), "independent profile readback: " + id);
+        const auto output = GenerationServices().generate(loaded, loaded.generationOptions());
+        check(output.success, "independent profile generation: " + id + ": " + output.error);
+        if (output.success) check(VerificationServices().verify(loaded, loaded.generationOptions()).overallStatus == VerificationStatus::Pass, "independent profile verification: " + id);
+    }
+    auto migrated = persistence.toJson(model); migrated.insert("schemaVersion", 0);
+    ProjectModel compatible;
+    check(persistence.fromJson(&compatible, migrated, &error) && compatible.projectProfile() == model.projectProfile(), "legacy schema migration preserves optional profile data");
+    ProjectModel old;
+    check(!persistence.toJson(old).contains("projectProfile") && !persistence.toJson(old).contains("projectMembers"), "legacy configurations retain their previous optional-domain shape");
+    check(persistence.fromJson(&reopened, persistence.toJson(old), &error) && reopened.projectProfile().isEmpty() && reopened.projectMembers().isEmpty(), "legacy reopen clears previous profile and members");
+}
+
 int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
@@ -247,6 +417,11 @@ int main(int argc, char** argv)
     FinalizationServices finalization;
     AgentEntryPointService entryPoints;
     ProjectMemory memory;
+    androidMembersRegression(persistence, fixture);
+    if (app.arguments().contains("--android-members")) {
+        QTextStream(stdout) << "Android/member checks: " << checks << ", failures: " << failures << "\nEvidence: " << fixture.path() << '\n';
+        return failures ? 1 : 0;
+    }
     identityRegression(manager, persistence, fixture);
     if (app.arguments().contains("--identity")) {
         QTextStream(stdout) << "Identity checks: " << checks << ", failures: " << failures << "\nEvidence: " << fixture.path() << '\n';
@@ -1302,7 +1477,7 @@ int main(int argc, char** argv)
     check(reopenedCompletion.completedPageIds() == persistedPageIds
               && reopenedList->item(2)->data(Qt::UserRole + 2).toBool()
               && reopenedList->item(3)->data(Qt::UserRole + 2).toBool()
-              && reopenedList->item(7)->data(Qt::UserRole + 2).toBool()
+              && reopenedWorkflow.navigationItem(WorkflowPageId::AcademicDocumentation)->data(Qt::UserRole + 2).toBool()
               && reopenedList->item(1)->background().color() == QColor(255, 251, 224)
               && reopenedWorkflow.completionPercentage() == expectedCompletionPercentage,
           "fresh reload restores checkmarks, parent aggregate, and derived progress");

@@ -95,6 +95,10 @@ QString TemplateValidation::catalogFingerprint()
         for (const auto& option : it.value()) options << option.second;
         options.sort(); catalog.insert(it.key(), QJsonArray::fromStringList(options));
     }
+    QJsonObject profiles;
+    for (const auto& option : EnvironmentCatalog::projectProfiles())
+        if (!option.second.isEmpty()) profiles.insert(option.second, EnvironmentCatalog::projectProfile(option.second));
+    catalog.insert("projectProfiles", profiles);
     ProjectModel model;
     QStringList paths;
     shape(ProjectPersistence().configuration(model), {}, paths);
@@ -110,6 +114,10 @@ QStringList TemplateValidation::validateConfiguration(const QJsonObject& config)
         for (const auto& error : DocumentInstructions::validate(instruction)) errors << error;
     for (const auto& document : {DocumentTemplates::thesis(), DocumentTemplates::report()})
         for (const auto& error : DocumentTemplates::validate(document)) errors << error;
+    QString profileError;
+    if (config.contains("projectProfile") && (!config.value("projectProfile").isObject()
+        || !ProjectModel::validateProjectProfile(config.value("projectProfile").toObject(), &profileError)))
+        errors << "Invalid project profile: " + profileError;
     ProjectModel empty;
     const auto expected = ProjectPersistence().configuration(empty);
     for (auto it = expected.begin(); it != expected.end(); ++it) {
@@ -400,7 +408,7 @@ QStringList TemplateValidation::readiness(const ProjectModel& model)
         }
     }
     // Older/manual projects retain their existing selective-generation contract.
-    if (!model.templateState().isEmpty()) errors += validateConfiguration(ProjectPersistence().configuration(model));
+    if (!model.templateState().isEmpty() || !model.projectProfile().isEmpty()) errors += validateConfiguration(ProjectPersistence().configuration(model));
     const auto communication = model.communicationConfiguration();
     if (communication.enabled) {
         const auto protocolNeedsAddress = QStringList{"http-rest", "websocket", "tcp", "udp"}.contains(communication.protocol);

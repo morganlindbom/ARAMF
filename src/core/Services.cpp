@@ -149,7 +149,7 @@ QJsonObject projectConfiguration(const ProjectModel& model, const QString& finge
     const auto academic = model.academicConfiguration();
     const auto ai = model.aiConfiguration();
     const auto communication = model.communicationConfiguration();
-    return QJsonObject{
+    QJsonObject result{
         {QStringLiteral("schemaVersion"), 1}, {QStringLiteral("projectId"), model.projectId()},
         {QStringLiteral("projectName"), model.projectName()}, {QStringLiteral("workerIdentity"), AramfPaths::runtimeWorkerDirectoryName()},
         {QStringLiteral("workerSchemaVersion"), 1}, {QStringLiteral("configurationFingerprint"), fingerprint}, {QStringLiteral("context"), model.context()},
@@ -172,6 +172,10 @@ QJsonObject projectConfiguration(const ProjectModel& model, const QString& finge
         {QStringLiteral("orchestration"), model.orchestrationState()},
         {QStringLiteral("canonicalPaths"), QJsonObject{{QStringLiteral("worker"), AramfPaths::runtimeWorkerDirectoryName()}, {QStringLiteral("status"), AramfPaths::ProjectStatus}, {QStringLiteral("currentState"), AramfPaths::CurrentState}, {QStringLiteral("routing"), AramfPaths::TaskRoutes}, {QStringLiteral("validation"), AramfPaths::ColdStartValidation}}}
     };
+    const auto saved = ProjectPersistence().toJson(model);
+    if (!model.projectProfile().isEmpty()) result.insert("projectProfile", model.projectProfileSummary());
+    if (!model.projectMembers().isEmpty()) result.insert("projectMembers", saved.value("projectMembers"));
+    return result;
 }
 
 QJsonObject workerManifest(const ProjectModel& model, const GenerationOptions& options, const QString& fingerprint)
@@ -612,8 +616,17 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
             + documentLine(QStringLiteral("Report"), academic.reportDocumentation, QStringLiteral("aramf-report-instruction"))
             + QStringLiteral("Thesis never uses the Report instruction; Report never uses the Thesis instruction. Custom template structure remains custom and external instructions retain their governed authority.\n")
             + QStringLiteral("The canonical built-in section hierarchy and bilingual authoring guidance are in `documentation/documentation-manifest.json` when documentation is enabled. Guidance is authoring assistance, not final document prose.\n");
-        if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")
-            || model.templateId() == QStringLiteral("official-android-arduino-smart-home") || model.templateId() == QStringLiteral("android-arduino-smart-home")) {
+        if (!model.projectProfile().isEmpty()) {
+            const auto summary = model.projectProfileSummary();
+            const auto reference = summary.value("reference").toObject();
+            canonicalAgent += "\n## Selected project profile\n\n" + reference.value("name").toString() + "\nSource: " + reference.value("source").toString() + "\n";
+            for (const auto& instruction : reference.value("instructions").toArray()) canonicalAgent += "- " + instruction.toString() + "\n";
+            canonicalAgent += "Review configured settings and capability states in project.json. Profile defaults are editable; source observations and user-reported environments are not test results.\n";
+            canonicalAgent += "Validation routes (run only within an authorized task):\n";
+            for (const auto& command : summary.value("validationRequirements").toArray()) canonicalAgent += "- " + command.toString() + "\n";
+        }
+        if (model.projectProfile().isEmpty() && (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")
+            || model.templateId() == QStringLiteral("official-android-arduino-smart-home") || model.templateId() == QStringLiteral("android-arduino-smart-home"))) {
             const auto android = model.androidConstraints();
             canonicalAgent += QStringLiteral(
                 "\n## Android / Kotlin project guidance\n\n"
@@ -903,7 +916,7 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
             {QStringLiteral("toolchainNotes"), stringMapToJson(capabilities.toolchainNotes)},
             {QStringLiteral("buildSystems"), toJsonArray(capabilities.buildSystems)}
         };
-        if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")) {
+        if (model.projectProfile().isEmpty() && (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini"))) {
             platform.insert(QStringLiteral("validationProfile"), QJsonObject{
                 {QStringLiteral("requiredBaseline"), QJsonArray{QStringLiteral("gradle-sync-or-configuration"), QStringLiteral("gradle-compile")}},
                 {QStringLiteral("optionalChecks"), QJsonArray{QStringLiteral("gradle-test"), QStringLiteral("gradle-lint"), QStringLiteral("instrumentation-test"), QStringLiteral("emulator-verification"), QStringLiteral("device-verification")}},
@@ -988,6 +1001,33 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
             effective.insert(QStringLiteral("sourceOfTruthResource"), android.sourceOfTruthResource);
             if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::AndroidEffectiveConfig)), effective, &error)) return fail(QStringLiteral("Platform metadata"), error);
             addGeneratedFiles(result, {AramfPaths::AndroidEffectiveConfig});
+        }
+        if (model.projectProfile().value("id") == QStringLiteral("keyestudio-smart-home-kit")) {
+            // Remove only an unchanged output of the previous named Android profile.
+            // A user-edited or unproven file remains untouched and blocks generation.
+            const QString androidPath = QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::AndroidEffectiveConfig));
+            if (QFileInfo::exists(androidPath)) {
+                QJsonObject previousState, actual;
+                ProjectModel previous;
+                if (!readJson(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath("ARAMF_WORKER/verification/generation-state.json")), &previousState, &error)
+                    || !ProjectPersistence().fromJson(&previous, previousState.value("canonicalState").toObject(), &error)
+                    || previous.projectId() != model.projectId() || previous.projectProfile().isEmpty()
+                    || previous.projectProfile().value("id") == QStringLiteral("keyestudio-smart-home-kit")
+                    || !readJson(androidPath, &actual, &error))
+                    return fail("Platform metadata", "Cannot establish ownership of the inactive Android output; the file was preserved.");
+                actual.remove("_file");
+                if (actual != previous.projectProfileSummary() || !QFile::remove(androidPath))
+                    return fail("Platform metadata", "Inactive Android output was edited or cannot be removed; the file was preserved.");
+            }
+        }
+        if (!model.projectProfile().isEmpty()) {
+            const auto summary = model.projectProfileSummary();
+            platform.insert("projectProfile", summary);
+            platform.insert("validationProfile", summary.value("validationRequirements"));
+            if (model.projectProfile().value("id") != QStringLiteral("keyestudio-smart-home-kit")) {
+                if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::AndroidEffectiveConfig)), summary, &error)) return fail("Platform metadata", error);
+                addGeneratedFiles(result, {AramfPaths::AndroidEffectiveConfig});
+            }
         }
         const QString platformPath = AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json"));
         if (!writeJsonFile(QDir(projectRoot).filePath(platformPath), platform, &error)) return fail(QStringLiteral("Platform metadata"), error);

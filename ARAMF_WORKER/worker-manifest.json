@@ -45,6 +45,7 @@
         "project.languages.scripting": "0.3.4.0",
         "project.languages.systems": "0.3.1.0",
         "project.languages.web": "0.3.3.0",
+        "project.members": "0.1.12.0",
         "project.modules-templates": "0.1.2.0",
         "project.overview": "0.1.0.0",
         "project.platforms": "0.1.7.0",
@@ -111,7 +112,7 @@
         "validationEvidence": "VALIDATION_EVIDENCE",
         "workerManifest": "DERIVED"
     },
-    "generatedFromFingerprint": "d71bcdee425c43910966aabffb4fe7d3d88698b8c826fcd7055cf556e75f0c35",
+    "generatedFromFingerprint": "69894fa75e683ebaef6acaee61e5df841bf865d164d48e4870113716f13ed1bf",
     "generationOptions": {
         "academicDocuments": true,
         "agentRules": true,
