@@ -10,13 +10,40 @@
 #include "ui/workflows/project/communication/ProjectCommunicationPage.h"
 #include "ui/workflows/project/compatibility/ProjectCompatibilityPage.h"
 #include "ui/workflows/project/academic/ProjectAcademicPage.h"
+#include "ui/workflows/project/academic/documentation/ProjectAcademicDocumentationPage.h"
+#include "ui/workflows/project/academic/research/ProjectAcademicResearchPage.h"
+#include "ui/workflows/project/academic/information/ProjectAcademicInformationPage.h"
+#include "ui/workflows/project/academic/standards/ProjectAcademicStandardsPage.h"
+#include "ui/workflows/project/academic/deliverables/ProjectAcademicDeliverablesPage.h"
 #include "ui/shared/ParentOverview.h"
 #include "ui/workflows/project/languages/ProjectLanguagesPage.h"
 #include "ui/workflows/project/frameworks/ProjectFrameworksPage.h"
+#include "ui/workflows/project/languages/systems/ProjectLanguageSystemsPage.h"
+#include "ui/workflows/project/languages/application/ProjectLanguageApplicationPage.h"
+#include "ui/workflows/project/languages/web/ProjectLanguageWebPage.h"
+#include "ui/workflows/project/languages/scripting/ProjectLanguageScriptingPage.h"
+#include "ui/workflows/project/frameworks/desktop/ProjectFrameworkDesktopPage.h"
+#include "ui/workflows/project/frameworks/webserver/ProjectFrameworkWebServerPage.h"
+#include "ui/workflows/project/frameworks/mobile/ProjectFrameworkMobilePage.h"
+#include "ui/workflows/project/frameworks/embedded/ProjectFrameworkEmbeddedPage.h"
+#include "ui/workflows/project/frameworks/dataml/ProjectFrameworkDataMlPage.h"
+#include "ui/workflows/project/frameworks/graphicsgame/ProjectFrameworkGraphicsGamePage.h"
 #include "ui/workflows/project/developmenttools/ProjectDevelopmentToolsPage.h"
+#include "ui/workflows/project/developmenttools/ide/ProjectDevelopmentToolsIdePage.h"
+#include "ui/workflows/project/developmenttools/versioncontrol/ProjectDevelopmentToolsVersionControlPage.h"
+#include "ui/workflows/project/developmenttools/support/ProjectDevelopmentToolsSupportPage.h"
 #include "ui/workflows/project/platforms/ProjectPlatformsPage.h"
+#include "ui/workflows/project/platforms/hosts/ProjectPlatformsHostsPage.h"
+#include "ui/workflows/project/platforms/targets/ProjectPlatformsTargetsPage.h"
 #include "ui/workflows/project/hardwarearchitecture/ProjectHardwareArchitecturePage.h"
+#include "ui/workflows/project/hardwarearchitecture/architectures/ProjectHardwareArchitecturesPage.h"
+#include "ui/workflows/project/hardwarearchitecture/processors/ProjectHardwareProcessorsPage.h"
+#include "ui/workflows/project/hardwarearchitecture/targets/ProjectHardwareTargetsPage.h"
 #include "ui/workflows/project/builddelivery/ProjectBuildDeliveryPage.h"
+#include "ui/workflows/project/builddelivery/toolchains/ProjectBuildDeliveryToolchainsPage.h"
+#include "ui/workflows/project/builddelivery/buildsystems/ProjectBuildDeliveryBuildSystemsPage.h"
+#include "ui/workflows/project/builddelivery/testing/ProjectBuildDeliveryTestingPage.h"
+#include "ui/workflows/project/builddelivery/automation/ProjectBuildDeliveryAutomationPage.h"
 #include "ui/workflows/ai/agents/AiAgentsPage.h"
 #include "ui/workflows/ai/responsibilities/AiResponsibilitiesPage.h"
 #include "ui/workflows/ai/autonomy/AiAutonomyPage.h"
@@ -113,7 +140,17 @@ namespace
             WorkflowPageId::AcademicStandards,
             WorkflowPageId::AcademicDeliverables,
             WorkflowPageId::Languages,
+            WorkflowPageId::LanguageSystems,
+            WorkflowPageId::LanguageApplication,
+            WorkflowPageId::LanguageWeb,
+            WorkflowPageId::LanguageScripting,
             WorkflowPageId::Frameworks,
+            WorkflowPageId::FrameworkDesktopUi,
+            WorkflowPageId::FrameworkWebServer,
+            WorkflowPageId::FrameworkMobile,
+            WorkflowPageId::FrameworkEmbeddedDevice,
+            WorkflowPageId::FrameworkDataMl,
+            WorkflowPageId::FrameworkGraphicsGame,
             WorkflowPageId::DevelopmentTools,
             WorkflowPageId::DevelopmentToolsIde,
             WorkflowPageId::DevelopmentToolsVersionControl,
@@ -153,6 +190,7 @@ namespace
             WorkflowPageId::Finalize,
             WorkflowPageId::UpdateReview,
             WorkflowPageId::UpdateApply,
+            WorkflowPageId::UpdateConfiguration,
             WorkflowPageId::ImprovementBacklog};
 
         return sequence;
@@ -298,21 +336,37 @@ MainWindow::MainWindow(
           tr("Choose a citation style and document languages.")},
          {QStringLiteral("project.academic.deliverables"), QStringLiteral("2.5"), tr("Requirements & deliverables"),
           tr("Select academic requirements and outputs.")}}, stack_);
-    academicDocumentationPage_ = new ProjectAcademicPage(&projectModel_, stack_, ProjectAcademicPage::Section::Documentation);
-    academicResearchPage_ = new ProjectAcademicPage(&projectModel_, stack_, ProjectAcademicPage::Section::Research);
-    academicInformationPage_ = new ProjectAcademicPage(&projectModel_, stack_, ProjectAcademicPage::Section::Information);
-    academicStandardsPage_ = new ProjectAcademicPage(&projectModel_, stack_, ProjectAcademicPage::Section::Standards);
-    academicDeliverablesPage_ = new ProjectAcademicPage(&projectModel_, stack_, ProjectAcademicPage::Section::Deliverables);
+    academicDocumentationPage_ = new ProjectAcademicDocumentationPage(&projectModel_, stack_);
+    academicResearchPage_ = new ProjectAcademicResearchPage(&projectModel_, stack_);
+    academicInformationPage_ = new ProjectAcademicInformationPage(&projectModel_, stack_);
+    academicStandardsPage_ = new ProjectAcademicStandardsPage(&projectModel_, stack_);
+    academicDeliverablesPage_ = new ProjectAcademicDeliverablesPage(&projectModel_, stack_);
 
-    languagesPage_ =
-        new ProjectLanguagesPage(
-            &projectModel_,
-            stack_);
+    languagesPage_ = new ParentOverviewPage(
+        tr("Languages"), tr("Select the project languages by purpose."),
+        {{QStringLiteral("project.languages.systems"), QStringLiteral("3.1"), tr("Systems languages"), tr("Select languages used for systems and native development.")},
+         {QStringLiteral("project.languages.application"), QStringLiteral("3.2"), tr("Application languages"), tr("Select languages used for application development.")},
+         {QStringLiteral("project.languages.web"), QStringLiteral("3.3"), tr("Web languages"), tr("Select languages used for browser and web development.")},
+         {QStringLiteral("project.languages.scripting"), QStringLiteral("3.4"), tr("Scripting languages"), tr("Select languages used for scripts and automation.")}}, stack_);
+    languageSystemsPage_ = new ProjectLanguageSystemsPage(&projectModel_, stack_);
+    languageApplicationPage_ = new ProjectLanguageApplicationPage(&projectModel_, stack_);
+    languageWebPage_ = new ProjectLanguageWebPage(&projectModel_, stack_);
+    languageScriptingPage_ = new ProjectLanguageScriptingPage(&projectModel_, stack_);
 
-    frameworksPage_ =
-        new ProjectFrameworksPage(
-            &projectModel_,
-            stack_);
+    frameworksPage_ = new ParentOverviewPage(
+        tr("Frameworks & SDKs"), tr("Select frameworks and SDKs by application domain."),
+        {{QStringLiteral("project.frameworks.desktop-ui"), QStringLiteral("4.1"), tr("Desktop & UI"), tr("Select desktop and user-interface frameworks.")},
+         {QStringLiteral("project.frameworks.web-server"), QStringLiteral("4.2"), tr("Web & server"), tr("Select web and server frameworks.")},
+         {QStringLiteral("project.frameworks.mobile"), QStringLiteral("4.3"), tr("Mobile"), tr("Select mobile frameworks and SDKs.")},
+         {QStringLiteral("project.frameworks.embedded-device"), QStringLiteral("4.4"), tr("Embedded & device"), tr("Select embedded and device frameworks.")},
+         {QStringLiteral("project.frameworks.data-ml"), QStringLiteral("4.5"), tr("Data & ML"), tr("Select data and machine-learning frameworks.")},
+         {QStringLiteral("project.frameworks.graphics-game"), QStringLiteral("4.6"), tr("Graphics & game"), tr("Select graphics and game frameworks.")}}, stack_);
+    frameworkDesktopUiPage_ = new ProjectFrameworkDesktopPage(&projectModel_, stack_);
+    frameworkWebServerPage_ = new ProjectFrameworkWebServerPage(&projectModel_, stack_);
+    frameworkMobilePage_ = new ProjectFrameworkMobilePage(&projectModel_, stack_);
+    frameworkEmbeddedDevicePage_ = new ProjectFrameworkEmbeddedPage(&projectModel_, stack_);
+    frameworkDataMlPage_ = new ProjectFrameworkDataMlPage(&projectModel_, stack_);
+    frameworkGraphicsGamePage_ = new ProjectFrameworkGraphicsGamePage(&projectModel_, stack_);
 
     developmentToolsPage_ = new ParentOverviewPage(
         tr("Development tools"), tr("Configure the editors, version control and support tools used by the project."),
@@ -322,12 +376,9 @@ MainWindow::MainWindow(
           tr("Choose how project history and source changes are managed.")},
          {QStringLiteral("project.development-tools.support"), QStringLiteral("5.3"), tr("Development support"),
           tr("Select debuggers, analyzers, SDKs and related tools.")}}, stack_);
-    developmentToolsIdePage_ = new ProjectDevelopmentToolsPage(
-        &projectModel_, stack_, ProjectDevelopmentToolsPage::Section::Ide);
-    developmentToolsVersionControlPage_ = new ProjectDevelopmentToolsPage(
-        &projectModel_, stack_, ProjectDevelopmentToolsPage::Section::VersionControl);
-    developmentToolsSupportPage_ = new ProjectDevelopmentToolsPage(
-        &projectModel_, stack_, ProjectDevelopmentToolsPage::Section::Support);
+    developmentToolsIdePage_ = new ProjectDevelopmentToolsIdePage(&projectModel_, stack_);
+    developmentToolsVersionControlPage_ = new ProjectDevelopmentToolsVersionControlPage(&projectModel_, stack_);
+    developmentToolsSupportPage_ = new ProjectDevelopmentToolsSupportPage(&projectModel_, stack_);
 
     platformsPage_ = new ParentOverviewPage(
         tr("Platforms"), tr("Define where the project is developed and where it runs."),
@@ -335,10 +386,8 @@ MainWindow::MainWindow(
           tr("Select the operating systems used to develop or build the project.")},
          {QStringLiteral("project.platforms.targets"), QStringLiteral("6.2"), tr("Target platforms"),
           tr("Select the platforms supported by the finished project.")}}, stack_);
-    platformsHostsPage_ = new ProjectPlatformsPage(
-        &projectModel_, stack_, ProjectPlatformsPage::Section::Hosts);
-    platformsTargetsPage_ = new ProjectPlatformsPage(
-        &projectModel_, stack_, ProjectPlatformsPage::Section::Targets);
+    platformsHostsPage_ = new ProjectPlatformsHostsPage(&projectModel_, stack_);
+    platformsTargetsPage_ = new ProjectPlatformsTargetsPage(&projectModel_, stack_);
 
     hardwareArchitecturePage_ = new ParentOverviewPage(
         tr("Hardware & architecture"), tr("Describe processor architecture and physical deployment targets."),
@@ -348,12 +397,9 @@ MainWindow::MainWindow(
           tr("Choose MCU or processor families used by the project.")},
          {QStringLiteral("project.hardware-architecture.targets"), QStringLiteral("7.3"), tr("Hardware & deployment targets"),
           tr("Select boards and physical deployment targets.")}}, stack_);
-    hardwareArchitecturesPage_ = new ProjectHardwareArchitecturePage(
-        &projectModel_, stack_, ProjectHardwareArchitecturePage::Section::Architectures);
-    hardwareProcessorsPage_ = new ProjectHardwareArchitecturePage(
-        &projectModel_, stack_, ProjectHardwareArchitecturePage::Section::Processors);
-    hardwareTargetsPage_ = new ProjectHardwareArchitecturePage(
-        &projectModel_, stack_, ProjectHardwareArchitecturePage::Section::Targets);
+    hardwareArchitecturesPage_ = new ProjectHardwareArchitecturesPage(&projectModel_, stack_);
+    hardwareProcessorsPage_ = new ProjectHardwareProcessorsPage(&projectModel_, stack_);
+    hardwareTargetsPage_ = new ProjectHardwareTargetsPage(&projectModel_, stack_);
 
     buildDeliveryPage_ = new ParentOverviewPage(
         tr("Build, test & delivery"), tr("Configure the toolchain, build process, testing and delivery pipeline."),
@@ -365,14 +411,10 @@ MainWindow::MainWindow(
           tr("Select testing and quality analysis capabilities.")},
          {QStringLiteral("project.build-delivery.automation"), QStringLiteral("8.4"), tr("Automation & delivery"),
           tr("Configure automation and the formats used to deliver releases.")}}, stack_);
-    buildDeliveryToolchainsPage_ = new ProjectBuildDeliveryPage(
-        &projectModel_, stack_, ProjectBuildDeliveryPage::Section::Toolchains);
-    buildDeliveryBuildSystemsPage_ = new ProjectBuildDeliveryPage(
-        &projectModel_, stack_, ProjectBuildDeliveryPage::Section::BuildSystems);
-    buildDeliveryTestingPage_ = new ProjectBuildDeliveryPage(
-        &projectModel_, stack_, ProjectBuildDeliveryPage::Section::Testing);
-    buildDeliveryAutomationPage_ = new ProjectBuildDeliveryPage(
-        &projectModel_, stack_, ProjectBuildDeliveryPage::Section::Automation);
+    buildDeliveryToolchainsPage_ = new ProjectBuildDeliveryToolchainsPage(&projectModel_, stack_);
+    buildDeliveryBuildSystemsPage_ = new ProjectBuildDeliveryBuildSystemsPage(&projectModel_, stack_);
+    buildDeliveryTestingPage_ = new ProjectBuildDeliveryTestingPage(&projectModel_, stack_);
+    buildDeliveryAutomationPage_ = new ProjectBuildDeliveryAutomationPage(&projectModel_, stack_);
 
     aiAgentsPage_ = new AiAgentsPage(&projectModel_, stack_);
     aiResponsibilitiesPage_ = new AiResponsibilitiesPage(&projectModel_, stack_);
@@ -443,7 +485,17 @@ MainWindow::MainWindow(
     registerPage(WorkflowPageId::AcademicStandards, academicStandardsPage_);
     registerPage(WorkflowPageId::AcademicDeliverables, academicDeliverablesPage_);
     registerPage(WorkflowPageId::Languages, languagesPage_);
+    registerPage(WorkflowPageId::LanguageSystems, languageSystemsPage_);
+    registerPage(WorkflowPageId::LanguageApplication, languageApplicationPage_);
+    registerPage(WorkflowPageId::LanguageWeb, languageWebPage_);
+    registerPage(WorkflowPageId::LanguageScripting, languageScriptingPage_);
     registerPage(WorkflowPageId::Frameworks, frameworksPage_);
+    registerPage(WorkflowPageId::FrameworkDesktopUi, frameworkDesktopUiPage_);
+    registerPage(WorkflowPageId::FrameworkWebServer, frameworkWebServerPage_);
+    registerPage(WorkflowPageId::FrameworkMobile, frameworkMobilePage_);
+    registerPage(WorkflowPageId::FrameworkEmbeddedDevice, frameworkEmbeddedDevicePage_);
+    registerPage(WorkflowPageId::FrameworkDataMl, frameworkDataMlPage_);
+    registerPage(WorkflowPageId::FrameworkGraphicsGame, frameworkGraphicsGamePage_);
     registerPage(WorkflowPageId::DevelopmentTools, developmentToolsPage_);
     registerPage(WorkflowPageId::DevelopmentToolsIde, developmentToolsIdePage_);
     registerPage(WorkflowPageId::DevelopmentToolsVersionControl, developmentToolsVersionControlPage_);
@@ -521,6 +573,14 @@ MainWindow::MainWindow(
         &MainWindow::goForward);
 
     connect(saveWork_, &QPushButton::clicked, this, &MainWindow::saveWork);
+    const auto connectOverview = [this](ParentOverviewPage* overview,
+                                        const QMap<QString, WorkflowPageId>& destinations) {
+        connect(overview, &ParentOverviewPage::cardActivated, this,
+                [this, destinations](const QString& id) {
+                    const auto target = destinations.constFind(id);
+                    if (target != destinations.constEnd()) setWorkflowPage(target.value());
+                });
+    };
     connect(projectOverviewPage_, &ParentOverviewPage::cardActivated, this,
             [this](const QString& id) {
                 if (id == QStringLiteral("project.file-worker"))
@@ -545,14 +605,18 @@ MainWindow::MainWindow(
                 else if (id == QStringLiteral("project.academic.deliverables"))
                     setWorkflowPage(WorkflowPageId::AcademicDeliverables);
             });
-    const auto connectOverview = [this](ParentOverviewPage* overview,
-                                        const QMap<QString, WorkflowPageId>& destinations) {
-        connect(overview, &ParentOverviewPage::cardActivated, this,
-                [this, destinations](const QString& id) {
-                    const auto target = destinations.constFind(id);
-                    if (target != destinations.constEnd()) setWorkflowPage(target.value());
-                });
-    };
+    connectOverview(languagesPage_, {
+        {QStringLiteral("project.languages.systems"), WorkflowPageId::LanguageSystems},
+        {QStringLiteral("project.languages.application"), WorkflowPageId::LanguageApplication},
+        {QStringLiteral("project.languages.web"), WorkflowPageId::LanguageWeb},
+        {QStringLiteral("project.languages.scripting"), WorkflowPageId::LanguageScripting}});
+    connectOverview(frameworksPage_, {
+        {QStringLiteral("project.frameworks.desktop-ui"), WorkflowPageId::FrameworkDesktopUi},
+        {QStringLiteral("project.frameworks.web-server"), WorkflowPageId::FrameworkWebServer},
+        {QStringLiteral("project.frameworks.mobile"), WorkflowPageId::FrameworkMobile},
+        {QStringLiteral("project.frameworks.embedded-device"), WorkflowPageId::FrameworkEmbeddedDevice},
+        {QStringLiteral("project.frameworks.data-ml"), WorkflowPageId::FrameworkDataMl},
+        {QStringLiteral("project.frameworks.graphics-game"), WorkflowPageId::FrameworkGraphicsGame}});
     connectOverview(developmentToolsPage_, {
         {QStringLiteral("project.development-tools.ide"), WorkflowPageId::DevelopmentToolsIde},
         {QStringLiteral("project.development-tools.version-control"), WorkflowPageId::DevelopmentToolsVersionControl},

@@ -10,7 +10,7 @@ class QLineEdit;
 class QLabel;
 class CapabilityCheckGroup;
 
-class ProjectAcademicPage final : public QWidget
+class ProjectAcademicPage : public QWidget
 {
     Q_OBJECT
 

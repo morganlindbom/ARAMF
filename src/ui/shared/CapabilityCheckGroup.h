@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/EnvironmentCatalog.h"
+#include "core/ProjectModel.h"
 
 #include <QGroupBox>
 
@@ -8,6 +9,7 @@ class QLineEdit;
 class QCheckBox;
 class QGridLayout;
 class QResizeEvent;
+class QVBoxLayout;
 
 class CapabilityCheckGroup final : public QGroupBox
 {
@@ -33,4 +35,29 @@ private:
 
 protected:
     void resizeEvent(QResizeEvent* event) override;
+};
+
+class CapabilityDetailsEditor final : public QGroupBox
+{
+public:
+    enum class Domain { Languages, Frameworks, Toolchains };
+
+    CapabilityDetailsEditor(ProjectModel* model, CapabilityCheckGroup* selection,
+                            Domain domain, QWidget* parent = nullptr);
+    // Brief: Create optional version and notes editors for selected catalog entries.
+    // Metadata is keyed by stable capability ID, so custom values and legacy selections remain compatible.
+
+private:
+    void refresh();
+    // Brief: Rebuild the detail rows from the current selection and model.
+    // Rebuilding only follows model changes; local edits are committed directly to the metadata maps.
+    void store(const QString& id, const QString& field, const QString& value);
+    // Brief: Persist one changed field in the matching metadata map.
+    // Updating one key leaves all capability selections and unrelated custom values intact.
+
+    ProjectModel* model_ = nullptr;
+    CapabilityCheckGroup* selection_ = nullptr;
+    Domain domain_ = Domain::Languages;
+    QVBoxLayout* layout_ = nullptr;
+    bool storing_ = false;
 };

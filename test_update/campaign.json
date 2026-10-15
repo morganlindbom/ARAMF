@@ -1,6 +1,6 @@
 {
     "campaign": "UPDATE",
     "completed": 310,
-    "fail": 0,
-    "pass": 310
+    "fail": 4,
+    "pass": 306
 }

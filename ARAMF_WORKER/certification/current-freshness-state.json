@@ -8,21 +8,33 @@
                 "dependencyManifestFingerprint": "0ea42f3d698ac071dddbd7e8f0ea996b8aa4bc0c9f0cbcaf43582528e4f39554"
             },
             "dependencyManifestFingerprint": "0ea42f3d698ac071dddbd7e8f0ea996b8aa4bc0c9f0cbcaf43582528e4f39554",
-            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/F1/reval-ac05b4d3-f363-491b-a222-34d57aeb1dde/evidence.json",
-            "evidenceFingerprint": "95c9cf70c592671c2137f2def9c62ea7e306193619afc3d69292fd343a3a84a3",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/F1/reval-31227ff2-131b-5fec-b799-562127e5ef8c/evidence.json",
+            "evidenceFingerprint": "ce2fd384c3f4f401a74d14d2ddf970283e8276e15451dff622083662a19ac48b",
             "historicalLifecycle": "F1.1.4.1.1",
+            "operationBinding": {
+                "contractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834",
+                "contractId": "c1491a84f42971c03bb415a568a4503e3c8eba553c9e4d6398646d119631ea18",
+                "kind": "revalidate-current/v1",
+                "operationId": "ea56a5f7-3242-4935-b1b4-b331ca956f88",
+                "softwareEvidence": {
+                    "fingerprint": "79a7ce9bfa311b1fd181c98402ffdb798495ee27376faa1ffd189f2ed2e25f82",
+                    "reference": "ARAMF_WORKER/certification/operations/ea56a5f7-3242-4935-b1b4-b331ca956f88/software-evidence.json"
+                },
+                "sourceFingerprint": "eef33dec4eaf4ed42e83ac8a3e903bf1f81d7778b282a204079f6c1adc147276",
+                "subject": "F1"
+            },
             "provenance": "agent-direct",
-            "revalidationId": "reval-ac05b4d3-f363-491b-a222-34d57aeb1dde",
+            "revalidationId": "reval-31227ff2-131b-5fec-b799-562127e5ef8c",
             "revalidationOfCertificateId": "cert-474a78ad-7f0d-4d48-9506-797e7846efef",
             "revalidationType": "FRESHNESS_REVALIDATION",
             "schemaVersion": 1,
             "semanticChange": false,
-            "sourceFingerprint": "a39b5973e74c60a1a689be65ae9662ab6cb5110292f1e55d4b95eb51144b1c81",
-            "sourceRevision": "28ec608e66752152a9d45514cb41f1c8702457c0",
+            "sourceFingerprint": "eef33dec4eaf4ed42e83ac8a3e903bf1f81d7778b282a204079f6c1adc147276",
+            "sourceRevision": "2c23822c1f94cdbf12266b4c0beb6de1399ee1ff",
             "status": "FRESH",
             "subject": "F1",
-            "supersedesRevalidationId": "reval-84e2734b-e340-4ab1-bcc9-fd00928add66",
-            "timestamp": "2026-10-02T17:14:30.800Z"
+            "supersedesRevalidationId": "reval-eda66a9d-0cd8-576a-8085-d29542ee262a",
+            "timestamp": "2026-10-14T20:24:37.305Z"
         },
         "F2": {
             "contractFingerprint": "5ec3dffb752ece9c7bf1104f8873de8d71d37a201c7416b99e1219e7ad9d6462",
@@ -31,21 +43,33 @@
                 "dependencyManifestFingerprint": "d0ffcebda3b9dec82998c532a8c9b43a2dfac66e5e4429a5d0826545bc51bc9e"
             },
             "dependencyManifestFingerprint": "d0ffcebda3b9dec82998c532a8c9b43a2dfac66e5e4429a5d0826545bc51bc9e",
-            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/F2/reval-f03a6f14-0862-4f07-a0c0-2cdaa406866e/evidence.json",
-            "evidenceFingerprint": "6d8d7199e8e7782dc0dd2f8e26ba767a30319408960f23eb3262fca9bad5bff1",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/F2/reval-424b79e0-502a-589d-b47e-8b884dd9c83a/evidence.json",
+            "evidenceFingerprint": "a07e2e17234fba72158778e1874837bf32b347e7cbd1abda621fa4c9b9ef8a6f",
             "historicalLifecycle": "F2.1.1.1.1",
+            "operationBinding": {
+                "contractFingerprint": "5ec3dffb752ece9c7bf1104f8873de8d71d37a201c7416b99e1219e7ad9d6462",
+                "contractId": "c1491a84f42971c03bb415a568a4503e3c8eba553c9e4d6398646d119631ea18",
+                "kind": "revalidate-current/v1",
+                "operationId": "ea56a5f7-3242-4935-b1b4-b331ca956f88",
+                "softwareEvidence": {
+                    "fingerprint": "79a7ce9bfa311b1fd181c98402ffdb798495ee27376faa1ffd189f2ed2e25f82",
+                    "reference": "ARAMF_WORKER/certification/operations/ea56a5f7-3242-4935-b1b4-b331ca956f88/software-evidence.json"
+                },
+                "sourceFingerprint": "20b3f923a245a4a781241ad99f8f320e63234412b68706b912a249dade910e15",
+                "subject": "F2"
+            },
             "provenance": "agent-direct",
-            "revalidationId": "reval-f03a6f14-0862-4f07-a0c0-2cdaa406866e",
+            "revalidationId": "reval-424b79e0-502a-589d-b47e-8b884dd9c83a",
             "revalidationOfCertificateId": "cert-3dc7eb1e-c5ce-4df9-854b-09cd4ea41dc9",
             "revalidationType": "FRESHNESS_REVALIDATION",
             "schemaVersion": 1,
             "semanticChange": false,
-            "sourceFingerprint": "b02a9ded91d024d2fdec9020d8843661f03f640b12d0d1d3b0a6b1b988491d62",
-            "sourceRevision": "28ec608e66752152a9d45514cb41f1c8702457c0",
+            "sourceFingerprint": "20b3f923a245a4a781241ad99f8f320e63234412b68706b912a249dade910e15",
+            "sourceRevision": "2c23822c1f94cdbf12266b4c0beb6de1399ee1ff",
             "status": "FRESH",
             "subject": "F2",
-            "supersedesRevalidationId": "reval-e3a89fa7-2903-442f-94fb-52e953003d4f",
-            "timestamp": "2026-10-02T17:18:41.959Z"
+            "supersedesRevalidationId": "reval-3300c9c4-b921-5c90-aa6a-7757c7fde8ba",
+            "timestamp": "2026-10-14T20:24:38.727Z"
         },
         "F3": {
             "contractFingerprint": "e2ac3f8ceb760a54fd4d3287ca97bc7b603890e5f7432b085ea085fe77e9d6e4",
@@ -54,21 +78,33 @@
                 "dependencyManifestFingerprint": "bbf2e8389568cff6b8ce2efb23ece6fdf53aed78c551935eb7a67367b7928f78"
             },
             "dependencyManifestFingerprint": "bbf2e8389568cff6b8ce2efb23ece6fdf53aed78c551935eb7a67367b7928f78",
-            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/F3/reval-e4af58dd-09a8-4a58-934f-f831cba4272f/evidence.json",
-            "evidenceFingerprint": "aef6c33b971a169bf4c238705184ef6fe5396c81106cdcf16c8e7858028587be",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/F3/reval-4bff75b2-aaa5-5cc6-af62-22129f17317d/evidence.json",
+            "evidenceFingerprint": "f1b8fb8e162f6c00a6ce702b50f8d34c27990a958fb16a744c5d82426e85a6de",
             "historicalLifecycle": "F3.1.1.1.1",
+            "operationBinding": {
+                "contractFingerprint": "e2ac3f8ceb760a54fd4d3287ca97bc7b603890e5f7432b085ea085fe77e9d6e4",
+                "contractId": "c1491a84f42971c03bb415a568a4503e3c8eba553c9e4d6398646d119631ea18",
+                "kind": "revalidate-current/v1",
+                "operationId": "ea56a5f7-3242-4935-b1b4-b331ca956f88",
+                "softwareEvidence": {
+                    "fingerprint": "79a7ce9bfa311b1fd181c98402ffdb798495ee27376faa1ffd189f2ed2e25f82",
+                    "reference": "ARAMF_WORKER/certification/operations/ea56a5f7-3242-4935-b1b4-b331ca956f88/software-evidence.json"
+                },
+                "sourceFingerprint": "74defd78fa76a38f3b6510852837a57fb0138b31d4d631f21fa725189293598c",
+                "subject": "F3"
+            },
             "provenance": "agent-direct",
-            "revalidationId": "reval-e4af58dd-09a8-4a58-934f-f831cba4272f",
+            "revalidationId": "reval-4bff75b2-aaa5-5cc6-af62-22129f17317d",
             "revalidationOfCertificateId": "cert-e4991486-f9b4-4df7-acc2-d5c925b735f8",
             "revalidationType": "FRESHNESS_REVALIDATION",
             "schemaVersion": 1,
             "semanticChange": false,
-            "sourceFingerprint": "047d553c24a0da122eb52a12cbd22bd03ba87fd0ef42790a462200e76a286d9f",
-            "sourceRevision": "28ec608e66752152a9d45514cb41f1c8702457c0",
+            "sourceFingerprint": "74defd78fa76a38f3b6510852837a57fb0138b31d4d631f21fa725189293598c",
+            "sourceRevision": "2c23822c1f94cdbf12266b4c0beb6de1399ee1ff",
             "status": "FRESH",
             "subject": "F3",
-            "supersedesRevalidationId": "reval-0b3134bd-31ae-400b-bff4-9c000e0c0ec0",
-            "timestamp": "2026-10-02T17:18:42.857Z"
+            "supersedesRevalidationId": "reval-d4fbbf59-50f3-5ba9-8ecb-f6d6e5024979",
+            "timestamp": "2026-10-14T20:24:40.320Z"
         },
         "F4": {
             "contractFingerprint": "1228f47d21adcd502053c972de8b4c6def3bb6cf4363d7d52e4d502edfa760f3",
@@ -77,21 +113,33 @@
                 "dependencyManifestFingerprint": "c8fd69da7b17505cadab356a5c8411f7c8b6300ab82e4643d8dc3cae7477aee3"
             },
             "dependencyManifestFingerprint": "c8fd69da7b17505cadab356a5c8411f7c8b6300ab82e4643d8dc3cae7477aee3",
-            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/F4/reval-c8f644a1-879f-4715-93d1-c7be5d15f367/evidence.json",
-            "evidenceFingerprint": "8ecc8e2c82c5d9f6fcbf276c054c21cf957b1448ca18fc692ba23b8d6444fc7b",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/F4/reval-476bf090-b953-546d-a059-b883588de9d8/evidence.json",
+            "evidenceFingerprint": "23a57733d2673527428481a7df4c63f999769a94b4ba4cf14727604bcb8400ab",
             "historicalLifecycle": "F4.1.1.1.1",
+            "operationBinding": {
+                "contractFingerprint": "1228f47d21adcd502053c972de8b4c6def3bb6cf4363d7d52e4d502edfa760f3",
+                "contractId": "c1491a84f42971c03bb415a568a4503e3c8eba553c9e4d6398646d119631ea18",
+                "kind": "revalidate-current/v1",
+                "operationId": "ea56a5f7-3242-4935-b1b4-b331ca956f88",
+                "softwareEvidence": {
+                    "fingerprint": "79a7ce9bfa311b1fd181c98402ffdb798495ee27376faa1ffd189f2ed2e25f82",
+                    "reference": "ARAMF_WORKER/certification/operations/ea56a5f7-3242-4935-b1b4-b331ca956f88/software-evidence.json"
+                },
+                "sourceFingerprint": "e7dc48baeb5a1316a58f6f0df37c6e1530a156a2eba6c246719b35c1f45f20a1",
+                "subject": "F4"
+            },
             "provenance": "agent-direct",
-            "revalidationId": "reval-c8f644a1-879f-4715-93d1-c7be5d15f367",
+            "revalidationId": "reval-476bf090-b953-546d-a059-b883588de9d8",
             "revalidationOfCertificateId": "cert-a444de8a-a244-45dc-9282-6237c8eda3a9",
             "revalidationType": "FRESHNESS_REVALIDATION",
             "schemaVersion": 1,
             "semanticChange": false,
-            "sourceFingerprint": "c390403103f7fa0e4d411c937173c4194e79d831de9dcde440ab4ac314ac0b28",
-            "sourceRevision": "28ec608e66752152a9d45514cb41f1c8702457c0",
+            "sourceFingerprint": "e7dc48baeb5a1316a58f6f0df37c6e1530a156a2eba6c246719b35c1f45f20a1",
+            "sourceRevision": "2c23822c1f94cdbf12266b4c0beb6de1399ee1ff",
             "status": "FRESH",
             "subject": "F4",
-            "supersedesRevalidationId": "reval-6edd33d8-86ea-4d1b-995d-aa96f6155f92",
-            "timestamp": "2026-10-02T17:18:43.808Z"
+            "supersedesRevalidationId": "reval-ce0f32c0-e7ec-5bd3-a12d-737c31e59eb6",
+            "timestamp": "2026-10-14T20:24:42.064Z"
         },
         "P1": {
             "contractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
@@ -101,21 +149,33 @@
                 "f1ContractFingerprint": "c70720099a0a4c3c911be13500070aa56fc4db76217091c4e4fa3e9f4020a834"
             },
             "dependencyManifestFingerprint": "eaa2f59a037360532296644254ac1afd6b64dce5d87faaf1f401055ca58aa992",
-            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P1/reval-44193281-222c-445e-b86f-aef5d6093fd5/evidence.json",
-            "evidenceFingerprint": "821458cbad94cf50d6e6aeb18c961d559132a7cd9a4ee72d8e4351d651bcf462",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P1/reval-3dde7af6-32fb-5e5f-bf16-f852355d500a/evidence.json",
+            "evidenceFingerprint": "93cdcaa2ce6b22890358a630db1e39d0c23ba2b1bce82a849b443ac9a2946bd2",
             "historicalLifecycle": "P1.1.3.1.1",
+            "operationBinding": {
+                "contractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303",
+                "contractId": "c1491a84f42971c03bb415a568a4503e3c8eba553c9e4d6398646d119631ea18",
+                "kind": "revalidate-current/v1",
+                "operationId": "ea56a5f7-3242-4935-b1b4-b331ca956f88",
+                "softwareEvidence": {
+                    "fingerprint": "79a7ce9bfa311b1fd181c98402ffdb798495ee27376faa1ffd189f2ed2e25f82",
+                    "reference": "ARAMF_WORKER/certification/operations/ea56a5f7-3242-4935-b1b4-b331ca956f88/software-evidence.json"
+                },
+                "sourceFingerprint": "8698c79f17f14a7c29e7b3bb36a6619af77fe42c09febe56d2f4d9d2ae028826",
+                "subject": "P1"
+            },
             "provenance": "agent-direct",
-            "revalidationId": "reval-44193281-222c-445e-b86f-aef5d6093fd5",
+            "revalidationId": "reval-3dde7af6-32fb-5e5f-bf16-f852355d500a",
             "revalidationOfCertificateId": "cert-823fefb3-0004-489e-b1c5-496bfcc6c254",
             "revalidationType": "FRESHNESS_REVALIDATION",
             "schemaVersion": 1,
             "semanticChange": false,
-            "sourceFingerprint": "237598249a3b15a017377b28443d779767b427789009fa813f72bf62317884f7",
-            "sourceRevision": "28ec608e66752152a9d45514cb41f1c8702457c0",
+            "sourceFingerprint": "8698c79f17f14a7c29e7b3bb36a6619af77fe42c09febe56d2f4d9d2ae028826",
+            "sourceRevision": "2c23822c1f94cdbf12266b4c0beb6de1399ee1ff",
             "status": "FRESH",
             "subject": "P1",
-            "supersedesRevalidationId": "reval-55a2869d-2668-4a34-8c9f-1e6f1ac474a7",
-            "timestamp": "2026-10-02T17:18:48.330Z"
+            "supersedesRevalidationId": "reval-0db4540c-da8e-5753-ab25-38cde9efbf18",
+            "timestamp": "2026-10-14T20:24:42.489Z"
         },
         "P2": {
             "contractFingerprint": "ce0218c8aea13ce7f60319a76beeac4168011ad694ebd1601e94c7b836dccb81",
@@ -125,21 +185,33 @@
                 "p1ContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303"
             },
             "dependencyManifestFingerprint": "bcf26bbb44a31e080253b683cc6695c9203ab8a59ee5530c796b586a197d9a44",
-            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P2/reval-fc8f805f-f8a2-49c6-8ecc-6cd8bb3616c9/evidence.json",
-            "evidenceFingerprint": "c9cf73228a53b99f14a5a1ea69ff0428c3f112098824dd5b4ea19aab3d80a768",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P2/reval-8b894f67-9f80-55e3-83a5-0d138a54e613/evidence.json",
+            "evidenceFingerprint": "f6ee4bd11ddd34895f6c28ab1ace6164ee9b738bd63812b6669323bdc60548e7",
             "historicalLifecycle": "P2.1.2.1.1",
+            "operationBinding": {
+                "contractFingerprint": "ce0218c8aea13ce7f60319a76beeac4168011ad694ebd1601e94c7b836dccb81",
+                "contractId": "c1491a84f42971c03bb415a568a4503e3c8eba553c9e4d6398646d119631ea18",
+                "kind": "revalidate-current/v1",
+                "operationId": "ea56a5f7-3242-4935-b1b4-b331ca956f88",
+                "softwareEvidence": {
+                    "fingerprint": "79a7ce9bfa311b1fd181c98402ffdb798495ee27376faa1ffd189f2ed2e25f82",
+                    "reference": "ARAMF_WORKER/certification/operations/ea56a5f7-3242-4935-b1b4-b331ca956f88/software-evidence.json"
+                },
+                "sourceFingerprint": "110757d740201499a59dd77d52268a1404a921a76b029f25141424f316e11744",
+                "subject": "P2"
+            },
             "provenance": "agent-direct",
-            "revalidationId": "reval-fc8f805f-f8a2-49c6-8ecc-6cd8bb3616c9",
+            "revalidationId": "reval-8b894f67-9f80-55e3-83a5-0d138a54e613",
             "revalidationOfCertificateId": "cert-1826c6e7-e7af-4ffb-8de2-938c120a0b2a",
             "revalidationType": "FRESHNESS_REVALIDATION",
             "schemaVersion": 1,
             "semanticChange": false,
-            "sourceFingerprint": "d99b5bf465a45f6d95cd08b35714fc1eb277be998f9e9e3be87a986a2dce5fb3",
-            "sourceRevision": "28ec608e66752152a9d45514cb41f1c8702457c0",
+            "sourceFingerprint": "110757d740201499a59dd77d52268a1404a921a76b029f25141424f316e11744",
+            "sourceRevision": "2c23822c1f94cdbf12266b4c0beb6de1399ee1ff",
             "status": "FRESH",
             "subject": "P2",
-            "supersedesRevalidationId": "reval-2cd8b5b6-c31f-4367-bab7-db3d1ede5285",
-            "timestamp": "2026-10-02T17:18:48.559Z"
+            "supersedesRevalidationId": "reval-22fc0832-f6b4-5547-95c8-a83c9d3e1594",
+            "timestamp": "2026-10-14T20:24:43.112Z"
         },
         "P3": {
             "contractFingerprint": "754ce7b5783ce7d5b0c170a317ac2b52e458827235c47d99221536080c9f0798",
@@ -150,21 +222,33 @@
                 "p2ContractFingerprint": "ce0218c8aea13ce7f60319a76beeac4168011ad694ebd1601e94c7b836dccb81"
             },
             "dependencyManifestFingerprint": "ca389512e8abf7aa9d26a0a44b14da4e23b6ad73910e93a964ac727c774b53e5",
-            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P3/reval-e4a47b1a-ee7c-4882-b8bb-abc8a18df8e5/evidence.json",
-            "evidenceFingerprint": "48e72378fa13f51e6da07e9ca191f4320521fb8cc129fc4579b7a8efe5462723",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P3/reval-8c563ea7-278b-59bd-87cd-788378235bc0/evidence.json",
+            "evidenceFingerprint": "16b6f968ed8b5e5ac216defcfe52deaec28d9881d5091d068c7324651b2e4b43",
             "historicalLifecycle": "P3.1.5.1.1",
+            "operationBinding": {
+                "contractFingerprint": "754ce7b5783ce7d5b0c170a317ac2b52e458827235c47d99221536080c9f0798",
+                "contractId": "c1491a84f42971c03bb415a568a4503e3c8eba553c9e4d6398646d119631ea18",
+                "kind": "revalidate-current/v1",
+                "operationId": "ea56a5f7-3242-4935-b1b4-b331ca956f88",
+                "softwareEvidence": {
+                    "fingerprint": "79a7ce9bfa311b1fd181c98402ffdb798495ee27376faa1ffd189f2ed2e25f82",
+                    "reference": "ARAMF_WORKER/certification/operations/ea56a5f7-3242-4935-b1b4-b331ca956f88/software-evidence.json"
+                },
+                "sourceFingerprint": "26b17597d93f6216a2b253bebb63bd2d473fe172150db4a1b3d1a2201f7c955d",
+                "subject": "P3"
+            },
             "provenance": "agent-direct",
-            "revalidationId": "reval-e4a47b1a-ee7c-4882-b8bb-abc8a18df8e5",
+            "revalidationId": "reval-8c563ea7-278b-59bd-87cd-788378235bc0",
             "revalidationOfCertificateId": "cert-677ad827-a1ab-4e0e-af82-308a7c71bab6",
             "revalidationType": "FRESHNESS_REVALIDATION",
             "schemaVersion": 1,
             "semanticChange": false,
             "sourceFingerprint": "26b17597d93f6216a2b253bebb63bd2d473fe172150db4a1b3d1a2201f7c955d",
-            "sourceRevision": "28ec608e66752152a9d45514cb41f1c8702457c0",
+            "sourceRevision": "2c23822c1f94cdbf12266b4c0beb6de1399ee1ff",
             "status": "FRESH",
             "subject": "P3",
-            "supersedesRevalidationId": "reval-97ca75f6-f492-42d1-965f-cf7a16a47da4",
-            "timestamp": "2026-10-02T17:18:48.967Z"
+            "supersedesRevalidationId": "reval-8d40e8cb-8b6a-5bc1-a6ed-f0d2a919e744",
+            "timestamp": "2026-10-14T20:24:43.907Z"
         },
         "P4": {
             "contractFingerprint": "7186d0e1753b79087a787dbc0b5b052f32da8578d462e9b73d4862a6b2b32d97",
@@ -174,21 +258,33 @@
                 "p1ContractFingerprint": "5f8efeb042266d28988f7ab01d2fa103be0420afa0433412ee595138d7aab303"
             },
             "dependencyManifestFingerprint": "940f3a8a04a3e95a70140d5850ee50f6bf44885ddfea30eb9b697d706e660fab",
-            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P4/reval-54dd0b77-9c2e-4735-8a89-16a0ceb46544/evidence.json",
-            "evidenceFingerprint": "7a2d761578f5c285b43dab532dbf759e086de09237275ce5ad4d3e94470dc24a",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P4/reval-3aea163f-d7ff-56c3-811b-cf2cbd2dbc79/evidence.json",
+            "evidenceFingerprint": "c287eb102c992aebd948b6b427475c454fd286d0618d7489465aafe73ae130c4",
             "historicalLifecycle": "P4.1.5.1.1",
+            "operationBinding": {
+                "contractFingerprint": "7186d0e1753b79087a787dbc0b5b052f32da8578d462e9b73d4862a6b2b32d97",
+                "contractId": "c1491a84f42971c03bb415a568a4503e3c8eba553c9e4d6398646d119631ea18",
+                "kind": "revalidate-current/v1",
+                "operationId": "ea56a5f7-3242-4935-b1b4-b331ca956f88",
+                "softwareEvidence": {
+                    "fingerprint": "79a7ce9bfa311b1fd181c98402ffdb798495ee27376faa1ffd189f2ed2e25f82",
+                    "reference": "ARAMF_WORKER/certification/operations/ea56a5f7-3242-4935-b1b4-b331ca956f88/software-evidence.json"
+                },
+                "sourceFingerprint": "e9457af87c9bc970a6ebf49903133cfc994bffa67bdbbe24f220deb9325c0930",
+                "subject": "P4"
+            },
             "provenance": "agent-direct",
-            "revalidationId": "reval-54dd0b77-9c2e-4735-8a89-16a0ceb46544",
+            "revalidationId": "reval-3aea163f-d7ff-56c3-811b-cf2cbd2dbc79",
             "revalidationOfCertificateId": "cert-2b6052e6-bc54-447f-96a5-33de08f21b13",
             "revalidationType": "FRESHNESS_REVALIDATION",
             "schemaVersion": 1,
             "semanticChange": false,
             "sourceFingerprint": "e9457af87c9bc970a6ebf49903133cfc994bffa67bdbbe24f220deb9325c0930",
-            "sourceRevision": "28ec608e66752152a9d45514cb41f1c8702457c0",
+            "sourceRevision": "2c23822c1f94cdbf12266b4c0beb6de1399ee1ff",
             "status": "FRESH",
             "subject": "P4",
-            "supersedesRevalidationId": "reval-6ef8c7f2-5727-43bf-b274-509d3bb5c8cd",
-            "timestamp": "2026-10-02T17:18:49.388Z"
+            "supersedesRevalidationId": "reval-be4d8e8d-4f98-5beb-bc03-771bc8e9f242",
+            "timestamp": "2026-10-14T20:24:44.697Z"
         },
         "P5": {
             "contractFingerprint": "1ecbdc8461623ad45f5bd297778e1feac95a3a6213d03d1cf45834d8c7f132b8",
@@ -199,21 +295,33 @@
                 "p4ContractFingerprint": "7186d0e1753b79087a787dbc0b5b052f32da8578d462e9b73d4862a6b2b32d97"
             },
             "dependencyManifestFingerprint": "37c448b6e86f7c5f931c0b4b78a4e59d2f67aa1d33080e6fdb9156044313100e",
-            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P5/reval-99257319-f245-4b36-b6f2-d1e9edb8e940/evidence.json",
-            "evidenceFingerprint": "a9e1e3a1379262b3768ae64a9f20432717c1b41cb353fc69ba186d037a332579",
+            "evidenceArtifact": "ARAMF_WORKER/certification/revalidation/P5/reval-b233c71e-23a3-5463-862c-1ccbeb08d27b/evidence.json",
+            "evidenceFingerprint": "4a969ab5bbe727523a215da46186213436d970206640f5275bbf9fb68dbce643",
             "historicalLifecycle": "P5.1.5.1.1",
+            "operationBinding": {
+                "contractFingerprint": "1ecbdc8461623ad45f5bd297778e1feac95a3a6213d03d1cf45834d8c7f132b8",
+                "contractId": "c1491a84f42971c03bb415a568a4503e3c8eba553c9e4d6398646d119631ea18",
+                "kind": "revalidate-current/v1",
+                "operationId": "ea56a5f7-3242-4935-b1b4-b331ca956f88",
+                "softwareEvidence": {
+                    "fingerprint": "79a7ce9bfa311b1fd181c98402ffdb798495ee27376faa1ffd189f2ed2e25f82",
+                    "reference": "ARAMF_WORKER/certification/operations/ea56a5f7-3242-4935-b1b4-b331ca956f88/software-evidence.json"
+                },
+                "sourceFingerprint": "d5b97a5c70ffd293942b86457e9f888af147f34800891186347944490a6962a5",
+                "subject": "P5"
+            },
             "provenance": "agent-direct",
-            "revalidationId": "reval-99257319-f245-4b36-b6f2-d1e9edb8e940",
+            "revalidationId": "reval-b233c71e-23a3-5463-862c-1ccbeb08d27b",
             "revalidationOfCertificateId": "cert-ca24b0d8-0226-45ee-afaa-00deff013395",
             "revalidationType": "FRESHNESS_REVALIDATION",
             "schemaVersion": 1,
             "semanticChange": false,
             "sourceFingerprint": "d5b97a5c70ffd293942b86457e9f888af147f34800891186347944490a6962a5",
-            "sourceRevision": "28ec608e66752152a9d45514cb41f1c8702457c0",
+            "sourceRevision": "2c23822c1f94cdbf12266b4c0beb6de1399ee1ff",
             "status": "FRESH",
             "subject": "P5",
-            "supersedesRevalidationId": "reval-9c4b340c-c81b-42be-be87-bf22ac5caf6a",
-            "timestamp": "2026-10-02T17:18:49.794Z"
+            "supersedesRevalidationId": "reval-bb25fd46-d44a-5814-817a-5fa1d1a84a93",
+            "timestamp": "2026-10-14T20:24:45.468Z"
         },
         "S1": {
             "contractFingerprint": "c97529c8d62c5c089a0bb662082feb732c19a64b4cd1710d457d7bdb94b0798c",

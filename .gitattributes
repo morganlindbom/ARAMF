@@ -1,0 +1,4 @@
+ARAMF_WORKER/certification/operations/901d3b39-d104-4450-bbe4-b424389be9e3/software-evidence.json filter=lfs diff=lfs merge=lfs -text
+ARAMF_WORKER/certification/operations/ea56a5f7-3242-4935-b1b4-b331ca956f88/software-evidence.json filter=lfs diff=lfs merge=lfs -text
+ARAMF_WORKER/verification/activation/b3459de7-0d5e-48ff-ba42-3d397bf6a03a/proof.json filter=lfs diff=lfs merge=lfs -text
+ARAMF_WORKER/verification/requirements/50bf9db1-992c-417e-a3f4-e21ca77cd137/proof.json filter=lfs diff=lfs merge=lfs -text

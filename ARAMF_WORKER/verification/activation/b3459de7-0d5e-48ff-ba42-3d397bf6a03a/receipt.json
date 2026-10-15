@@ -1,0 +1,287 @@
+{
+    "auditRecord": {
+        "eventId": "event-a8c5577a-ae8a-48d4-821d-a95887b83474",
+        "eventType": "TASK_STARTED",
+        "operation": "task-start",
+        "sequenceNumber": 704,
+        "status": "PASS"
+    },
+    "contractId": "066f7c67e3340f3b16867f8a9524194b90d2633fceef04e44abdca4ed8991f75",
+    "error": "",
+    "gates": {
+        "f4Eligibility": {
+            "error": "",
+            "success": true
+        },
+        "foundationEligibility": {
+            "error": "",
+            "success": true
+        }
+    },
+    "observedLifecycle": {
+        "active": {
+            "certification": 0,
+            "done": 0,
+            "iteration": 1,
+            "loop": 1,
+            "process": 6
+        },
+        "completedHistory": [
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "process": 2
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "process": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "process": 3
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "process": 4
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 4,
+                "loop": 1,
+                "process": 5
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "foundation": 1,
+                "iteration": 1,
+                "loop": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "foundation": 1,
+                "iteration": 2,
+                "loop": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "foundation": 1,
+                "iteration": 3,
+                "loop": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "foundation": 1,
+                "iteration": 4,
+                "loop": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 3,
+                "loop": 1,
+                "process": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "process": 2
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 5,
+                "loop": 1,
+                "process": 3
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 5,
+                "loop": 1,
+                "process": 4
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 5,
+                "loop": 1,
+                "process": 5
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "foundation": 2,
+                "iteration": 1,
+                "loop": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "foundation": 3,
+                "iteration": 1,
+                "loop": 1
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "foundation": 4,
+                "iteration": 1,
+                "loop": 1
+            }
+        ],
+        "foundationIntegrationValid": true,
+        "legacyHistory": [
+            "P0.1.1.1",
+            "P1.1.1.1",
+            "P2.1.1.1",
+            "P3.1.0.0",
+            "P0.1.1.1.1",
+            "P1.1.1.1.1",
+            "P2.1.1.1.1",
+            "P1.1.1.1",
+            "legacy:P0.1.2.1.1",
+            "legacy:P1.1.1.1.1",
+            "legacy:P2.1.4.1.1",
+            "legacy:P3.1.4.1.1",
+            "legacy:P4.1.4.1.1"
+        ],
+        "namespaceVersion": 2,
+        "next": {
+            "certification": 0,
+            "done": 0,
+            "iteration": 0,
+            "loop": 1,
+            "process": 7
+        },
+        "structureHistory": [
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 3
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 2,
+                "loop": 1,
+                "structure": 3
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 3,
+                "loop": 1,
+                "structure": 3
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 4
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 5
+            },
+            {
+                "certification": 1,
+                "done": 1,
+                "iteration": 1,
+                "loop": 1,
+                "structure": 6
+            }
+        ]
+    },
+    "operationId": "b3459de7-0d5e-48ff-ba42-3d397bf6a03a",
+    "outcome": "P6_STARTED",
+    "outputs": {
+        "ARAMF_WORKER.aramf.json": "230d0cb74982788ebc297956a7630b6550f64103a0fdaa365f65d47ab79b40b8",
+        "ARAMF_WORKER/AGENTS.md": "3eef1fc8bee5ab329f6744b46da9cb3b315e1d5386d60b6866ba468c8175a8a5",
+        "ARAMF_WORKER/ARAMF_WORKER.json": "56db3cd69fca75451c3a5eaa2fe2a36a4c7208e37865b92648568a9eac104f0d",
+        "ARAMF_WORKER/PROJECT_STATUS.md": "84915a676c59e614d09f928fe9318a3d2c8edc1371cb7915e8b25588f783ffbe",
+        "ARAMF_WORKER/communication/communication-contract.json": "MISSING",
+        "ARAMF_WORKER/communication/multi-target-build.json": "MISSING",
+        "ARAMF_WORKER/context/task-dag.json": "adb1e8ac59cfcbdee4077d7557e2c643df20edfb05377a30d368c2ff997ec69a",
+        "ARAMF_WORKER/hardware/hardware-resources.json": "MISSING",
+        "ARAMF_WORKER/memory/cold-start-validation.json": "1e99a5e713b20fe2ec54487539674a4bdcb454171baec129d5e38635957c99d6",
+        "ARAMF_WORKER/memory/current-state.md": "dd7fe970a5a51303f8627d94f2c71d99804290605f4ae3cfe657320f08643767",
+        "ARAMF_WORKER/memory/event-log.jsonl": "1a2caffa4d3f54120fcd13ec646f9a33d4c82104c620fcff87e30d5fbe8e7266",
+        "ARAMF_WORKER/memory/memory-config.json": "fbfd961566f3d72405261d7b5479fa2b34b32bf1ce4dc4517913954ad1dfb0fc",
+        "ARAMF_WORKER/memory/memory-contract.json": "af96e05b6a106b93d451c09c63940136f750c2edef6951fc2c85e206810c6e4e",
+        "ARAMF_WORKER/memory/memory-manifest.json": "ac9e91e4207b80c2fdde4d2e673926e05ba7ac046cac2a9999df7b17d44b8f6f",
+        "ARAMF_WORKER/memory/metrics.json": "0b2ac5c9a39218de72e6f782fbb5b22834f674fa8cbb0e3a94291a7b8588db1b",
+        "ARAMF_WORKER/platforms/android-effective-config.json": "MISSING",
+        "ARAMF_WORKER/platforms/platform-metadata.json": "20ee031af2eb81316e4392c824a6257c2a7fa552b024cc1027d89245695c8644",
+        "ARAMF_WORKER/project.json": "03185c682fe5b893bdd9fdc9a08437d4705a7a9ce6bea4f4455177d87b518e32",
+        "ARAMF_WORKER/provenance.json": "b176df6c73cc68c8c49b76251557a2f8e56812f5a7312b75e0845346590afde6",
+        "ARAMF_WORKER/resources/resources.json": "a018fe94953f617d12e1e444425d11e394b2dca21b4e6eb0248a43a1ca05094a",
+        "ARAMF_WORKER/routing/README.md": "786b9d265b681130641850700543eb521bd0f526dafe4a27ef7728e5d344b7ab",
+        "ARAMF_WORKER/routing/scope-routes.json": "736417269dddc96545f071e3f2a2fc5ddbe0aa81145222d2477bde5f89d658a5",
+        "ARAMF_WORKER/routing/task-routes.json": "a43f8276640d0038c9bfcee8bf9c56ae5e1f04b1ed70bf4d5256444ed826eb38",
+        "ARAMF_WORKER/routing/validation-policy.json": "ff9eccf12591380b7cedc9cb21fd02a73442ae1c36bebc21c98c5c789b13b9bd",
+        "ARAMF_WORKER/rules/generated-rules.md": "953bec9c771b7d834aba0ce733df61a5b779905b31ea7239a894530b836ca347",
+        "ARAMF_WORKER/selection-effects.json": "64a5a727a24ae625fba2107dfc9730a71a0934703e2a8b7f7f432c5dd4f6f8cf",
+        "ARAMF_WORKER/verification/activation/b3459de7-0d5e-48ff-ba42-3d397bf6a03a/proof.json": "0dfb4457713926706629a14858fa73fc3dcfaaa3e27ec68b6e0be0b136280fc8",
+        "ARAMF_WORKER/verification/generation-state.json": "255a2bf563593f5f2cba144e1f0bbf295d584c9cf33901a14fb3a00469adf5ea",
+        "ARAMF_WORKER/worker-manifest.json": "5eb3508de5f263baab7fbd1d1f8cc06981160d4f24c57882fec6177c498a76b6"
+    },
+    "producer": "WorkerTaskServices/p6-activation-operation/v1",
+    "stages": [
+        {
+            "error": "",
+            "stage": "foundation-eligibility",
+            "success": true
+        },
+        {
+            "error": "",
+            "stage": "f4-eligibility",
+            "success": true
+        },
+        {
+            "error": "",
+            "stage": "start",
+            "startedAt": "2026-10-14T21:07:49.109Z",
+            "success": true
+        },
+        {
+            "derivedSynchronized": true,
+            "error": "",
+            "rolledBack": false,
+            "saved": true,
+            "stage": "configuration",
+            "success": true,
+            "verified": true
+        },
+        {
+            "error": "",
+            "stage": "audit",
+            "success": true
+        }
+    ],
+    "startedAt": "2026-10-14T21:07:49.109Z",
+    "timestamp": "2026-10-14T21:09:58.767Z"
+}

@@ -14,6 +14,7 @@ ProjectBuildDeliveryPage::ProjectBuildDeliveryPage(ProjectModel* model, QWidget*
         : section_ == Section::Automation ? tr("Automation & delivery") : tr("Build, test & delivery");
     layout->addWidget(new QLabel(QStringLiteral("<h2>%1</h2>Select how the project is compiled, tested, automated and delivered.").arg(title), this));
     toolchains_ = new CapabilityCheckGroup(tr("Compiler / Toolchain / Runtime"), EnvironmentCatalog::toolchains(), 3, this);
+    toolchainDetails_ = new CapabilityDetailsEditor(model_, toolchains_, CapabilityDetailsEditor::Domain::Toolchains, this);
     buildSystems_ = new CapabilityCheckGroup(tr("Build Systems"), EnvironmentCatalog::buildSystems(), 3, this);
     dependencies_ = new CapabilityCheckGroup(tr("Dependency / Package Management"), EnvironmentCatalog::dependencyManagers(), 3, this);
     configurations_ = new CapabilityCheckGroup(tr("Build Configurations"), EnvironmentCatalog::buildConfigurations(), 3, this);
@@ -29,7 +30,7 @@ ProjectBuildDeliveryPage::ProjectBuildDeliveryPage(ProjectModel* model, QWidget*
     quality_->setObjectName(QStringLiteral("qualityCapabilities"));
     automation_->setObjectName(QStringLiteral("automationCapabilities"));
     delivery_->setObjectName(QStringLiteral("deliveryCapabilities"));
-    layout->addWidget(toolchains_); layout->addWidget(buildSystems_); layout->addWidget(dependencies_); layout->addWidget(configurations_);
+    layout->addWidget(toolchains_); layout->addWidget(toolchainDetails_); layout->addWidget(buildSystems_); layout->addWidget(dependencies_); layout->addWidget(configurations_);
     layout->addWidget(testing_); layout->addWidget(quality_); layout->addWidget(automation_); layout->addWidget(delivery_); layout->addStretch();
     connect(toolchains_, &CapabilityCheckGroup::selectionChanged, this, [this](const QStringList& value) { auto c=model_->developmentCapabilities(); c.toolchains=value; model_->setDevelopmentCapabilities(c); });
     connect(buildSystems_, &CapabilityCheckGroup::selectionChanged, this, [this](const QStringList& value) { auto c=model_->developmentCapabilities(); c.buildSystems=value; model_->setDevelopmentCapabilities(c); });
@@ -46,6 +47,7 @@ ProjectBuildDeliveryPage::ProjectBuildDeliveryPage(ProjectModel* model, QWidget*
     const bool testing = all || section_ == Section::Testing;
     const bool automation = all || section_ == Section::Automation;
     toolchains_->setVisible(toolchain);
+    toolchainDetails_->setVisible(toolchain);
     buildSystems_->setVisible(build);
     dependencies_->setVisible(build);
     configurations_->setVisible(build);

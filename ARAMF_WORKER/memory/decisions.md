@@ -341,3 +341,14 @@ creating parallel lessons.
 - Superseded-By: none
 - Summary: User-approved ADMIN_OVERRIDE event-cc8303ac-6577-45e1-9986-57a0a4c52d5f authorizes this narrow repair. Folder manifest v1 includes every typed entry and raw content hash, with only exact explicitly declared canonical generated-output markers. Default protection remains. P6 CMake grants bind verified administrator, project, full request, exact path/operation/base/result, expiry and one verified consumption; preparation and postflight enforce them. No Foundation dependencies, certification gates or historical evidence are changed.
 <!-- /ARAMF-DECISION -->
+
+## Decision Record: p6-code-bank-requirements-50bf9db1-992c-417e-a3f4-e21ca77cd137
+
+<!-- ARAMF-DECISION -->
+- Decision-ID: p6-code-bank-requirements-50bf9db1-992c-417e-a3f4-e21ca77cd137
+- Topic: Canonical P6 Code Bank requirements
+- Scope: source-code
+- Status: current
+- Superseded-By: none
+- Summary: Commissioned P6 Canonical Code Bank baseline P6-CODEBANK-REQ-1 is registered in rules.scopeMetadata[source-code].p6CodeBankRequirements; SHA256 31c103e805f6340ca334de22f9b297647e6896fee3dc30f56ab65ca9dcac5356. Its twelve criteria cover identity, exact authority, ingestion, validation, transitions, persistence, integrity, compatibility, evidence, reuse, boundaries and lifecycle certification. Project-local storage, same-project default reuse, nominated review, exact compatibility and no execution/network ingestion are agent engineering defaults. This decision authorizes no implementation, protected CMake change or lifecycle start.
+<!-- /ARAMF-DECISION -->

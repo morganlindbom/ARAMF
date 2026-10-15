@@ -1,6 +1,6 @@
 {
     "_file": "verification-result.json",
-    "checkedAt": "2026-10-06T21:36:19Z",
+    "checkedAt": "2026-10-15T00:39:58Z",
     "checks": [
         {
             "details": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF",
@@ -103,6 +103,12 @@
             "id": "generated-rules",
             "name": "Generated rules",
             "status": "PASS"
+        },
+        {
+            "details": "Product was not selected.",
+            "id": "academic-document-manifest",
+            "name": "Academic document manifest",
+            "status": "NOT_APPLICABLE"
         },
         {
             "details": "ARAMF_WORKER/routing/task-routes.json",
@@ -255,6 +261,18 @@
             "status": "PASS"
         },
         {
+            "details": "Academic draft generation is not selected or Academic Documentation is disabled.",
+            "id": "academic-documents",
+            "name": "Academic draft documents",
+            "status": "NOT_APPLICABLE"
+        },
+        {
+            "details": "Canonical configuration products match generation readback.",
+            "id": "configuration-artifact-readback",
+            "name": "Configuration product byte bindings",
+            "status": "PASS"
+        },
+        {
             "details": "Fingerprint matches ProjectModel.",
             "id": "freshness",
             "name": "Generated configuration is current",
@@ -267,7 +285,7 @@
             "status": "PASS"
         }
     ],
-    "fingerprint": "b17df54a72cc5c84d9ac1f52f1bb08f6aaf23b3771dfb3a46139727569debe4b",
+    "fingerprint": "d71bcdee425c43910966aabffb4fe7d3d88698b8c826fcd7055cf556e75f0c35",
     "overallStatus": "PASS",
     "projectRoot": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF"
 }

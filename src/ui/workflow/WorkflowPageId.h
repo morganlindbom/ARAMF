@@ -15,7 +15,17 @@ enum class WorkflowPageId {
     AcademicStandards,
     AcademicDeliverables,
     Languages,
+    LanguageSystems,
+    LanguageApplication,
+    LanguageWeb,
+    LanguageScripting,
     Frameworks,
+    FrameworkDesktopUi,
+    FrameworkWebServer,
+    FrameworkMobile,
+    FrameworkEmbeddedDevice,
+    FrameworkDataMl,
+    FrameworkGraphicsGame,
     DevelopmentTools,
     DevelopmentToolsIde,
     DevelopmentToolsVersionControl,
@@ -74,7 +84,17 @@ inline QString workflowPageKey(WorkflowPageId page)
     case WorkflowPageId::AcademicStandards: return QStringLiteral("project.academic.standards");
     case WorkflowPageId::AcademicDeliverables: return QStringLiteral("project.academic.deliverables");
     case WorkflowPageId::Languages: return QStringLiteral("project.languages");
+    case WorkflowPageId::LanguageSystems: return QStringLiteral("project.languages.systems");
+    case WorkflowPageId::LanguageApplication: return QStringLiteral("project.languages.application");
+    case WorkflowPageId::LanguageWeb: return QStringLiteral("project.languages.web");
+    case WorkflowPageId::LanguageScripting: return QStringLiteral("project.languages.scripting");
     case WorkflowPageId::Frameworks: return QStringLiteral("project.frameworks");
+    case WorkflowPageId::FrameworkDesktopUi: return QStringLiteral("project.frameworks.desktop-ui");
+    case WorkflowPageId::FrameworkWebServer: return QStringLiteral("project.frameworks.web-server");
+    case WorkflowPageId::FrameworkMobile: return QStringLiteral("project.frameworks.mobile");
+    case WorkflowPageId::FrameworkEmbeddedDevice: return QStringLiteral("project.frameworks.embedded-device");
+    case WorkflowPageId::FrameworkDataMl: return QStringLiteral("project.frameworks.data-ml");
+    case WorkflowPageId::FrameworkGraphicsGame: return QStringLiteral("project.frameworks.graphics-game");
     case WorkflowPageId::DevelopmentTools: return QStringLiteral("project.development-tools");
     case WorkflowPageId::DevelopmentToolsIde: return QStringLiteral("project.development-tools.ide");
     case WorkflowPageId::DevelopmentToolsVersionControl: return QStringLiteral("project.development-tools.version-control");

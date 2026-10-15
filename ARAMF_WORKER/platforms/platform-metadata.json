@@ -20,11 +20,19 @@
         "targetPlatform": "desktop",
         "versionControl": "none"
     },
+    "frameworkNotes": {
+    },
+    "frameworkVersions": {
+    },
     "frameworks": [
         "qt"
     ],
     "hardwareTargets": [
     ],
+    "languageNotes": {
+    },
+    "languageVersions": {
+    },
     "languages": [
         "cpp"
     ],
@@ -39,6 +47,10 @@
         "windows-desktop"
     ],
     "templateId": "",
+    "toolchainNotes": {
+    },
+    "toolchainVersions": {
+    },
     "toolchains": [
         "msys2-ucrt64-gcc"
     ]

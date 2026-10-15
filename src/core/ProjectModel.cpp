@@ -284,6 +284,8 @@ void ProjectModel::applyTemplateDefaults(const DevelopmentEnvironment& value)
 }
 
 void ProjectModel::setDevelopmentCapabilities(const DevelopmentCapabilities& value)
+// Brief: Replace the selected development capabilities and their metadata.
+// Preserve the existing legacy mirrors while treating optional version and notes maps as part of model identity.
 {
     const QString derivedContext = projectTypeLocked() ? templateState_.value("projectType").toString() : deriveProjectContext(value);
     if (capabilities_.languages == value.languages
@@ -304,6 +306,12 @@ void ProjectModel::setDevelopmentCapabilities(const DevelopmentCapabilities& val
         && capabilities_.qualityCapabilities == value.qualityCapabilities
         && capabilities_.automationCapabilities == value.automationCapabilities
         && capabilities_.deliveryCapabilities == value.deliveryCapabilities
+        && capabilities_.languageVersions == value.languageVersions
+        && capabilities_.languageNotes == value.languageNotes
+        && capabilities_.frameworkVersions == value.frameworkVersions
+        && capabilities_.frameworkNotes == value.frameworkNotes
+        && capabilities_.toolchainVersions == value.toolchainVersions
+        && capabilities_.toolchainNotes == value.toolchainNotes
         && context_ == derivedContext) {
         return;
     }
@@ -479,7 +487,16 @@ void ProjectModel::setAiConfiguration(const AiConfiguration& value)
 
 void ProjectModel::applyTemplateCapabilities(const DevelopmentCapabilities& value)
 {
+    // Brief: Apply a template without erasing user-authored capability details.
+
+    // Versions and notes belong to the project model; keep them even when the new template changes selected catalog entries.
     DevelopmentCapabilities next = value;
+    next.languageVersions = capabilities_.languageVersions;
+    next.languageNotes = capabilities_.languageNotes;
+    next.frameworkVersions = capabilities_.frameworkVersions;
+    next.frameworkNotes = capabilities_.frameworkNotes;
+    next.toolchainVersions = capabilities_.toolchainVersions;
+    next.toolchainNotes = capabilities_.toolchainNotes;
     if (environmentOverrides_.contains(QStringLiteral("language"))) next.languages = {environment_.language};
     if (environmentOverrides_.contains(QStringLiteral("framework"))) next.frameworks = {environment_.framework};
     if (environmentOverrides_.contains(QStringLiteral("ide"))) next.ides = {environment_.ide};
@@ -736,13 +753,16 @@ void ProjectModel::resolveAndroidConstraints()
 }
 
 void ProjectModel::setGenerationOptions(const GenerationOptions& value)
+// Brief: Store every independently selectable output product.
+// Academic authoring documents have their own switch and do not depend on the AGENTS/rules product.
 {
     if (generationOptions_.generateAgentRules == value.generateAgentRules
         && generationOptions_.generateRouting == value.generateRouting
         && generationOptions_.generatePlatforms == value.generatePlatforms
         && generationOptions_.generateResources == value.generateResources
         && generationOptions_.generateMemory == value.generateMemory
-        && generationOptions_.generateProvenance == value.generateProvenance) {
+        && generationOptions_.generateProvenance == value.generateProvenance
+        && generationOptions_.generateAcademicDocuments == value.generateAcademicDocuments) {
         return;
     }
     generationOptions_ = value;
