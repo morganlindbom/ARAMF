@@ -22,6 +22,23 @@
 #include <limits>
 
 namespace {
+QJsonValue withoutMemberSnapshots(const QJsonValue& value)
+// Brief: Keep member identities out of internal template caches; the project member domain owns them.
+{
+    if (value.isObject()) {
+        auto object = value.toObject();
+        object.remove("projectMembers");
+        for (auto it = object.begin(); it != object.end(); ++it) it.value() = withoutMemberSnapshots(it.value());
+        return object;
+    }
+    if (value.isArray()) {
+        QJsonArray array;
+        for (const auto& item : value.toArray()) array.append(withoutMemberSnapshots(item));
+        return array;
+    }
+    return value;
+}
+
 QJsonArray toJsonArray(const QStringList& values)
 {
     QJsonArray array;
@@ -267,7 +284,7 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     root.insert(QStringLiteral("description"), model.description());
     root.insert(QStringLiteral("templateId"), model.templateId());
     root.insert(QStringLiteral("templateModules"), toJsonArray(model.templateModules()));
-    root.insert(QStringLiteral("templateState"), model.templateState());
+    root.insert(QStringLiteral("templateState"), withoutMemberSnapshots(model.templateState()));
     QStringList completedPageIds;
     for (const auto& pageId : model.completedPageIds()) {
         if (workflowPageCapabilities(pageId).userCheckableCompletion) {
@@ -453,6 +470,14 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
         hardwareResources.append(QJsonObject{{QStringLiteral("id"), resource.id}, {QStringLiteral("endpointId"), resource.endpointId}, {QStringLiteral("resourceType"), resource.resourceType}, {QStringLiteral("physicalResource"), resource.physicalResource}, {QStringLiteral("direction"), resource.direction}, {QStringLiteral("logicalMode"), resource.logicalMode}, {QStringLiteral("activeLevel"), resource.activeLevel}, {QStringLiteral("purpose"), resource.purpose}, {QStringLiteral("ownership"), resource.ownership}, {QStringLiteral("capabilities"), toJsonArray(resource.capabilities)}});
     root.insert(QStringLiteral("hardwareResources"), hardwareResources);
     root.insert(QStringLiteral("profileSelections"), toJsonArray(model.profileSelections()));
+    if (!model.projectProfile().isEmpty()) root.insert("projectProfile", model.projectProfile());
+    if (!model.projectMembers().isEmpty()) {
+        QJsonArray members;
+        for (const auto& member : model.projectMembers()) members.append(QJsonObject{
+            {"name", member.name}, {"role", member.role}, {"responsibilities", member.responsibilities},
+            {"affiliation", member.affiliation}, {"email", member.email}, {"githubUsername", member.githubUsername}});
+        root.insert("projectMembers", members);
+    }
     root.insert(QStringLiteral("options"), options);
 
     return root;
@@ -524,6 +549,24 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
 {
     if (!model) { if (error) *error = "Project model is not available."; return false; }
     QJsonObject root = inputRoot;
+    if (root.contains("projectProfile") && (!root.value("projectProfile").isObject()
+        || !ProjectModel::validateProjectProfile(root.value("projectProfile").toObject(), error))) {
+        if (error && error->isEmpty()) *error = "Invalid project profile.";
+        return false;
+    }
+    QList<ProjectMember> members;
+    if (root.contains("projectMembers")) {
+        if (!root.value("projectMembers").isArray()) { if (error) *error = "Project members must be an array."; return false; }
+        for (const auto& value : root.value("projectMembers").toArray()) {
+            const auto object = value.toObject();
+            const QStringList fields{"name", "role", "responsibilities", "affiliation", "email", "githubUsername"};
+            if (!value.isObject()) { if (error) *error = "Invalid project member."; return false; }
+            for (auto it = object.begin(); it != object.end(); ++it)
+                if (!fields.contains(it.key()) || !it.value().isString()) { if (error) *error = "Unsupported project member field: " + it.key(); return false; }
+            members.append({object.value("name").toString(), object.value("role").toString(), object.value("responsibilities").toString(),
+                object.value("affiliation").toString(), object.value("email").toString(), object.value("githubUsername").toString()});
+        }
+    }
     bool validSchemaVersion = false;
     const int sourceVersion = readSchemaVersion(root, &validSchemaVersion);
     if (!validSchemaVersion || sourceVersion < 0) {
@@ -725,6 +768,8 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
 
     model->beginUpdate();
     model->resetForNewProject();
+    model->projectProfile_ = root.value("projectProfile").toObject();
+    model->setProjectMembers(members);
     model->setTemplateState(root.value("templateState").toObject());
     model->setProjectId(root.value(QStringLiteral("projectId")).toString());
     model->setProjectName(root.value(QStringLiteral("projectName")).toString());
@@ -982,6 +1027,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
     for (auto it = optionsObject.constBegin(); it != optionsObject.constEnd(); ++it) {
         model->setOptionValues(it.key(), fromJsonArray(it.value()));
     }
+    if (!model->projectProfile().isEmpty()) model->resolveAndroidConstraints();
     model->clearEnvironmentOverrides();
     int migrationSourceVersion = sourceVersion;
     if (sourceVersion == ProjectSchema::CurrentVersion

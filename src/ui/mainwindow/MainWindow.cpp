@@ -9,6 +9,7 @@
 #include "ui/workflows/project/modulestemplates/ProjectModulesTemplatesPage.h"
 #include "ui/workflows/project/communication/ProjectCommunicationPage.h"
 #include "ui/workflows/project/compatibility/ProjectCompatibilityPage.h"
+#include "ui/workflows/project/members/ProjectMembersPage.h"
 #include "ui/workflows/project/academic/ProjectAcademicPage.h"
 #include "ui/workflows/project/academic/documentation/ProjectAcademicDocumentationPage.h"
 #include "ui/workflows/project/academic/research/ProjectAcademicResearchPage.h"
@@ -133,6 +134,7 @@ namespace
             WorkflowPageId::ProjectModulesTemplates,
             WorkflowPageId::ProjectCommunication,
             WorkflowPageId::ProjectCompatibility,
+            WorkflowPageId::ProjectMembers,
             WorkflowPageId::Academic,
             WorkflowPageId::AcademicDocumentation,
             WorkflowPageId::AcademicResearch,
@@ -323,6 +325,7 @@ MainWindow::MainWindow(
         &projectModel_, &templateManager_, stack_);
     projectCommunicationPage_ = new ProjectCommunicationPage(&projectModel_, stack_);
     projectCompatibilityPage_ = new ProjectCompatibilityPage(&projectModel_, stack_);
+    projectMembersPage_ = new ProjectMembersPage(&projectModel_, stack_);
 
     academicPage_ = new ParentOverviewPage(
         tr("Academic"), tr("Configure academic documents, research and delivery requirements."),
@@ -478,6 +481,7 @@ MainWindow::MainWindow(
     registerPage(WorkflowPageId::ProjectModulesTemplates, projectModulesTemplatesPage_);
     registerPage(WorkflowPageId::ProjectCommunication, projectCommunicationPage_);
     registerPage(WorkflowPageId::ProjectCompatibility, projectCompatibilityPage_);
+    registerPage(WorkflowPageId::ProjectMembers, projectMembersPage_);
     registerPage(WorkflowPageId::Academic, academicPage_);
     registerPage(WorkflowPageId::AcademicDocumentation, academicDocumentationPage_);
     registerPage(WorkflowPageId::AcademicResearch, academicResearchPage_);
@@ -589,6 +593,8 @@ MainWindow::MainWindow(
                     setWorkflowPage(WorkflowPageId::ProjectModulesTemplates);
                 else if (id == QStringLiteral("project.communication"))
                     setWorkflowPage(WorkflowPageId::ProjectCommunication);
+                else if (id == QStringLiteral("project.members"))
+                    setWorkflowPage(WorkflowPageId::ProjectMembers);
                 else if (id == QStringLiteral("project.compatibility"))
                     setWorkflowPage(WorkflowPageId::ProjectCompatibility);
             });

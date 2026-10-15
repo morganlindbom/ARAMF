@@ -1,6 +1,6 @@
 {
     "_file": "scope-routes.json",
-    "inputFingerprint": "d71bcdee425c43910966aabffb4fe7d3d88698b8c826fcd7055cf556e75f0c35",
+    "inputFingerprint": "69894fa75e683ebaef6acaee61e5df841bf865d164d48e4870113716f13ed1bf",
     "schemaVersion": 1,
     "scopes": [
         {
@@ -263,6 +263,8 @@
                     "src/ui/workflows/project/languages/systems/ProjectLanguageSystemsPage.h",
                     "src/ui/workflows/project/languages/web/ProjectLanguageWebPage.cpp",
                     "src/ui/workflows/project/languages/web/ProjectLanguageWebPage.h",
+                    "src/ui/workflows/project/members/ProjectMembersPage.h",
+                    "src/ui/workflows/project/overview/ProjectOverviewPage.cpp",
                     "src/ui/workflows/project/platforms/ProjectPlatformsPage.cpp",
                     "src/ui/workflows/project/platforms/ProjectPlatformsPage.h",
                     "src/ui/workflows/project/platforms/hosts/ProjectPlatformsHostsPage.cpp",

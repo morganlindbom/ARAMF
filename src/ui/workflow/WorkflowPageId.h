@@ -66,7 +66,8 @@ enum class WorkflowPageId {
     UpdateReview,
     UpdateApply,
     UpdateConfiguration,
-    ImprovementBacklog
+    ImprovementBacklog,
+    ProjectMembers
 };
 
 inline QString workflowPageKey(WorkflowPageId page)
@@ -77,6 +78,7 @@ inline QString workflowPageKey(WorkflowPageId page)
     case WorkflowPageId::ProjectModulesTemplates: return QStringLiteral("project.modules-templates");
     case WorkflowPageId::ProjectCommunication: return QStringLiteral("project.communication");
     case WorkflowPageId::ProjectCompatibility: return QStringLiteral("project.compatibility");
+    case WorkflowPageId::ProjectMembers: return QStringLiteral("project.members");
     case WorkflowPageId::Academic: return QStringLiteral("project.academic");
     case WorkflowPageId::AcademicDocumentation: return QStringLiteral("project.academic.documentation");
     case WorkflowPageId::AcademicResearch: return QStringLiteral("project.academic.research");

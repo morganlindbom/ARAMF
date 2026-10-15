@@ -9,6 +9,38 @@
             "summary": "Stable verified baseline for autonomous Codex to ARAMF Project Memory feedback, with semantic validation and cold-start coverage.",
             "title": "Autonomous agent memory feedback baseline",
             "verificationStatus": "PASS"
+        },
+        {
+            "createdAt": "2026-10-15T19:45:26Z",
+            "id": "checkpoint-7f9cf23e-88dc-4ec5-8dcd-c64495cafb4a",
+            "latestEventId": "event-21ff724b-b88f-4880-9be1-8272433df320",
+            "productionSequence": 794,
+            "provenance": {
+                "actor": "agent",
+                "agentId": "codex",
+                "tool": "aramf-memory-cli"
+            },
+            "relatedTask": "Android profiles and project members",
+            "scope": "project",
+            "summary": "User-requested resumable checkpoint before travelling. Android profiles and members implementation saved; source snapshot 6 frozen. Fresh build, Windows startup, context coordination and P3 PASS. Full Worker/CTest cancelled by request; test250/test550, remaining gates and final VERIFIED postflight are not complete. P6 remains P6.1.1.0.0 started uncertified incomplete. No commit/push/merge and no StorePath writes. Local backup destination: C:\\Users\\morga\\Documents\\ARAMF-checkpoints\\2026-10-15-2143-android-members. Evidence: C:\\Users\\morga\\AppData\\Local\\Temp\\aramf-android-recovery-20261015-g8wioihp. Successor contract d9a511306032a4cd2741c376ac84d9b77a7645a6ba3857b7296c55a1f567a99e; authorization expires 2026-10-16T19:18:23Z.",
+            "title": "Android profiles and members - safe travel checkpoint",
+            "verificationStatus": "IMPLEMENTED_UNVERIFIED"
+        },
+        {
+            "createdAt": "2026-10-15T22:51:29Z",
+            "id": "checkpoint-ca44785f-e0c1-4ed7-b66e-f410d8be7a67",
+            "latestEventId": "event-0c234154-0400-4678-8eba-8d069693c203",
+            "productionSequence": 803,
+            "provenance": {
+                "actor": "agent",
+                "agentId": "codex",
+                "tool": "aramf-memory-cli"
+            },
+            "relatedTask": "Android profiles and project members",
+            "scope": "project",
+            "summary": "Android profiles and project members are VERIFIED by fresh native TaskContract postflight. Full Worker: 843 checks, zero failures; all 23 Android/member assertions PASS. CTest: 18/18 PASS. test_250: 250/250 PASS. test_550: 250/250 automated PASS; 50 historical manual cases excluded. Build, startup, context, P3, Git diff, memory, cold-start, topology, impacted validation and acceptance PASS. All 22 source files match snapshot 6; saved configuration and P6 remain unchanged. Earlier cancelled attempts retained. No commit, push, merge or StorePath writes. Native evidence: C:\\Users\\morga\\AppData\\Local\\Temp\\aramf-android-recovery-20261015-g8wioihp\\feature-resume-postflight-20261016.json",
+            "title": "Android profiles and project members - verified completion",
+            "verificationStatus": "VERIFIED"
         }
     ]
 }

@@ -165,6 +165,7 @@ QList<ReleaseComponent> ReleaseManagementService::defaultComponents()
         {"project.academic", "Project / Academic", 1, 3},
         {"project.communication", "Project / Project communication", 1, 10},
         {"project.compatibility", "Project / Project compatibility & migration", 1, 11},
+        {"project.members", "Project / Project members", 1, 12},
         {"project.academic.documentation", "Project / Academic / Documentation", 2, 1},
         {"project.academic.research", "Project / Academic / Thesis & research", 2, 2},
         {"project.academic.information", "Project / Academic / Academic information", 2, 3},

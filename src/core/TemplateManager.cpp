@@ -532,7 +532,7 @@ QList<TemplateDefinition> TemplateManager::definitions() const
         d.resourcePolicy = model.resourcePolicy(); d.generation = model.generationOptions();
         d.communication = model.communicationConfiguration();
         d.certification = model.certificationConfiguration(); d.description = model.description();
-        ensureStandardAgents(d);
+        if (model.projectProfile().isEmpty()) ensureStandardAgents(d);
         model.setAiConfiguration(d.ai);
         d.configuration = ProjectPersistence().configuration(model);
         // Keep the reusable module provenance alongside the normalized
@@ -651,6 +651,8 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
                  || model->academicConfiguration().enabled
                  || model->aiConfiguration().primaryAgent != QStringLiteral("none"))) root = previous;
     else root = selected.first().configuration;
+    // Member records come from the current project or explicit reusable role slots, never a cached baseline.
+    root.remove("projectMembers");
     QJsonObject provenance;
     QStringList contexts;
     QString primary;
@@ -664,6 +666,8 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
         }
         if (!d.projectType.isEmpty() && !contexts.contains(d.projectType)) contexts << d.projectType;
         const auto source = d.configuration;
+        if (source.contains("projectProfile")) root.insert("projectProfile", source.value("projectProfile"));
+        if (model->projectMembers().isEmpty() && source.contains("projectMembers")) root.insert("projectMembers", source.value("projectMembers"));
         mergeDomain(root, source, QStringLiteral("capabilities"), {"languages", "frameworks", "ides", "versionControlSystems", "developmentTools", "hostOperatingSystems", "targetPlatforms", "targetArchitectures", "processorFamilies", "hardwareTargets", "toolchains", "buildSystems", "dependencyManagers", "buildConfigurations", "testingCapabilities", "qualityCapabilities", "automationCapabilities", "deliveryCapabilities"});
         mergeDomain(root, source, QStringLiteral("rules"), {"activeCategories", "workScopes", "projectScopes", "contextPolicies"});
         mergeDomain(root, source, QStringLiteral("memory"), {"captureCategories", "maintenanceOptions", "validationOptions", "historyOptions"});
@@ -681,7 +685,8 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
     QStringList baselineAgents = {"chatgpt", "gemini", "github-copilot", "openai-codex"};
     auto additional = QStringList{}; for (const auto& value : ai.value("additionalAgents").toArray()) additional << value.toString();
     const auto selectedPrimary = ai.value("primaryAgent").toString();
-    for (const auto& agent : baselineAgents) if (agent != selectedPrimary && !additional.contains(agent)) additional << agent;
+    if (!root.contains("projectProfile"))
+        for (const auto& agent : baselineAgents) if (agent != selectedPrimary && !additional.contains(agent)) additional << agent;
     QJsonArray additionalJson; for (const auto& agent : additional) additionalJson.append(agent);
     ai.insert("additionalAgents", additionalJson); root.insert("ai", ai);
     root.insert("context", contexts.isEmpty() ? root.value("context") : contexts.first());
@@ -699,6 +704,8 @@ bool TemplateManager::applyModules(ProjectModel* model, const QStringList& modul
     preserve("packageManager", currentEnvironment.packageManager);
     for (const auto& key : {"projectId", "projectName", "projectPath", "projectFilePath", "workerNameSuffix"}) root.insert(key, previous.value(key));
     if (!selected.first().userDefined) root.insert("resources", previous.value("resources"));
+    if (!model->projectMembers().isEmpty()) root.insert("projectMembers", previous.value("projectMembers"));
+    if (!root.contains("projectProfile") && previous.contains("projectProfile")) root.insert("projectProfile", previous.value("projectProfile"));
     root.insert("projectId", previous.value("projectId"));
     root.insert("projectName", previous.value("projectName"));
     root.insert("projectPath", previous.value("projectPath"));
@@ -745,8 +752,14 @@ bool TemplateManager::saveCustomTemplate(const ProjectModel& model, const QStrin
                             QStringLiteral("projectPath"), QStringLiteral("projectFilePath"),
                             QStringLiteral("workerNameSuffix"), QStringLiteral("templateId"), QStringLiteral("templateState")})
         savedConfiguration.remove(key);
-    if (savedConfiguration.isEmpty() || model.templateModules().isEmpty()) {
-        if (error) *error = "Select at least one project module before saving a template.";
+    // Reusable role slots never carry personal identities, affiliations or contact details.
+    QJsonArray roleSlots;
+    for (const auto& member : model.projectMembers()) roleSlots.append(QJsonObject{
+        {"name", ""}, {"role", member.role}, {"responsibilities", member.responsibilities},
+        {"affiliation", ""}, {"email", ""}, {"githubUsername", ""}});
+    if (!roleSlots.isEmpty()) savedConfiguration.insert("projectMembers", roleSlots);
+    if (savedConfiguration.isEmpty() || (model.templateModules().isEmpty() && model.projectProfile().isEmpty() && model.projectMembers().isEmpty())) {
+        if (error) *error = "Select a project module or profile, or define member role slots before saving a template.";
         return false;
     }
     auto library = readLibrary(libraryPath_, error);

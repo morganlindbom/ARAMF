@@ -1,6 +1,8 @@
 #include "ProjectModel.h"
 #include <QJsonArray>
 #include "AramfPaths.h"
+#include "EnvironmentCatalog.h"
+#include "ProjectPersistence.h"
 
 #include <QUuid>
 #include <QSet>
@@ -317,6 +319,7 @@ void ProjectModel::setDevelopmentCapabilities(const DevelopmentCapabilities& val
     }
 
     capabilities_ = value;
+    synchronizeProjectProfile();
     context_ = derivedContext;
     resolveAndroidConstraints();
     const auto& effective = capabilities_;
@@ -642,6 +645,42 @@ void ProjectModel::setAndroidConstraints(const AndroidProjectConstraints& value)
 void ProjectModel::resolveAndroidConstraints()
 {
     AndroidProjectConstraints next;
+    if (!projectProfile_.isEmpty()) {
+        const auto settings = projectProfile_.value("settings").toObject();
+        const auto definition = EnvironmentCatalog::projectProfile(projectProfile_.value("id").toString());
+        const auto features = projectProfile_.value("features").toObject();
+        const auto required = [&](const char* key) { return features.value(key).toObject().value("required").toBool(); };
+        next.minSdk = settings.value("minSdk").toString().toInt();
+        next.minSdkSpecified = next.minSdk > 0;
+        next.minSdkSource = "project-profile:" + projectProfile_.value("id").toString();
+        next.kotlinRequired = required("kotlin");
+        next.composeSelected = capabilities_.frameworks.contains("jetpack-compose");
+        next.composeRequired = required("compose");
+        next.retrofitRequired = required("retrofit");
+        next.githubApiRequired = required("api-writes");
+        next.roomRequired = false;
+        next.unitTestsRequired = required("junit");
+        next.lintRequired = required("lint");
+        if (projectProfile_.value("id") == QStringLiteral("android-application-lab-2")) {
+            next.courseName = QStringLiteral("Android Application Lab 2");
+            next.courseNameSource = definition.value("source").toString();
+            next.humanInTheLoopRequired = required("human-approval");
+            next.internetPermissionRequired = required("api-writes");
+            next.privateRepositoryRequired = required("private-repository");
+            next.githubPatRequired = required("api-writes");
+            next.classicPatRequired = next.githubPatRequired;
+            next.patScope = next.githubPatRequired ? QStringLiteral("repo") : QString();
+            next.rawAdversarialTextRequired = required("human-approval");
+            next.workflow = settings.value("forceMerge").toString() + "; Force Reject: " + settings.value("forceReject").toString();
+            next.workflowSource = definition.value("source").toString();
+            next.hardcodedTokenProhibited = true;
+            next.securityAlertRedRequired = required("human-approval");
+            next.normalGreenRequired = required("incident-closure");
+            next.pollingRequired = required("incident-closure");
+        }
+        androidConstraints_ = next;
+        return;
+    }
     if (templateId_ != QStringLiteral("android-studio-kotlin-gemini") && context_ != QStringLiteral("android-application")) {
         androidConstraints_ = next;
         return;
@@ -944,6 +983,8 @@ void ProjectModel::resetForNewProject()
     communication_ = {};
     androidConstraints_ = {};
     profileSelections_.clear();
+    projectProfile_ = {};
+    projectMembers_.clear();
     ai_ = {};
     options_.clear();
     environmentOverrides_.clear();
@@ -1371,4 +1412,286 @@ bool ProjectModel::reworkS6(QString* error)
     structuralEvolutionEnforcement_.lifecycle = processVersionState_.activeStructure;
     modified_ = true;
     return true;
+}
+
+namespace {
+QJsonValue mergeProfileContribution(const QJsonValue& current, const QJsonValue& oldValue, const QJsonValue& next)
+// Brief: Replace owned defaults while retaining additions, removals and scalar user overrides.
+{
+    if (current == oldValue || current.isUndefined()) return next;
+    if (next.isObject() || oldValue.isObject()) {
+        auto result = current.toObject();
+        const auto before = oldValue.toObject();
+        const auto after = next.toObject();
+        QSet<QString> keys;
+        for (auto it = before.begin(); it != before.end(); ++it) keys.insert(it.key());
+        for (auto it = after.begin(); it != after.end(); ++it) keys.insert(it.key());
+        for (const auto& key : keys) {
+            const auto value = mergeProfileContribution(result.value(key), before.value(key), after.value(key));
+            if (value.isUndefined()) result.remove(key); else result.insert(key, value);
+        }
+        return result;
+    }
+    if (current.isArray() && (oldValue.isArray() || next.isArray())) {
+        QJsonArray result;
+        const auto before = oldValue.toArray();
+        const auto after = next.toArray();
+        const auto fallback = [](const QJsonValue& value) { return value == "none" || value == "not-applicable" || value == "auto"; };
+        bool addsConcrete = false;
+        for (const auto& value : after) addsConcrete |= !fallback(value);
+        for (const auto& value : current.toArray())
+            if ((!before.contains(value) || after.contains(value)) && !(fallback(value) && addsConcrete)) result.append(value);
+        for (const auto& value : after)
+            if (!before.contains(value) && !result.contains(value) && !(fallback(value) && !result.isEmpty())) result.append(value);
+        return result;
+    }
+    return current;
+}
+
+QJsonObject profileContribution(const QJsonObject& profile)
+// Brief: Translate only catalog-owned fields into existing ARAMF configuration domains.
+{
+    const auto id = profile.value("id").toString();
+    const auto definition = EnvironmentCatalog::projectProfile(id);
+    QJsonObject capabilities;
+    const auto catalog = definition.value("features").toObject();
+    const auto choices = profile.value("features").toObject();
+    for (auto it = catalog.begin(); it != catalog.end(); ++it) {
+        const auto item = it.value().toObject();
+        if (!choices.value(it.key()).toObject().value("selected").toBool()) continue;
+        const auto category = item.value("category").toString();
+        if (category.isEmpty()) continue;
+        auto values = capabilities.value(category).toArray();
+        if (!values.contains(item.value("selection"))) values.append(item.value("selection"));
+        capabilities.insert(category, values);
+    }
+    if (id != "keyestudio-smart-home-kit") capabilities.insert("targetArchitectures", QJsonArray{"auto"});
+    const auto settings = profile.value("settings").toObject();
+    if (id == "storepath-android") {
+        capabilities.insert("frameworkVersions", QJsonObject{{"jetpack-compose", settings.value("composeBom")}});
+        capabilities.insert("toolchainVersions", QJsonObject{{"java-jdk", settings.value("gradleRuntimeJdk")}});
+        capabilities.insert("languageNotes", QJsonObject{{"kotlin", "AGP-managed built-in Kotlin; Compose plugin " + settings.value("kotlinComposePlugin").toString()}});
+    }
+    QJsonObject root{{"capabilities", capabilities}, {"rules", QJsonObject{{"activeCategories", definition.value("rules")}}},
+        {"ai", QJsonObject{{"primaryAgent", "openai-codex"}, {"responsibilities", QJsonArray{"coding", "code-review", "testing"}}, {"permissions", QJsonArray{"read-project-files", "modify-files", "create-files", "run-tests", "run-builds", "run-project-tools"}}}}};
+    const auto location = definition.value("source").toString();
+    root.insert("resources", QJsonArray{QJsonObject{{"id", "profile-reference-" + id}, {"name", definition.value("name")},
+        {"type", id == "storepath-android" ? "url" : "file"}, {"location", id == "storepath-android" ? location : QString()},
+        {"description", location}, {"enabled", id == "storepath-android"}, {"role", "reference"},
+        {"authorityLevel", "supporting-reference"}, {"locationMode", "referenced"}, {"status", "unverified"}, {"loadingStrategyOverride", ""}, {"lastModified", ""}, {"fingerprint", ""}, {"scopes", QJsonArray{"software", "testing"}}}});
+    return root;
+}
+}
+
+bool ProjectModel::validateProjectProfile(const QJsonObject& profile, QString* error)
+// Brief: Reject unknown fields and inconsistent states before any project mutation.
+{
+    const auto reject = [&](const QString& text) { if (error) *error = text; return false; };
+    if (profile.isEmpty()) return true;
+    const auto definition = EnvironmentCatalog::projectProfile(profile.value("id").toString());
+    if (definition.isEmpty()) return reject("Unknown project profile.");
+    for (auto it = profile.begin(); it != profile.end(); ++it)
+        if (it.key() != "id" && it.key() != "settings" && it.key() != "features" && it.key() != "applied") return reject("Unsupported project profile field: " + it.key());
+    if (!profile.value("settings").isObject() || !profile.value("features").isObject()) return reject("Profile settings and features must be objects.");
+    const auto settings = profile.value("settings").toObject();
+    const auto defaults = definition.value("settings").toObject();
+    if (settings.keys() != defaults.keys()) return reject("Profile settings must match the selected profile schema.");
+    for (auto it = settings.begin(); it != settings.end(); ++it)
+        if (!it.value().isString()) return reject("Profile setting values must be text.");
+    if (profile.value("id") == QStringLiteral("storepath-android")) {
+        bool minOk = false, targetOk = false, compileOk = false;
+        const int minimum = settings.value("minSdk").toString().toInt(&minOk);
+        const int target = settings.value("targetSdk").toString().toInt(&targetOk);
+        const int compile = settings.value("compileSdk").toString().toInt(&compileOk);
+        if (!minOk || !targetOk || !compileOk || minimum < 1 || target < minimum || compile < target)
+            return reject("SDK levels must be positive integers with minSdk <= targetSdk <= compileSdk.");
+    }
+    const auto features = profile.value("features").toObject();
+    const auto known = definition.value("features").toObject();
+    if (features.keys() != known.keys()) return reject("Profile capabilities must match the selected profile schema.");
+    for (auto it = features.begin(); it != features.end(); ++it) {
+        const auto state = it.value().toObject();
+        if (state.keys() != QStringList{"availability", "required", "selected"}
+            || !state.value("required").isBool() || !state.value("selected").isBool()) return reject("Invalid profile capability state.");
+        const auto availability = state.value("availability").toString();
+        if (availability != "available" && availability != "planned" && availability != "unsupported") return reject("Invalid profile capability availability.");
+        if ((availability != "available" && (state.value("required").toBool() || state.value("selected").toBool()))
+            || (state.value("required").toBool() && !state.value("selected").toBool())) return reject("Required capabilities must be selected and available.");
+        if (profile.value("id") == QStringLiteral("storepath-android") && it.key() == "wifi-rtt" && availability != "unsupported") return reject("Wi-Fi RTT is unsupported on the recorded StorePath test phone.");
+    }
+    if (profile.contains("applied")) {
+        if (!profile.value("applied").isObject()) return reject("Invalid profile contribution baseline.");
+        const auto baseline = profile.value("applied").toObject();
+        if (baseline.contains("applied") || baseline.value("id") != profile.value("id")
+            || !validateProjectProfile(baseline, error)) return reject("Invalid profile contribution baseline.");
+    }
+    return true;
+}
+
+bool ProjectModel::selectProjectProfile(const QString& id, QString* error)
+// Brief: Apply a distinct profile through persistence, preserving unrelated project state and edits.
+{
+    if (projectProfile_.value("id").toString() == id) return true;
+    if (id.isEmpty()) { projectProfile_ = {}; resolveAndroidConstraints(); notifyChanged(); return true; }
+    const auto definition = EnvironmentCatalog::projectProfile(id);
+    if (definition.isEmpty()) { if (error) *error = "Unknown project profile."; return false; }
+    QJsonObject choices;
+    const auto features = definition.value("features").toObject();
+    for (auto it = features.begin(); it != features.end(); ++it) {
+        const auto item = it.value().toObject();
+        choices.insert(it.key(), QJsonObject{{"selected", item.value("selected")}, {"required", item.value("required")}, {"availability", item.value("availability")}});
+    }
+    return applyProjectProfile(QJsonObject{{"id", id}, {"settings", definition.value("settings")}, {"features", choices}}, error);
+}
+
+bool ProjectModel::applyProjectProfile(const QJsonObject& profile, QString* error)
+// Brief: Merge supported profile contributions without touching release, identity or member authority.
+{
+    if (!validateProjectProfile(profile, error)) return false;
+    auto root = ProjectPersistence().toJson(*this);
+    const auto originalAi = root.value("ai");
+    ProjectModel defaultModel;
+    const bool preserveAi = projectProfile_.isEmpty() && originalAi != ProjectPersistence().toJson(defaultModel).value("ai");
+    const auto next = profileContribution(profile);
+    auto before = projectProfile_.contains("applied") ? profileContribution(projectProfile_.value("applied").toObject()) : QJsonObject{};
+    if (before.isEmpty()) {
+        ProjectModel defaults;
+        const auto defaultConfiguration = ProjectPersistence().toJson(defaults);
+        for (const auto& domain : {QStringLiteral("capabilities"), QStringLiteral("ai")}) {
+            const auto defaultValues = defaultConfiguration.value(domain).toObject();
+            // A customized stack may depend on otherwise-default C++/CMake selections.
+            // Replace the implicit desktop stack only when the complete capability domain is pristine.
+            if (domain == "capabilities" && root.value(domain) != defaultConfiguration.value(domain)) continue;
+            QJsonObject ownedDefaults;
+            const auto target = next.value(domain).toObject();
+            for (auto it = target.begin(); it != target.end(); ++it)
+                if (root.value(domain).toObject().value(it.key()) == defaultValues.value(it.key())) ownedDefaults.insert(it.key(), defaultValues.value(it.key()));
+            before.insert(domain, ownedDefaults);
+        }
+    }
+    root = mergeProfileContribution(root, before, next).toObject();
+    // An existing autonomy choice is explicit; selecting a stack cannot grant additional permissions.
+    if (preserveAi) root.insert("ai", originalAi);
+    auto stored = profile;
+    stored.remove("applied");
+    stored.insert("applied", stored);
+    root.insert("projectProfile", stored);
+    // Refresh only mirrors that still equal their previous capability defaults.
+    const auto previous = ProjectPersistence().toJson(*this);
+    auto environment = previous.value("environment").toObject();
+    const auto oldCapabilities = previous.value("capabilities").toObject();
+    const auto newCapabilities = root.value("capabilities").toObject();
+    const QMap<QString, QString> mirrors{{"language", "languages"}, {"framework", "frameworks"}, {"ide", "ides"},
+        {"compiler", "toolchains"}, {"operatingSystem", "hostOperatingSystems"}, {"targetPlatform", "targetPlatforms"},
+        {"targetArchitecture", "targetArchitectures"}, {"buildSystem", "buildSystems"}, {"packageManager", "dependencyManagers"}, {"versionControl", "versionControlSystems"}};
+    for (auto it = mirrors.begin(); it != mirrors.end(); ++it) {
+        const auto oldList = oldCapabilities.value(it.value()).toArray();
+        const auto newList = newCapabilities.value(it.value()).toArray();
+        if (environment.value(it.key()).toString() == (oldList.isEmpty() ? QString() : oldList.first().toString()))
+            environment.insert(it.key(), newList.isEmpty() ? QString() : newList.first().toString());
+    }
+    root.insert("environment", environment);
+    if (!projectTypeLocked()) {
+        root.insert("context", profile.value("id") == QStringLiteral("keyestudio-smart-home-kit") ? "embedded-firmware" : "android-application");
+    }
+    const auto overrides = environmentOverrides_;
+    beginUpdate();
+    const bool ok = ProjectPersistence().fromJson(this, root, error);
+    environmentOverrides_ = overrides;
+    if (ok) { setModified(true); resolveAndroidConstraints(); }
+    endUpdate();
+    return ok;
+}
+
+bool ProjectModel::setProjectProfileSetting(const QString& key, const QString& value, QString* error)
+// Brief: Edit an existing non-secret setting and reconcile its mapped ARAMF defaults.
+{
+    auto next = projectProfile_;
+    auto settings = next.value("settings").toObject();
+    if (!settings.contains(key)) { if (error) *error = "Unknown profile setting."; return false; }
+    settings.insert(key, value); next.insert("settings", settings); next.remove("applied");
+    return applyProjectProfile(next, error);
+}
+
+bool ProjectModel::setProjectProfileFeature(const QString& key, bool selected, bool required, const QString& availability, QString* error)
+// Brief: Edit selection, requirement and availability without claiming future work is implemented.
+{
+    auto next = projectProfile_;
+    auto features = next.value("features").toObject();
+    if (!features.contains(key)) { if (error) *error = "Unknown profile capability."; return false; }
+    features.insert(key, QJsonObject{{"selected", selected}, {"required", required}, {"availability", availability}});
+    next.insert("features", features); next.remove("applied");
+    return applyProjectProfile(next, error);
+}
+
+void ProjectModel::setProjectMembers(const QList<ProjectMember>& members)
+// Brief: Store participants without assigning permissions or requiring contact details.
+{
+    if (projectMembers_ == members) return;
+    projectMembers_ = members;
+    notifyChanged();
+}
+
+QJsonObject ProjectModel::projectProfileSummary() const
+// Brief: Expose editable configuration and provenance, omitting internal merge bookkeeping.
+{
+    if (projectProfile_.isEmpty()) return {};
+    auto result = projectProfile_;
+    result.remove("applied");
+    result.insert("reference", EnvironmentCatalog::projectProfile(projectProfile_.value("id").toString()));
+    auto validation = EnvironmentCatalog::projectProfile(projectProfile_.value("id").toString()).value("validation").toArray();
+    if (projectProfile_.value("id") == QStringLiteral("storepath-android")) {
+        const auto settings = projectProfile_.value("settings").toObject();
+        const auto features = projectProfile_.value("features").toObject();
+        validation = {};
+        if (features.value("junit").toObject().value("selected").toBool()) validation.append(settings.value("unitTestCommand"));
+        if (features.value("gradle").toObject().value("selected").toBool()) validation.append(settings.value("buildCommand"));
+        if (features.value("lint").toObject().value("selected").toBool()) validation.append(settings.value("lintCommand"));
+        validation.append("Instrumentation, emulator and connected-device tests require separate observed evidence.");
+    } else if (projectProfile_.value("id") == QStringLiteral("android-application-lab-2")) {
+        const auto settings = projectProfile_.value("settings").toObject();
+        const auto features = projectProfile_.value("features").toObject();
+        const auto selected = [&](const char* key) { return features.value(key).toObject().value("selected").toBool(); };
+        validation = {};
+        if (selected("human-approval")) validation.append("Verify detection within " + settings.value("alertDetectionDeadlineSeconds").toString()
+            + " seconds; present " + settings.value("alertState").toString() + " and obtain the operator decision.");
+        if (selected("api-writes")) {
+            validation.append("Verify Force Reject: " + settings.value("forceReject").toString() + "; human approval is required before writes.");
+            validation.append("Verify Force Merge: " + settings.value("forceMerge").toString() + "; human approval is required before writes.");
+        }
+        if (selected("incident-closure")) validation.append("Verify incident closure and ViewModel polling returns to " + settings.value("normalState").toString());
+        if (selected("defensive-errors")) validation.append("Verify network failures and HTTP 401/403/422 show a readable Snackbar without a crash.");
+    }
+    result.insert("validationRequirements", validation);
+    result.insert("verification", "Configured only; no application, emulator, device or hardware execution is claimed.");
+    return result;
+}
+
+
+void ProjectModel::synchronizeProjectProfile()
+// Brief: Reflect edits made on generic capability pages while retaining the last applied defaults for merging.
+{
+    if (projectProfile_.isEmpty()) return;
+    const auto definition = EnvironmentCatalog::projectProfile(projectProfile_.value("id").toString());
+    const auto catalog = definition.value("features").toObject();
+    const auto capabilities = ProjectPersistence().toJson(*this).value("capabilities").toObject();
+    auto features = projectProfile_.value("features").toObject();
+    for (auto it = catalog.begin(); it != catalog.end(); ++it) {
+        const auto fact = it.value().toObject();
+        const auto category = fact.value("category").toString();
+        if (category.isEmpty()) continue;
+        auto state = features.value(it.key()).toObject();
+        const bool selected = capabilities.value(category).toArray().contains(fact.value("selection"));
+        state.insert("selected", selected);
+        if (!selected) state.insert("required", false);
+        if (selected) state.insert("availability", "available");
+        features.insert(it.key(), state);
+    }
+    projectProfile_.insert("features", features);
+    if (projectProfile_.value("id") == QStringLiteral("storepath-android")) {
+        auto settings = projectProfile_.value("settings").toObject();
+        if (capabilities_.toolchainVersions.contains("java-jdk")) settings.insert("gradleRuntimeJdk", capabilities_.toolchainVersions.value("java-jdk"));
+        if (capabilities_.frameworkVersions.contains("jetpack-compose")) settings.insert("composeBom", capabilities_.frameworkVersions.value("jetpack-compose"));
+        projectProfile_.insert("settings", settings);
+    }
 }

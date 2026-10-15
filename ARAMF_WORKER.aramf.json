@@ -1113,6 +1113,8 @@
                     "src/ui/workflows/project/languages/systems/ProjectLanguageSystemsPage.h",
                     "src/ui/workflows/project/languages/web/ProjectLanguageWebPage.cpp",
                     "src/ui/workflows/project/languages/web/ProjectLanguageWebPage.h",
+                    "src/ui/workflows/project/members/ProjectMembersPage.h",
+                    "src/ui/workflows/project/overview/ProjectOverviewPage.cpp",
                     "src/ui/workflows/project/platforms/ProjectPlatformsPage.cpp",
                     "src/ui/workflows/project/platforms/ProjectPlatformsPage.h",
                     "src/ui/workflows/project/platforms/hosts/ProjectPlatformsHostsPage.cpp",

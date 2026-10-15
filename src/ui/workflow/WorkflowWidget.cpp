@@ -194,6 +194,7 @@ void WorkflowWidget::setStepCount(int)
             {QStringLiteral("1.2"), tr("Project modules & templates"), WorkflowPageId::ProjectModulesTemplates, 2},
             {QStringLiteral("1.3"), tr("Project communication"), WorkflowPageId::ProjectCommunication, 2},
             {QStringLiteral("1.4"), tr("Project compatibility & migration"), WorkflowPageId::ProjectCompatibility, 2},
+            {QStringLiteral("1.5"), tr("Project members"), WorkflowPageId::ProjectMembers, 2},
             {QStringLiteral("2"), tr("Academic"), WorkflowPageId::Academic, 1},
             {QStringLiteral("2.1"), tr("Documentation"), WorkflowPageId::AcademicDocumentation, 2},
             {QStringLiteral("2.2"), tr("Thesis & research"), WorkflowPageId::AcademicResearch, 2},
@@ -282,7 +283,7 @@ void WorkflowWidget::setStepCount(int)
     }
     parentChildren_.insert(WorkflowPageId::Setup,
                            {WorkflowPageId::ProjectIdentity, WorkflowPageId::ProjectModulesTemplates,
-                            WorkflowPageId::ProjectCommunication, WorkflowPageId::ProjectCompatibility});
+                            WorkflowPageId::ProjectCommunication, WorkflowPageId::ProjectCompatibility, WorkflowPageId::ProjectMembers});
     parentChildren_.insert(WorkflowPageId::Academic,
                            {WorkflowPageId::AcademicDocumentation, WorkflowPageId::AcademicResearch,
                             WorkflowPageId::AcademicInformation, WorkflowPageId::AcademicStandards,

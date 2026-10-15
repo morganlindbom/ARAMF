@@ -61,6 +61,21 @@ struct DevelopmentCapabilities {
     QMap<QString, QString> toolchainNotes;
 };
 
+struct ProjectMember {
+    QString name;
+    QString role;
+    QString responsibilities;
+    QString affiliation;
+    QString email;
+    QString githubUsername;
+    bool operator==(const ProjectMember& other) const
+    // Brief: Compare persisted member values without introducing identity or permission semantics.
+    {
+        return name == other.name && role == other.role && responsibilities == other.responsibilities
+            && affiliation == other.affiliation && email == other.email && githubUsername == other.githubUsername;
+    }
+};
+
 struct AcademicConfiguration {
     bool enabled = false;
     QString academicMode = QStringLiteral("disabled");
@@ -421,6 +436,14 @@ public:
     MemoryConfiguration memoryConfiguration() const { return memoryConfiguration_; }
     CertificationConfiguration certificationConfiguration() const { return certificationConfiguration_; }
     AndroidProjectConstraints androidConstraints() const { return androidConstraints_; }
+    QJsonObject projectProfile() const { return projectProfile_; }
+    QList<ProjectMember> projectMembers() const { return projectMembers_; }
+    bool selectProjectProfile(const QString& id, QString* error = nullptr);
+    bool setProjectProfileSetting(const QString& key, const QString& value, QString* error = nullptr);
+    bool setProjectProfileFeature(const QString& key, bool selected, bool required, const QString& availability, QString* error = nullptr);
+    void setProjectMembers(const QList<ProjectMember>& members);
+    static bool validateProjectProfile(const QJsonObject& profile, QString* error = nullptr);
+    QJsonObject projectProfileSummary() const;
     GenerationOptions generationOptions() const { return generationOptions_; }
     CommunicationConfiguration communicationConfiguration() const { return communication_; }
     QStringList aiPlatforms() const { return aiPlatforms_; }
@@ -561,6 +584,10 @@ private:
     MemoryConfiguration memoryConfiguration_;
     CertificationConfiguration certificationConfiguration_;
     AndroidProjectConstraints androidConstraints_;
+    QJsonObject projectProfile_;
+    QList<ProjectMember> projectMembers_;
+    bool applyProjectProfile(const QJsonObject& profile, QString* error);
+    void synchronizeProjectProfile();
     GenerationOptions generationOptions_;
     CommunicationConfiguration communication_;
     QStringList aiPlatforms_;

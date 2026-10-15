@@ -23,6 +23,7 @@ class ProjectOverviewPage;
 class ProjectModulesTemplatesPage;
 class ProjectCommunicationPage;
 class ProjectCompatibilityPage;
+class ProjectMembersPage;
 class ProjectAcademicPage;
 class ParentOverviewPage;
 class ProjectLanguagesPage;
@@ -118,6 +119,7 @@ private:
     ProjectModulesTemplatesPage* projectModulesTemplatesPage_ = nullptr;
     ProjectCommunicationPage* projectCommunicationPage_ = nullptr;
     ProjectCompatibilityPage* projectCompatibilityPage_ = nullptr;
+    ProjectMembersPage* projectMembersPage_ = nullptr;
     ParentOverviewPage* academicPage_ = nullptr;
     ProjectAcademicPage* academicDocumentationPage_ = nullptr;
     ProjectAcademicPage* academicResearchPage_ = nullptr;

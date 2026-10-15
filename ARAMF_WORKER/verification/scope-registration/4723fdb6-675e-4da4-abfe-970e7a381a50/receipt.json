@@ -1,0 +1,62 @@
+{
+    "applyStartedAt": "2026-10-15T16:47:47.370Z",
+    "audit": {
+        "contractId": "617ab6a6749ec6f2d15541e39c1e8ee9184df3201df6c70caa023ad6df220c3c",
+        "eventId": "event-e718c43e-3d5e-459f-ad47-edb56a27c774",
+        "eventType": "SCOPE_MAPPING_REGISTERED",
+        "operationId": "4723fdb6-675e-4da4-abfe-970e7a381a50",
+        "originalTaskId": "09e5844b6ce951ce931b3bcf53fddd5360a33b408ebbadc9695d3d658936fc22",
+        "provenance": {
+            "actor": "agent",
+            "agentId": "/root",
+            "tool": "WorkerTaskServices/scope-registration-operation/v1"
+        },
+        "registeredFiles": [
+            "src/ui/workflows/project/members/ProjectMembersPage.h",
+            "src/ui/workflows/project/overview/ProjectOverviewPage.cpp"
+        ],
+        "registeredScope": "source-code",
+        "scope": "project",
+        "sequenceNumber": 736,
+        "status": "PASS",
+        "task": "Register exact missing task source mappings through canonical configuration",
+        "timestamp": "2026-10-15T16:49:59Z"
+    },
+    "contractId": "617ab6a6749ec6f2d15541e39c1e8ee9184df3201df6c70caa023ad6df220c3c",
+    "error": "",
+    "operationId": "4723fdb6-675e-4da4-abfe-970e7a381a50",
+    "outcome": "SCOPE_FILES_REGISTERED",
+    "outputs": {
+        "ARAMF_WORKER.aramf.json": "ac2bac93a4527379452ef79c73a84b5f7523e59757153211c0e8bbc7276fe54a",
+        "ARAMF_WORKER/AGENTS.md": "3eef1fc8bee5ab329f6744b46da9cb3b315e1d5386d60b6866ba468c8175a8a5",
+        "ARAMF_WORKER/ARAMF_WORKER.json": "56db3cd69fca75451c3a5eaa2fe2a36a4c7208e37865b92648568a9eac104f0d",
+        "ARAMF_WORKER/PROJECT_STATUS.md": "84915a676c59e614d09f928fe9318a3d2c8edc1371cb7915e8b25588f783ffbe",
+        "ARAMF_WORKER/communication/communication-contract.json": "MISSING",
+        "ARAMF_WORKER/communication/multi-target-build.json": "MISSING",
+        "ARAMF_WORKER/context/task-dag.json": "adb1e8ac59cfcbdee4077d7557e2c643df20edfb05377a30d368c2ff997ec69a",
+        "ARAMF_WORKER/hardware/hardware-resources.json": "MISSING",
+        "ARAMF_WORKER/memory/cold-start-validation.json": "c0bd33b60827f5ea76307475de1cc47d4b60372ec81355fd47c2b200737bc7fc",
+        "ARAMF_WORKER/memory/current-state.md": "38af3d803e947bf91d12c38fd4b27b360c56bdbce726914dc4e5552f408966e2",
+        "ARAMF_WORKER/memory/event-log.jsonl": "9632d988dc4d11e30aea23a8fd21d8b60abe6a4d021461067eb1317b1fa992d4",
+        "ARAMF_WORKER/memory/memory-config.json": "fbfd961566f3d72405261d7b5479fa2b34b32bf1ce4dc4517913954ad1dfb0fc",
+        "ARAMF_WORKER/memory/memory-contract.json": "af96e05b6a106b93d451c09c63940136f750c2edef6951fc2c85e206810c6e4e",
+        "ARAMF_WORKER/memory/memory-manifest.json": "bc1fbe5bcd4569fc571bb8143c77a02f2f20fa112afb913dcfb6ed656b5d1185",
+        "ARAMF_WORKER/memory/metrics.json": "13042448eccba0a8f0b3ca15c193946b42515f58a1c3d81fcfbadd680b0134fb",
+        "ARAMF_WORKER/platforms/android-effective-config.json": "MISSING",
+        "ARAMF_WORKER/platforms/platform-metadata.json": "20ee031af2eb81316e4392c824a6257c2a7fa552b024cc1027d89245695c8644",
+        "ARAMF_WORKER/project.json": "85ce7376068bfe96d511899d54d636e1c286b64acb683d45ea9630d1021e6adc",
+        "ARAMF_WORKER/provenance.json": "b176df6c73cc68c8c49b76251557a2f8e56812f5a7312b75e0845346590afde6",
+        "ARAMF_WORKER/resources/resources.json": "a018fe94953f617d12e1e444425d11e394b2dca21b4e6eb0248a43a1ca05094a",
+        "ARAMF_WORKER/routing/README.md": "786b9d265b681130641850700543eb521bd0f526dafe4a27ef7728e5d344b7ab",
+        "ARAMF_WORKER/routing/scope-routes.json": "2af5d16eb9ef6e21e1770aff4630c26424568cebc307e2ce9d035973af128b50",
+        "ARAMF_WORKER/routing/task-routes.json": "4334c087256f0f25fbe9c31ed283cb7a374c088d2299a18b2a92045410eb5799",
+        "ARAMF_WORKER/routing/validation-policy.json": "ff9eccf12591380b7cedc9cb21fd02a73442ae1c36bebc21c98c5c789b13b9bd",
+        "ARAMF_WORKER/rules/generated-rules.md": "953bec9c771b7d834aba0ce733df61a5b779905b31ea7239a894530b836ca347",
+        "ARAMF_WORKER/selection-effects.json": "64a5a727a24ae625fba2107dfc9730a71a0934703e2a8b7f7f432c5dd4f6f8cf",
+        "ARAMF_WORKER/verification/generation-state.json": "dbe46962f9b95b543c51e09dd7b15f39e0143470d935d2a62704cc10d57217ea",
+        "ARAMF_WORKER/verification/scope-registration/4723fdb6-675e-4da4-abfe-970e7a381a50/proof.json": "84f59576993ca5a602fec722e7908f87eab8e95b91bff682a2f817d5c8864eb0",
+        "ARAMF_WORKER/worker-manifest.json": "5346d5e692a50b7afeb6e1cc6366d9903b824843fdfbeb2f3ef8fe2ae118619a"
+    },
+    "producer": "WorkerTaskServices/scope-registration-operation/v1",
+    "timestamp": "2026-10-15T16:50:01.158Z"
+}

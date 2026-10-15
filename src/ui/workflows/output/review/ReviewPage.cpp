@@ -51,6 +51,7 @@ QString configurationSummary(const QJsonObject& object, const QString& prefix = 
     QString text;
     const auto catalogs = TemplateValidation::catalogs();
     for (auto it = object.begin(); it != object.end(); ++it) {
+        if (prefix == QStringLiteral("projectProfile.") && it.key() == "applied") continue;
         if (it.key() == "environment" || it.key() == "profileSelections" || it.key() == "options") continue;
         if (it.key() == "androidConstraints" && it.value().toObject().value("sourceOfTruthResource").toString().isEmpty()) continue;
         // Once a generic link is present, the legacy flat dataFormat field is
@@ -319,6 +320,8 @@ void ReviewPage::refreshFromModel()
         text += tr("\nTemplate defaults: %1\nProject type: %2 (template constraint)\nChanged from template: %3\n")
             .arg(model_->templateState().value("name").toString(), model_->context(), listOrNone(TemplateValidation::changedDomains(*model_)));
     }
-    text += tr("\nComplete effective configuration\n") + configurationSummary(ProjectPersistence().configuration(*model_));
+    auto configuration = ProjectPersistence().configuration(*model_);
+    if (!model_->projectProfile().isEmpty()) configuration.insert("projectProfile", model_->projectProfileSummary());
+    text += tr("\nComplete effective configuration\n") + configurationSummary(configuration);
     summary_->setPlainText(text);
 }

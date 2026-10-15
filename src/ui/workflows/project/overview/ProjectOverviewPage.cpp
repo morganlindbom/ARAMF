@@ -15,7 +15,9 @@ ProjectOverviewPage::ProjectOverviewPage(QWidget* parent)
             tr("Define communication between project targets, including transport, protocol and endpoint roles.")},
            {QStringLiteral("project.compatibility"), QStringLiteral("1.4"),
             tr("Project compatibility & migration"),
-            tr("Review schema compatibility, migration notices and canonical project paths.")} },
+            tr("Review schema compatibility, migration notices and canonical project paths.")},
+           {QStringLiteral("project.members"), QStringLiteral("1.5"),
+            tr("Project members"), tr("Define roles, responsibilities and optional contact details.")} },
           parent)
 {
 }

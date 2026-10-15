@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QJsonObject>
 #include <QList>
 #include <QPair>
 #include <QString>
@@ -8,6 +9,8 @@ using EnvironmentOption = QPair<QString, QString>;
 
 namespace EnvironmentCatalog {
 
+QJsonObject projectProfile(const QString& id);
+QList<EnvironmentOption> projectProfiles();
 QList<EnvironmentOption> ides();
 QList<EnvironmentOption> toolchains();
 QList<EnvironmentOption> operatingSystems();

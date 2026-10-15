@@ -947,8 +947,20 @@ QJsonObject WorkerTaskServices::authorizeReauthorization(const ProjectModel& mod
     const auto previouslyObserved = strings(originalPostflight.value("modifiedFiles"));
     if (previouslyObserved.size() != originalPostflight.value("modifiedFiles").toArray().size())
         return {{"status", "BLOCKED"}, {"error", "Origin report has duplicate or invalid modified-file entries"}};
+    QSet<QString> delegatedRecorderPaths;
+    const auto policy = mutationPolicy(model);
+    // The reproduced report has already validated recorder ownership, canonical
+    // state and append-only history. Keep that existing delegation; it is not
+    // permission for the caller to write memory files or broaden source scope.
+    for (const auto& value : originalPostflight.value("serviceChanges").toArray()) {
+        const auto change = value.toObject();
+        const auto path = change.value("path").toString();
+        if (change.value("service") == "ProjectMemory recorder"
+            && change.value("validation") == "canonical-producer-and-boundary"
+            && fileRole(model, path, policy).value("writer") == "ProjectMemory recorder") delegatedRecorderPaths.insert(path);
+    }
     for (const auto& path : previouslyObserved)
-        if (!files.contains(path) && !canonical.contains(path))
+        if (!files.contains(path) && !canonical.contains(path) && !delegatedRecorderPaths.contains(path))
             return {{"status", "BLOCKED"}, {"error", "Authorization must explicitly cover every path in the original failed report: " + path}};
     const auto allowedOutputs = reauthorizationOutputs();
     QJsonObject scopedHashes;
@@ -1816,6 +1828,127 @@ bool writeNew(const QString& path, const QByteArray& bytes)
 
 QJsonObject WorkerTaskServices::acceptanceProfile(const QString& id)
 {
+    // Brief: Bind the Android/member contract to measured core assertions plus full UI/build regression.
+    if (id == "task-android-profiles-members/v1") {
+        static const auto profile = QJsonDocument::fromJson(QByteArray(R"ARAMF({
+  "id": "task-android-profiles-members/v1",
+  "version": 1,
+  "requirements": [
+    "Backward-compatible loading and affected migration, navigation, user overrides, capability states, profile separation, toolchain values, UI behavior and generated output have meaningful regressions.",
+    "Dedicated stable project.members page uses the next valid project position and stable ID without renumbering; members can be added, edited and removed with optional contacts, roles, responsibilities and affiliation.",
+    "Profile selection consistently configures applicable capabilities, environment, AI permissions, resources, rules and validation while preserving unrelated choices and explicit user overrides; all defaults are reviewable and editable.",
+    "Required current builds, focused tests, routing-policy checks, producer readback and exact-scope postflight pass; historical failures are preserved, physical device testing is not claimed, and P6 remains started, uncertified and incomplete.",
+    "Save and reopen, review, template save and restore, generation and verification retain profile data and members; reusable templates strip personal identities and contact details while retaining role slots.",
+    "StorePath defaults and provenance match actual repository b9489f02ec2c4cc6e5bdbc28adf593e8dc1cb4b6, distinguishing Gradle runtime JDK from Java target, user-reported environment from verification, actual dependencies from planned capabilities and unsupported Wi-Fi RTT.",
+    "StorePath, Android Application Lab 2 and optional Keyestudio profiles remain distinct; Lab 2 includes Retrofit/GitHub REST writes, operator decisions, defensive errors and incident closure only when selected, without storing secrets or performing remote writes."
+  ],
+  "files": [
+    "src/core/ComponentVersion.cpp",
+    "src/core/EnvironmentCatalog.cpp",
+    "src/core/EnvironmentCatalog.h",
+    "src/core/ProjectModel.cpp",
+    "src/core/ProjectModel.h",
+    "src/core/ProjectPersistence.cpp",
+    "src/core/Services.cpp",
+    "src/core/TemplateManager.cpp",
+    "src/core/TemplateValidation.cpp",
+    "src/core/WorkerTaskServices.cpp",
+    "src/core/WorkflowPageMetadata.cpp",
+    "src/ui/mainwindow/MainWindow.cpp",
+    "src/ui/mainwindow/MainWindow.h",
+    "src/ui/workflow/WorkflowPageId.h",
+    "src/ui/workflow/WorkflowWidget.cpp",
+    "src/ui/workflows/output/review/ReviewPage.cpp",
+    "src/ui/workflows/project/frameworks/mobile/ProjectFrameworkMobilePage.h",
+    "src/ui/workflows/project/members/ProjectMembersPage.h",
+    "src/ui/workflows/project/overview/ProjectOverviewPage.cpp",
+    "tests/TemplateConfigurationTests.cpp",
+    "tests/WorkerTaskTests.cpp",
+    "tests/WorkflowNavigationTests.cpp"
+  ],
+  "checks": [
+    "aramf_core_tests::--worker-tasks",
+    "production-build",
+    "ctest"
+  ],
+  "criteria": [
+    {
+      "id": "ANDROID-1",
+      "requirement": "Backward-compatible loading and affected migration, navigation, user overrides, capability states, profile separation, toolchain values, UI behavior and generated output have meaningful regressions.",
+      "check": "aramf_core_tests::--worker-tasks",
+      "assertions": [
+        "android profile persistence round trip",
+        "android profile legacy configuration clears optional fields",
+        "android profile registered acceptance is exact"
+      ]
+    },
+    {
+      "id": "ANDROID-2",
+      "requirement": "Dedicated stable project.members page uses the next valid project position and stable ID without renumbering; members can be added, edited and removed with optional contacts, roles, responsibilities and affiliation.",
+      "check": "aramf_core_tests::--worker-tasks",
+      "assertions": [
+        "android members model supports add edit remove",
+        "android members stable page belongs to project setup"
+      ]
+    },
+    {
+      "id": "ANDROID-3",
+      "requirement": "Profile selection consistently configures applicable capabilities, environment, AI permissions, resources, rules and validation while preserving unrelated choices and explicit user overrides; all defaults are reviewable and editable.",
+      "check": "aramf_core_tests::--worker-tasks",
+      "assertions": [
+        "android profiles configure capabilities and environment",
+        "android profiles preserve unrelated user choices",
+        "android profile generic edits synchronize",
+        "android profiles configure safe local AI defaults"
+      ]
+    },
+    {
+      "id": "ANDROID-4",
+      "requirement": "Required current builds, focused tests, routing-policy checks, producer readback and exact-scope postflight pass; historical failures are preserved, physical device testing is not claimed, and P6 remains started, uncertified and incomplete.",
+      "check": "aramf_core_tests::--worker-tasks",
+      "assertions": [
+        "android profile operations preserve lifecycle",
+        "android profile generation and verification pass",
+        "android profile acceptance requires current full validation"
+      ]
+    },
+    {
+      "id": "ANDROID-5",
+      "requirement": "Save and reopen, review, template save and restore, generation and verification retain profile data and members; reusable templates strip personal identities and contact details while retaining role slots.",
+      "check": "aramf_core_tests::--worker-tasks",
+      "assertions": [
+        "android profile persistence round trip",
+        "android templates preserve roles without identities",
+        "android generated information retains members and profile"
+      ]
+    },
+    {
+      "id": "ANDROID-6",
+      "requirement": "StorePath defaults and provenance match actual repository b9489f02ec2c4cc6e5bdbc28adf593e8dc1cb4b6, distinguishing Gradle runtime JDK from Java target, user-reported environment from verification, actual dependencies from planned capabilities and unsupported Wi-Fi RTT.",
+      "check": "aramf_core_tests::--worker-tasks",
+      "assertions": [
+        "android StorePath observed toolchain defaults",
+        "android StorePath runtime and targets remain separate",
+        "android StorePath capabilities are not external tools",
+        "android StorePath excludes future dependencies and RTT"
+      ]
+    },
+    {
+      "id": "ANDROID-7",
+      "requirement": "StorePath, Android Application Lab 2 and optional Keyestudio profiles remain distinct; Lab 2 includes Retrofit/GitHub REST writes, operator decisions, defensive errors and incident closure only when selected, without storing secrets or performing remote writes.",
+      "check": "aramf_core_tests::--worker-tasks",
+      "assertions": [
+        "android Lab 2 requirements remain distinct",
+        "android Lab 2 incident closure and errors retain provenance",
+        "android hardware stays optional and separate",
+        "android profile switching removes owned course requirements",
+        "android profile rejects unknown credentials and malformed input"
+      ]
+    }
+  ]
+})ARAMF")).object();
+        return profile;
+    }
     if (id == "task-scope-registration-operations/v1") {
         const QStringList requirements{
             "Scope registration preparation is read-only and binds the exact original blocked task, project identity, current configuration, source observations, minimal additive file mapping and canonical producer outputs.",
@@ -2157,7 +2290,7 @@ QJsonObject measuredProfile(const QJsonObject& contract)
     const auto request = contract.value("request").toObject();
     auto profile = WorkerTaskServices::acceptanceProfile(request.value("acceptanceProfile").toString());
     if (profile.isEmpty() && request.value("acceptanceProfile").toString().isEmpty()) {
-        for (const QString& id : {QStringLiteral("task-certification-operations/v1"), QStringLiteral("task-p6-requirements-operations/v1"), QStringLiteral("task-p6-activation-governance/v1"), QStringLiteral("task-scope-registration-operations/v1")}) {
+        for (const QString& id : {QStringLiteral("task-certification-operations/v1"), QStringLiteral("task-p6-requirements-operations/v1"), QStringLiteral("task-p6-activation-governance/v1"), QStringLiteral("task-scope-registration-operations/v1"), QStringLiteral("task-android-profiles-members/v1")}) {
             const auto candidate = WorkerTaskServices::acceptanceProfile(id);
             if (semantic(request.value("definitionOfDone")) == semantic(candidate.value("requirements"))) profile = candidate;
         }
@@ -2389,7 +2522,7 @@ QJsonObject WorkerTaskServices::runCheck(const ProjectModel& model, const QJsonO
     // registered requirements before their producer exists. Recognition never
     // rewrites that immutable request, its baseline, or its permissions.
     if (profile.isEmpty() && contract.value("request").toObject().value("acceptanceProfile").toString().isEmpty()) {
-        for (const QString& id : {QStringLiteral("task-certification-operations/v1"), QStringLiteral("task-p6-activation-governance/v1"), QStringLiteral("task-scope-registration-operations/v1")}) {
+        for (const QString& id : {QStringLiteral("task-certification-operations/v1"), QStringLiteral("task-p6-activation-governance/v1"), QStringLiteral("task-scope-registration-operations/v1"), QStringLiteral("task-android-profiles-members/v1")}) {
             const auto candidate = acceptanceProfile(id);
             if (semantic(contract.value("request").toObject().value("definitionOfDone")) == semantic(candidate.value("requirements"))) profile = candidate;
         }

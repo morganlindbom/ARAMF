@@ -77,6 +77,7 @@ int main(int argc, char** argv)
         WorkflowPageId::ProjectModulesTemplates,
         WorkflowPageId::ProjectCommunication,
         WorkflowPageId::ProjectCompatibility,
+        WorkflowPageId::ProjectMembers,
         WorkflowPageId::Academic,
         WorkflowPageId::AcademicDocumentation,
         WorkflowPageId::AcademicResearch,
@@ -173,8 +174,8 @@ int main(int argc, char** argv)
                       && list->item(3)->text().contains(QStringLiteral("1.2  Project modules & templates"))
                       && list->item(4)->text().contains(QStringLiteral("1.3  Project communication"))
                       && list->item(5)->text().contains(QStringLiteral("1.4  Project compatibility & migration"))
-                      && list->item(7)->text().contains(QStringLiteral("2.1  Documentation"))
-                      && list->item(11)->text().contains(QStringLiteral("2.5  Requirements & deliverables"))
+                      && list->item(8)->text().contains(QStringLiteral("2.1  Documentation"))
+                      && list->item(12)->text().contains(QStringLiteral("2.5  Requirements & deliverables"))
                       && list->item(rows.at(expected.indexOf(WorkflowPageId::DevelopmentToolsIde)))->text().contains(QStringLiteral("5.1  IDE & editors"))
                       && list->item(rows.at(expected.indexOf(WorkflowPageId::PlatformsTargets)))->text().contains(QStringLiteral("6.2  Target platforms"))
                       && list->item(rows.at(expected.indexOf(WorkflowPageId::HardwareProcessors)))->text().contains(QStringLiteral("7.2  Processor families"))
@@ -203,8 +204,9 @@ int main(int argc, char** argv)
     auto* secondChild = completionList->item(3);
     auto* thirdChild = completionList->item(4);
     auto* fourthChild = completionList->item(5);
-    auto* academicItem = completionList->item(6);
-    auto* academicFirstChild = completionList->item(7);
+    auto* membersChild = completionList->item(6);
+    auto* academicItem = completionList->item(7);
+    auto* academicFirstChild = completionList->item(8);
     int expectedSetupProgressPages = 0;
     int expectedUserCheckablePages = 0;
     for (const auto page : completionWorkflow.workflowPageIds()) {
@@ -269,7 +271,8 @@ int main(int argc, char** argv)
     clickCompletion(firstChild);
     clickCompletion(thirdChild);
     clickCompletion(fourthChild);
-    ok &= require(completionWorkflow.completedPageCount() == 4
+    clickCompletion(membersChild);
+    ok &= require(completionWorkflow.completedPageCount() == 5
                       && parentItem->background().color() == QColor(204, 238, 211),
                   "all completed children turn the parent noticeably light green");
     clickCompletion(firstChild);
@@ -333,7 +336,7 @@ int main(int argc, char** argv)
     overview.show();
     QApplication::processEvents();
     const auto cards = overview.findChildren<ParentOverviewCard*>();
-    ok &= require(cards.size() == 4 && overview.findChildren<QCheckBox*>().isEmpty(),
+    ok &= require(cards.size() == 5 && overview.findChildren<QCheckBox*>().isEmpty(),
                   "parent overview has reusable child cards and no completion status");
     QSet<QString> cardDestinations;
     QObject::connect(&overview, &ParentOverviewPage::cardActivated,
@@ -344,7 +347,8 @@ int main(int argc, char** argv)
         QCoreApplication::sendEvent(card, &event);
     }
     ok &= require(cardDestinations.contains(QStringLiteral("project.communication"))
-                      && cardDestinations.contains(QStringLiteral("project.compatibility")),
+                      && cardDestinations.contains(QStringLiteral("project.compatibility"))
+                      && cardDestinations.contains(QStringLiteral("project.members")),
                   "parent overview routes to the new project child IDs");
 
     ok &= require(cardDestinations.contains(QStringLiteral("project.file-worker"))
