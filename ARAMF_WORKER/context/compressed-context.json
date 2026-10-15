@@ -76,7 +76,7 @@
             "scope": "current-project-state",
             "section": "resources",
             "source": "external:04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3",
-            "sourceFingerprint": "5dddea514770e3e82c92c4e9de84416c7f2bd05caae28b0732a578bd6147de81",
+            "sourceFingerprint": "03192ac0a78c539bbe1cdef9b16b27e7aabffaf0b8ec00fcbfce8dc76f235d80",
             "status": "CURRENT",
             "summary": "resources context from external:04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3"
         },
@@ -193,7 +193,7 @@
             "scope": "all",
             "section": "project-state",
             "source": "ARAMF_WORKER/PROJECT_STATUS.md",
-            "sourceFingerprint": "e27eb73ea6988c160acc38de595a345def4e0d666a3a9c79fa0037ffad25dc93",
+            "sourceFingerprint": "11b47162b2b3030c6635cf87eecff4db23a90f86b78866e787cf4c2f39790bcd",
             "status": "CURRENT",
             "summary": "project-state context from ARAMF_WORKER/PROJECT_STATUS.md"
         },
@@ -258,7 +258,7 @@
             "scope": "all",
             "section": "project-state",
             "source": "ARAMF_WORKER/memory/current-state.md",
-            "sourceFingerprint": "f3931940788e767ea837bfc885ee465a0cfc0577ae8e979854d5a63fa0a2edcf",
+            "sourceFingerprint": "73f699ade5553e420998c46a6cd673b8859d62b93c1e3daa75f0437e6a8b1e10",
             "status": "CURRENT",
             "summary": "project-state context from ARAMF_WORKER/memory/current-state.md"
         },
@@ -297,7 +297,7 @@
             "scope": "project-requirements",
             "section": "resources",
             "source": "external:04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3",
-            "sourceFingerprint": "5dddea514770e3e82c92c4e9de84416c7f2bd05caae28b0732a578bd6147de81",
+            "sourceFingerprint": "03192ac0a78c539bbe1cdef9b16b27e7aabffaf0b8ec00fcbfce8dc76f235d80",
             "status": "CURRENT",
             "summary": "resources context from external:04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3"
         },
@@ -393,7 +393,7 @@
             "summary": "resources context from external:c693014c-27ef-4ce1-9291-6fb37ff0c375"
         }
     ],
-    "indexFingerprint": "899462129f30ef084d1b63dcf95dd353b3e699baf41ad371bd5cf32086f4e8fc",
+    "indexFingerprint": "672971657e1310c1a716df1bd844ec87c5a26c2f2dd3d5375d6346b2c5cddd86",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "schemaVersion": 1,
     "sourceIndex": "context-index.json"
