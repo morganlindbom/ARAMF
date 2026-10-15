@@ -14,7 +14,9 @@
 #include <QProcess>
 #include <QSaveFile>
 #include <QSet>
+#include <QRegularExpression>
 #include <QUuid>
+#include <algorithm>
 
 namespace {
 QString workerPath(const QString& root, const QString& relative)
@@ -55,6 +57,77 @@ bool writeBytes(const QString& filePath, const QByteArray& bytes, QString* error
         return false;
     }
     return true;
+}
+
+QJsonValue canonicalOperationValue(const QJsonValue& value)
+{
+    if (value.isObject()) {
+        QJsonObject result; const auto object = value.toObject();
+        for (auto it = object.begin(); it != object.end(); ++it) result.insert(it.key(), canonicalOperationValue(it.value()));
+        return result;
+    }
+    if (value.isArray()) {
+        QList<QByteArray> values;
+        for (const auto& item : value.toArray()) values.append(QJsonDocument(QJsonArray{canonicalOperationValue(item)}).toJson(QJsonDocument::Compact));
+        std::sort(values.begin(), values.end()); QJsonArray result;
+        for (const auto& item : values) result.append(QJsonDocument::fromJson(item).array().first());
+        return result;
+    }
+    return value;
+}
+
+// Only an exact sealed FAILED coordinator attempt may classify its own
+// interrupted immutable pair. Unexplained corruption remains a hard failure.
+bool retainedFailedAttempt(const QString& root, const QString& subject, const QString& revalidationId)
+{
+    const QDir operations(workerPath(root, "ARAMF_WORKER/certification/operations"));
+    const auto hash = [&](const QString& relative) {
+        QFile file(QDir(root).filePath(relative));
+        if (!file.exists()) return QString("MISSING");
+        return file.open(QIODevice::ReadOnly) ? hashBytes(file.readAll()) : QString("UNREADABLE");
+    };
+    const QString prefix = "ARAMF_WORKER/certification/revalidation/" + subject + '/' + revalidationId;
+    for (const auto& operationId : operations.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+        if (!QRegularExpression("^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$").match(operationId).hasMatch()) continue;
+        if (revalidationId != "reval-" + QUuid::createUuidV5(QUuid(operationId), ("revalidate-current/v1/" + subject).toUtf8()).toString(QUuid::WithoutBraces)) continue;
+        const QString operationPrefix = "ARAMF_WORKER/certification/operations/" + operationId;
+        const bool recovered = QFileInfo::exists(operations.filePath(operationId + "/recovery.json"));
+        const QString receiptName = recovered ? "recovery.json" : "receipt.json";
+        const QString sealName = recovered ? "recovery-seal.json" : "seal.json";
+        const auto receipt = readObject(operations.filePath(operationId + '/' + receiptName), nullptr);
+        const auto seal = readObject(operations.filePath(operationId + '/' + sealName), nullptr);
+        const auto proof = readObject(operations.filePath(operationId + "/software-evidence.json"), nullptr);
+        const auto contract = proof.value("operationContract").toObject();
+        auto unsignedContract = contract; unsignedContract.remove("contractId");
+        const auto intent = contract.value("intent").toObject();
+        const QString contractId = contract.value("contractId").toString();
+        if (contract.value("contractKind") != "canonical-certification-operation/v1" || contractId.isEmpty()
+            || hashBytes(QJsonDocument(canonicalOperationValue(unsignedContract).toObject()).toJson(QJsonDocument::Compact)) != contractId
+            || !contract.value("preflight").toObject().value("status").toString().startsWith("READY")
+            || contract.value("operationId") != operationId || intent.value("kind") != "revalidate-current/v1"
+            || !intent.value("subjects").toArray().contains(subject)
+            || contract.value("projectBinding").toObject().value("projectRoot") != QFileInfo(root).canonicalFilePath()
+            || receipt.value("contractId") != contractId || seal.value("contractId") != contractId
+            || receipt.value("operationId") != operationId || seal.value("operationId") != operationId
+            || receipt.value("outcome") != "FAILED" || receipt.value("error").toString().isEmpty()
+            || receipt.value("producer") != "WorkerTaskServices/certification-operation/v1"
+            || seal.value("producer") != receipt.value("producer") || proof.value("producer") != receipt.value("producer")
+            || seal.value("receiptFingerprint") != hash(operationPrefix + '/' + receiptName)
+            || receipt.value("outputs").toObject().value(operationPrefix + "/software-evidence.json") != hash(operationPrefix + "/software-evidence.json")) continue;
+        if (recovered && (!contract.value("permittedFiles").toArray().contains(operationPrefix + '/' + receiptName)
+            || !contract.value("permittedFiles").toArray().contains(operationPrefix + '/' + sealName)
+            || receipt.value("outputs").toObject().value(operationPrefix + "/receipt.json") != hash(operationPrefix + "/receipt.json")
+            || receipt.value("outputs").toObject().value(operationPrefix + "/seal.json") != hash(operationPrefix + "/seal.json"))) continue;
+        bool exact = true;
+        for (const auto& name : QStringList{"evidence.json", "revalidation.json"}) {
+            const QString path = prefix + '/' + name;
+            exact &= contract.value("permittedFiles").toArray().contains(path)
+                && contract.value("baseline").toObject().value(path).toString("MISSING") == "MISSING"
+                && receipt.value("outputs").toObject().value(path) == hash(path);
+        }
+        if (exact) return true;
+    }
+    return false;
 }
 
 bool gitRevision(const QString& root, QString* revision, QString* error)
@@ -109,7 +182,40 @@ QJsonObject readHistoricalEvidence(const QString& root, const QJsonObject& certi
         if (error) *error = QStringLiteral("Historical certificate has no evidence reference.");
         return {};
     }
-    return readObject(QDir(root).filePath(reference), error);
+    const QString path = QDir(root).filePath(reference);
+    const QString canonical = QFileInfo(path).canonicalFilePath(), canonicalRoot = QFileInfo(root).canonicalFilePath();
+    QFile file(path);
+    if (canonical.isEmpty() || !canonical.startsWith(canonicalRoot + '/', Qt::CaseInsensitive) || !file.open(QIODevice::ReadOnly)) {
+        if (error) *error = "Historical evidence is missing or outside this project.";
+        return {};
+    }
+    const auto bytes = file.readAll();
+    const QString actual = hashBytes(bytes);
+    bool bound = false;
+    for (const auto& value : certificate.value("evidenceReferences").toArray()) {
+        const auto entry = value.toObject();
+        if (entry.value("reference") != reference) continue;
+        if (entry.value("fingerprint") != actual) {
+            if (error) *error = "Historical evidence bytes differ from their certificate reference.";
+            return {};
+        }
+        bound = true;
+    }
+    if (certificate.value("evidenceArtifact") == reference && certificate.contains("evidenceFingerprint")) {
+        if (certificate.value("evidenceFingerprint") != actual) {
+            if (error) *error = "Historical evidence bytes differ from the sealed certificate.";
+            return {};
+        }
+        bound = true;
+    }
+    if (!bound) { if (error) *error = "Historical evidence has no exact certificate fingerprint."; return {}; }
+    QJsonParseError parseError;
+    const auto document = QJsonDocument::fromJson(bytes, &parseError);
+    if (parseError.error != QJsonParseError::NoError || !document.isObject()) {
+        if (error) *error = "Historical evidence JSON is malformed.";
+        return {};
+    }
+    return document.object();
 }
 
 QString completedLifecycleFromProject(const QString& root, const QString& subject, const QJsonObject& historicalEvidence)
@@ -229,7 +335,20 @@ bool CertificationRevalidationService::latest(const QString& projectRoot, const 
     QString latestId;
     for (const auto& entry : directories) {
         const auto record = readObject(directory.filePath(entry + QStringLiteral("/revalidation.json")), error);
-        if (record.isEmpty()) return false;
+        const bool valid = record.value("schemaVersion").toInt() == 1 && record.value("subject") == subject
+            && record.value("revalidationId") == entry && record.value("revalidationType") == "FRESHNESS_REVALIDATION"
+            && record.value("status") == "FRESH" && !record.value("revalidationOfCertificateId").toString().isEmpty()
+            && QDateTime::fromString(record.value("timestamp").toString(), Qt::ISODateWithMs).isValid()
+            && record.value("evidenceArtifact") == "ARAMF_WORKER/certification/revalidation/" + subject + '/' + entry + "/evidence.json"
+            && QRegularExpression("^[a-f0-9]{64}$").match(record.value("evidenceFingerprint").toString()).hasMatch();
+        if (!valid) {
+            if (!retainedFailedAttempt(projectRoot, subject, entry)) {
+                if (error && error->isEmpty()) *error = "Malformed or unclassified revalidation history: " + subject + '/' + entry;
+                return false;
+            }
+            if (error) error->clear();
+            continue;
+        }
         const QString timestamp = record.value(QStringLiteral("timestamp")).toString();
         const QString id = record.value(QStringLiteral("revalidationId")).toString();
         if (latestRecord.isEmpty() || timestamp > latestTimestamp || (timestamp == latestTimestamp && id > latestId)) {
@@ -310,9 +429,17 @@ bool CertificationRevalidationService::validateHistoricalSource(const QString& r
 
 bool CertificationRevalidationService::revalidate(const QString& projectRoot, const QString& subject,
                                                   const QJsonObject& regressionEvidence,
-                                                  CertificationRevalidationResult* result, QString* error)
+                                                  CertificationRevalidationResult* result, QString* error,
+                                                  const QString& plannedId, const QJsonObject& operationBinding)
 {
     if (error) error->clear();
+    if ((!plannedId.isEmpty() && (!QRegularExpression("^reval-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$").match(plannedId).hasMatch()
+            || operationBinding.value("subject") != subject
+            || !QRegularExpression("^[a-f0-9]{64}$").match(operationBinding.value("contractId").toString()).hasMatch()))
+        || (plannedId.isEmpty() && !operationBinding.isEmpty())) {
+        if (error) *error = "Invalid planned revalidation identity or operation binding.";
+        return false;
+    }
     if (!isAllowedSubject(subject)) {
         if (error) *error = QStringLiteral("Freshness revalidation is not enabled for subject %1.").arg(subject);
         return false;
@@ -372,7 +499,25 @@ bool CertificationRevalidationService::revalidate(const QString& projectRoot, co
     normalizedRegressionEvidence.remove(QStringLiteral("sourceRevision"));
     normalizedRegressionEvidence.remove(QStringLiteral("historicalSourceSnapshot"));
     normalizedRegressionEvidence.insert(QStringLiteral("implementationRevision"), sourceRevision);
-    const QString revalidationId = QStringLiteral("reval-%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+    const QString revalidationId = plannedId.isEmpty()
+        ? QStringLiteral("reval-%1").arg(QUuid::createUuid().toString(QUuid::WithoutBraces)) : plannedId;
+    const QString plannedDirectory = workerPath(projectRoot, AramfPaths::CertificationRevalidationDirectory + '/' + subject + '/' + revalidationId);
+    if (QFileInfo::exists(plannedDirectory)
+        || (!plannedId.isEmpty() && (operationBinding.value("sourceFingerprint") != sourceFingerprint
+            || operationBinding.value("contractFingerprint") != contractFingerprint))) {
+        if (error) *error = "Planned revalidation already exists or its source/contract binding changed.";
+        return false;
+    }
+    const auto writeImmutable = [&](const QString& path, const QByteArray& bytes) {
+        if (!QDir().mkpath(QFileInfo(path).absolutePath())) return false;
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::NewOnly) || file.write(bytes) != bytes.size()) {
+            if (error) *error = file.errorString();
+            return false;
+        }
+        file.close();
+        return file.open(QIODevice::ReadOnly) && file.readAll() == bytes;
+    };
     const QString timestamp = QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
     const QString historicalLifecycle = completedLifecycleFromProject(projectRoot, subject, historicalEvidence);
     QJsonObject previousRevalidation;
@@ -398,13 +543,14 @@ bool CertificationRevalidationService::revalidate(const QString& projectRoot, co
                                                     {QStringLiteral("dependencyBinding"), QStringLiteral("CertificationDependencyBindingProvider")}}},
         {QStringLiteral("timestamp"), timestamp}};
     if (!historicalSourceSnapshot.isEmpty()) evidence.insert("historicalSourceSnapshot", historicalSourceSnapshot);
+    if (!operationBinding.isEmpty()) evidence.insert("operationBinding", operationBinding);
     const auto normalizedBindings = bindingsForEvidence(dependencyBindings);
     for (auto it = normalizedBindings.begin(); it != normalizedBindings.end(); ++it) evidence.insert(it.key(), it.value());
     const QByteArray evidenceBytes = QJsonDocument(evidence).toJson(QJsonDocument::Compact) + '\n';
     const QString evidenceRelative = AramfPaths::CertificationRevalidationDirectory + QLatin1Char('/') + subject
         + QLatin1Char('/') + revalidationId + QStringLiteral("/evidence.json");
     const QString evidencePath = QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(evidenceRelative));
-    if (!writeBytes(evidencePath, evidenceBytes, error)) return false;
+    if (!writeImmutable(evidencePath, evidenceBytes)) return false;
     QFile persistedEvidence(evidencePath);
     if (!persistedEvidence.open(QIODevice::ReadOnly)) {
         if (error) *error = persistedEvidence.errorString();
@@ -434,8 +580,9 @@ bool CertificationRevalidationService::revalidate(const QString& projectRoot, co
         {QStringLiteral("provenance"), QStringLiteral("agent-direct")}};
     const QString recordRelative = AramfPaths::CertificationRevalidationDirectory + QLatin1Char('/') + subject
         + QLatin1Char('/') + revalidationId + QStringLiteral("/revalidation.json");
-    if (!writeBytes(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(recordRelative)),
-                    QJsonDocument(record).toJson(QJsonDocument::Compact) + '\n', error)) return false;
+    if (!operationBinding.isEmpty()) record.insert("operationBinding", operationBinding);
+    if (!writeImmutable(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(recordRelative)),
+                    QJsonDocument(record).toJson(QJsonDocument::Compact) + '\n')) return false;
 
     QJsonObject currentState;
     const QString currentStatePath = workerPath(projectRoot, AramfPaths::CurrentFreshnessState);

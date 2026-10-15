@@ -84,7 +84,17 @@ int main(int argc, char** argv)
         WorkflowPageId::AcademicStandards,
         WorkflowPageId::AcademicDeliverables,
         WorkflowPageId::Languages,
+        WorkflowPageId::LanguageSystems,
+        WorkflowPageId::LanguageApplication,
+        WorkflowPageId::LanguageWeb,
+        WorkflowPageId::LanguageScripting,
         WorkflowPageId::Frameworks,
+        WorkflowPageId::FrameworkDesktopUi,
+        WorkflowPageId::FrameworkWebServer,
+        WorkflowPageId::FrameworkMobile,
+        WorkflowPageId::FrameworkEmbeddedDevice,
+        WorkflowPageId::FrameworkDataMl,
+        WorkflowPageId::FrameworkGraphicsGame,
         WorkflowPageId::DevelopmentTools,
         WorkflowPageId::DevelopmentToolsIde,
         WorkflowPageId::DevelopmentToolsVersionControl,
@@ -169,6 +179,10 @@ int main(int argc, char** argv)
                       && list->item(rows.at(expected.indexOf(WorkflowPageId::PlatformsTargets)))->text().contains(QStringLiteral("6.2  Target platforms"))
                       && list->item(rows.at(expected.indexOf(WorkflowPageId::HardwareProcessors)))->text().contains(QStringLiteral("7.2  Processor families"))
                       && list->item(rows.at(expected.indexOf(WorkflowPageId::BuildDeliveryAutomation)))->text().contains(QStringLiteral("8.4  Automation & delivery"))
+                      && list->item(rows.at(expected.indexOf(WorkflowPageId::Review)))->text().contains(QStringLiteral("21  Review"))
+                      && list->item(rows.at(expected.indexOf(WorkflowPageId::Generate)))->text().contains(QStringLiteral("22  Generate"))
+                      && list->item(rows.at(expected.indexOf(WorkflowPageId::UpdateReview)))->text().contains(QStringLiteral("25  Review Framework Knowledge"))
+                      && list->item(rows.at(expected.indexOf(WorkflowPageId::ImprovementBacklog)))->text().contains(QStringLiteral("28  ARAMF Improvement Backlog"))
                       && list->item(2)->text().size() > list->item(1)->text().size(),
                   "Project hierarchy is always expanded with distinct child indentation");
     list->setCurrentRow(2);

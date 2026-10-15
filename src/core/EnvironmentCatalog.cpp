@@ -271,6 +271,65 @@ QList<EnvironmentOption> frameworks()
     });
 }
 
+namespace {
+QList<EnvironmentOption> selectedOptions(const QList<EnvironmentOption>& source, const QStringList& ids)
+{
+    QList<EnvironmentOption> result;
+    for (const auto& option : source) if (ids.contains(option.second)) result.append(option);
+    return result;
+}
+}
+
+QList<EnvironmentOption> languageSystems()
+// Brief: Return the non-overlapping systems language catalog.
+// Keep the catalog source authoritative and filter by stable capability IDs to preserve selection identity.
+{ return selectedOptions(languages(), {"cpp", "c", "java", "kotlin", "csharp", "rust", "go", "swift", "assembly", "pio-assembly", "zig", "objective-c"}); }
+
+QList<EnvironmentOption> languageApplication()
+// Brief: Return application and data languages.
+// This group owns scripting and query languages plus the custom-entry selector.
+{ return selectedOptions(languages(), {"python", "sql", "dart", "php", "custom"}); }
+
+QList<EnvironmentOption> languageWeb()
+// Brief: Return web document and application languages.
+// IDs are drawn from the canonical language catalog and appear in this group only.
+{ return selectedOptions(languages(), {"javascript", "typescript", "html", "css"}); }
+
+QList<EnvironmentOption> languageScripting()
+// Brief: Return shell and automation languages.
+// Keep this optional group empty when the canonical catalog has no separate scripting-only entries.
+{ return selectedOptions(languages(), {"bash", "powershell", "ruby", "lua"}); }
+
+QList<EnvironmentOption> frameworkDesktopUi()
+// Brief: Return desktop and UI frameworks.
+// The custom framework selector stays accessible from this broad UI category.
+{ return selectedOptions(frameworks(), {"qt", "wxwidgets", "gtk", "dotnet", "winui", "custom"}); }
+
+QList<EnvironmentOption> frameworkWebServer()
+// Brief: Return web and server frameworks.
+// Keep the existing custom Retrofit entry intact alongside the canonical catalog IDs.
+{ return selectedOptions(frameworks(), {"react", "vue", "angular", "svelte", "express", "nodejs", "django", "flask", "fastapi", "nextjs", "nuxt", "nestjs", "aspnet", "custom:Retrofit"}); }
+
+QList<EnvironmentOption> frameworkMobile()
+// Brief: Return mobile frameworks and SDKs.
+// Android SDK, emulators, testing libraries, and UI libraries remain together in this domain.
+{ return selectedOptions(frameworks(), {"flutter", "react-native", "dotnet-maui", "android-sdk", "android-emulator", "android-device-testing", "jetpack-compose", "room"}); }
+
+QList<EnvironmentOption> frameworkEmbeddedDevice()
+// Brief: Return embedded and device frameworks.
+// Preserve all current microcontroller SDK and RTOS selections.
+{ return selectedOptions(frameworks(), {"pico-sdk", "arduino", "platformio", "esp-idf", "zephyr", "freertos", "stm32-hal", "cmsis", "tinyusb"}); }
+
+QList<EnvironmentOption> frameworkDataMl()
+// Brief: Return data processing and machine learning libraries.
+// Catalog membership remains stable, including accelerator and model-runtime options.
+{ return selectedOptions(frameworks(), {"pytorch", "tensorflow", "scikit-learn", "keras", "xgboost", "lightgbm", "hugging-face-transformers", "numpy", "pandas", "scipy", "matplotlib", "opencv", "onnx", "onnx-runtime", "tensorflow-lite", "cuda", "cudnn"}); }
+
+QList<EnvironmentOption> frameworkGraphicsGame()
+// Brief: Return graphics and game development frameworks.
+// These entries are separate from application UI and data/ML libraries.
+{ return selectedOptions(frameworks(), {"sdl", "sfml", "unreal", "unity", "godot", "opengl", "vulkan"}); }
+
 QList<EnvironmentOption> hardwareTargets()
 {
     return options({

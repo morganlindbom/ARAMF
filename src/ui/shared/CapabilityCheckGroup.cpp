@@ -4,8 +4,11 @@
 #include <QCheckBox>
 #include <QGridLayout>
 #include <QLineEdit>
+#include <QFormLayout>
+#include <QLabel>
 #include <QResizeEvent>
 #include <QSignalBlocker>
+#include <QVBoxLayout>
 
 namespace {
 bool isCustomId(const QString& id)
@@ -139,4 +142,78 @@ void CapabilityCheckGroup::setAllSelected(bool selected, bool includeCustom)
         changed = true;
     }
     if (changed) emit selectionChanged(selectedIds());
+}
+
+CapabilityDetailsEditor::CapabilityDetailsEditor(ProjectModel* model, CapabilityCheckGroup* selection,
+                                                 Domain domain, QWidget* parent)
+// Brief: Bind editable metadata fields to one capability selection group.
+// The editor keeps version and notes optional and stores changes under stable selected IDs.
+    : QGroupBox(tr("Selected item details (optional)"), parent), model_(model), selection_(selection), domain_(domain),
+      layout_(new QVBoxLayout(this))
+{
+    if (selection_) connect(selection_, &CapabilityCheckGroup::selectionChanged, this, &CapabilityDetailsEditor::refresh);
+    if (model_) connect(model_, &ProjectModel::developmentCapabilitiesChanged, this, &CapabilityDetailsEditor::refresh);
+    refresh();
+}
+
+void CapabilityDetailsEditor::refresh()
+// Brief: Rebuild detail rows for currently selected IDs.
+// Stored metadata is read first so refreshing after a round-trip restores every editable value.
+{
+    if (storing_) return;
+    while (auto* item = layout_->takeAt(0)) {
+        if (item->widget()) item->widget()->deleteLater();
+        delete item;
+    }
+    if (!model_ || !selection_) return;
+    const auto capabilities = model_->developmentCapabilities();
+    for (const auto& id : selection_->selectedIds()) {
+        auto* row = new QWidget(this);
+        auto* form = new QFormLayout(row);
+        const QString label = id.startsWith(QStringLiteral("custom:")) ? id.mid(7) : id;
+        auto* version = new QLineEdit(row);
+        auto* notes = new QLineEdit(row);
+        QString versionValue;
+        QString notesValue;
+        if (domain_ == Domain::Languages) {
+            versionValue = capabilities.languageVersions.value(id);
+            notesValue = capabilities.languageNotes.value(id);
+        } else if (domain_ == Domain::Frameworks) {
+            versionValue = capabilities.frameworkVersions.value(id);
+            notesValue = capabilities.frameworkNotes.value(id);
+        } else {
+            versionValue = capabilities.toolchainVersions.value(id);
+            notesValue = capabilities.toolchainNotes.value(id);
+        }
+        version->setObjectName(QStringLiteral("capabilityVersion_") + id);
+        notes->setObjectName(QStringLiteral("capabilityNotes_") + id);
+        version->setPlaceholderText(tr("Version (optional)"));
+        notes->setPlaceholderText(tr("Notes (optional)"));
+        version->setText(versionValue);
+        notes->setText(notesValue);
+        form->addRow(label, version);
+        form->addRow(tr("Notes"), notes);
+        connect(version, &QLineEdit::textEdited, this, [this, id](const QString& value) { store(id, QStringLiteral("version"), value); });
+        connect(notes, &QLineEdit::textEdited, this, [this, id](const QString& value) { store(id, QStringLiteral("notes"), value); });
+        layout_->addWidget(row);
+    }
+    if (selection_->selectedIds().isEmpty()) layout_->addWidget(new QLabel(tr("Select an item to add optional details."), this));
+    layout_->addStretch();
+}
+
+void CapabilityDetailsEditor::store(const QString& id, const QString& field, const QString& value)
+// Brief: Persist one edited detail without dropping other capability selections.
+// Empty values remove only that optional detail; project capabilities and sibling metadata remain untouched.
+{
+    if (!model_) return;
+    auto capabilities = model_->developmentCapabilities();
+    QMap<QString, QString>* values = nullptr;
+    if (domain_ == Domain::Languages) values = field == QStringLiteral("version") ? &capabilities.languageVersions : &capabilities.languageNotes;
+    else if (domain_ == Domain::Frameworks) values = field == QStringLiteral("version") ? &capabilities.frameworkVersions : &capabilities.frameworkNotes;
+    else values = field == QStringLiteral("version") ? &capabilities.toolchainVersions : &capabilities.toolchainNotes;
+    if (value.trimmed().isEmpty()) values->remove(id);
+    else values->insert(id, value.trimmed());
+    storing_ = true;
+    model_->setDevelopmentCapabilities(capabilities);
+    storing_ = false;
 }

@@ -2,7 +2,8 @@
 #include "core/ProjectModel.h"
 #include <QWidget>
 class CapabilityCheckGroup;
-class ProjectBuildDeliveryPage final : public QWidget
+class CapabilityDetailsEditor;
+class ProjectBuildDeliveryPage : public QWidget
 {
 public:
     enum class Section { All, Toolchains, BuildSystems, Testing, Automation };
@@ -11,6 +12,7 @@ private:
     ProjectModel* model_;
     Section section_;
     CapabilityCheckGroup* toolchains_;
+    CapabilityDetailsEditor* toolchainDetails_;
     CapabilityCheckGroup* buildSystems_;
     CapabilityCheckGroup* dependencies_;
     CapabilityCheckGroup* configurations_;

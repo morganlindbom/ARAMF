@@ -2,19 +2,45 @@
     "academic": {
         "academicDeliverables": [
         ],
-        "academicLanguage": "",
+        "academicLanguage": "swedish",
+        "academicLanguages": [
+            "swedish"
+        ],
         "academicMode": "disabled",
         "academicRequirements": [
         ],
         "citationStyle": "",
+        "enabled": false,
         "examiner": "",
         "institution": "",
         "programmeOrCourse": "",
+        "projectTypes": [
+        ],
+        "reportDocumentation": {
+            "enabled": false,
+            "instructionId": "aramf-report-instruction",
+            "instructionVersion": 1,
+            "language": "sv",
+            "templateId": "aramf-default-report",
+            "templateMode": "aramf-default",
+            "templateSourceId": "",
+            "templateVersion": 1
+        },
         "researchMethods": [
         ],
         "supervisor": "",
         "thesisApproaches": [
         ],
+        "thesisDocumentation": {
+            "enabled": false,
+            "instructionId": "aramf-thesis-instruction",
+            "instructionVersion": 1,
+            "language": "sv",
+            "templateId": "aramf-default-thesis",
+            "templateMode": "aramf-default",
+            "templateSourceId": "",
+            "templateVersion": 1
+        },
         "thesisLevel": ""
     },
     "ai": {
@@ -129,6 +155,128 @@
         "chatgpt",
         "github-copilot"
     ],
+    "androidConstraints": {
+        "analysisDispatcher": "",
+        "analysisDispatcherSource": "",
+        "applicationStateFields": [
+        ],
+        "applicationStateFieldsSource": "",
+        "applicationStateSource": "",
+        "applicationStateSourceSource": "",
+        "architecture": "",
+        "architectureSource": "",
+        "buildConfigRequired": false,
+        "buildConfigSource": "",
+        "classicPatRequired": false,
+        "classicPatSource": "",
+        "collectAsStateRequired": false,
+        "collectAsStateSource": "",
+        "composeAllowed": true,
+        "composeAvailable": true,
+        "composeRequired": false,
+        "composeRequiredSource": "",
+        "composeSelected": true,
+        "composeSource": "",
+        "confidenceMaxPercent": -1,
+        "confidenceMinPercent": -1,
+        "confidenceRangeSource": "",
+        "courseName": "",
+        "courseNameSource": "",
+        "deceptionDetectorRequired": false,
+        "deceptionDetectorSource": "",
+        "declaredTechnologies": [
+        ],
+        "declaredTechnologiesSource": "",
+        "domainAgentDistinction": "",
+        "domainAgentDistinctionSource": "",
+        "domainAgents": [
+        ],
+        "domainAgentsSource": "",
+        "githubApiRequired": false,
+        "githubApiSource": "",
+        "githubPatRequired": false,
+        "githubPatSource": "",
+        "gsonRequired": false,
+        "gsonSource": "",
+        "hardcodedTokenProhibited": false,
+        "hardcodedTokenSource": "",
+        "humanInTheLoopRequired": false,
+        "humanInTheLoopSource": "",
+        "initialBranch": "",
+        "initialBranchSource": "",
+        "instructorCollaboratorRequired": false,
+        "instructorCollaboratorSource": "",
+        "internetPermissionRequired": false,
+        "internetPermissionSource": "",
+        "kotlinRequired": false,
+        "kotlinSource": "",
+        "lintRequired": false,
+        "lintSource": "",
+        "localPropertiesRequired": false,
+        "localPropertiesSource": "",
+        "minSdk": 0,
+        "minSdkSource": "",
+        "minSdkSpecified": false,
+        "networkDispatcher": "",
+        "networkDispatcherSource": "",
+        "normalGreenRequired": false,
+        "normalGreenSource": "",
+        "patScope": "",
+        "patScopeSource": "",
+        "pollingExecutionLocation": "",
+        "pollingExecutionLocationSource": "",
+        "pollingIntervalSeconds": 0,
+        "pollingIntervalSource": "",
+        "pollingRequired": false,
+        "pollingSource": "",
+        "primaryIde": "android-studio",
+        "primaryIdeSource": "",
+        "privateRepositoryRequired": false,
+        "privateRepositorySource": "",
+        "projectDomain": "",
+        "projectDomainSource": "",
+        "rawAdversarialTextRequired": false,
+        "rawAdversarialTextSource": "",
+        "regexOrHeuristicsRequired": false,
+        "regexOrHeuristicsSource": "",
+        "repositoryName": "",
+        "repositoryNameSource": "",
+        "requiredInitialFile": "",
+        "requiredInitialFileSource": "",
+        "retrofitRequired": false,
+        "retrofitSource": "",
+        "roomRequired": false,
+        "roomSource": "",
+        "securityAlertRedRequired": false,
+        "securityAlertRedSource": "",
+        "sourceOfTruthResource": "",
+        "sourceOfTruthTitle": "",
+        "stateFlowRequired": false,
+        "stateFlowSource": "",
+        "stateModel": "",
+        "stateModelSource": "",
+        "submissionRequirements": [
+        ],
+        "submissionRequirementsSource": "",
+        "submissionSegments": [
+        ],
+        "submissionSegmentsSource": "",
+        "submissionVideoDuration": "",
+        "submissionVideoDurationSource": "",
+        "uiTechnology": "compose",
+        "uiTechnologySource": "",
+        "unitTestsRequired": false,
+        "unitTestsSource": "",
+        "unresolvedRequirements": [
+        ],
+        "unresolvedRequirementsSource": "",
+        "validationRequirements": [
+        ],
+        "validationRequirementsSource": "",
+        "workflow": "",
+        "workflowSource": "",
+        "xmlRequired": false
+    },
     "capabilities": {
         "automationCapabilities": [
             "automated-build",
@@ -148,6 +296,10 @@
         ],
         "developmentTools": [
         ],
+        "frameworkNotes": {
+        },
+        "frameworkVersions": {
+        },
         "frameworks": [
             "qt"
         ],
@@ -158,6 +310,10 @@
         "ides": [
             "visual-studio-code"
         ],
+        "languageNotes": {
+        },
+        "languageVersions": {
+        },
         "languages": [
             "cpp"
         ],
@@ -176,12 +332,44 @@
             "unit-testing",
             "integration-testing"
         ],
+        "toolchainNotes": {
+        },
+        "toolchainVersions": {
+        },
         "toolchains": [
             "msys2-ucrt64-gcc"
         ],
         "versionControlSystems": [
             "git"
         ]
+    },
+    "certification": {
+        "defaultVerificationLevel": "HOST_TEST",
+        "enabled": false
+    },
+    "communication": {
+        "authenticationRequired": false,
+        "dataFormat": "",
+        "destinationRole": "",
+        "destinationTarget": "",
+        "enabled": false,
+        "encryptionRequired": false,
+        "endpoint": "",
+        "endpoints": [
+        ],
+        "errorHandling": "",
+        "integrationRequirements": [
+        ],
+        "links": [
+        ],
+        "messages": [
+        ],
+        "protocol": "",
+        "protocolVersion": "1",
+        "reconnectPolicy": "",
+        "sourceRole": "",
+        "sourceTarget": "",
+        "transport": ""
     },
     "context": "desktop-application",
     "description": "AI Rules And Memory Framework - self-hosted development project.",
@@ -198,6 +386,7 @@
         "versionControl": "none"
     },
     "generationOptions": {
+        "academicDocuments": true,
         "agentRules": true,
         "memory": true,
         "platforms": true,
@@ -205,6 +394,8 @@
         "resources": true,
         "routing": true
     },
+    "hardwareResources": [
+    ],
     "memory": {
         "captureCategories": [
             "current-project-status",
@@ -247,16 +438,36 @@
             "stale-current-state",
             "referenced-resources",
             "project-status-consistency"
-        ]
+        ],
+        "writerMode": "agent-direct"
+    },
+    "migration": {
+        "currentSchemaVersion": 2,
+        "notices": [
+        ],
+        "sourceSchemaVersion": 0,
+        "status": "MIGRATION_OK"
     },
     "options": {
     },
+    "processVersion": {
+        "active": null,
+        "completedHistory": [
+        ],
+        "legacyHistory": [
+        ],
+        "namespaceVersion": 2,
+        "next": null
+    },
     "profileSelections": [
     ],
-    "projectFilePath": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF-self-host.aramf.json",
+    "projectFilePath": "ARAMF-self-host.aramf.json",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "projectName": "ARAMF",
     "projectPath": "D:\\ON DESCTOP\\HKR KURSER\\C++\\ARAMF2\\ARAMF",
+    "releaseManagement": {
+        "targetRelease": null
+    },
     "resourcePolicy": {
         "loadingStrategy": "relevant",
         "options": [
@@ -279,6 +490,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250",
             "locationMode": "referenced",
             "name": "test_250",
+            "role": "supporting-material",
             "scopes": [
                 "architecture",
                 "software",
@@ -299,6 +511,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550",
             "locationMode": "referenced",
             "name": "test_550",
+            "role": "supporting-material",
             "scopes": [
                 "testing"
             ],
@@ -316,6 +529,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/CMakeLists.txt",
             "locationMode": "referenced",
             "name": "CMakeLists.txt",
+            "role": "source-of-truth",
             "scopes": [
                 "software",
                 "build-system"
@@ -334,6 +548,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_250/info.md",
             "locationMode": "referenced",
             "name": "info.md",
+            "role": "supporting-material",
             "scopes": [
             ],
             "status": "available",
@@ -350,6 +565,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/aramf_setup",
             "locationMode": "referenced",
             "name": "aramf_setup",
+            "role": "supporting-material",
             "scopes": [
                 "software"
             ],
@@ -367,6 +583,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/src",
             "locationMode": "referenced",
             "name": "src",
+            "role": "source-of-truth",
             "scopes": [
                 "architecture",
                 "software"
@@ -385,6 +602,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/test_550/info.md",
             "locationMode": "referenced",
             "name": "info.md",
+            "role": "supporting-material",
             "scopes": [
             ],
             "status": "available",
@@ -401,6 +619,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER",
             "locationMode": "referenced",
             "name": "ARAMF_WORKER",
+            "role": "source-of-truth",
             "scopes": [
                 "project-requirements",
                 "current-project-state"
@@ -419,6 +638,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/tests",
             "locationMode": "referenced",
             "name": "tests",
+            "role": "supporting-material",
             "scopes": [
                 "testing"
             ],
@@ -436,6 +656,7 @@
             "location": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/AGENTS.md",
             "locationMode": "referenced",
             "name": "AGENTS.md",
+            "role": "source-of-truth",
             "scopes": [
                 "project-requirements",
                 "architecture",
@@ -530,6 +751,8 @@
             "ci-cd",
             "ui-ux"
         ],
+        "scopeMetadata": {
+        },
         "workScopes": [
             "planning",
             "architecture",
@@ -546,5 +769,148 @@
             "project-status"
         ]
     },
-    "templateId": ""
+    "runtimeOwnership": {
+        "claims": [
+        ],
+        "schemaVersion": 1
+    },
+    "schemaVersion": 2,
+    "structure": {
+        "s1ResponsibilityOwnership": {
+            "artifacts": [
+            ],
+            "lifecycle": {
+                "certification": 0,
+                "done": 0,
+                "iteration": 0,
+                "loop": 1,
+                "structure": 1
+            },
+            "lifecycleHistory": [
+            ],
+            "responsibilities": [
+            ],
+            "rootId": "",
+            "schemaVersion": 1
+        },
+        "s2PhysicalStructure": {
+            "boundaries": [
+            ],
+            "lifecycle": {
+                "certification": 0,
+                "done": 0,
+                "iteration": 0,
+                "loop": 1,
+                "structure": 2
+            },
+            "lifecycleHistory": [
+            ],
+            "nodes": [
+            ],
+            "placements": [
+            ],
+            "rootId": "",
+            "schemaVersion": 1
+        },
+        "s3DependencyInterfaces": {
+            "dependencies": [
+            ],
+            "interfaces": [
+            ],
+            "lifecycle": {
+                "certification": 0,
+                "done": 0,
+                "iteration": 0,
+                "loop": 1,
+                "structure": 3
+            },
+            "lifecycleHistory": [
+            ],
+            "metadata": {
+            },
+            "observations": [
+            ],
+            "schemaVersion": 1
+        },
+        "s4CompositionEncapsulation": {
+            "compositionContracts": [
+            ],
+            "encapsulationPolicies": [
+            ],
+            "lifecycle": {
+                "certification": 0,
+                "done": 0,
+                "iteration": 0,
+                "loop": 1,
+                "structure": 4
+            },
+            "lifecycleHistory": [
+            ],
+            "metadata": {
+            },
+            "observations": [
+            ],
+            "schemaVersion": 1
+        },
+        "s5DecompositionModularity": {
+            "assessments": [
+            ],
+            "decompositionProposals": [
+            ],
+            "lifecycle": {
+                "certification": 0,
+                "done": 0,
+                "iteration": 0,
+                "loop": 1,
+                "structure": 5
+            },
+            "lifecycleHistory": [
+            ],
+            "metadata": {
+            },
+            "modularityPolicies": [
+            ],
+            "observations": [
+            ],
+            "schemaVersion": 1
+        },
+        "s6StructuralEvolutionEnforcement": {
+            "enforcementPolicies": [
+            ],
+            "exemptions": [
+            ],
+            "lifecycle": {
+                "certification": 0,
+                "done": 0,
+                "iteration": 0,
+                "loop": 1,
+                "structure": 6
+            },
+            "lifecycleHistory": [
+            ],
+            "metadata": {
+            },
+            "migrationPlans": [
+            ],
+            "observations": [
+            ],
+            "remediationPlans": [
+            ],
+            "ruleBindings": [
+            ],
+            "schemaVersion": 1,
+            "waivers": [
+            ]
+        }
+    },
+    "templateId": "",
+    "templateModules": [
+    ],
+    "templateState": {
+    },
+    "workerNameSuffix": "",
+    "workflowProgress": {
+        "completedPages": [
+        ]
+    }
 }

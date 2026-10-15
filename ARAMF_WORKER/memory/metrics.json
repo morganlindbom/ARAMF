@@ -1,9 +1,9 @@
 {
     "_file": "metrics.json",
-    "activeEvents": 537,
-    "buildAttempts": 86,
-    "failures": 53,
-    "iterations": 77,
-    "testAttempts": 142,
-    "totalEventsCreated": 350
+    "activeEvents": 721,
+    "buildAttempts": 157,
+    "failures": 108,
+    "iterations": 81,
+    "testAttempts": 214,
+    "totalEventsCreated": 534
 }

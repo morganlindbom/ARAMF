@@ -60,6 +60,8 @@
 #include <QTextStream>
 #include <QTimer>
 #include <QJsonObject>
+#include <QHash>
+#include <QSet>
 #include <algorithm>
 #include <cmath>
 
@@ -320,13 +322,41 @@ int main(int argc, char** argv)
               && componentVersion.toString() == QStringLiteral("0.1.1.0"),
           "component version parses and formats as four-part identity");
     const auto defaultReleaseComponents = ReleaseManagementService::defaultComponents();
+    WorkflowWidget releasePageCatalog;
+    QHash<QString, int> releasePageCounts;
+    for (const auto& component : defaultReleaseComponents) ++releasePageCounts[component.id];
+    bool allWorkflowPagesTrackedOnce = true;
+    for (const auto page : releasePageCatalog.workflowPageIds())
+        allWorkflowPagesTrackedOnce &= releasePageCounts.value(workflowPageKey(page)) == 1;
+    QSet<QString> languageGroupIds;
+    bool languageGroupsUnique = true;
+    for (const auto& group : {EnvironmentCatalog::languageSystems(), EnvironmentCatalog::languageApplication(),
+                              EnvironmentCatalog::languageWeb(), EnvironmentCatalog::languageScripting()})
+        for (const auto& option : group) {
+            languageGroupsUnique &= !languageGroupIds.contains(option.second);
+            languageGroupIds.insert(option.second);
+        }
+    QSet<QString> frameworkGroupIds;
+    bool frameworkGroupsUnique = true;
+    for (const auto& group : {EnvironmentCatalog::frameworkDesktopUi(), EnvironmentCatalog::frameworkWebServer(),
+                              EnvironmentCatalog::frameworkMobile(), EnvironmentCatalog::frameworkEmbeddedDevice(),
+                              EnvironmentCatalog::frameworkDataMl(), EnvironmentCatalog::frameworkGraphicsGame()})
+        for (const auto& option : group) {
+            frameworkGroupsUnique &= !frameworkGroupIds.contains(option.second);
+            frameworkGroupIds.insert(option.second);
+        }
+    const auto allLanguageIds = [&] { QSet<QString> ids; for (const auto& option : EnvironmentCatalog::languages()) ids.insert(option.second); return ids; }();
+    const auto allFrameworkIds = [&] { QSet<QString> ids; for (const auto& option : EnvironmentCatalog::frameworks()) ids.insert(option.second); return ids; }();
+    check(languageGroupsUnique && languageGroupIds == allLanguageIds
+              && frameworkGroupsUnique && frameworkGroupIds == allFrameworkIds,
+          "language and framework child catalogs form complete nonduplicated partitions of the existing catalogs");
     const auto identityComponent = std::find_if(defaultReleaseComponents.cbegin(), defaultReleaseComponents.cend(), [](const ReleaseComponent& component) {
         return component.id == QStringLiteral("project.modules-templates");
     });
     const auto releaseIdentityComponent = std::find_if(defaultReleaseComponents.cbegin(), defaultReleaseComponents.cend(), [](const ReleaseComponent& component) {
         return component.id == QStringLiteral("release.product-version");
     });
-    check(defaultReleaseComponents.size() == 34
+    check(allWorkflowPagesTrackedOnce && defaultReleaseComponents.size() >= 34
               && identityComponent != defaultReleaseComponents.cend()
               && identityComponent->version.toString() == QStringLiteral("0.1.2.0")
               && releaseIdentityComponent != defaultReleaseComponents.cend()
@@ -371,6 +401,32 @@ int main(int argc, char** argv)
               && releaseComponent->version.approvedRelease == 1
               && !reloadedReleaseService.approvalHistory().isEmpty(),
           "component approval and history persist in the app-owned registry");
+    {
+        QFile stateFile(fixture.filePath(QStringLiteral("release-management.json")));
+        QJsonObject legacyState;
+        if (stateFile.openMode() != QIODevice::NotOpen) legacyState = QJsonDocument::fromJson(stateFile.readAll()).object();
+        stateFile.close();
+        if (!legacyState.isEmpty()) {
+            QJsonArray oldComponents;
+            for (const auto& entry : legacyState.value(QStringLiteral("components")).toArray())
+                if (entry.toObject().value(QStringLiteral("id")).toString() != QStringLiteral("project.languages.systems")) oldComponents.append(entry);
+            oldComponents.append(QJsonObject{{QStringLiteral("id"), QStringLiteral("project.retired-page")},
+                {QStringLiteral("displayName"), QStringLiteral("Historical retired page")}, {QStringLiteral("version"), QStringLiteral("0.9.99.7")},
+                {QStringLiteral("releaseRequired"), false}, {QStringLiteral("enabled"), false}});
+            legacyState.insert(QStringLiteral("components"), oldComponents);
+            QFile oldState(fixture.filePath(QStringLiteral("release-management.json")));
+            if (oldState.open(QIODevice::WriteOnly | QIODevice::Truncate)) oldState.write(QJsonDocument(legacyState).toJson());
+            ReleaseManagementService::setStatePathForTests(fixture.filePath(QStringLiteral("release-management.json")));
+            ReleaseManagementService additiveMigration;
+            const auto migratedPage = std::find_if(additiveMigration.components().cbegin(), additiveMigration.components().cend(), [](const ReleaseComponent& entry) { return entry.id == QStringLiteral("project.languages.systems"); });
+            const auto retainedHistory = std::find_if(additiveMigration.components().cbegin(), additiveMigration.components().cend(), [](const ReleaseComponent& entry) { return entry.id == QStringLiteral("project.retired-page"); });
+            check(migratedPage != additiveMigration.components().cend() && retainedHistory != additiveMigration.components().cend()
+                      && retainedHistory->version.toString() == QStringLiteral("0.9.99.7")
+                      && additiveMigration.approvalHistory().size() == legacyState.value(QStringLiteral("approvalHistory")).toArray().size(),
+                  "release registry adds current child pages while preserving unknown historical IDs and approval history");
+            ReleaseManagementService::setStatePathForTests(fixture.filePath(QStringLiteral("release-management.json")));
+        }
+    }
     ProjectModel releaseModel;
     releaseModel.setTargetRelease(1);
     const QString releaseProjectFile = fixture.filePath(QStringLiteral("release-target.aramf.json"));
@@ -829,6 +885,10 @@ int main(int argc, char** argv)
         ProjectModulesTemplatesPage modulesPage(&model, &manager);
         ReviewPage review(&model);
         GeneratePage generate(&model, &setup, &generation);
+        bool hasAcademicProductChoice = false;
+        for (auto* product : generate.findChildren<QCheckBox*>())
+            if (product->property("generationProduct").toString() == QStringLiteral("academic-documents")) hasAcademicProductChoice = true;
+        check(hasAcademicProductChoice, d.id + " Generate exposes Academic Documentation as its own output product");
         // These pages exist before the selection, just as in the production application.
         ProjectLanguagesPage languagePage(&model);
         ProjectFrameworksPage frameworkPage(&model);
@@ -841,10 +901,39 @@ int main(int argc, char** argv)
         for (const auto& box : languagePage.findChildren<QCheckBox*>()) {
             if (box->text() == "Kotlin") check(box->isChecked() == d.capabilities.languages.contains("kotlin"), d.id + " GUI language refresh");
         }
+        if (d.id == QStringLiteral("android-arduino-smart-home")) {
+            auto details = languagePage.findChild<QLineEdit*>(QStringLiteral("capabilityVersion_kotlin"));
+            check(details != nullptr, "selected language exposes optional version metadata");
+            if (details) {
+                details->setText(QStringLiteral("2.1"));
+                QMetaObject::invokeMethod(details, "textEdited", Qt::DirectConnection, Q_ARG(QString, QStringLiteral("2.1")));
+                auto capabilityData = model.developmentCapabilities();
+                capabilityData.languageNotes.insert(QStringLiteral("kotlin"), QStringLiteral("Android application source"));
+                capabilityData.frameworkVersions.insert(QStringLiteral("android-sdk"), QStringLiteral("35"));
+                capabilityData.frameworkNotes.insert(QStringLiteral("android-sdk"), QStringLiteral("Minimum project SDK"));
+                if (!capabilityData.toolchains.isEmpty()) {
+                    capabilityData.toolchainVersions.insert(capabilityData.toolchains.first(), QStringLiteral("13.2"));
+                    capabilityData.toolchainNotes.insert(capabilityData.toolchains.first(), QStringLiteral("ARM cross compiler"));
+                }
+                model.setDevelopmentCapabilities(capabilityData);
+                check(model.developmentCapabilities().languageVersions.value(QStringLiteral("kotlin")) == QStringLiteral("2.1")
+                          && model.developmentCapabilities().languageNotes.value(QStringLiteral("kotlin")) == QStringLiteral("Android application source"),
+                      "selected language version and notes reach Review and Generate model data");
+            }
+        }
         check(TemplateValidation::readiness(model).isEmpty(), d.id + " readiness without page visits");
         check(review.findChild<QPlainTextEdit*>()->toPlainText().contains("READY"), d.id + " Review ready");
         generate.findChild<QPushButton*>("saveAndGenerate")->click();
         check(generate.findChild<QPlainTextEdit*>()->toPlainText().contains("Generate: PASS"), d.id + " production Save & Generate click: " + generate.findChild<QPlainTextEdit*>()->toPlainText().left(240));
+        if (d.id == QStringLiteral("android-arduino-smart-home")) {
+            QFile platformFile(QDir(root).filePath(QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json")));
+            QJsonObject platformMetadata;
+            if (platformFile.open(QIODevice::ReadOnly)) platformMetadata = QJsonDocument::fromJson(platformFile.readAll()).object();
+            check(platformMetadata.value(QStringLiteral("languageVersions")).toObject().value(QStringLiteral("kotlin")).toString() == QStringLiteral("2.1")
+                      && platformMetadata.value(QStringLiteral("frameworkNotes")).toObject().value(QStringLiteral("android-sdk")).toString() == QStringLiteral("Minimum project SDK")
+                      && !platformMetadata.value(QStringLiteral("toolchainVersions")).toObject().isEmpty(),
+                  "Generate consumes language, framework, and toolchain versions and notes");
+        }
         auto verified = verification.verify(model, model.generationOptions());
         QStringList verificationFailures;
         for (const auto& item : verified.checks) if (item.status == VerificationStatus::Fail) verificationFailures << item.id + ":" + item.details;
@@ -1584,6 +1673,67 @@ int main(int argc, char** argv)
                   QStringLiteral("Build and delivery"));
     check(academicStack && dynamic_cast<ProjectBuildDeliveryPage*>(academicStack->currentWidget()),
           "toolchain child opens its dedicated controls");
+    checkOverview(WorkflowPageId::Languages, 4, WorkflowPageId::LanguageSystems,
+                  QStringLiteral("Languages"));
+    checkOverview(WorkflowPageId::Frameworks, 6, WorkflowPageId::FrameworkDesktopUi,
+                  QStringLiteral("Frameworks and SDKs"));
+    for (const auto child : {WorkflowPageId::LanguageSystems, WorkflowPageId::LanguageApplication,
+                             WorkflowPageId::LanguageWeb, WorkflowPageId::LanguageScripting,
+                             WorkflowPageId::FrameworkDesktopUi, WorkflowPageId::FrameworkWebServer,
+                             WorkflowPageId::FrameworkMobile, WorkflowPageId::FrameworkEmbeddedDevice,
+                             WorkflowPageId::FrameworkDataMl, WorkflowPageId::FrameworkGraphicsGame}) {
+        academicWorkflow->setCurrentPage(child);
+        QApplication::processEvents();
+        const bool languageChild = child == WorkflowPageId::LanguageSystems || child == WorkflowPageId::LanguageApplication
+            || child == WorkflowPageId::LanguageWeb || child == WorkflowPageId::LanguageScripting;
+        check(academicWorkflow->currentPage() == child && academicStack && academicStack->currentWidget()
+                  && (languageChild ? dynamic_cast<ProjectLanguagesPage*>(academicStack->currentWidget()) != nullptr
+                                    : dynamic_cast<ProjectFrameworksPage*>(academicStack->currentWidget()) != nullptr),
+              QStringLiteral("specific Languages / Frameworks child route resolves: ") + workflowPageKey(child));
+    }
+    ProjectModel groupedCatalogModel;
+    ProjectLanguagesPage systemsCatalog(&groupedCatalogModel, nullptr, EnvironmentCatalog::languageSystems(),
+        {QStringLiteral("cpp"), QStringLiteral("c"), QStringLiteral("java"), QStringLiteral("kotlin"), QStringLiteral("csharp"), QStringLiteral("rust"), QStringLiteral("go"), QStringLiteral("swift"), QStringLiteral("assembly"), QStringLiteral("pio-assembly"), QStringLiteral("zig"), QStringLiteral("objective-c")});
+    ProjectLanguagesPage webCatalog(&groupedCatalogModel, nullptr, EnvironmentCatalog::languageWeb(),
+        {QStringLiteral("javascript"), QStringLiteral("typescript"), QStringLiteral("html"), QStringLiteral("css")});
+    const auto chooseCapability = [](QWidget& page, const QString& id) {
+        for (auto* box : page.findChildren<QCheckBox*>())
+            if (box->property("capabilityId").toString() == id) { if (!box->isChecked()) box->click(); return true; }
+        return false;
+    };
+    const bool selectedCpp = chooseCapability(systemsCatalog, QStringLiteral("cpp"));
+    const bool selectedJs = chooseCapability(webCatalog, QStringLiteral("javascript"));
+    check(selectedCpp && selectedJs && groupedCatalogModel.developmentCapabilities().languages.contains(QStringLiteral("cpp"))
+              && groupedCatalogModel.developmentCapabilities().languages.contains(QStringLiteral("javascript")),
+          "language child pages merge their own choices without clearing sibling selections");
+    ProjectLanguagesPage applicationCatalog(&groupedCatalogModel, nullptr, EnvironmentCatalog::languageApplication(),
+        {QStringLiteral("python"), QStringLiteral("sql"), QStringLiteral("dart"), QStringLiteral("php"), QStringLiteral("custom")});
+    const bool customLanguageSelected = chooseCapability(applicationCatalog, QStringLiteral("custom"));
+    if (auto* customEntry = applicationCatalog.findChild<QLineEdit*>()) customEntry->setText(QStringLiteral("MyDSL"));
+    check(customLanguageSelected && groupedCatalogModel.developmentCapabilities().languages.contains(QStringLiteral("custom:MyDSL")),
+          "grouped application languages retain usable custom entries");
+    ProjectFrameworksPage desktopCatalog(&groupedCatalogModel, nullptr, EnvironmentCatalog::frameworkDesktopUi(),
+        {QStringLiteral("qt"), QStringLiteral("wxwidgets"), QStringLiteral("gtk"), QStringLiteral("dotnet"), QStringLiteral("winui"), QStringLiteral("custom")});
+    const bool customFrameworkSelected = chooseCapability(desktopCatalog, QStringLiteral("custom"));
+    if (auto* customEntry = desktopCatalog.findChild<QLineEdit*>()) customEntry->setText(QStringLiteral("MyUI"));
+    check(customFrameworkSelected && groupedCatalogModel.developmentCapabilities().frameworks.contains(QStringLiteral("custom:MyUI")),
+          "grouped framework pages retain usable custom entries");
+    auto groupedDetails = groupedCatalogModel.developmentCapabilities();
+    groupedDetails.languageVersions.insert(QStringLiteral("cpp"), QStringLiteral("23"));
+    groupedDetails.languageNotes.insert(QStringLiteral("cpp"), QStringLiteral("Native core"));
+    groupedDetails.frameworkVersions.insert(QStringLiteral("custom:MyUI"), QStringLiteral("5.0"));
+    groupedDetails.frameworkNotes.insert(QStringLiteral("custom:MyUI"), QStringLiteral("Internal toolkit"));
+    groupedDetails.toolchains = {QStringLiteral("gcc")};
+    groupedDetails.toolchainVersions.insert(QStringLiteral("gcc"), QStringLiteral("14"));
+    groupedDetails.toolchainNotes.insert(QStringLiteral("gcc"), QStringLiteral("CI compiler"));
+    groupedCatalogModel.setDevelopmentCapabilities(groupedDetails);
+    const QString groupedSave = fixture.filePath(QStringLiteral("grouped-capabilities.aramf.json"));
+    check(persistence.save(groupedCatalogModel, groupedSave), "save grouped selections and optional detail metadata");
+    ProjectModel groupedReload;
+    check(persistence.load(&groupedReload, groupedSave)
+              && persistence.configuration(groupedReload) == persistence.configuration(groupedCatalogModel)
+              && groupedReload.developmentCapabilities().toolchainVersions.value(QStringLiteral("gcc")) == QStringLiteral("14"),
+          "grouped custom entries and language/framework/toolchain details survive save-close-reopen");
     academicWindow.close();
 
     ProjectModel sectionModel;
@@ -1691,6 +1841,22 @@ int main(int argc, char** argv)
         }
     }
     check(variants == QSet<QString>{"thesis-en", "thesis-sv", "report-en", "report-sv"}, "both documents have distinct Swedish and English variants");
+    QString academicDraftPath;
+    for (const auto& file : languageGeneration.generatedFiles) {
+        if (file.contains(QStringLiteral("/Thesis/")) && file.endsWith(QStringLiteral(".md"))) {
+            academicDraftPath = file;
+            break;
+        }
+    }
+    QFile academicDraft(QDir(languageModel.projectPath()).filePath(academicDraftPath));
+    QByteArray academicDraftContent;
+    if (academicDraft.open(QIODevice::ReadOnly)) academicDraftContent = academicDraft.readAll();
+    academicDraft.close();
+    check(!academicDraftPath.isEmpty() && academicDraftContent.contains("DRAFT SCAFFOLD")
+              && academicDraftContent.contains("Language:") && academicDraftContent.contains("Variant ID:")
+              && academicDraftContent.contains("Template ID:")
+              && QFileInfo(QDir(languageModel.projectPath()).filePath(academicDraftPath)).suffix() == QStringLiteral("md"),
+          "generation writes editable academic drafts with a clear scaffold marker, language, variant ID, and provenance");
     QFile languageRules(QDir(languageModel.projectPath()).filePath("ARAMF_WORKER/AGENTS.md"));
     check(languageRules.open(QIODevice::ReadOnly) && languageRules.readAll().contains("do not combine languages into one bilingual document"), "generated rules require separate versions");
     languageRules.close(); // Release the Windows handle before atomic regeneration.
@@ -1725,6 +1891,16 @@ int main(int argc, char** argv)
                   && !document.contains("sections"), "both custom Thesis variants preserve source provenance without injecting default structure");
     }
     check(DocumentTemplateInspector::inspect(customResource).contentHash == inspectedMarkdown.contentHash, "language generation leaves the original custom source untouched");
+    for (const auto& file : languageGeneration.generatedFiles) {
+        if (!file.contains(QStringLiteral("/Thesis/")) || !file.endsWith(QStringLiteral(".md"))) continue;
+        QFile authoredScaffold(QDir(languageModel.projectPath()).filePath(file));
+        if (authoredScaffold.open(QIODevice::ReadOnly)) {
+            const auto scaffold = authoredScaffold.readAll();
+            check(scaffold.contains("## Introduction") && scaffold.contains("#### Evidence"),
+                  "safely parsed custom template headings are retained in the editable scaffold");
+            break;
+        }
+    }
     auto legacyLanguageJson = persistence.toJson(languageModel);
     auto legacyLanguage = legacyLanguageJson.value("academic").toObject();
     legacyLanguage.remove("academicLanguages");
@@ -1748,6 +1924,72 @@ int main(int argc, char** argv)
         languageModel.academicConfiguration().documentLanguages(), languageModel.academicConfiguration().documentLanguages());
     for (const auto& entry : disabledManifest.value("documents").toArray())
         if (entry.toObject().value("documentType").toString() == "report") check(!entry.toObject().value("enabled").toBool(), "disabled Report has no active language variants");
+
+    if (!academicDraftPath.isEmpty()) {
+        QFile editedDraft(QDir(languageModel.projectPath()).filePath(academicDraftPath));
+        if (editedDraft.open(QIODevice::WriteOnly | QIODevice::Truncate)) editedDraft.write("Student-authored content\n");
+        editedDraft.close();
+        const auto editedVerification = verification.verify(languageReloaded, languageReloaded.generationOptions());
+        bool staleFound = false;
+        for (const auto& item : editedVerification.checks)
+            if (item.id == QStringLiteral("academic-documents") && item.status == VerificationStatus::Fail) staleFound = true;
+        check(staleFound, "Verify detects stale edits to generated academic drafts");
+
+        auto docsOnlyOptions = languageReloaded.generationOptions();
+        docsOnlyOptions.generateAgentRules = false;
+        docsOnlyOptions.generateRouting = false;
+        docsOnlyOptions.generatePlatforms = false;
+        docsOnlyOptions.generateResources = false;
+        docsOnlyOptions.generateMemory = false;
+        docsOnlyOptions.generateProvenance = false;
+        docsOnlyOptions.generateAcademicDocuments = true;
+        languageReloaded.setGenerationOptions(docsOnlyOptions);
+        const auto docsOnlyResult = generation.regenerateConfiguration(languageReloaded, docsOnlyOptions);
+        check(docsOnlyResult.success && docsOnlyResult.generatedFiles.contains(QStringLiteral("ARAMF_WORKER/documentation/documentation-manifest.json")),
+              "Academic drafts generate independently when AGENTS and rules output is disabled: " + docsOnlyResult.error);
+        QFile preservedDraft(QDir(languageModel.projectPath()).filePath(academicDraftPath));
+        check(preservedDraft.open(QIODevice::ReadOnly) && preservedDraft.readAll().contains("Student-authored content"),
+              "modified author document remains intact when generation finds an overwrite conflict");
+        bool conflictScaffoldFound = false;
+        for (const auto& file : docsOnlyResult.generatedFiles) if (file.contains(QStringLiteral("ARAMF-conflict"))) conflictScaffoldFound = true;
+        check(conflictScaffoldFound, "overwrite conflict creates an explicit separate draft path");
+        const auto docsOnlyVerification = verification.verify(languageReloaded, docsOnlyOptions);
+        bool docsPass = false;
+        for (const auto& item : docsOnlyVerification.checks)
+            if (item.id == QStringLiteral("academic-documents") && item.status == VerificationStatus::Pass) docsPass = true;
+        check(docsPass, "Academic draft verification works without AGENTS/rules generation");
+
+        QFile opaqueSource(fixture.filePath(QStringLiteral("opaque-report-template.xyz")));
+        if (opaqueSource.open(QIODevice::WriteOnly)) opaqueSource.write("Opaque custom template bytes");
+        opaqueSource.close();
+        ProjectResource opaqueResource;
+        opaqueResource.id = QStringLiteral("opaque-report-template");
+        opaqueResource.role = QStringLiteral("report-template");
+        opaqueResource.location = opaqueSource.fileName();
+        opaqueResource.enabled = true;
+        auto resourcesWithOpaqueSource = languageReloaded.resources();
+        resourcesWithOpaqueSource << opaqueResource;
+        languageReloaded.setResources(resourcesWithOpaqueSource);
+        auto opaqueAcademic = languageReloaded.academicConfiguration();
+        opaqueAcademic.reportDocumentation.templateMode = QStringLiteral("source");
+        opaqueAcademic.reportDocumentation.templateSourceId = opaqueResource.id;
+        languageReloaded.setAcademicConfiguration(opaqueAcademic);
+        const auto opaqueGeneration = generation.regenerateConfiguration(languageReloaded, docsOnlyOptions);
+        check(opaqueGeneration.success && std::any_of(opaqueGeneration.warnings.cbegin(), opaqueGeneration.warnings.cend(), [](const QString& warning) {
+                  return warning.contains(QStringLiteral("cannot be transformed"));
+              }), "unrecognized custom formats retain provenance and report scaffold limitation clearly");
+        QFile opaqueManifestFile(QDir(languageModel.projectPath()).filePath(QStringLiteral("ARAMF_WORKER/documentation/documentation-manifest.json")));
+        QJsonObject opaqueManifest;
+        if (opaqueManifestFile.open(QIODevice::ReadOnly)) opaqueManifest = QJsonDocument::fromJson(opaqueManifestFile.readAll()).object();
+        bool opaqueProvenanceKept = false;
+        for (const auto& item : opaqueManifest.value(QStringLiteral("documents")).toArray()) {
+            const auto document = item.toObject();
+            if (document.value(QStringLiteral("documentType")) == QStringLiteral("report"))
+                opaqueProvenanceKept = document.value(QStringLiteral("sourceId")).toString() == opaqueResource.id
+                    && document.value(QStringLiteral("validationState")).toString() == QStringLiteral("provenance-only-source");
+        }
+        check(opaqueProvenanceKept, "custom source provenance remains attached to generated report scaffold");
+    }
     languagePage.close();
 
     audit.insert("validation", QJsonObject{{"checks", checks}, {"failures", failures}, {"catalogFingerprint", TemplateValidation::catalogFingerprint()}});

@@ -201,7 +201,17 @@ void WorkflowWidget::setStepCount(int)
             {QStringLiteral("2.4"), tr("Standards & languages"), WorkflowPageId::AcademicStandards, 2},
             {QStringLiteral("2.5"), tr("Requirements & deliverables"), WorkflowPageId::AcademicDeliverables, 2},
             {QStringLiteral("3"), tr("Which languages are used?"), WorkflowPageId::Languages, 1},
+            {QStringLiteral("3.1"), tr("Systems languages"), WorkflowPageId::LanguageSystems, 2},
+            {QStringLiteral("3.2"), tr("Application & data languages"), WorkflowPageId::LanguageApplication, 2},
+            {QStringLiteral("3.3"), tr("Web languages"), WorkflowPageId::LanguageWeb, 2},
+            {QStringLiteral("3.4"), tr("Scripting languages"), WorkflowPageId::LanguageScripting, 2},
             {QStringLiteral("4"), tr("Which frameworks / SDKs are used?"), WorkflowPageId::Frameworks, 1},
+            {QStringLiteral("4.1"), tr("Desktop & UI frameworks"), WorkflowPageId::FrameworkDesktopUi, 2},
+            {QStringLiteral("4.2"), tr("Web & server frameworks"), WorkflowPageId::FrameworkWebServer, 2},
+            {QStringLiteral("4.3"), tr("Mobile frameworks & SDKs"), WorkflowPageId::FrameworkMobile, 2},
+            {QStringLiteral("4.4"), tr("Embedded & device frameworks"), WorkflowPageId::FrameworkEmbeddedDevice, 2},
+            {QStringLiteral("4.5"), tr("Data & ML frameworks"), WorkflowPageId::FrameworkDataMl, 2},
+            {QStringLiteral("4.6"), tr("Graphics & game frameworks"), WorkflowPageId::FrameworkGraphicsGame, 2},
             {QStringLiteral("5"), tr("Which development tools are used?"), WorkflowPageId::DevelopmentTools, 1},
             {QStringLiteral("5.1"), tr("IDE & editors"), WorkflowPageId::DevelopmentToolsIde, 2},
             {QStringLiteral("5.2"), tr("Version control"), WorkflowPageId::DevelopmentToolsVersionControl, 2},
@@ -241,15 +251,15 @@ void WorkflowWidget::setStepCount(int)
             {QStringLiteral("20.4"), tr("Release readiness"), WorkflowPageId::ReleaseReadiness, 2},
             {QStringLiteral("20.5"), tr("Approval & release history"), WorkflowPageId::ApprovalHistory, 2}}},
         {tr("GENERATE"), {
-            {QStringLiteral("26"), tr("Review"), WorkflowPageId::Review, 1},
-            {QStringLiteral("27"), tr("Generate"), WorkflowPageId::Generate, 1},
-            {QStringLiteral("28"), tr("Verify"), WorkflowPageId::Verify, 1},
-            {QStringLiteral("29"), tr("Finalize"), WorkflowPageId::Finalize, 1}}},
+            {QStringLiteral("21"), tr("Review"), WorkflowPageId::Review, 1},
+            {QStringLiteral("22"), tr("Generate"), WorkflowPageId::Generate, 1},
+            {QStringLiteral("23"), tr("Verify"), WorkflowPageId::Verify, 1},
+            {QStringLiteral("24"), tr("Finalize"), WorkflowPageId::Finalize, 1}}},
         {tr("UPDATE"), {
-            {QStringLiteral("30"), tr("Review Framework Knowledge"), WorkflowPageId::UpdateReview, 1},
-            {QStringLiteral("31"), tr("Apply Framework Knowledge"), WorkflowPageId::UpdateApply, 1},
-            {QStringLiteral("32"), tr("Update complete ARAMF"), WorkflowPageId::UpdateConfiguration, 1},
-            {QStringLiteral("33"), tr("ARAMF Improvement Backlog"), WorkflowPageId::ImprovementBacklog, 1}}}
+            {QStringLiteral("25"), tr("Review Framework Knowledge"), WorkflowPageId::UpdateReview, 1},
+            {QStringLiteral("26"), tr("Apply Framework Knowledge"), WorkflowPageId::UpdateApply, 1},
+            {QStringLiteral("27"), tr("Update complete ARAMF"), WorkflowPageId::UpdateConfiguration, 1},
+            {QStringLiteral("28"), tr("ARAMF Improvement Backlog"), WorkflowPageId::ImprovementBacklog, 1}}}
     };
     for (const auto& group : groups) {
         auto* heading = new QListWidgetItem(group.first, steps_);
@@ -277,6 +287,13 @@ void WorkflowWidget::setStepCount(int)
                            {WorkflowPageId::AcademicDocumentation, WorkflowPageId::AcademicResearch,
                             WorkflowPageId::AcademicInformation, WorkflowPageId::AcademicStandards,
                             WorkflowPageId::AcademicDeliverables});
+    parentChildren_.insert(WorkflowPageId::Languages,
+                           {WorkflowPageId::LanguageSystems, WorkflowPageId::LanguageApplication,
+                            WorkflowPageId::LanguageWeb, WorkflowPageId::LanguageScripting});
+    parentChildren_.insert(WorkflowPageId::Frameworks,
+                           {WorkflowPageId::FrameworkDesktopUi, WorkflowPageId::FrameworkWebServer,
+                            WorkflowPageId::FrameworkMobile, WorkflowPageId::FrameworkEmbeddedDevice,
+                            WorkflowPageId::FrameworkDataMl, WorkflowPageId::FrameworkGraphicsGame});
     parentChildren_.insert(WorkflowPageId::DevelopmentTools,
                            {WorkflowPageId::DevelopmentToolsIde, WorkflowPageId::DevelopmentToolsVersionControl,
                             WorkflowPageId::DevelopmentToolsSupport});

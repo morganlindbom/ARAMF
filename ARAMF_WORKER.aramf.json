@@ -303,6 +303,10 @@
             "debugger",
             "memory-analysis"
         ],
+        "frameworkNotes": {
+        },
+        "frameworkVersions": {
+        },
         "frameworks": [
             "qt"
         ],
@@ -314,6 +318,10 @@
         "ides": [
             "visual-studio-code"
         ],
+        "languageNotes": {
+        },
+        "languageVersions": {
+        },
         "languages": [
             "cpp"
         ],
@@ -337,6 +345,10 @@
             "integration-testing",
             "e2e-testing"
         ],
+        "toolchainNotes": {
+        },
+        "toolchainVersions": {
+        },
         "toolchains": [
             "msys2-ucrt64-gcc"
         ],
@@ -387,6 +399,7 @@
         "versionControl": "none"
     },
     "generationOptions": {
+        "academicDocuments": true,
         "agentRules": true,
         "memory": true,
         "platforms": true,
@@ -470,7 +483,13 @@
     "options": {
     },
     "processVersion": {
-        "active": null,
+        "active": {
+            "certification": 0,
+            "done": 0,
+            "iteration": 1,
+            "loop": 1,
+            "process": 6
+        },
         "completedHistory": [
             {
                 "certification": 1,
@@ -614,7 +633,7 @@
             "done": 0,
             "iteration": 0,
             "loop": 1,
-            "process": 6
+            "process": 7
         },
         "structureHistory": [
             {
@@ -973,11 +992,14 @@
                     "src/core/CertificationFreshness.cpp",
                     "src/core/CertificationRevalidation.cpp",
                     "src/core/CertificationRevalidation.h",
+                    "src/core/ComponentVersion.cpp",
                     "src/core/ConfigurationUpdateService.cpp",
                     "src/core/ConfigurationUpdateService.h",
                     "src/core/ContextCoordinationService.cpp",
                     "src/core/DocumentTemplate.cpp",
                     "src/core/DocumentTemplate.h",
+                    "src/core/EnvironmentCatalog.cpp",
+                    "src/core/EnvironmentCatalog.h",
                     "src/core/FoundationCertificationCampaign.cpp",
                     "src/core/FoundationCertificationCampaign.h",
                     "src/core/FoundationProjectValidation.cpp",
@@ -997,11 +1019,13 @@
                     "src/core/Services.h",
                     "src/core/TemplateManager.cpp",
                     "src/core/TemplateValidation.cpp",
+                    "src/core/UpdateService.cpp",
                     "src/core/WorkerContextResolver.cpp",
                     "src/core/WorkerContextResolver.h",
                     "src/core/WorkerTaskServices.cpp",
                     "src/core/WorkerTaskServices.h",
                     "src/core/WorkflowPageMetadata.cpp",
+                    "src/core/WorkflowPageMetadata.h",
                     "src/foundations/F1/EvidenceStorage.cpp",
                     "src/foundations/F1/EvidenceStorage.h",
                     "src/foundations/F1/MemoryEvidenceFoundation.cpp",
@@ -1020,20 +1044,81 @@
                     "src/processes/P6/CodeBankVerification.cpp",
                     "src/ui/mainwindow/MainWindow.cpp",
                     "src/ui/mainwindow/MainWindow.h",
+                    "src/ui/shared/CapabilityCatalogPage.cpp",
+                    "src/ui/shared/CapabilityCatalogPage.h",
+                    "src/ui/shared/CapabilityCheckGroup.cpp",
+                    "src/ui/shared/CapabilityCheckGroup.h",
                     "src/ui/workflow/WorkflowPageId.h",
                     "src/ui/workflow/WorkflowWidget.cpp",
+                    "src/ui/workflow/WorkflowWidget.h",
                     "src/ui/workflows/ai/autonomy/AiAutonomyPage.cpp",
+                    "src/ui/workflows/output/generate/GeneratePage.cpp",
+                    "src/ui/workflows/output/generate/GeneratePage.h",
                     "src/ui/workflows/output/review/ReviewPage.cpp",
                     "src/ui/workflows/project/academic/ProjectAcademicPage.cpp",
                     "src/ui/workflows/project/academic/ProjectAcademicPage.h",
+                    "src/ui/workflows/project/academic/deliverables/ProjectAcademicDeliverablesPage.cpp",
+                    "src/ui/workflows/project/academic/deliverables/ProjectAcademicDeliverablesPage.h",
+                    "src/ui/workflows/project/academic/documentation/ProjectAcademicDocumentationPage.cpp",
+                    "src/ui/workflows/project/academic/documentation/ProjectAcademicDocumentationPage.h",
+                    "src/ui/workflows/project/academic/information/ProjectAcademicInformationPage.cpp",
+                    "src/ui/workflows/project/academic/information/ProjectAcademicInformationPage.h",
+                    "src/ui/workflows/project/academic/research/ProjectAcademicResearchPage.cpp",
+                    "src/ui/workflows/project/academic/research/ProjectAcademicResearchPage.h",
+                    "src/ui/workflows/project/academic/standards/ProjectAcademicStandardsPage.cpp",
+                    "src/ui/workflows/project/academic/standards/ProjectAcademicStandardsPage.h",
                     "src/ui/workflows/project/builddelivery/ProjectBuildDeliveryPage.cpp",
                     "src/ui/workflows/project/builddelivery/ProjectBuildDeliveryPage.h",
+                    "src/ui/workflows/project/builddelivery/automation/ProjectBuildDeliveryAutomationPage.cpp",
+                    "src/ui/workflows/project/builddelivery/automation/ProjectBuildDeliveryAutomationPage.h",
+                    "src/ui/workflows/project/builddelivery/buildsystems/ProjectBuildDeliveryBuildSystemsPage.cpp",
+                    "src/ui/workflows/project/builddelivery/buildsystems/ProjectBuildDeliveryBuildSystemsPage.h",
+                    "src/ui/workflows/project/builddelivery/testing/ProjectBuildDeliveryTestingPage.cpp",
+                    "src/ui/workflows/project/builddelivery/testing/ProjectBuildDeliveryTestingPage.h",
+                    "src/ui/workflows/project/builddelivery/toolchains/ProjectBuildDeliveryToolchainsPage.cpp",
+                    "src/ui/workflows/project/builddelivery/toolchains/ProjectBuildDeliveryToolchainsPage.h",
                     "src/ui/workflows/project/developmenttools/ProjectDevelopmentToolsPage.cpp",
                     "src/ui/workflows/project/developmenttools/ProjectDevelopmentToolsPage.h",
+                    "src/ui/workflows/project/developmenttools/ide/ProjectDevelopmentToolsIdePage.cpp",
+                    "src/ui/workflows/project/developmenttools/ide/ProjectDevelopmentToolsIdePage.h",
+                    "src/ui/workflows/project/developmenttools/support/ProjectDevelopmentToolsSupportPage.cpp",
+                    "src/ui/workflows/project/developmenttools/support/ProjectDevelopmentToolsSupportPage.h",
+                    "src/ui/workflows/project/developmenttools/versioncontrol/ProjectDevelopmentToolsVersionControlPage.cpp",
+                    "src/ui/workflows/project/developmenttools/versioncontrol/ProjectDevelopmentToolsVersionControlPage.h",
+                    "src/ui/workflows/project/frameworks/dataml/ProjectFrameworkDataMlPage.cpp",
+                    "src/ui/workflows/project/frameworks/dataml/ProjectFrameworkDataMlPage.h",
+                    "src/ui/workflows/project/frameworks/desktop/ProjectFrameworkDesktopPage.cpp",
+                    "src/ui/workflows/project/frameworks/desktop/ProjectFrameworkDesktopPage.h",
+                    "src/ui/workflows/project/frameworks/embedded/ProjectFrameworkEmbeddedPage.cpp",
+                    "src/ui/workflows/project/frameworks/embedded/ProjectFrameworkEmbeddedPage.h",
+                    "src/ui/workflows/project/frameworks/graphicsgame/ProjectFrameworkGraphicsGamePage.cpp",
+                    "src/ui/workflows/project/frameworks/graphicsgame/ProjectFrameworkGraphicsGamePage.h",
+                    "src/ui/workflows/project/frameworks/mobile/ProjectFrameworkMobilePage.cpp",
+                    "src/ui/workflows/project/frameworks/mobile/ProjectFrameworkMobilePage.h",
+                    "src/ui/workflows/project/frameworks/webserver/ProjectFrameworkWebServerPage.cpp",
+                    "src/ui/workflows/project/frameworks/webserver/ProjectFrameworkWebServerPage.h",
                     "src/ui/workflows/project/hardwarearchitecture/ProjectHardwareArchitecturePage.cpp",
                     "src/ui/workflows/project/hardwarearchitecture/ProjectHardwareArchitecturePage.h",
+                    "src/ui/workflows/project/hardwarearchitecture/architectures/ProjectHardwareArchitecturesPage.cpp",
+                    "src/ui/workflows/project/hardwarearchitecture/architectures/ProjectHardwareArchitecturesPage.h",
+                    "src/ui/workflows/project/hardwarearchitecture/processors/ProjectHardwareProcessorsPage.cpp",
+                    "src/ui/workflows/project/hardwarearchitecture/processors/ProjectHardwareProcessorsPage.h",
+                    "src/ui/workflows/project/hardwarearchitecture/targets/ProjectHardwareTargetsPage.cpp",
+                    "src/ui/workflows/project/hardwarearchitecture/targets/ProjectHardwareTargetsPage.h",
+                    "src/ui/workflows/project/languages/application/ProjectLanguageApplicationPage.cpp",
+                    "src/ui/workflows/project/languages/application/ProjectLanguageApplicationPage.h",
+                    "src/ui/workflows/project/languages/scripting/ProjectLanguageScriptingPage.cpp",
+                    "src/ui/workflows/project/languages/scripting/ProjectLanguageScriptingPage.h",
+                    "src/ui/workflows/project/languages/systems/ProjectLanguageSystemsPage.cpp",
+                    "src/ui/workflows/project/languages/systems/ProjectLanguageSystemsPage.h",
+                    "src/ui/workflows/project/languages/web/ProjectLanguageWebPage.cpp",
+                    "src/ui/workflows/project/languages/web/ProjectLanguageWebPage.h",
                     "src/ui/workflows/project/platforms/ProjectPlatformsPage.cpp",
                     "src/ui/workflows/project/platforms/ProjectPlatformsPage.h",
+                    "src/ui/workflows/project/platforms/hosts/ProjectPlatformsHostsPage.cpp",
+                    "src/ui/workflows/project/platforms/hosts/ProjectPlatformsHostsPage.h",
+                    "src/ui/workflows/project/platforms/targets/ProjectPlatformsTargetsPage.cpp",
+                    "src/ui/workflows/project/platforms/targets/ProjectPlatformsTargetsPage.h",
                     "src/ui/workflows/project/setup/ProjectSetupPage.cpp"
                 ],
                 "folderResourcePolicies": {
@@ -1057,6 +1142,226 @@
                     "ARAMF_WORKER/verification/latest-validation.json",
                     "ARAMF_WORKER/verification/verification-result.json"
                 ],
+                "p6CodeBankRequirements": {
+                    "baselineId": "P6-CODEBANK-REQ-1",
+                    "contract": {
+                        "dependencies": [
+                            "F1",
+                            "F2",
+                            "F3",
+                            "F4",
+                            "P1",
+                            "P2",
+                            "P3",
+                            "P4",
+                            "P5"
+                        ],
+                        "evidence": "Retain actual raw validator reports and provenance durably with immutable identifiers; use existing F1 physical audit adapter without changing Foundation ownership",
+                        "interfaces": [
+                            "ingest",
+                            "inspect",
+                            "list",
+                            "validate",
+                            "review",
+                            "promote",
+                            "reject",
+                            "revoke",
+                            "verifyEvidence",
+                            "authorizeReuse"
+                        ],
+                        "lifecycle": "External P6 coordinator composes Foundation predicates and F4 public lifecycle; current prerequisite acceptance then measured HOST_TEST certification then completion",
+                        "ownership": "P6 owns project-local bank material and immutable revision state; canonical project identity and exact task grants govern all access",
+                        "storage": {
+                            "format": "versioned-json-and-raw-bytes",
+                            "identity": "UUID-and-immutable-revision-ordinal",
+                            "integrity": "SHA256",
+                            "root": "ARAMF_WORKER/code-bank"
+                        }
+                    },
+                    "criteria": [
+                        {
+                            "id": "P6-01",
+                            "requirement": "Stable project bank artifact revision and owner identity; resolve the acting principal and role from authoritative bindings and reject missing or forged identity",
+                            "testCases": [
+                                "forged-actor",
+                                "identity-roundtrip",
+                                "missing-actor",
+                                "wrong-owner"
+                            ]
+                        },
+                        {
+                            "id": "P6-02",
+                            "requirement": "Every content read mutation review and reuse requires exact action revision project scope and resource authorization; listing binds an exact project bank index revision and returns only individually authorized revision bindings; reject expired revoked foreign or altered grants and path escapes",
+                            "testCases": [
+                                "altered-grant",
+                                "authorized-action",
+                                "expired-grant",
+                                "foreign-project",
+                                "linked-escape",
+                                "revoked-grant",
+                                "scope-mismatch",
+                                "stranger-action",
+                                "traversal"
+                            ]
+                        },
+                        {
+                            "id": "P6-03",
+                            "requirement": "Ingest exact raw bytes with origin revision digest actor and timestamp; reject incomplete provenance source drift and conflicting identities; never execute ingested content",
+                            "testCases": [
+                                "content-never-executed",
+                                "duplicate-identity",
+                                "exact-byte-ingestion",
+                                "incomplete-provenance",
+                                "source-race"
+                            ]
+                        },
+                        {
+                            "id": "P6-04",
+                            "requirement": "Run declared fixed validators and retain measured results; review binds the exact revision criteria and evidence; caller PASS missing checks failed checks and stale reviews cannot promote",
+                            "testCases": [
+                                "caller-pass-rejected",
+                                "failed-check",
+                                "measured-validation",
+                                "missing-check",
+                                "stale-review"
+                            ]
+                        },
+                        {
+                            "id": "P6-05",
+                            "requirement": "Permit only declared ingested validated reviewed promoted transitions and explicit rejection revocation or supersession; retain immutable previous revisions and append-only transition history",
+                            "testCases": [
+                                "illegal-transitions",
+                                "legal-transitions",
+                                "rejected-history",
+                                "revoked-history",
+                                "superseded-history"
+                            ]
+                        },
+                        {
+                            "id": "P6-06",
+                            "requirement": "Persist versioned schema stable UUIDs revision ordinals and raw bytes across process restart using locking and create-only records; reject replay unsupported schemas corruption and incomplete writes while preserving evidence",
+                            "testCases": [
+                                "concurrent-write",
+                                "interrupted-write",
+                                "replay",
+                                "restart-roundtrip",
+                                "retained-corruption",
+                                "schema-rejection"
+                            ]
+                        },
+                        {
+                            "id": "P6-07",
+                            "requirement": "Bind raw content metadata authoritative requirements and dependencies with SHA256; detect missing duplicated conflicting or altered records and evidence",
+                            "testCases": [
+                                "conflicting-record",
+                                "content-tamper",
+                                "duplicate-record",
+                                "evidence-tamper",
+                                "metadata-tamper",
+                                "missing-record"
+                            ]
+                        },
+                        {
+                            "id": "P6-08",
+                            "requirement": "Compatibility requires exact declared language toolchain interface and dependency bindings; missing incompatible ambiguous or cyclic bindings fail without guessed version-range compatibility",
+                            "testCases": [
+                                "dependency-cycle",
+                                "dependency-mismatch",
+                                "exact-compatibility",
+                                "interface-mismatch",
+                                "language-mismatch",
+                                "missing-dependency",
+                                "toolchain-mismatch"
+                            ]
+                        },
+                        {
+                            "id": "P6-09",
+                            "requirement": "Store indexed durable evidence by artifact and revision; retrieve after restart and independently rehash every evidence artifact before reuse; retain failed attempts and reject stale deleted tampered or foreign evidence",
+                            "testCases": [
+                                "deleted-evidence",
+                                "evidence-retrieval",
+                                "failed-attempt-preservation",
+                                "foreign-evidence",
+                                "restart-evidence",
+                                "stale-evidence"
+                            ]
+                        },
+                        {
+                            "id": "P6-10",
+                            "requirement": "Authorize reuse only for the current promoted compatible revision with fresh verified evidence and exact scope; stale superseded rejected revoked and incompatible revisions independently deny with reasons",
+                            "testCases": [
+                                "authorized-reuse",
+                                "incompatible-reuse",
+                                "rejected-reuse",
+                                "revoked-reuse",
+                                "stale-reuse",
+                                "superseded-reuse"
+                            ]
+                        },
+                        {
+                            "id": "P6-11",
+                            "requirement": "Typed API and CLI share ownership authorization persistence and failure rules; never modify caller source execute content expand TaskContract scope or create direct dependencies between Foundations",
+                            "testCases": [
+                                "api-cli-equivalence",
+                                "foundation-independence",
+                                "scope-not-expanded",
+                                "unrelated-byte-preservation"
+                            ]
+                        },
+                        {
+                            "id": "P6-12",
+                            "requirement": "Require current full project-bound prerequisite acceptance before P6 lifecycle start; persist and reload actual F4 iteration certification and completion; durable HOST_TEST certification binds P6 criteria source dependencies and measured evidence with explicit freshness invalidation",
+                            "testCases": [
+                                "altered-certificate",
+                                "certificate-readback",
+                                "criteria-freshness",
+                                "dependency-freshness",
+                                "evidence-freshness",
+                                "missing-prerequisite",
+                                "real-lifecycle",
+                                "source-freshness"
+                            ]
+                        }
+                    ],
+                    "engineeringDefaults": [
+                        {
+                            "id": "reuse-project",
+                            "rationale": "No implicit cross-project authority",
+                            "value": "same-project-unless-explicit-exact-cross-project-grant"
+                        },
+                        {
+                            "id": "review-role",
+                            "rationale": "Review authority remains explicit",
+                            "value": "owner-or-explicitly-nominated-reviewer"
+                        },
+                        {
+                            "id": "compatibility",
+                            "rationale": "No unverified compatibility inference",
+                            "value": "exact-declared-bindings"
+                        },
+                        {
+                            "id": "ingestion",
+                            "rationale": "Ingestion preserves material and provenance only",
+                            "value": "local-bytes-without-execution-or-network"
+                        },
+                        {
+                            "id": "terminal-revision",
+                            "rationale": "Terminal evidence and history stay immutable",
+                            "value": "new-revision-required"
+                        }
+                    ],
+                    "namespaceVersion": 2,
+                    "ownerScope": "source-code",
+                    "provenance": {
+                        "actor": "agent",
+                        "agentId": "/root/p6_route_review",
+                        "classification": "Commissioned requirements with explicitly recorded agent engineering defaults",
+                        "source": "Register the fixed P6 requirements baseline as the engineering prerequisite for the authorized activation-only operation. Preserve actual agent provenance, existing work and history; stop after later initial P6 start.",
+                        "tool": "WorkerTaskServices/p6-requirements-operation/v1"
+                    },
+                    "schemaVersion": 1,
+                    "subject": "P6"
+                },
                 "riskTraits": [
                     "governance",
                     "persistence"
@@ -1082,6 +1387,7 @@
                     "tests/FoundationTests.cpp",
                     "tests/P2ExecutionTests.cpp",
                     "tests/P6CodeBankTests.cpp",
+                    "tests/ProjectDocumentationGenerationTests.cpp",
                     "tests/ProjectMemoryTests.cpp",
                     "tests/TemplateConfigurationTests.cpp",
                     "tests/WorkerTaskTests.cpp",

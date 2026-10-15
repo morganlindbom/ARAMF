@@ -5,6 +5,7 @@
 #include <QHash>
 #include <QSet>
 #include <QJsonObject>
+#include <QMap>
 #include <QJsonValue>
 #include <QByteArray>
 #include <QJsonArray>
@@ -52,6 +53,12 @@ struct DevelopmentCapabilities {
     QStringList qualityCapabilities;
     QStringList automationCapabilities;
     QStringList deliveryCapabilities;
+    QMap<QString, QString> languageVersions;
+    QMap<QString, QString> languageNotes;
+    QMap<QString, QString> frameworkVersions;
+    QMap<QString, QString> frameworkNotes;
+    QMap<QString, QString> toolchainVersions;
+    QMap<QString, QString> toolchainNotes;
 };
 
 struct AcademicConfiguration {
@@ -298,6 +305,7 @@ struct GenerationOptions {
     bool generateResources = true;
     bool generateMemory = true;
     bool generateProvenance = true;
+    bool generateAcademicDocuments = true;
 };
 
 struct CommunicationEndpoint {

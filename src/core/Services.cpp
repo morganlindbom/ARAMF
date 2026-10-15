@@ -51,6 +51,16 @@ QJsonArray toJsonArray(const QStringList& values)
     return result;
 }
 
+QJsonObject stringMapToJson(const QMap<QString, QString>& values)
+// Brief: Serialize keyed capability metadata for generated project products.
+
+// Stable capability IDs remain the keys so Review, generated manifests, and persisted details refer to the same selected item.
+{
+    QJsonObject object;
+    for (auto it = values.cbegin(); it != values.cend(); ++it) object.insert(it.key(), it.value());
+    return object;
+}
+
 bool writeTextFile(const QString& path, const QByteArray& data, QString* error, bool onlyIfMissing = false)
 {
     if (onlyIfMissing && QFile::exists(path)) return true;
@@ -149,6 +159,9 @@ QJsonObject projectConfiguration(const ProjectModel& model, const QString& finge
             {QStringLiteral("targetPlatform"), environment.targetPlatform}, {QStringLiteral("targetArchitecture"), environment.targetArchitecture}, {QStringLiteral("buildSystem"), environment.buildSystem},
             {QStringLiteral("packageManager"), environment.packageManager}, {QStringLiteral("versionControl"), environment.versionControl}}},
         {QStringLiteral("languages"), toJsonArray(capabilities.languages)}, {QStringLiteral("frameworks"), toJsonArray(capabilities.frameworks)},
+        {QStringLiteral("languageVersions"), stringMapToJson(capabilities.languageVersions)}, {QStringLiteral("languageNotes"), stringMapToJson(capabilities.languageNotes)},
+        {QStringLiteral("frameworkVersions"), stringMapToJson(capabilities.frameworkVersions)}, {QStringLiteral("frameworkNotes"), stringMapToJson(capabilities.frameworkNotes)},
+        {QStringLiteral("toolchainVersions"), stringMapToJson(capabilities.toolchainVersions)}, {QStringLiteral("toolchainNotes"), stringMapToJson(capabilities.toolchainNotes)},
         {QStringLiteral("tools"), toJsonArray(capabilities.developmentTools)}, {QStringLiteral("targetPlatforms"), toJsonArray(capabilities.targetPlatforms)},
         {QStringLiteral("hardware"), toJsonArray(capabilities.hardwareTargets)}, {QStringLiteral("architectures"), toJsonArray(capabilities.targetArchitectures)},
         {QStringLiteral("academic"), QJsonObject{{QStringLiteral("enabled"), academic.enabled}, {QStringLiteral("projectTypes"), toJsonArray(academic.projectTypes)}, {QStringLiteral("academicLanguages"), toJsonArray(academic.academicLanguages)}, {QStringLiteral("thesis"), academic.thesisDocumentation.enabled}, {QStringLiteral("report"), academic.reportDocumentation.enabled}}},
@@ -176,7 +189,7 @@ QJsonObject workerManifest(const ProjectModel& model, const GenerationOptions& o
         {QStringLiteral("derivedFiles"), QJsonObject{{QStringLiteral("status"), AramfPaths::ProjectStatus}, {QStringLiteral("coldStartValidation"), AramfPaths::ColdStartValidation}, {QStringLiteral("latestValidation"), AramfPaths::LatestValidation}, {QStringLiteral("contextIndex"), AramfPaths::ContextIndex}, {QStringLiteral("compressedContext"), AramfPaths::CompressedContext}, {QStringLiteral("contextFreshness"), AramfPaths::ContextFreshness}, {QStringLiteral("agentAdapters"), AramfPaths::AgentAdapters}}},
         {QStringLiteral("p1Context"), QJsonObject{{QStringLiteral("index"), AramfPaths::ContextIndex}, {QStringLiteral("compressed"), AramfPaths::CompressedContext}, {QStringLiteral("freshness"), AramfPaths::ContextFreshness}, {QStringLiteral("taskDag"), AramfPaths::TaskDag}, {QStringLiteral("handoffs"), QStringLiteral("ARAMF_WORKER/context/handoffs/")}, {QStringLiteral("adapters"), AramfPaths::AgentAdapters}, {QStringLiteral("latestValidationAuthority"), QStringLiteral("DERIVED_CANONICAL_ENTRY_POINT")}}},
         {QStringLiteral("coldStart"), QJsonObject{{QStringLiteral("files"), QJsonArray{AramfPaths::ProjectConfiguration, AramfPaths::WorkerManifest, AramfPaths::AgentInstructions, AramfPaths::CurrentState, AramfPaths::ColdStartValidation, AramfPaths::LatestValidation, AramfPaths::ValidationPolicy}}, {QStringLiteral("historyExcluded"), true}}},
-        {QStringLiteral("generationOptions"), QJsonObject{{QStringLiteral("agentRules"), options.generateAgentRules}, {QStringLiteral("routing"), options.generateRouting}, {QStringLiteral("memory"), options.generateMemory}}}
+        {QStringLiteral("generationOptions"), QJsonObject{{QStringLiteral("agentRules"), options.generateAgentRules}, {QStringLiteral("routing"), options.generateRouting}, {QStringLiteral("memory"), options.generateMemory}, {QStringLiteral("academicDocuments"), options.generateAcademicDocuments}}}
     };
 }
 
@@ -330,11 +343,17 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
         {QStringLiteral("context"), model.context()},
         {QStringLiteral("languages"), toJsonArray(capabilities.languages)},
         {QStringLiteral("frameworks"), toJsonArray(capabilities.frameworks)},
+        {QStringLiteral("languageVersions"), stringMapToJson(capabilities.languageVersions)},
+        {QStringLiteral("languageNotes"), stringMapToJson(capabilities.languageNotes)},
+        {QStringLiteral("frameworkVersions"), stringMapToJson(capabilities.frameworkVersions)},
+        {QStringLiteral("frameworkNotes"), stringMapToJson(capabilities.frameworkNotes)},
         {QStringLiteral("tools"), toJsonArray(capabilities.developmentTools)},
         {QStringLiteral("platforms"), toJsonArray(capabilities.targetPlatforms)},
         {QStringLiteral("hardware"), toJsonArray(capabilities.hardwareTargets)},
         {QStringLiteral("architectures"), toJsonArray(capabilities.targetArchitectures)},
         {QStringLiteral("toolchains"), toJsonArray(capabilities.toolchains)},
+        {QStringLiteral("toolchainVersions"), stringMapToJson(capabilities.toolchainVersions)},
+        {QStringLiteral("toolchainNotes"), stringMapToJson(capabilities.toolchainNotes)},
         {QStringLiteral("buildSystems"), toJsonArray(capabilities.buildSystems)},
         {QStringLiteral("dependencyManagers"), toJsonArray(capabilities.dependencyManagers)},
         {QStringLiteral("buildConfigurations"), toJsonArray(capabilities.buildConfigurations)},
@@ -361,7 +380,14 @@ QString projectConfigurationFingerprint(const ProjectModel& model,
         {QStringLiteral("platformOutput"), options.generatePlatforms},
         {QStringLiteral("resourceOutput"), options.generateResources},
         {QStringLiteral("memoryOutput"), options.generateMemory},
-        {QStringLiteral("provenance"), options.generateProvenance}};
+        {QStringLiteral("provenance"), options.generateProvenance},
+        {QStringLiteral("academicDocuments"), options.generateAcademicDocuments},
+        {QStringLiteral("languageVersions"), stringMapToJson(capabilities.languageVersions)},
+        {QStringLiteral("languageNotes"), stringMapToJson(capabilities.languageNotes)},
+        {QStringLiteral("frameworkVersions"), stringMapToJson(capabilities.frameworkVersions)},
+        {QStringLiteral("frameworkNotes"), stringMapToJson(capabilities.frameworkNotes)},
+        {QStringLiteral("toolchainVersions"), stringMapToJson(capabilities.toolchainVersions)},
+        {QStringLiteral("toolchainNotes"), stringMapToJson(capabilities.toolchainNotes)}};
     const auto communication = model.communicationConfiguration();
     value.insert(QStringLiteral("communication"), QJsonObject{{QStringLiteral("enabled"), communication.enabled}, {QStringLiteral("sourceTarget"), communication.sourceTarget}, {QStringLiteral("destinationTarget"), communication.destinationTarget}, {QStringLiteral("transport"), communication.transport}, {QStringLiteral("protocol"), communication.protocol}, {QStringLiteral("protocolVersion"), communication.protocolVersion}});
     value.insert(QStringLiteral("processVersion"), processVersionStateToJson(model.processVersionState()));
@@ -412,7 +438,10 @@ QStringList GenerationServices::configurationUpdateFiles(const ProjectModel& mod
         AramfPaths::TaskDag};
     paths << AramfPaths::runtimeWorkerDirectoryName() + '/' + AramfPaths::runtimeWorkerDirectoryName() + ".json";
     if (options.generateAgentRules) paths << AramfPaths::AgentInstructions << AramfPaths::GeneratedRules
-        << AramfPaths::ProjectStatus << "ARAMF_WORKER/documentation/documentation-manifest.json";
+        << AramfPaths::ProjectStatus;
+    if (options.generateAcademicDocuments) paths << "ARAMF_WORKER/documentation/documentation-manifest.json"
+        << "ARAMF_WORKER/documentation/Thesis" << "ARAMF_WORKER/documentation/Report"
+        << "ARAMF_WORKER/verification/generation-state.json";
     if (options.generateRouting) paths << AramfPaths::TaskRoutes << AramfPaths::ScopeRoutes
         << AramfPaths::ValidationPolicy << "ARAMF_WORKER/routing/README.md";
     if (options.generatePlatforms) paths << "ARAMF_WORKER/platforms/platform-metadata.json"
@@ -443,7 +472,8 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
     }
     result.fingerprint = projectConfigurationFingerprint(model, options);
     if (!options.generateAgentRules && !options.generateRouting && !options.generatePlatforms
-        && !options.generateResources && !options.generateMemory && !options.generateProvenance) {
+        && !options.generateResources && !options.generateMemory && !options.generateProvenance
+        && !options.generateAcademicDocuments) {
         result.error = QStringLiteral("Generation stopped: select at least one output product.");
         return result;
     }
@@ -484,7 +514,8 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
         {options.generatePlatforms, QStringLiteral("Platform and environment metadata")},
         {options.generateResources, QStringLiteral("Resource manifest")},
         {options.generateMemory, QStringLiteral("Project Memory")},
-        {options.generateProvenance, QStringLiteral("Provenance and selection effects")}};
+        {options.generateProvenance, QStringLiteral("Provenance and selection effects")},
+        {options.generateAcademicDocuments, QStringLiteral("Academic documentation")}};
     auto fail = [&result, &productOrder](const QString& product, const QString& error) {
         result.failedProduct = product;
         result.partial = !result.generatedFiles.isEmpty();
@@ -507,6 +538,7 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
     if (!options.generateResources) result.skippedProducts << QStringLiteral("Resource manifest");
     if (!options.generateMemory) result.skippedProducts << QStringLiteral("Project Memory");
     if (!options.generateProvenance) result.skippedProducts << QStringLiteral("Provenance and selection effects");
+    if (!options.generateAcademicDocuments) result.skippedProducts << QStringLiteral("Academic documentation");
 
     QString error;
     if (options.generateAgentRules) {
@@ -857,12 +889,18 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
                 {QStringLiteral("packageManager"), environment.packageManager}, {QStringLiteral("versionControl"), environment.versionControl}}},
             {QStringLiteral("languages"), toJsonArray(capabilities.languages)},
             {QStringLiteral("frameworks"), toJsonArray(capabilities.frameworks)},
+            {QStringLiteral("languageVersions"), stringMapToJson(capabilities.languageVersions)},
+            {QStringLiteral("languageNotes"), stringMapToJson(capabilities.languageNotes)},
+            {QStringLiteral("frameworkVersions"), stringMapToJson(capabilities.frameworkVersions)},
+            {QStringLiteral("frameworkNotes"), stringMapToJson(capabilities.frameworkNotes)},
             {QStringLiteral("developmentTools"), toJsonArray(capabilities.developmentTools)},
             {QStringLiteral("targetPlatforms"), toJsonArray(capabilities.targetPlatforms)},
             {QStringLiteral("targetArchitectures"), toJsonArray(capabilities.targetArchitectures)},
             {QStringLiteral("processorFamilies"), toJsonArray(capabilities.processorFamilies)},
             {QStringLiteral("hardwareTargets"), toJsonArray(capabilities.hardwareTargets)},
             {QStringLiteral("toolchains"), toJsonArray(capabilities.toolchains)},
+            {QStringLiteral("toolchainVersions"), stringMapToJson(capabilities.toolchainVersions)},
+            {QStringLiteral("toolchainNotes"), stringMapToJson(capabilities.toolchainNotes)},
             {QStringLiteral("buildSystems"), toJsonArray(capabilities.buildSystems)}
         };
         if (model.context() == QStringLiteral("android-application") || model.templateId() == QStringLiteral("android-studio-kotlin-gemini")) {
@@ -1097,7 +1135,9 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
     }
 
     const auto academic = model.academicConfiguration();
-    if (options.generateAgentRules && (academic.thesisDocumentation.enabled || academic.reportDocumentation.enabled)) {
+    QJsonObject generationAcademicHashes;
+    if (options.generateAcademicDocuments && academic.enabled
+        && (academic.thesisDocumentation.enabled || academic.reportDocumentation.enabled)) {
         const auto validateSelectedSource = [&](const AcademicConfiguration::DocumentationConfiguration& configuration, const QString& role, const QString& label) {
             if (!configuration.enabled) return QString();
             if (configuration.templateMode != QStringLiteral("source")) {
@@ -1111,7 +1151,6 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
             if (!selected->enabled) return label + QStringLiteral(" custom template resource is disabled");
             const auto inspection = DocumentTemplateInspector::inspect(*selected, projectRoot);
             if (!inspection.exists) return label + QStringLiteral(" custom template source file is missing");
-            if (!inspection.formatRecognized) return label + QStringLiteral(" custom template format is unsupported");
             return QString();
         };
         const QString thesisSourceError = validateSelectedSource(academic.thesisDocumentation, QStringLiteral("thesis-template"), QStringLiteral("Thesis"));
@@ -1153,7 +1192,10 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
                     document.insert(QStringLiteral("warnings"), QJsonArray::fromStringList(inspection.warnings));
                     if (!selected.enabled) document.insert(QStringLiteral("validationState"), QStringLiteral("disabled-resource"));
                     else if (!inspection.exists) document.insert(QStringLiteral("validationState"), QStringLiteral("missing-source"));
-                    else if (!inspection.formatRecognized) document.insert(QStringLiteral("validationState"), QStringLiteral("unsupported-format"));
+                    else if (!inspection.formatRecognized) {
+                        document.insert(QStringLiteral("validationState"), QStringLiteral("provenance-only-source"));
+                        result.warnings << QStringLiteral("%1 source format cannot be transformed; a built-in scaffold will be generated with source provenance retained.").arg(document.value(QStringLiteral("documentType")).toString());
+                    }
                 }
             }
             return document;
@@ -1169,6 +1211,90 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
         if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(documentationPath)), documentationManifest, &error))
             return fail(QStringLiteral("Documentation template manifest"), error);
         addGeneratedFiles(result, {documentationPath});
+        QJsonObject previousHashes;
+        QJsonObject previousState;
+        readJson(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/generation-state.json"))), &previousState, nullptr);
+        previousHashes = previousState.value(QStringLiteral("academicDocumentHashes")).toObject();
+        QJsonObject academicHashes;
+        for (const auto& item : documents) {
+            const auto document = item.toObject();
+            if (!document.value(QStringLiteral("enabled")).toBool()) continue;
+            const QString type = document.value(QStringLiteral("documentType")).toString();
+            const QString language = document.value(QStringLiteral("language")).toString();
+            const QString variantId = document.value(QStringLiteral("variantId")).toString();
+            const QString title = type.compare(QStringLiteral("report"), Qt::CaseInsensitive) == 0 ? QStringLiteral("Report") : QStringLiteral("Thesis");
+            const auto& templateConfiguration = type.compare(QStringLiteral("report"), Qt::CaseInsensitive) == 0
+                ? academic.reportDocumentation : academic.thesisDocumentation;
+            const QString templateMode = document.value(QStringLiteral("mode")).toString();
+            const QString templateId = document.value(QStringLiteral("templateId")).toString();
+            const int templateVersion = document.value(QStringLiteral("templateVersion")).toInt();
+            QList<DocumentSection> authoringSections;
+            if (templateConfiguration.templateMode == QStringLiteral("source")) {
+                const auto configuredResources = model.resources();
+                const auto resource = std::find_if(configuredResources.cbegin(), configuredResources.cend(), [&](const ProjectResource& candidate) {
+                    return candidate.id == templateConfiguration.templateSourceId;
+                });
+                if (resource != configuredResources.cend()) {
+                    const auto inspection = DocumentTemplateInspector::inspect(*resource, projectRoot);
+                    if (inspection.formatRecognized && inspection.structurallyParsed) authoringSections = inspection.sections;
+                    else result.warnings << QStringLiteral("%1 custom template structure was not safely parsed; using the built-in section scaffold while preserving source provenance.").arg(title);
+                }
+            }
+            const auto documentTemplate = type.compare(QStringLiteral("report"), Qt::CaseInsensitive) == 0
+                ? DocumentTemplates::report() : DocumentTemplates::thesis();
+            if (authoringSections.isEmpty()) authoringSections = documentTemplate.sections;
+            const QString relative = QStringLiteral("ARAMF_WORKER/documentation/%1/%2-%3.md").arg(title, language, variantId);
+            QString markdown = QStringLiteral("# %1 draft scaffold\n\n> DRAFT SCAFFOLD — not finished academic prose. Fill each section with your own work and evidence.\n\nLanguage: %2\nVariant ID: %3\nTemplate mode: %4\nSource ID: %5\nSource path: %6\nSource hash: %7\n\n")
+                .arg(title, language, variantId, templateMode.isEmpty() ? templateConfiguration.templateMode : templateMode,
+                     templateConfiguration.templateSourceId, document.value(QStringLiteral("sourcePath")).toString(), document.value(QStringLiteral("contentHash")).toString());
+            markdown += QStringLiteral("Template ID: %1\nTemplate version: %2\n\n").arg(templateId.isEmpty() ? QStringLiteral("custom-source") : templateId, templateVersion > 0 ? QString::number(templateVersion) : QStringLiteral("external"));
+            const auto instruction = type.compare(QStringLiteral("report"), Qt::CaseInsensitive) == 0 ? DocumentInstructions::report() : DocumentInstructions::thesis();
+            for (const auto& section : authoringSections) {
+                const bool swedish = language.compare(QStringLiteral("sv"), Qt::CaseInsensitive) == 0;
+                const QString heading = (swedish ? section.titleSv : section.titleEn).isEmpty()
+                    ? (!section.titleEn.isEmpty() ? section.titleEn : section.titleSv)
+                    : (swedish ? section.titleSv : section.titleEn);
+                const QString guidance = (swedish ? section.guidanceSv : section.guidanceEn).isEmpty()
+                    ? (!section.guidanceEn.isEmpty() ? section.guidanceEn : section.guidanceSv)
+                    : (swedish ? section.guidanceSv : section.guidanceEn);
+                markdown += QStringLiteral("%1 %2\n\n%3\n\n[Write this section in your own words. Support claims with traceable evidence and references.]\n\n")
+                    .arg(QString(qBound(2, section.level + 1, 6), QLatin1Char('#')), heading, guidance);
+            }
+            markdown += QStringLiteral("## Document-specific guidance\n\n%1\n").arg(instruction.rules.join(QStringLiteral("\n")));
+            const QString absolute = QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(relative));
+            const QByteArray bytes = markdown.toUtf8();
+            QString outputRelative = relative;
+            QFile existing(absolute);
+            bool mayReplace = !existing.exists();
+            if (existing.exists() && previousHashes.contains(relative) && existing.open(QIODevice::ReadOnly)) {
+                const QString existingHash = QString::fromLatin1(QCryptographicHash::hash(existing.readAll(), QCryptographicHash::Sha256).toHex());
+                mayReplace = existingHash == previousHashes.value(relative).toString();
+                existing.close();
+            }
+            if (!mayReplace) {
+                const QFileInfo info(absolute);
+                const QString conflictBase = info.completeBaseName() + QStringLiteral("-ARAMF-conflict");
+                QString conflict = info.dir().filePath(conflictBase + QStringLiteral(".md"));
+                for (int suffix = 2; QFileInfo::exists(conflict); ++suffix)
+                    conflict = info.dir().filePath(conflictBase + QStringLiteral("-%1.md").arg(suffix));
+                outputRelative = QDir(projectRoot).relativeFilePath(conflict).replace('\\', '/');
+                result.warnings << QStringLiteral("Preserved user-authored academic document %1; generated draft scaffold at %2.").arg(relative, outputRelative);
+            }
+            if (!writeTextFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(outputRelative)), bytes, &error))
+                return fail(QStringLiteral("Academic documentation"), error);
+            QFile generatedDocument(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(outputRelative)));
+            if (!generatedDocument.open(QIODevice::ReadOnly))
+                return fail(QStringLiteral("Academic documentation readback"), generatedDocument.errorString());
+            const QString writtenDigest = QString::fromLatin1(QCryptographicHash::hash(generatedDocument.readAll(), QCryptographicHash::Sha256).toHex());
+            academicHashes.insert(outputRelative, writtenDigest);
+            result.generatedFiles << outputRelative;
+        }
+        documentationManifest.insert(QStringLiteral("scaffoldStatus"), QStringLiteral("draft-only"));
+        if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(documentationPath)), documentationManifest, &error))
+            return fail(QStringLiteral("Documentation template manifest"), error);
+        result.generatedFiles.removeAll(documentationPath);
+        result.generatedFiles << documentationPath;
+        generationAcademicHashes = academicHashes;
     }
 
     if (!writeJsonFile(QDir(projectRoot).filePath(AramfPaths::resolveWorkerRelativePath(AramfPaths::WorkerManifest)), workerManifest(model, options, result.fingerprint), &error))
@@ -1214,7 +1340,9 @@ GenerationResult GenerationServices::generateProducts(const ProjectModel& model,
         {QStringLiteral("generatedAt"), QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
         {QStringLiteral("agentRules"), options.generateAgentRules}, {QStringLiteral("routing"), options.generateRouting},
         {QStringLiteral("platforms"), options.generatePlatforms}, {QStringLiteral("resources"), options.generateResources},
-        {QStringLiteral("memory"), options.generateMemory}, {QStringLiteral("provenance"), options.generateProvenance}};
+        {QStringLiteral("memory"), options.generateMemory}, {QStringLiteral("provenance"), options.generateProvenance},
+        {QStringLiteral("academicDocuments"), options.generateAcademicDocuments},
+        {QStringLiteral("academicDocumentHashes"), generationAcademicHashes}};
     if (updateExisting) {
         QJsonObject hashes;
         // Bind the products actually emitted by the canonical writers. Mutable
@@ -1410,6 +1538,10 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     checkFile(QStringLiteral("aramf-worker-agents"), QStringLiteral("ARAMF_WORKER/AGENTS.md"), AramfPaths::AgentInstructions, expectedOptions.generateAgentRules);
     checkFile(QStringLiteral("project-status"), QStringLiteral("PROJECT_STATUS.md"), AramfPaths::ProjectStatus, expectedOptions.generateAgentRules);
     checkFile(QStringLiteral("generated-rules"), QStringLiteral("Generated rules"), AramfPaths::GeneratedRules, expectedOptions.generateAgentRules);
+    checkFile(QStringLiteral("academic-document-manifest"), QStringLiteral("Academic document manifest"),
+              QStringLiteral("ARAMF_WORKER/documentation/documentation-manifest.json"),
+              expectedOptions.generateAcademicDocuments && model.academicConfiguration().enabled
+                  && (model.academicConfiguration().thesisDocumentation.enabled || model.academicConfiguration().reportDocumentation.enabled));
     checkFile(QStringLiteral("task-routes"), QStringLiteral("Task routes"), AramfPaths::TaskRoutes, expectedOptions.generateRouting);
     checkFile(QStringLiteral("scope-routes"), QStringLiteral("Scope routes"), AramfPaths::ScopeRoutes, expectedOptions.generateRouting);
     checkFile(QStringLiteral("platforms"), QStringLiteral("Platform metadata"), QStringLiteral("ARAMF_WORKER/platforms/platform-metadata.json"), expectedOptions.generatePlatforms);
@@ -1510,6 +1642,40 @@ VerificationResult VerificationServices::verify(const ProjectModel& model,
     QJsonObject state; QString stateError;
     const bool stateReadable = readJson(QDir(root).filePath(AramfPaths::resolveWorkerRelativePath(QStringLiteral("ARAMF_WORKER/verification/generation-state.json"))), &state, &stateError);
     const bool current = stateReadable && state.value(QStringLiteral("fingerprint")).toString() == result.fingerprint;
+    if (expectedOptions.generateAcademicDocuments && model.academicConfiguration().enabled) {
+        const auto academicHashes = state.value(QStringLiteral("academicDocumentHashes")).toObject();
+        const auto academic = model.academicConfiguration();
+        const bool hasEnabledAcademicDocument = academic.thesisDocumentation.enabled || academic.reportDocumentation.enabled;
+        bool documentsCurrent = !academicHashes.isEmpty() || !hasEnabledAcademicDocument;
+        QStringList staleDocuments;
+        for (auto it = academicHashes.begin(); it != academicHashes.end(); ++it) {
+            const QString relative = QDir::cleanPath(it.key());
+            const QString expectedPrefix = AramfPaths::runtimeWorkerDirectoryName() + QStringLiteral("/documentation/");
+            if (relative != it.key() || !relative.startsWith(expectedPrefix) || QDir::isAbsolutePath(relative)) {
+                documentsCurrent = false;
+                staleDocuments << it.key();
+                continue;
+            }
+            QFile document(QDir(root).filePath(relative));
+            if (!document.open(QIODevice::ReadOnly)) {
+                documentsCurrent = false;
+                staleDocuments << it.key();
+                continue;
+            }
+            const QString actual = QString::fromLatin1(QCryptographicHash::hash(document.readAll(), QCryptographicHash::Sha256).toHex());
+            if (actual != it.value().toString()) {
+                documentsCurrent = false;
+                staleDocuments << it.key();
+            }
+        }
+        addCheck(result, QStringLiteral("academic-documents"), QStringLiteral("Academic draft documents"),
+                 documentsCurrent ? VerificationStatus::Pass : VerificationStatus::Fail,
+                 documentsCurrent ? QStringLiteral("All generated academic drafts match their recorded hashes.")
+                                  : QStringLiteral("Missing or modified academic drafts: %1").arg(staleDocuments.join(QStringLiteral(", "))));
+    } else {
+        addCheck(result, QStringLiteral("academic-documents"), QStringLiteral("Academic draft documents"),
+                 VerificationStatus::NotApplicable, QStringLiteral("Academic draft generation is not selected or Academic Documentation is disabled."));
+    }
     if (state.contains("configurationArtifactHashes")) {
         const auto hashes = state.value("configurationArtifactHashes").toObject();
         bool matches = !hashes.isEmpty();

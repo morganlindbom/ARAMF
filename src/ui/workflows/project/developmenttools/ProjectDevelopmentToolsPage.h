@@ -4,7 +4,7 @@
 #include <QWidget>
 
 class CapabilityCheckGroup;
-class ProjectDevelopmentToolsPage final : public QWidget
+class ProjectDevelopmentToolsPage : public QWidget
 {
 public:
     enum class Section { All, Ide, VersionControl, Support };

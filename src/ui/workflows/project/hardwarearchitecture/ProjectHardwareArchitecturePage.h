@@ -2,7 +2,7 @@
 #include "core/ProjectModel.h"
 #include <QWidget>
 class CapabilityCheckGroup;
-class ProjectHardwareArchitecturePage final : public QWidget
+class ProjectHardwareArchitecturePage : public QWidget
 {
 public:
     enum class Section { All, Architectures, Processors, Targets };

@@ -25,6 +25,10 @@
 #include <QStandardPaths>
 #include <QSet>
 #include <QTemporaryDir>
+#include <QUuid>
+#include <QCryptographicHash>
+#include <QDirIterator>
+#include <QMap>
 #include <QBuffer>
 #include <QTextStream>
 #include <QListWidget>
@@ -37,24 +41,96 @@
 
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
 namespace {
+QByteArray campaignBytes(const QString& path, bool* readable)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) { *readable = false; return {}; }
+    const auto data = file.readAll();
+    if (file.error() != QFileDevice::NoError) *readable = false;
+    return data;
+}
+
+QJsonObject originalCampaignArtifacts(const QString& root, bool* readable)
+{
+    QJsonObject snapshot;
+    const auto observe = [&](const QString& path) {
+        const QFileInfo entry(path);
+        const QString relative = QDir(root).relativeFilePath(path);
+        if (entry.isSymLink() || entry.isJunction()) snapshot.insert(relative, "LINK:" + entry.symLinkTarget());
+        else if (entry.isDir()) snapshot.insert(relative, "DIRECTORY");
+        else if (!entry.exists()) snapshot.insert(relative, "MISSING");
+        else snapshot.insert(relative, QString::fromLatin1(QCryptographicHash::hash(campaignBytes(path, readable), QCryptographicHash::Sha256).toHex()));
+    };
+    observe(QDir(root).filePath(QStringLiteral("campaign.json")));
+    const QString results = QDir(root).filePath(QStringLiteral("results"));
+    observe(results);
+    QDirIterator iterator(results, QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden, QDirIterator::Subdirectories);
+    while (iterator.hasNext()) observe(iterator.next());
+    return snapshot;
+}
+
 struct Campaign {
     int pass = 0;
     int fail = 0;
     QString root;
+    bool ioOk = true;
+    bool createOnlyVerified = true;
+    bool artifactReadbackVerified = true;
+    QStringList ioErrors;
+    QJsonArray failedIds;
+    QJsonArray outcomes;
+    QSet<QString> observedIds;
+    QMap<QString, QByteArray> expectedResults;
+
+    void ioFailure(const QString& detail)
+    {
+        ioOk = false;
+        ioErrors.append(detail);
+        QTextStream(stderr) << "UPDATE ARTIFACT FAIL: " << detail << Qt::endl;
+    }
+
+    bool saveNew(const QString& path, const QByteArray& data)
+    {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::NewOnly)) {
+            createOnlyVerified = false;
+            ioFailure(path + ": " + file.errorString());
+            return false;
+        }
+        const bool written = file.write(data) == data.size() && file.flush() && file.error() == QFileDevice::NoError;
+        file.close();
+        // Observe the create-only contract against the actual persisted file.
+        QFile collision(path);
+        const bool duplicateRejected = !collision.open(QIODevice::WriteOnly | QIODevice::NewOnly);
+        if (collision.isOpen()) collision.close();
+        bool readable = true;
+        const bool exact = campaignBytes(path, &readable) == data && readable;
+        createOnlyVerified &= duplicateRejected;
+        artifactReadbackVerified &= written && exact;
+        if (!written || !duplicateRejected || !exact) ioFailure(path + ": write, create-only refusal or exact readback failed");
+        return written && duplicateRejected && exact;
+    }
 
     bool check(const QString& id, const QString& description, bool condition, const QString& detail = {})
     {
         const QString result = condition ? QStringLiteral("PASS") : QStringLiteral("FAIL");
-        if (condition) ++pass; else ++fail;
-        QDir().mkpath(QDir(root).filePath(QStringLiteral("results")));
-        QFile file(QDir(root).filePath(QStringLiteral("results/%1.md").arg(id)));
-        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            const QByteArray text = QStringLiteral("# %1\n\nScenario: %2\n\nResult: %3\n%4")
-                                        .arg(id, description, result, detail).toUtf8();
-            file.write(text);
+        if (condition) ++pass; else {
+            ++fail;
+            failedIds.append(id);
+            QTextStream(stderr) << "UPDATE FAIL " << id << ": " << description << ": " << detail << Qt::endl;
         }
+        outcomes.append(QJsonObject{{"id", id}, {"description", description}, {"result", result}, {"detail", detail}});
+        if (observedIds.contains(id)) ioFailure("Duplicate original assertion ID: " + id);
+        observedIds.insert(id);
+        const QString resultDirectory = QDir(root).filePath(QStringLiteral("results"));
+        if (!QDir().mkpath(resultDirectory)) ioFailure("Cannot create result directory: " + resultDirectory);
+        const QString path = QDir(root).filePath(QStringLiteral("results/%1.md").arg(id));
+        const QByteArray text = QStringLiteral("# %1\n\nScenario: %2\n\nResult: %3\n%4")
+                                    .arg(id, description, result, detail).toUtf8();
+        if (saveNew(path, text)) expectedResults.insert(path, text);
         return condition;
     }
 };
@@ -86,19 +162,107 @@ bool openOrReport(QFile& file, QIODevice::OpenMode mode, const char* purpose)
 int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
+    const QString runId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    const QString applicationName = QStringLiteral("aramf_update_campaign_runner-") + runId;
+    // AppData/legacy storage uses application identity, independently of the
+    // canonical global-library test override. Set it before QStandardPaths.
+    QCoreApplication::setApplicationName(applicationName);
     QStandardPaths::setTestModeEnabled(true);
-    QTemporaryDir globalData;
-    FrameworkKnowledgeService::setGlobalLibraryPathForTests(QDir(globalData.path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")));
-    QFile::remove(FrameworkKnowledgeService().legacyGlobalLibraryPath());
+    const QString binaryDirectory = QFileInfo(QCoreApplication::applicationDirPath()).canonicalFilePath();
+    QTemporaryDir resultDirectory(QDir(binaryDirectory).filePath(QStringLiteral("aramf-update-campaign-") + runId + QStringLiteral("-XXXXXX")));
+    resultDirectory.setAutoRemove(false);
+    const QString resultRoot = resultDirectory.path();
+    std::unique_ptr<QTemporaryDir> globalData;
+    if (resultDirectory.isValid()) {
+        globalData = std::make_unique<QTemporaryDir>(QDir(resultRoot).filePath(QStringLiteral("global-data-XXXXXX")));
+        globalData->setAutoRemove(false);
+    }
+    const QString globalLibrary = globalData && globalData->isValid()
+        ? QDir(globalData->path()).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")) : QString();
+    const bool globalInitiallyAbsent = globalData && globalData->isValid() && !QFileInfo::exists(globalLibrary);
+    if (!globalLibrary.isEmpty()) FrameworkKnowledgeService::setGlobalLibraryPathForTests(globalLibrary);
+    const QString legacyPath = QDir::cleanPath(FrameworkKnowledgeService().legacyGlobalLibraryPath());
+    const QString legacyDirectory = QFileInfo(legacyPath).absolutePath();
+    const bool legacyInitiallyAbsent = !QFileInfo::exists(legacyDirectory) && !QFileInfo::exists(legacyPath);
+    bool legacyIdentityVerified = legacyInitiallyAbsent && QFileInfo(legacyDirectory).fileName() == applicationName
+        && QCoreApplication::applicationName() == applicationName && !QFileInfo(legacyDirectory).isSymLink()
+        && !QFileInfo(legacyDirectory).isJunction();
     const QString repoRoot = QDir::cleanPath(QDir(QCoreApplication::applicationDirPath()).filePath(QStringLiteral("..")));
-    Campaign campaign{0, 0, QDir(repoRoot).filePath(QStringLiteral("test_update"))};
+    const QString sharedCampaignRoot = QDir(repoRoot).filePath(QStringLiteral("test_update"));
+    bool originalReadable = true;
+    const auto originalArtifacts = originalCampaignArtifacts(sharedCampaignRoot, &originalReadable);
+    Campaign campaign{0, 0, resultRoot};
+    const auto contained = [](const QString& parent, const QString& child) {
+        const QString relative = QDir(parent).relativeFilePath(child);
+        return !parent.isEmpty() && !child.isEmpty() && !QDir::isAbsolutePath(relative)
+            && relative != QStringLiteral("..") && !relative.startsWith(QStringLiteral("../")) && relative != QStringLiteral(".");
+    };
+    const bool resultIdentityVerified = resultDirectory.isValid() && contained(binaryDirectory, resultRoot)
+        && QFileInfo(resultRoot).fileName().contains(runId) && !QFileInfo(resultRoot).isSymLink() && !QFileInfo(resultRoot).isJunction();
+    const bool globalIdentityVerified = globalInitiallyAbsent && contained(resultRoot, globalData->path());
+    QTextStream(stdout) << "UPDATE artifacts: " << resultRoot << " legacy=" << legacyPath << " application=" << applicationName << Qt::endl;
+    const auto finishCampaign = [&]() {
+        bool originalStillReadable = true;
+        const bool repositoryArtifactsUnchanged = originalReadable
+            && originalCampaignArtifacts(sharedCampaignRoot, &originalStillReadable) == originalArtifacts && originalStillReadable;
+        bool resultsContained = resultIdentityVerified;
+        for (auto it = campaign.expectedResults.cbegin(); it != campaign.expectedResults.cend(); ++it) {
+            bool readable = true;
+            resultsContained &= contained(resultRoot, it.key()) && !QFileInfo(it.key()).isSymLink() && !QFileInfo(it.key()).isJunction();
+            campaign.artifactReadbackVerified &= campaignBytes(it.key(), &readable) == it.value() && readable;
+        }
+        bool complete = campaign.pass + campaign.fail == 310 && campaign.observedIds.size() == 310 && campaign.outcomes.size() == 310;
+        for (int id = 1; id <= 310; ++id) complete &= campaign.observedIds.contains(QStringLiteral("UPDATE-%1").arg(id, 3, 10, QChar('0')));
+        if (!complete) campaign.ioFailure(QStringLiteral("Campaign ended after %1 of 310 original assertions").arg(campaign.pass + campaign.fail));
+        legacyIdentityVerified &= QCoreApplication::applicationName() == applicationName
+            && QDir::cleanPath(FrameworkKnowledgeService().legacyGlobalLibraryPath()) == legacyPath
+            && QFileInfo(legacyDirectory).fileName() == applicationName && !QFileInfo(legacyDirectory).isSymLink()
+            && !QFileInfo(legacyDirectory).isJunction() && !QFileInfo(legacyPath).isSymLink() && !QFileInfo(legacyPath).isJunction();
+        const QJsonObject summary{{"campaign", "UPDATE"}, {"runId", runId}, {"resultRoot", resultRoot},
+            {"legacyPath", legacyPath}, {"applicationName", applicationName}, {"completed", campaign.pass + campaign.fail},
+            {"pass", campaign.pass}, {"fail", campaign.fail}, {"failedIds", campaign.failedIds},
+            {"outcomes", campaign.outcomes}, {"ioErrors", QJsonArray::fromStringList(campaign.ioErrors)}};
+        const bool summaryRetained = resultIdentityVerified
+            && campaign.saveNew(QDir(resultRoot).filePath(QStringLiteral("campaign.json")), QJsonDocument(summary).toJson(QJsonDocument::Indented));
+        const bool coveragePass = complete && campaign.pass == 310 && campaign.fail == 0;
+        const bool isolationPass = resultsContained && globalIdentityVerified && legacyIdentityVerified && repositoryArtifactsUnchanged;
+        const bool artifactsPass = campaign.ioOk && campaign.expectedResults.size() == 310 && summaryRetained
+            && campaign.createOnlyVerified && campaign.artifactReadbackVerified && campaign.failedIds.size() == campaign.fail;
+        const auto status = [](bool pass) { return pass ? QStringLiteral("PASS") : QStringLiteral("FAIL"); };
+        const QJsonObject assertions{{"UPDATE runner retains all 310 original assertions", status(coveragePass)},
+            {"UPDATE runner isolates result and legacy paths", status(isolationPass)},
+            {"UPDATE runner preserves create-only results and reports failed IDs", status(artifactsPass)}};
+        const QJsonObject acceptance{{"schemaVersion", 1}, {"runId", runId}, {"resultRoot", resultRoot},
+            {"legacyPath", legacyPath}, {"applicationName", applicationName}, {"completed", campaign.pass + campaign.fail},
+            {"passed", campaign.pass}, {"failed", campaign.fail}, {"failedIds", campaign.failedIds},
+            {"ioErrors", QJsonArray::fromStringList(campaign.ioErrors)}, {"createOnlyVerified", campaign.createOnlyVerified && summaryRetained},
+            {"artifactReadbackVerified", campaign.artifactReadbackVerified && summaryRetained},
+            {"repositoryArtifactsUnchanged", repositoryArtifactsUnchanged}, {"legacyIdentityVerified", legacyIdentityVerified},
+            {"assertions", assertions}};
+        QTextStream(stdout) << "UPDATE-ISOLATION-ACCEPTANCE " << QJsonDocument(acceptance).toJson(QJsonDocument::Compact) << Qt::endl;
+        std::cout << "UPDATE campaign: " << campaign.pass << " / " << (campaign.pass + campaign.fail) << " PASS\n";
+        return coveragePass && isolationPass && artifactsPass ? 0 : 1;
+    };
+    if (!resultIdentityVerified || !globalIdentityVerified || !legacyIdentityVerified || !originalReadable) {
+        campaign.ioFailure(QStringLiteral("Run isolation or original artifact observation failed before campaign execution"));
+        return finishCampaign();
+    }
+    const auto removeRunLegacy = [&](const QString& requestedPath) {
+        const bool owned = QDir::cleanPath(requestedPath) == legacyPath && QCoreApplication::applicationName() == applicationName
+            && QFileInfo(legacyDirectory).fileName() == applicationName && !QFileInfo(legacyDirectory).isSymLink()
+            && !QFileInfo(legacyDirectory).isJunction() && !QFileInfo(legacyPath).isSymLink() && !QFileInfo(legacyPath).isJunction();
+        const bool removed = owned && (!QFileInfo::exists(legacyPath) || QFile::remove(legacyPath));
+        legacyIdentityVerified &= owned;
+        if (!removed) campaign.ioFailure(QStringLiteral("Run-owned legacy reset failed: ") + requestedPath);
+        return removed;
+    };
     QTemporaryDir fixture;
     fixture.setAutoRemove(true);
     ProjectModel model;
     QString error;
     bool ready = fixture.isValid() && initialize(fixture.path(), &model, &error);
     campaign.check(QStringLiteral("UPDATE-001"), QStringLiteral("isolated fixture initialization"), ready, error);
-    if (!ready) return 1;
+    if (!ready) return finishCampaign();
 
     FrameworkKnowledgeService knowledge;
     const QString candidateId = knowledge.propose(fixture.path(), QStringLiteral("Approved update lesson"),
@@ -406,7 +570,7 @@ int main(int argc, char** argv)
     AramfPaths::setApplicationDirectoryForTests(releaseDirectory);
     campaign.check(QStringLiteral("UPDATE-050"), QStringLiteral("Release build resolves the ARAMF program root"), QDir::cleanPath(AramfPaths::programRoot()) == QDir::cleanPath(root));
     AramfPaths::setApplicationDirectoryForTests(debugDirectory);
-    QFile::remove(rootKnowledge.legacyGlobalLibraryPath());
+    if (!removeRunLegacy(rootKnowledge.legacyGlobalLibraryPath())) return finishCampaign();
     const bool rootCreated = rootKnowledge.ensureGlobalLibrary(&libraryError);
     campaign.check(QStringLiteral("UPDATE-051"), QStringLiteral("global library is created under the ARAMF program root"), rootCreated && rootLibrary == QDir(root).filePath(QStringLiteral("ARAMF_DATA/framework-knowledge-library.json")) && QFileInfo::exists(rootLibrary));
     campaign.check(QStringLiteral("UPDATE-052"), QStringLiteral("no active global library is created under build"), !QDir::cleanPath(rootLibrary).contains(QStringLiteral("build")));
@@ -449,7 +613,7 @@ int main(int argc, char** argv)
     if (legacyCMake.open(QIODevice::WriteOnly | QIODevice::Text)) { legacyCMake.write("cmake_minimum_required(VERSION 3.20)\n"); legacyCMake.close(); }
     AramfPaths::setApplicationDirectoryForTests(QDir(legacyRoot).filePath(QStringLiteral("build/Debug")));
     FrameworkKnowledgeService legacyRootKnowledge;
-    QFile::remove(legacyRootKnowledge.legacyGlobalLibraryPath());
+    if (!removeRunLegacy(legacyRootKnowledge.legacyGlobalLibraryPath())) return finishCampaign();
     writeLibrary(legacyRootKnowledge.legacyGlobalLibraryPath(), QJsonArray{rootEntry});
     const bool appDataMigrated = legacyRootKnowledge.ensureGlobalLibrary(&libraryError);
     const auto appDataMigratedEntries = legacyRootKnowledge.globalEntries(&libraryError);
@@ -846,7 +1010,7 @@ int main(int argc, char** argv)
     QTemporaryDir pvdProject;
     QDir(pvdProject.path()).mkpath(QStringLiteral("ARAMF_WORKER"));
     QFile pvdProfile(QDir(pvdProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json")));
-    if (!openOrReport(pvdProfile, QIODevice::WriteOnly, "Unable to create PVD profile fixture")) return 1;
+    if (!openOrReport(pvdProfile, QIODevice::WriteOnly, "Unable to create PVD profile fixture")) return finishCampaign();
     pvdProfile.write(QJsonDocument(QJsonObject{{QStringLiteral("projectId"), QStringLiteral("pvd-project")}, {QStringLiteral("projectName"), QStringLiteral("Pico Visual Designer")}}).toJson()); pvdProfile.close();
     ImprovementBacklogService backlog;
     QJsonObject reportResult; QString backlogError;
@@ -925,12 +1089,12 @@ int main(int argc, char** argv)
     const auto restartedItems = ImprovementBacklogService().items(&backlogError); campaign.check(QStringLiteral("UPDATE-233"), QStringLiteral("backlog persists across service restart"), !restartedItems.isEmpty());
     QDir(QDir(backlogRoot.path()).filePath(QStringLiteral("build"))).removeRecursively(); campaign.check(QStringLiteral("UPDATE-234"), QStringLiteral("disposable build deletion cannot remove backlog"), QFileInfo::exists(backlogPath));
     QFile backlogBackup(backlogPath);
-    if (!openOrReport(backlogBackup, QIODevice::ReadOnly, "Unable to read backlog fixture")) return 1;
+    if (!openOrReport(backlogBackup, QIODevice::ReadOnly, "Unable to read backlog fixture")) return finishCampaign();
     const QByteArray validBacklog = backlogBackup.readAll(); backlogBackup.close();
-    if (!openOrReport(backlogBackup, QIODevice::WriteOnly, "Unable to write malformed backlog fixture")) return 1;
+    if (!openOrReport(backlogBackup, QIODevice::WriteOnly, "Unable to write malformed backlog fixture")) return finishCampaign();
     backlogBackup.write("{ malformed"); backlogBackup.close();
     QString malformedError; const bool malformedRead = !ImprovementBacklogService().items(&malformedError).isEmpty() || malformedError.isEmpty();
-    if (!openOrReport(backlogBackup, QIODevice::WriteOnly, "Unable to restore backlog fixture")) return 1;
+    if (!openOrReport(backlogBackup, QIODevice::WriteOnly, "Unable to restore backlog fixture")) return finishCampaign();
     backlogBackup.write(validBacklog); backlogBackup.close();
     campaign.check(QStringLiteral("UPDATE-235"), QStringLiteral("malformed backlog fails explicitly without replacement"), !malformedRead && malformedError.contains(QStringLiteral("malformed")));
     campaign.check(QStringLiteral("UPDATE-236"), QStringLiteral("atomic persistence keeps a valid prior backlog"), ImprovementBacklogService().items(&backlogError).size() >= restartedItems.size());
@@ -939,10 +1103,10 @@ int main(int argc, char** argv)
     campaign.check(QStringLiteral("UPDATE-239"), QStringLiteral("reporting a gap does not modify ARAMF production source"), QFileInfo::exists(QDir(pvdProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json"))));
     campaign.check(QStringLiteral("UPDATE-240"), QStringLiteral("managed Pico Visual Designer fixture reports to global backlog"), std::any_of(restartedItems.cbegin(), restartedItems.cend(), [](const auto& item) { return item.value(QStringLiteral("originProjects")).toArray().first().toObject().value(QStringLiteral("projectName")).toString() == QStringLiteral("Pico Visual Designer"); }));
      QBuffer cliOutput;
-     if (!cliOutput.open(QIODevice::ReadWrite)) return 1;
+     if (!cliOutput.open(QIODevice::ReadWrite)) return finishCampaign();
      QTextStream cliStream(&cliOutput); QTextStream cliErrorStream(&cliOutput); const int cliReportCode = runMemoryCommand({QStringLiteral("improvement"), QStringLiteral("report"), QStringLiteral("--project"), pvdProject.path(), QStringLiteral("--title"), QStringLiteral("CLI gap"), QStringLiteral("--observation"), QStringLiteral("CLI reported framework gap")}, cliStream, cliErrorStream); cliStream.flush(); const auto cliText = QString::fromUtf8(cliOutput.data()); campaign.check(QStringLiteral("UPDATE-246"), QStringLiteral("CLI report returns stable item ID"), cliReportCode == 0 && cliText.contains(QStringLiteral("gap-"))); campaign.check(QStringLiteral("UPDATE-247"), QStringLiteral("CLI report identifies NEW or existing occurrence"), cliText.contains(QStringLiteral("outcome=NEW")) || cliText.contains(QStringLiteral("EXISTING_OCCURRENCE_APPENDED")));
      QBuffer listOutput;
-     if (!listOutput.open(QIODevice::ReadWrite)) return 1;
+     if (!listOutput.open(QIODevice::ReadWrite)) return finishCampaign();
      QTextStream listStream(&listOutput); QTextStream listError(&listOutput); const int cliListCode = runMemoryCommand({QStringLiteral("improvement"), QStringLiteral("list"), QStringLiteral("--stage"), QStringLiteral("todo")}, listStream, listError); listStream.flush(); campaign.check(QStringLiteral("UPDATE-248"), QStringLiteral("CLI list shows persisted backlog"), cliListCode == 0 && QString::fromUtf8(listOutput.data()).contains(QStringLiteral("TODO-")));
     QTemporaryDir instructionProject; ProjectModel instructionModel; instructionModel.setProjectPath(instructionProject.path()); ProjectMemory instructionMemory; QString instructionError; const bool initializedInstructions = instructionMemory.initialize(instructionProject.path(), &instructionModel, &instructionError); QFile instructionFile(QDir(instructionProject.path()).filePath(AramfPaths::AgentInstructions)); const QString instructionText = instructionFile.open(QIODevice::ReadOnly) ? QString::fromUtf8(instructionFile.readAll()) : QString(); campaign.check(QStringLiteral("UPDATE-249"), QStringLiteral("generated AGENTS instruct agents to report framework gaps"), initializedInstructions && instructionText.contains(QStringLiteral("aramf improvement report")) && instructionText.contains(QStringLiteral("observation")));
     QTemporaryDir generationProject;
@@ -993,7 +1157,7 @@ int main(int argc, char** argv)
     QTemporaryDir identityProject;
     QDir(identityProject.path()).mkpath(QStringLiteral("ARAMF_WORKER"));
     QFile identityProfile(QDir(identityProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json")));
-    if (!openOrReport(identityProfile, QIODevice::WriteOnly, "Unable to create identity profile fixture")) return 1;
+    if (!openOrReport(identityProfile, QIODevice::WriteOnly, "Unable to create identity profile fixture")) return finishCampaign();
     identityProfile.write(QJsonDocument(QJsonObject{{QStringLiteral("projectId"), QStringLiteral("project-uuid-261")}, {QStringLiteral("projectName"), QStringLiteral("Identity Fixture")}}).toJson());
     identityProfile.close();
     ImprovementBacklogService identityBacklog;
@@ -1007,7 +1171,7 @@ int main(int argc, char** argv)
     QTemporaryDir movedIdentityProject;
     QDir(movedIdentityProject.path()).mkpath(QStringLiteral("ARAMF_WORKER"));
     QFile movedProfile(QDir(movedIdentityProject.path()).filePath(QStringLiteral("ARAMF_WORKER/aramf-profile.json")));
-    if (!openOrReport(movedProfile, QIODevice::WriteOnly, "Unable to create moved identity profile fixture")) return 1;
+    if (!openOrReport(movedProfile, QIODevice::WriteOnly, "Unable to create moved identity profile fixture")) return finishCampaign();
     movedProfile.write(QJsonDocument(QJsonObject{{QStringLiteral("projectId"), QStringLiteral("project-uuid-261")}, {QStringLiteral("projectName"), QStringLiteral("Identity Fixture")}}).toJson());
     movedProfile.close();
     QJsonObject movedResult;
@@ -1021,7 +1185,7 @@ int main(int argc, char** argv)
     }
     campaign.check(QStringLiteral("UPDATE-263"), QStringLiteral("moving project path does not change stable project identity"), movedIdentityPreserved);
      QBuffer identityCliOutput;
-     if (!identityCliOutput.open(QIODevice::ReadWrite)) return 1;
+     if (!identityCliOutput.open(QIODevice::ReadWrite)) return finishCampaign();
      QTextStream identityCliStream(&identityCliOutput); QTextStream identityCliError(&identityCliOutput);
     const int identityCliCode = runMemoryCommand({QStringLiteral("improvement"), QStringLiteral("report"), QStringLiteral("--project"), identityProject.path(), QStringLiteral("--project-id"), QStringLiteral("project-uuid-261"), QStringLiteral("--project-name"), QStringLiteral("Identity Fixture"), QStringLiteral("--title"), QStringLiteral("CLI identity gap"), QStringLiteral("--observation"), QStringLiteral("CLI and GUI must use the same identity semantics.")}, identityCliStream, identityCliError);
     identityCliStream.flush();
@@ -1042,7 +1206,7 @@ int main(int argc, char** argv)
     QJsonObject historicalItem{{QStringLiteral("id"), QStringLiteral("gap-historical-identity")}, {QStringLiteral("title"), QStringLiteral("Historical identity gap")}, {QStringLiteral("occurrences"), QJsonArray{historicalOccurrence}}, {QStringLiteral("originProjects"), QJsonArray{historicalOrigin}}};
     QJsonObject historicalStore{{QStringLiteral("_file"), QStringLiteral("aramf-improvement-backlog.json")}, {QStringLiteral("version"), 1}, {QStringLiteral("items"), QJsonArray{historicalItem}}};
     QFile historicalFile(backlogPath);
-    if (!openOrReport(historicalFile, QIODevice::WriteOnly | QIODevice::Truncate, "Unable to create historical backlog fixture")) return 1;
+    if (!openOrReport(historicalFile, QIODevice::WriteOnly | QIODevice::Truncate, "Unable to create historical backlog fixture")) return finishCampaign();
     historicalFile.write(QJsonDocument(historicalStore).toJson()); historicalFile.close();
     const bool normalizedHistorical = identityBacklog.normalizeProjectIdentity(ImprovementBacklogProjectIdentity{QStringLiteral("project-uuid-261"), QStringLiteral("Identity Fixture"), QDir::cleanPath(QFileInfo(identityProject.path()).absoluteFilePath())}, &backlogError);
     const auto normalizedItems = identityBacklog.items(&backlogError);
@@ -1157,7 +1321,7 @@ int main(int argc, char** argv)
     QBuffer adminCliBuffer;
     if (!adminCliBuffer.open(QIODevice::ReadWrite)) {
         std::cerr << "Unable to open admin CLI buffer: " << adminCliBuffer.errorString().toStdString() << '\n';
-        return 1;
+        return finishCampaign();
     }
     QTextStream adminCliOutput(&adminCliBuffer);
     QTextStream adminCliError(&adminCliBuffer);
@@ -1273,10 +1437,5 @@ int main(int argc, char** argv)
     FrameworkKnowledgeService::clearGlobalLibraryPathForTests();
     ImprovementBacklogService::clearPathForTests();
 
-    QJsonObject summary{{QStringLiteral("campaign"), QStringLiteral("UPDATE")}, {QStringLiteral("completed"), campaign.pass + campaign.fail},
-                        {QStringLiteral("pass"), campaign.pass}, {QStringLiteral("fail"), campaign.fail}};
-    QFile campaignFile(QDir(campaign.root).filePath(QStringLiteral("campaign.json")));
-    if (campaignFile.open(QIODevice::WriteOnly | QIODevice::Text)) campaignFile.write(QJsonDocument(summary).toJson(QJsonDocument::Indented));
-    std::cout << "UPDATE campaign: " << campaign.pass << " / " << (campaign.pass + campaign.fail) << " PASS\n";
-    return campaign.fail == 0 ? 0 : 1;
+    return finishCampaign();
 }

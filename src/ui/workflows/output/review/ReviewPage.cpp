@@ -186,10 +186,25 @@ void ReviewPage::refreshFromModel()
                      model_->academicConfiguration().enabled ? tr("Enabled") : tr("Disabled"),
                      displayList(model_->academicConfiguration().projectTypes, EnvironmentCatalog::academicModes()));
     text += tr("Project Configuration\n");
-    text += tr("  Languages: %1\n  Frameworks / SDKs: %2\n  Development tools: %3\n  Platforms: %4\n  Hardware / Architecture: %5\n  Build / Testing / Delivery: %6\n\n")
-                .arg(displayList(capabilities.languages, EnvironmentCatalog::languages()), displayList(capabilities.frameworks, EnvironmentCatalog::frameworks()),
-                     listOrNone(capabilities.developmentTools), listOrNone(capabilities.targetPlatforms),
-                     listOrNone(capabilities.hardwareTargets),
+    QStringList languageDetails;
+    for (const auto& id : capabilities.languages)
+        languageDetails << QStringLiteral("%1%2%3").arg(id,
+            capabilities.languageVersions.contains(id) ? QStringLiteral(" ") + capabilities.languageVersions.value(id) : QString(),
+            capabilities.languageNotes.contains(id) ? QStringLiteral(" — ") + capabilities.languageNotes.value(id) : QString());
+    QStringList frameworkDetails;
+    for (const auto& id : capabilities.frameworks)
+        frameworkDetails << QStringLiteral("%1%2%3").arg(id,
+            capabilities.frameworkVersions.contains(id) ? QStringLiteral(" ") + capabilities.frameworkVersions.value(id) : QString(),
+            capabilities.frameworkNotes.contains(id) ? QStringLiteral(" — ") + capabilities.frameworkNotes.value(id) : QString());
+    QStringList toolchainDetails;
+    for (const auto& id : capabilities.toolchains)
+        toolchainDetails << QStringLiteral("%1%2%3").arg(id,
+            capabilities.toolchainVersions.contains(id) ? QStringLiteral(" ") + capabilities.toolchainVersions.value(id) : QString(),
+            capabilities.toolchainNotes.contains(id) ? QStringLiteral(" — ") + capabilities.toolchainNotes.value(id) : QString());
+    text += tr("  Languages: %1\n  Frameworks / SDKs: %2\n  Toolchains: %3\n  Development tools: %4\n  Platforms: %5\n  Hardware / Architecture: %6\n  Build / Testing / Delivery: %7\n\n")
+                .arg(listOrNone(languageDetails), listOrNone(frameworkDetails),
+                     listOrNone(toolchainDetails), listOrNone(capabilities.developmentTools),
+                     listOrNone(capabilities.targetPlatforms), listOrNone(capabilities.hardwareTargets),
                      listOrNone(capabilities.buildSystems + capabilities.testingCapabilities + capabilities.deliveryCapabilities));
     const auto communication = model_->communicationConfiguration();
     const auto hardwareResources = model_->hardwareResources();
@@ -278,13 +293,14 @@ void ReviewPage::refreshFromModel()
                 .arg(memory.retentionLevel).arg(memory.captureCategories.size())
                 .arg(memory.maintenanceOptions.size()).arg(memory.validationOptions.size())
                 .arg(QString::number(static_cast<double>(memory.maximumSizeBytes) / (1024.0 * 1024.0 * 1024.0), 'g', 6));
-    text += tr("Generation Plan\n  Agent rules: %1\n  Routing: %2\n  Platform/environment metadata: %3\n  Resource manifest: %4\n  Project Memory: %5\n  Provenance / selection effects: %6\n\n")
+    text += tr("Generation Plan\n  Agent rules: %1\n  Routing: %2\n  Platform/environment metadata: %3\n  Resource manifest: %4\n  Project Memory: %5\n  Provenance / selection effects: %6\n  Academic document drafts: %7\n\n")
                 .arg(options.generateAgentRules ? tr("selected") : tr("not selected"),
                      options.generateRouting ? tr("selected") : tr("not selected"),
                      options.generatePlatforms ? tr("selected") : tr("not selected"),
                      options.generateResources ? tr("selected") : tr("not selected"),
                      options.generateMemory ? tr("selected") : tr("not selected"),
-                     options.generateProvenance ? tr("selected") : tr("not selected"));
+                     options.generateProvenance ? tr("selected") : tr("not selected"),
+                     options.generateAcademicDocuments ? tr("selected") : tr("not selected"));
     QJsonObject workerValidation;
     const QString workerValidationPath = QDir(model_->projectPath()).filePath(
         AramfPaths::workerDirectoryName(model_->workerNameSuffix()) + QStringLiteral("/verification/latest-validation.json"));

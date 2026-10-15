@@ -41,7 +41,7 @@
             "dependencies": [
                 "external:be17deda-e75e-47bc-afd8-5c83472af077"
             ],
-            "fingerprint": "7ff9333ef46f5db7a703208513cdb039a858f20b2faf0f7710738e038a77e4c6",
+            "fingerprint": "e9cb08820706ece5bf3da7fd3bb5266c92c1a3e2b2dc76017d2639d53de5ec47",
             "id": "13755694461dd3e6bc0a",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/tests",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -58,7 +58,7 @@
             "dependencies": [
                 "external:226c31e8-233e-4bcb-acf0-f1f853c04cbf"
             ],
-            "fingerprint": "f7d33c19677d176a90f392fcb5511409fd8f7f181dac3847009954ddeb300210",
+            "fingerprint": "41506d05c63c2c630f2b718219fa572c8177ae21e3a24b8e345bf8124ced4e2c",
             "id": "15315567c5f086f3bc87",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/src",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -75,7 +75,7 @@
             "dependencies": [
                 "ARAMF_WORKER/routing/task-routes.json"
             ],
-            "fingerprint": "ee5f393bf7b6b6db424f937a09256b643eb8f6c0dffecf68d37b4c98713a44a1",
+            "fingerprint": "959df51e471d3e3296c44e7adba1a3610f69ed08b98b0a6992e6ad5847bb470e",
             "id": "18635c7cd22b919fd9fe",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/routing/task-routes.json",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -92,7 +92,7 @@
             "dependencies": [
                 "external:04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3"
             ],
-            "fingerprint": "92c1e15c8ba49b5504811b1362e234481665daa56ce1357f86e91c23a98d571f",
+            "fingerprint": "0cf8a96ab0c9884644ca05fe7d86c8585a43e5602760b3179ff1125fe7ab39f9",
             "id": "1970a7e29f52f2105277",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -109,7 +109,7 @@
             "dependencies": [
                 "ARAMF_WORKER/routing/scope-routes.json"
             ],
-            "fingerprint": "3e0804dcf0a2d009f9971403d1eb20404701cfb56e31e928e954e838cdb29521",
+            "fingerprint": "c7d30f718bc8116fad8905896bbec5e635175add1b96fb92fbd8813f97b51068",
             "id": "1bf5b61e779e42541cf5",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/routing/scope-routes.json",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -126,7 +126,7 @@
             "dependencies": [
                 "external:226c31e8-233e-4bcb-acf0-f1f853c04cbf"
             ],
-            "fingerprint": "f7d33c19677d176a90f392fcb5511409fd8f7f181dac3847009954ddeb300210",
+            "fingerprint": "41506d05c63c2c630f2b718219fa572c8177ae21e3a24b8e345bf8124ced4e2c",
             "id": "269d88cc0f32de1bd9a6",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/src",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -245,7 +245,7 @@
             "dependencies": [
                 "ARAMF_WORKER/PROJECT_STATUS.md"
             ],
-            "fingerprint": "6f753125e792966257f49df058363abbe3fb8ab1dd37149f21cecbce30ff8695",
+            "fingerprint": "84915a676c59e614d09f928fe9318a3d2c8edc1371cb7915e8b25588f783ffbe",
             "id": "5279bc546fb4c7b6194d",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/PROJECT_STATUS.md",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -262,7 +262,7 @@
             "dependencies": [
                 "ARAMF_WORKER/memory/decisions.md"
             ],
-            "fingerprint": "dba43f17227aa0d40de9284e13021a2d3086f50c51dead8c0979cc5b41d74f91",
+            "fingerprint": "7a04f3069bef9b12db3d23380bd4c6c51c4c2057ba4cf41d52b853c4dcbbcfce",
             "id": "5af84d7b0624524c28b1",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/memory/decisions.md",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -330,7 +330,7 @@
             "dependencies": [
                 "ARAMF_WORKER/memory/current-state.md"
             ],
-            "fingerprint": "a5e814266c07e88693f8c8eaf1414fd7c27605ca352c8af5f49c05ef5d6b3829",
+            "fingerprint": "0375c0ec3a6824d91f3a41c24e77aa97e30e08eb90250d309b8df4a098c3e0d5",
             "id": "a9be820da65a6b88c14e",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/memory/current-state.md",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -381,7 +381,7 @@
             "dependencies": [
                 "external:04fa6ff2-ba1b-474a-8657-a71b9ab6e8f3"
             ],
-            "fingerprint": "92c1e15c8ba49b5504811b1362e234481665daa56ce1357f86e91c23a98d571f",
+            "fingerprint": "0cf8a96ab0c9884644ca05fe7d86c8585a43e5602760b3179ff1125fe7ab39f9",
             "id": "cae31206f3f40e55de88",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -449,7 +449,7 @@
             "dependencies": [
                 "ARAMF_WORKER/worker-manifest.json"
             ],
-            "fingerprint": "e744b4bb0774c58c87e32e193107e6aa08d9069445f003638654d70940522361",
+            "fingerprint": "282c2c51b766591c405ab1c5dca46bdee7214032f2139e766772d7e7111361ce",
             "id": "d337e707f92b78abc66f",
             "path": "D:/ON DESCTOP/HKR KURSER/C++/ARAMF2/ARAMF/ARAMF_WORKER/worker-manifest.json",
             "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
@@ -514,7 +514,7 @@
             "version": 1
         }
     ],
-    "fingerprint": "1efd0c0d6baf3b52d876576847c7fdc169bee203067e20f454dd7f96682ec2b4",
+    "fingerprint": "6950ba88a45e9e8a9a97296d3ad51dea84cb2775083533758a3d997e5b8f60ae",
     "projectId": "201987ad-a9f4-46b7-aca2-4a5029faecf9",
     "schemaVersion": 1,
     "workerIdentity": "ARAMF_WORKER"

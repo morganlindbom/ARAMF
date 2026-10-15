@@ -41,6 +41,27 @@ QStringList fromJsonArrayOr(const QJsonObject& object, const QString& key, const
     return object.contains(key) ? fromJsonArray(object.value(key)) : fallback;
 }
 
+QJsonObject stringMapToJson(const QMap<QString, QString>& values)
+// Brief: Serialize optional capability metadata by stable catalog ID.
+// Empty values are omitted so legacy configuration remains compact and existing selections remain authoritative.
+{
+    QJsonObject result;
+    for (auto it = values.cbegin(); it != values.cend(); ++it)
+        if (!it.value().isEmpty()) result.insert(it.key(), it.value());
+    return result;
+}
+
+QMap<QString, QString> stringMapFromJson(const QJsonValue& value)
+// Brief: Read optional metadata without changing legacy capability selections.
+// Missing or empty fields yield an empty map and preserve additive migration behavior.
+{
+    QMap<QString, QString> result;
+    const auto object = value.toObject();
+    for (auto it = object.begin(); it != object.end(); ++it)
+        if (!it.value().toString().isEmpty()) result.insert(it.key(), it.value().toString());
+    return result;
+}
+
 int readSchemaVersion(const QJsonObject& root, bool* valid)
 {
     if (valid) *valid = true;
@@ -218,6 +239,12 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
     capabilityObject.insert(QStringLiteral("qualityCapabilities"), toJsonArray(capabilities.qualityCapabilities));
     capabilityObject.insert(QStringLiteral("automationCapabilities"), toJsonArray(capabilities.automationCapabilities));
     capabilityObject.insert(QStringLiteral("deliveryCapabilities"), toJsonArray(capabilities.deliveryCapabilities));
+    capabilityObject.insert(QStringLiteral("languageVersions"), stringMapToJson(capabilities.languageVersions));
+    capabilityObject.insert(QStringLiteral("languageNotes"), stringMapToJson(capabilities.languageNotes));
+    capabilityObject.insert(QStringLiteral("frameworkVersions"), stringMapToJson(capabilities.frameworkVersions));
+    capabilityObject.insert(QStringLiteral("frameworkNotes"), stringMapToJson(capabilities.frameworkNotes));
+    capabilityObject.insert(QStringLiteral("toolchainVersions"), stringMapToJson(capabilities.toolchainVersions));
+    capabilityObject.insert(QStringLiteral("toolchainNotes"), stringMapToJson(capabilities.toolchainNotes));
 
     QJsonObject options;
     const auto storedOptions = model.options();
@@ -388,7 +415,8 @@ QJsonObject ProjectPersistence::toJson(const ProjectModel& model) const
         {QStringLiteral("platforms"), generation.generatePlatforms},
         {QStringLiteral("resources"), generation.generateResources},
         {QStringLiteral("memory"), generation.generateMemory},
-        {QStringLiteral("provenance"), generation.generateProvenance}});
+        {QStringLiteral("provenance"), generation.generateProvenance},
+        {QStringLiteral("academicDocuments"), generation.generateAcademicDocuments}});
     const auto communication = model.communicationConfiguration();
     QJsonArray endpoints;
     for (const auto& endpoint : communication.endpoints)
@@ -676,6 +704,12 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
         capabilities.qualityCapabilities = fromJsonArrayOr(capabilityObject, QStringLiteral("qualityCapabilities"), capabilities.qualityCapabilities);
         capabilities.automationCapabilities = fromJsonArrayOr(capabilityObject, QStringLiteral("automationCapabilities"), capabilities.automationCapabilities);
         capabilities.deliveryCapabilities = fromJsonArrayOr(capabilityObject, QStringLiteral("deliveryCapabilities"), capabilities.deliveryCapabilities);
+        capabilities.languageVersions = stringMapFromJson(capabilityObject.value(QStringLiteral("languageVersions")));
+        capabilities.languageNotes = stringMapFromJson(capabilityObject.value(QStringLiteral("languageNotes")));
+        capabilities.frameworkVersions = stringMapFromJson(capabilityObject.value(QStringLiteral("frameworkVersions")));
+        capabilities.frameworkNotes = stringMapFromJson(capabilityObject.value(QStringLiteral("frameworkNotes")));
+        capabilities.toolchainVersions = stringMapFromJson(capabilityObject.value(QStringLiteral("toolchainVersions")));
+        capabilities.toolchainNotes = stringMapFromJson(capabilityObject.value(QStringLiteral("toolchainNotes")));
     } else {
         if (!environment.language.isEmpty()) capabilities.languages = {environment.language};
         if (!environment.framework.isEmpty() && environment.framework != QStringLiteral("none")) capabilities.frameworks = {environment.framework};
@@ -769,6 +803,7 @@ bool ProjectPersistence::fromJson(ProjectModel* model, const QJsonObject& inputR
         generation.generateResources = generationObject.value(QStringLiteral("resources")).toBool(true);
         generation.generateMemory = generationObject.value(QStringLiteral("memory")).toBool(true);
         generation.generateProvenance = generationObject.value(QStringLiteral("provenance")).toBool(true);
+        generation.generateAcademicDocuments = generationObject.value(QStringLiteral("academicDocuments")).toBool(true);
         model->setGenerationOptions(generation);
     }
     CommunicationConfiguration communication = defaults.communicationConfiguration();

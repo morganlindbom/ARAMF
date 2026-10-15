@@ -76,7 +76,8 @@ QStringList frameworkScopesForProject(const ProjectModel& model)
     if (aramfProject && !scopes.contains(QStringLiteral("all"))) scopes.append(QStringLiteral("all"));
     const auto options = model.generationOptions();
     if (options.generateAgentRules || options.generateRouting || options.generatePlatforms
-        || options.generateResources || options.generateMemory || options.generateProvenance) {
+        || options.generateResources || options.generateMemory || options.generateProvenance
+        || options.generateAcademicDocuments) {
         for (const auto& scope : {QStringLiteral("lifecycle"), QStringLiteral("verification"),
                                   QStringLiteral("finalization"), QStringLiteral("selective-generation"),
                                   QStringLiteral("optional-components")}) {

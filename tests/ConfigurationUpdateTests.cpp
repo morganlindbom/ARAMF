@@ -116,6 +116,144 @@ static bool rawFile(const QString& path, const QByteArray& bytes)
     return file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size() && file.commit();
 }
 
+static QStringList treeEntries(const QString& root)
+{
+    QStringList entries;
+    QDirIterator it(root, QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System,
+                    QDirIterator::Subdirectories);
+    while (it.hasNext()) entries.append(QDir(root).relativeFilePath(it.next()));
+    entries.sort();
+    return entries;
+}
+
+static bool pureConfigurationPreview()
+{
+    QTemporaryDir fixture; fixture.setAutoRemove(false);
+    auto fail = [&](int line) {
+        std::cerr << "Preview failure at " << line << "; fixture " << fixture.path().toStdString() << '\n';
+        return false;
+    };
+    if (!fixture.isValid()) return fail(__LINE__);
+    ProjectModel model;
+    model.setProjectPath(fixture.path());
+    model.setDescription("Original configuration");
+    auto capabilities = model.developmentCapabilities();
+    capabilities.languages = {QStringLiteral("cpp"), QStringLiteral("c")};
+    model.setDevelopmentCapabilities(capabilities);
+    if (!writeState(fixture.path(), ConfigurationUpdateService::canonicalState(model))) return fail(__LINE__);
+    ConfigurationUpdateService updates;
+    const auto initialFiles = treeBytes(fixture.path());
+    const auto initialEntries = treeEntries(fixture.path());
+    const auto unchanged = updates.preview(model);
+    if (!unchanged.success || !unchanged.noChange || unchanged.removalBlocked
+        || treeBytes(fixture.path()) != initialFiles || treeEntries(fixture.path()) != initialEntries)
+        return fail(__LINE__);
+
+    const QString planPath = fixture.filePath("ARAMF_WORKER/update/update-plan.json");
+    const QByteArray previousPlan("{\"previous-plan\":true}\r\n");
+    if (!rawFile(planPath, previousPlan)) return fail(__LINE__);
+    const auto before = treeBytes(fixture.path());
+    const auto entries = treeEntries(fixture.path());
+    model.setDescription("Proposed configuration");
+    const auto modelBefore = ConfigurationUpdateService::canonicalState(model);
+    const auto changed = updates.preview(model);
+    if (!changed.success || changed.noChange || changed.removalBlocked || !changed.error.isEmpty()
+        || changed.plan.value("status") != "VALID" || changed.plan.value("modified").toArray().isEmpty()
+        || changed.plan.value("currentState").toObject() != modelBefore
+        || changed.configurationSaved || changed.derivedSynchronized || changed.verified || changed.rolledBack
+        || ConfigurationUpdateService::canonicalState(model) != modelBefore
+        || readBytes(planPath) != previousPlan || treeBytes(fixture.path()) != before
+        || treeEntries(fixture.path()) != entries) return fail(__LINE__);
+
+    capabilities.languages = {QStringLiteral("cpp")};
+    model.setDevelopmentCapabilities(capabilities);
+    const auto removed = updates.preview(model);
+    if (removed.success || !removed.removalBlocked || removed.noChange || removed.error.isEmpty()
+        || removed.plan.value("status") != "REMOVAL_BLOCKED"
+        || removed.plan.value("removalBlocked").toArray().isEmpty()
+        || removed.plan.value("currentState").toObject() != ConfigurationUpdateService::canonicalState(model)
+        || removed.configurationSaved || removed.derivedSynchronized || removed.verified || removed.rolledBack
+        || readBytes(planPath) != previousPlan || treeBytes(fixture.path()) != before
+        || treeEntries(fixture.path()) != entries) return fail(__LINE__);
+    // The existing UI validation contract still persists a truthful blocked plan.
+    const auto validated = updates.validate(model);
+    if (!validated.success || !validated.removalBlocked || validated.plan != removed.plan
+        || jsonAt(planPath) != removed.plan) return fail(__LINE__);
+    std::cout << "pure_configuration_preview: PASS (unchanged tree, retained plan bytes, removal rejection, compatible validation)\n";
+    return true;
+}
+
+static bool effectiveConfigurationInventory()
+{
+    QTemporaryDir fixture; fixture.setAutoRemove(false);
+    if (!fixture.isValid()) return false;
+    auto fail = [&](int line, const QString& error = {}) {
+        std::cerr << "Effective inventory failure at " << line << ": " << error.toStdString() << '\n';
+        return false;
+    };
+    ProjectPersistence persistence;
+    for (const auto& suffix : QStringList{QString(), QStringLiteral("INVENTORY")}) {
+        for (int selected = 0; selected < 8; ++selected) {
+            for (int academicOption = -1; academicOption < 2; ++academicOption) {
+                ProjectModel model;
+                model.setProjectPath(fixture.path()); model.setWorkerNameSuffix(suffix);
+                // Exercise mixed non-academic selections without changing them
+                // to make the output inventory smaller.
+                auto options = model.generationOptions();
+                options.generateAgentRules = selected & 1;
+                options.generateRouting = selected & 2;
+                options.generatePlatforms = selected & 4;
+                options.generateResources = !(selected & 1);
+                options.generateMemory = !(selected & 2);
+                options.generateProvenance = !(selected & 4);
+                model.setGenerationOptions(options);
+                auto input = persistence.toJson(model);
+                auto academic = input.value("academic").toObject();
+                academic.insert("enabled", bool(selected & 1));
+                auto thesis = academic.value("thesisDocumentation").toObject();
+                auto report = academic.value("reportDocumentation").toObject();
+                thesis.insert("enabled", bool(selected & 2)); report.insert("enabled", bool(selected & 4));
+                academic.insert("thesisDocumentation", thesis); academic.insert("reportDocumentation", report);
+                input.insert("academic", academic);
+                auto generation = input.value("generationOptions").toObject();
+                if (academicOption < 0) generation.remove("academicDocuments");
+                else generation.insert("academicDocuments", bool(academicOption));
+                input.insert("generationOptions", generation);
+                QString error;
+                if (!persistence.fromJson(&model, input, &error)) return fail(__LINE__, error);
+                const auto before = persistence.toJson(model);
+                const auto savedAcademic = before.value("academic").toObject();
+                const auto savedGeneration = before.value("generationOptions").toObject();
+                if (savedAcademic.value("enabled").toBool() != bool(selected & 1)
+                    || savedAcademic.value("thesisDocumentation").toObject().value("enabled").toBool() != bool(selected & 2)
+                    || savedAcademic.value("reportDocumentation").toObject().value("enabled").toBool() != bool(selected & 4)
+                    || (academicOption < 0 && !savedGeneration.value("academicDocuments").toBool(true)))
+                    return fail(__LINE__);
+                const bool academicOutput = savedGeneration.value("academicDocuments").toBool(true) && (selected & 1);
+                const bool thesisOutput = academicOutput && (selected & 2);
+                const bool reportOutput = academicOutput && (selected & 4);
+                const QString worker = AramfPaths::workerDirectoryName(suffix);
+                const QString manifest = worker + "/documentation/documentation-manifest.json";
+                const QString thesisPath = worker + "/documentation/Thesis", reportPath = worker + "/documentation/Report";
+                const auto producerFiles = GenerationServices::configurationUpdateFiles(model, model.generationOptions());
+                auto expected = producerFiles;
+                if (!thesisOutput && !reportOutput) expected.removeAll(manifest);
+                if (!thesisOutput) expected.removeAll(thesisPath);
+                if (!reportOutput) expected.removeAll(reportPath);
+                const auto effective = ConfigurationUpdateService::effectiveOutputFiles(model);
+                if (effective != expected || !effective.contains(worker + "/verification/generation-state.json")
+                    || effective.contains(manifest) != (producerFiles.contains(manifest) && (thesisOutput || reportOutput))
+                    || effective.contains(thesisPath) != (producerFiles.contains(thesisPath) && thesisOutput)
+                    || effective.contains(reportPath) != (producerFiles.contains(reportPath) && reportOutput)
+                    || persistence.toJson(model) != before || !treeEntries(fixture.path()).isEmpty())
+                    return fail(__LINE__);
+            }
+        }
+    }
+    std::cout << "effective_configuration_inventory: PASS (inactive outputs pruned, active markers preserved, generation-state retained, all options unchanged)\n";
+    return true;
+}
+
 static void componentProfile(ProjectModel& model)
 {
     auto c = model.developmentCapabilities();
@@ -190,6 +328,9 @@ static bool transactionalPropagation(bool legacy = false)
     const auto siblingBefore = treeBytes(fixture.filePath("ARAMF_WORKER_OTHER"));
     const QString worker = fixture.filePath(AramfPaths::workerDirectoryName(original.workerNameSuffix()));
     const auto history = readBytes(worker + "/memory/event-log.jsonl"), decisions = readBytes(worker + "/memory/decisions.md");
+    const auto originalState = ConfigurationUpdateService::canonicalState(original);
+    if (QFileInfo::exists(worker + "/documentation/Thesis") || QFileInfo::exists(worker + "/documentation/Report"))
+        return fail(__LINE__);
     // An empty program root proves updates do not initialize global knowledge.
     QTemporaryDir program; program.setAutoRemove(false);
     AramfPaths::setProgramRootForTests(program.path());
@@ -227,10 +368,27 @@ static bool transactionalPropagation(bool legacy = false)
         || reload.projectName() != "HVD Components" || reload.workerNameSuffix() != original.workerNameSuffix()
         || !profileReadback(reload) || treeBytes(fixture.filePath("ARAMF_WORKER_OTHER")) != siblingBefore
         || readBytes(worker + "/memory/event-log.jsonl") != history || readBytes(worker + "/memory/decisions.md") != decisions
+        || ConfigurationUpdateService::canonicalState(reload).value("academic") != originalState.value("academic")
+        || ConfigurationUpdateService::canonicalState(reload).value("generationOptions") != originalState.value("generationOptions")
+        || QFileInfo::exists(worker + "/documentation/Thesis") || QFileInfo::exists(worker + "/documentation/Report")
+        || !QFileInfo::exists(worker + "/verification/generation-state.json")
         || QFileInfo::exists(worker + "/legacy-only.txt") || !treeBytes(program.path()).isEmpty()) return fail(__LINE__);
     QProcess child; child.setProcessChannelMode(QProcess::MergedChannels);
     child.start(QCoreApplication::applicationFilePath(), {"--reload-component-profile", original.projectFilePath(), original.projectId()});
     if (!child.waitForFinished(60000) || child.exitCode() || child.exitStatus() != QProcess::NormalExit) return fail(__LINE__, child.readAll());
+    // Inactive historical documents remain user data even when their former
+    // output directories already exist. They are outside this transaction.
+    if (!rawFile(worker + "/documentation/Thesis/previous.md", "# Preserved thesis\r\n")
+        || !rawFile(worker + "/documentation/Report/previous.md", "# Preserved report\r\n")
+        || !rawFile(worker + "/documentation/documentation-manifest.json", "{\"historical-output\":true}\r\n"))
+        return fail(__LINE__);
+    const auto previousDocuments = treeBytes(worker + "/documentation");
+    const auto preserved = ConfigurationUpdateService().apply(reload);
+    if (!preserved.success || !preserved.configurationSaved || !preserved.derivedSynchronized || !preserved.verified
+        || treeBytes(worker + "/documentation") != previousDocuments
+        || readBytes(worker + "/memory/event-log.jsonl") != history
+        || readBytes(worker + "/memory/decisions.md") != decisions || !profileReadback(reload))
+        return fail(__LINE__, preserved.error);
     // The receipt is checked, not merely stored: a stale product cannot verify.
     if (!rawFile(worker + "/platforms/platform-metadata.json", "{}\r\n")) return fail(__LINE__);
     if (VerificationServices().verify(reload, reload.generationOptions(), false).overallStatus == VerificationStatus::Pass) return fail(__LINE__);
@@ -273,6 +431,8 @@ int main(int argc, char** argv)
             && model.workerNameSuffix() == "HVD_COMPONENTS"
             && VerificationServices().verify(model, model.generationOptions(), false).overallStatus == VerificationStatus::Pass ? 0 : 20;
     }
+    if (!pureConfigurationPreview()) return 24;
+    if (!effectiveConfigurationInventory()) return 25;
     if (!namedWorkerUpdates()) return 21;
     if (!transactionalPropagation() || !transactionalPropagation(true)) return 23;
     QTemporaryDir fixture;

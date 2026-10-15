@@ -15,7 +15,8 @@ public:
     static bool certify(const QString& root, const QString& file, const QString& subject,
                         const QString& revision, const QString& artifact, QJsonObject* result, QString* error);
     static bool complete(const QString& root, const QString& file, const QString& subject, QString* error);
-    static bool acceptIntegration(const QString& root, const QString& file, QJsonObject* result, QString* error);
+    static bool acceptIntegration(const QString& root, const QString& file, QJsonObject* result, QString* error,
+                                  const QString& plannedId = {}, const QJsonObject& operationBinding = {});
     static bool eligible(const QString& root, const QString& file, QString* error);
     static QJsonObject freshness(const QString& root);
     // Historical bytes are checked against the sealed certificate and its own

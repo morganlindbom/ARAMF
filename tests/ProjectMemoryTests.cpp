@@ -1797,6 +1797,7 @@ int main(int argc, char** argv)
     noProducts.generateResources = false;
     noProducts.generateMemory = false;
     noProducts.generateProvenance = false;
+    noProducts.generateAcademicDocuments = false;
     const GenerationResult noProductResult = generationServices.generate(generationModel, noProducts);
     ok &= require(!noProductResult.success && noProductResult.error.contains(QStringLiteral("select at least one")), "empty generation must be rejected");
 

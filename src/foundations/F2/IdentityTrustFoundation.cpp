@@ -54,6 +54,33 @@ bool IdentityTrustFoundation::isVerifiedAdministrativeOverride(const QString& in
         && normalized.contains(QStringLiteral("override"), Qt::CaseInsensitive);
 }
 
+bool IdentityTrustFoundation::isExplicitTemporaryGovernanceRepairAuthority(const QString& instruction)
+{
+    const QString text = instruction.simplified();
+    const QString lower = text.toLower();
+    // Deliberately recognize affirmative repair language, rather than treating
+    // a name, a quotation or a general discussion as delegated authority.
+    const bool affirmative = text.startsWith(QStringLiteral("Admin Morgan Lindbom confirms the explicit, temporary authority already granted"))
+        || text.startsWith(QStringLiteral("Admin Morgan Lindbom explicitly authorizes temporary governance repair"));
+    if (!affirmative || containsDestructivePattern(text)) return false;
+    for (const QString& denied : {QStringLiteral("does not authorize"), QStringLiteral("do not authorize"),
+             QStringLiteral("not granted"), QStringLiteral("not confirm"), QStringLiteral("revok"),
+             QStringLiteral("withdraw"), QStringLiteral("hypothetical"), QStringLiteral("example"),
+             QStringLiteral("quoted"), QStringLiteral("ignore the"), QStringLiteral("bypass"), QStringLiteral("skip "),
+             QStringLiteral("waiv"), QStringLiteral("without current"), QStringLiteral("no current"),
+             QStringLiteral("do not preserve"), QStringLiteral("do not require"), QStringLiteral("not required"),
+             QStringLiteral("optional"), QStringLiteral("unrestricted"), QStringLiteral("indefinite"), QStringLiteral("unlimited")})
+        if (lower.contains(denied)) return false;
+    for (const QString& constraint : {QStringLiteral("restore aramf"), QStringLiteral("temporary bootstrap repair authority"),
+             QStringLiteral("exact purpose and file scope"), QStringLiteral("preserve all existing work"),
+             QStringLiteral("contracts, baselines, reports, and evidence"), QStringLiteral("do not discard or rewrite history"),
+             QStringLiteral("does not suspend aramf"), QStringLiteral("ordinary process"),
+             QStringLiteral("ready taskcontracts"), QStringLiteral("exact scope"),
+             QStringLiteral("current evidence"), QStringLiteral("required validation"), QStringLiteral("pass postflight")})
+        if (!lower.contains(constraint)) return false;
+    return true;
+}
+
 bool IdentityTrustFoundation::containsDestructivePattern(const QString& text)
 {
     static const QStringList patterns = {

@@ -255,7 +255,78 @@ QStringList filesFor(const QString& subject)
             QStringLiteral("src/foundations/F4/ProcessVersion.h"), QStringLiteral("src/foundations/F4/ProcessVersion.cpp")};
         return files;
     }
-    if (subject == QStringLiteral("P1")) return {QStringLiteral("src/core/WorkerTaskServices.h"), QStringLiteral("src/core/WorkerTaskServices.cpp"), QStringLiteral("tests/WorkerTaskTests.cpp"), QStringLiteral("tests/P2ExecutionTests.cpp")};
+    // P1 owns these production inputs to its governance adapters. F1-covered inputs
+    // remain bound through the existing F1 dependency; shared implementation coverage
+    // adds no process or Foundation dependency edge. Keep this finite list deterministic.
+    if (subject == QStringLiteral("P1")) return {
+        QStringLiteral("src/core/WorkerTaskServices.h"),
+        QStringLiteral("src/core/WorkerTaskServices.cpp"),
+        QStringLiteral("tests/WorkerTaskTests.cpp"),
+        QStringLiteral("tests/P2ExecutionTests.cpp"),
+        QStringLiteral("src/core/AiCatalog.h"),
+        QStringLiteral("src/core/AiCatalog.cpp"),
+        QStringLiteral("src/core/CertificationFreshness.h"),
+        QStringLiteral("src/core/CertificationFreshness.cpp"),
+        QStringLiteral("src/core/CertificationRevalidation.h"),
+        QStringLiteral("src/core/CertificationRevalidation.cpp"),
+        QStringLiteral("src/core/ComponentVersion.h"),
+        QStringLiteral("src/core/ComponentVersion.cpp"),
+        QStringLiteral("src/core/ConfigurationUpdateService.h"),
+        QStringLiteral("src/core/ConfigurationUpdateService.cpp"),
+        QStringLiteral("src/core/ContextCoordinationService.h"),
+        QStringLiteral("src/core/ContextCoordinationService.cpp"),
+        QStringLiteral("src/core/ControlPlaneMigration.h"),
+        QStringLiteral("src/core/ControlPlaneMigration.cpp"),
+        QStringLiteral("src/core/DocumentInstruction.h"),
+        QStringLiteral("src/core/DocumentInstruction.cpp"),
+        QStringLiteral("src/core/DocumentTemplate.h"),
+        QStringLiteral("src/core/DocumentTemplate.cpp"),
+        QStringLiteral("src/core/DocumentTemplateInspector.h"),
+        QStringLiteral("src/core/DocumentTemplateInspector.cpp"),
+        QStringLiteral("src/core/EnvironmentCatalog.h"),
+        QStringLiteral("src/core/EnvironmentCatalog.cpp"),
+        QStringLiteral("src/core/FoundationCertificationCampaign.h"),
+        QStringLiteral("src/core/FoundationCertificationCampaign.cpp"),
+        QStringLiteral("src/core/GitIgnoreService.h"),
+        QStringLiteral("src/core/GitIgnoreService.cpp"),
+        QStringLiteral("src/core/MemoryCatalog.h"),
+        QStringLiteral("src/core/MemoryCatalog.cpp"),
+        QStringLiteral("src/core/ProcessVersion.h"),
+        QStringLiteral("src/core/ProcessVersion.cpp"),
+        QStringLiteral("src/core/ProjectModel.h"),
+        QStringLiteral("src/core/ProjectModel.cpp"),
+        QStringLiteral("src/core/ProjectPersistence.h"),
+        QStringLiteral("src/core/ProjectPersistence.cpp"),
+        QStringLiteral("src/core/RuleCatalog.h"),
+        QStringLiteral("src/core/RuleCatalog.cpp"),
+        QStringLiteral("src/core/Services.h"),
+        QStringLiteral("src/core/Services.cpp"),
+        QStringLiteral("src/core/TemplateValidation.h"),
+        QStringLiteral("src/core/TemplateValidation.cpp"),
+        QStringLiteral("src/core/ValidationRouting.h"),
+        QStringLiteral("src/core/ValidationRouting.cpp"),
+        QStringLiteral("src/core/WorkerContextResolver.h"),
+        QStringLiteral("src/core/WorkerContextResolver.cpp"),
+        QStringLiteral("src/core/WorkflowPageMetadata.h"),
+        QStringLiteral("src/core/WorkflowPageMetadata.cpp"),
+        QStringLiteral("src/core/AramfPaths.h"),
+        QStringLiteral("src/core/ProjectSchema.h"),
+        QStringLiteral("src/foundations/F4/ProcessVersion.h"),
+        QStringLiteral("src/foundations/F4/ProcessVersion.cpp"),
+        QStringLiteral("src/structure/S1/ResponsibilityOwnership.h"),
+        QStringLiteral("src/structure/S1/ResponsibilityOwnership.cpp"),
+        QStringLiteral("src/structure/S2/PhysicalStructure.h"),
+        QStringLiteral("src/structure/S2/PhysicalStructure.cpp"),
+        QStringLiteral("src/structure/S3/DependencyInterfaces.h"),
+        QStringLiteral("src/structure/S3/DependencyInterfaces.cpp"),
+        QStringLiteral("src/structure/S4/CompositionEncapsulation.h"),
+        QStringLiteral("src/structure/S4/CompositionEncapsulation.cpp"),
+        QStringLiteral("src/structure/S5/DecompositionModularity.h"),
+        QStringLiteral("src/structure/S5/DecompositionModularity.cpp"),
+        QStringLiteral("src/structure/S6/StructuralEvolutionEnforcement.h"),
+        QStringLiteral("src/structure/S6/StructuralEvolutionEnforcement.cpp"),
+        QStringLiteral("src/foundations/F2/IdentityTrustFoundation.h"),
+        QStringLiteral("src/foundations/F2/IdentityTrustFoundation.cpp")};
     if (subject == QStringLiteral("P2")) return {QStringLiteral("src/core/ContextCoordinationService.h"), QStringLiteral("src/core/ContextCoordinationService.cpp"), QStringLiteral("src/core/WorkerContextResolver.h"), QStringLiteral("src/core/WorkerContextResolver.cpp"), QStringLiteral("tests/ContextCoordinationTests.cpp")};
     if (subject == QStringLiteral("P3")) return {QStringLiteral("src/core/ExecutionOrchestrator.h"), QStringLiteral("src/core/ExecutionOrchestrator.cpp"), QStringLiteral("tests/P2ExecutionTests.cpp")};
     if (subject == QStringLiteral("P4")) return {QStringLiteral("src/core/PredictiveOptimizationService.h"), QStringLiteral("src/core/PredictiveOptimizationService.cpp"), QStringLiteral("tests/P3PredictiveTests.cpp")};
@@ -384,7 +455,7 @@ bool CertificationSourceManifestProvider::fingerprint(const QString& projectRoot
 
 CertificationSourceManifest CertificationSourceManifestProvider::manifest(const QString& subject)
 {
-    return {subject, QStringLiteral("1"), filesFor(subject)};
+    return {subject, subject == QStringLiteral("P1") ? QStringLiteral("3") : QStringLiteral("1"), filesFor(subject)};
 }
 
 bool CertificationContractManifestProvider::fingerprint(const QString& subject, const QString& projectRoot,

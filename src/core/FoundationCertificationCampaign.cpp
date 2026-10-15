@@ -5,6 +5,7 @@
 #include "CertificationRevalidation.h"
 #include "ProjectModel.h"
 #include "ProjectPersistence.h"
+#include "AramfPaths.h"
 #include <QCoreApplication>
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -16,6 +17,7 @@
 #include <QSaveFile>
 #include <QUuid>
 #include <QSet>
+#include <QRegularExpression>
 #include <algorithm>
 
 namespace foundation_campaign {
@@ -41,9 +43,10 @@ bool writeNew(const QString& path, const QByteArray& bytes, QString* error)
 {
     if (QFileInfo::exists(path)) return fail(error, "Immutable evidence already exists: " + path);
     if (!QDir().mkpath(QFileInfo(path).absolutePath())) return fail(error, "Cannot create evidence directory");
-    QSaveFile file(path);
-    if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit())
+    QFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::NewOnly) || file.write(bytes) != bytes.size())
         return fail(error, file.errorString());
+    file.close();
     return read(path) == bytes || fail(error, "Evidence readback mismatch");
 }
 QString resolve(const QString& root, const QString& file)
@@ -74,6 +77,20 @@ bool save(const QString& root, const QString& file, const ProjectModel& model, Q
     if (!persistence.load(&restored, resolve(root, file), error)) return false;
     return processVersionStateToJson(restored.processVersionState()) == processVersionStateToJson(model.processVersionState())
         || fail(error, "Lifecycle persistence readback mismatch");
+}
+QJsonObject projectBinding(const QString& root, const ProjectModel& model, QString* error)
+{
+    const QString worker = AramfPaths::workerDirectoryName(model.workerNameSuffix());
+    const auto project = object(resolve(root, worker + "/project.json"));
+    if (model.projectId().isEmpty() || project.value("projectId") != model.projectId()
+        || project.value("workerIdentity") != worker) {
+        fail(error, "Saved model and canonical Worker project identity disagree");
+        return {};
+    }
+    // The nine prerequisite source/contract/evidence bindings below capture
+    // relevant configuration. P6 progress must not invalidate its own entry.
+    return {{"projectId", model.projectId()}, {"projectRoot", QFileInfo(root).canonicalFilePath()},
+        {"workerIdentity", worker}};
 }
 bool active(const ProjectModel& model, const QString& subject, QString* error)
 {
@@ -421,12 +438,21 @@ QJsonObject FoundationCertificationCampaign::freshness(const QString& root)
 }
 
 bool FoundationCertificationCampaign::acceptIntegration(const QString& root, const QString& file,
-                                                         QJsonObject* result, QString* error)
+                                                         QJsonObject* result, QString* error,
+                                                         const QString& plannedId, const QJsonObject& operationBinding)
 {
     using namespace foundation_campaign;
     ProjectModel model;
     if (!load(root, file, &model, error)) return false;
+    const auto identity = projectBinding(root, model, error);
+    if (identity.isEmpty()) return false;
+    if ((!plannedId.isEmpty() && (!QRegularExpression("^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$").match(plannedId).hasMatch()
+            || operationBinding.value("projectBinding") != identity
+            || !QRegularExpression("^[a-f0-9]{64}$").match(operationBinding.value("contractId").toString()).hasMatch()))
+        || (plannedId.isEmpty() && !operationBinding.isEmpty())) return fail(error, "Invalid planned integration identity or binding");
     auto state = model.processVersionState();
+    if (!plannedId.isEmpty() && !state.foundationIntegrationValid)
+        return fail(error, "Planned acceptance currently requires an unchanged already-true integration lifecycle projection");
     if (state.hasActiveProcess || state.hasActiveStructure) return fail(error, "An unfinished lifecycle blocks integration acceptance");
     QJsonObject certificates;
     for (const auto& subject : QStringList{"F1","F2","F3","F4","P1","P2","P3","P4","P5"}) {
@@ -442,10 +468,12 @@ bool FoundationCertificationCampaign::acceptIntegration(const QString& root, con
     }
     const auto report = FoundationIntegrationService::validate(root, &model, error);
     if (!report.valid) return false;
-    const QString path = "ARAMF_WORKER/certification/integration/" + QUuid::createUuid().toString(QUuid::WithoutBraces) + "/acceptance.json";
-    const QJsonObject acceptance{{"schemaVersion", 1}, {"acceptanceType", "AUTHORITATIVE_ACCEPTANCE"},
+    const QString path = "ARAMF_WORKER/certification/integration/"
+        + (plannedId.isEmpty() ? QUuid::createUuid().toString(QUuid::WithoutBraces) : plannedId) + "/acceptance.json";
+    QJsonObject acceptance{{"schemaVersion", 2}, {"acceptanceType", "AUTHORITATIVE_ACCEPTANCE"}, {"projectBinding", identity},
         {"result", "PASS"}, {"certificates", certificates}, {"freshness", freshness(root)},
         {"validation", report.fullReport}, {"timestamp", QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs)}};
+    if (!operationBinding.isEmpty()) acceptance.insert("operationBinding", operationBinding);
     if (!writeNew(resolve(root, path), QJsonDocument(acceptance).toJson(), error)) return false;
     // Derived only after independent certificates, their current freshness, and
     // external integration have all passed. This does not instantiate peers inside a Foundation.
@@ -464,13 +492,16 @@ bool FoundationCertificationCampaign::eligible(const QString& root, const QStrin
     ProjectModel model;
     if (!load(root, file, &model, error)
         || !model.processVersionState().isP6Eligible(error)) return false;
+    const auto identity = projectBinding(root, model, error);
+    if (identity.isEmpty()) return false;
     for (const auto& subject : QStringList{"F1","F2","F3","F4","P1","P2","P3","P4","P5"})
         if (!certificateValid(root, subject, nullptr, error)) return false;
     bool accepted = false;
     const QDir directory(resolve(root, "ARAMF_WORKER/certification/integration"));
     for (const auto& entry : directory.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
         const auto record = object(directory.filePath(entry + "/acceptance.json"));
-        if (record.value("acceptanceType") != "AUTHORITATIVE_ACCEPTANCE" || record.value("result") != "PASS") continue;
+        if (record.value("acceptanceType") != "AUTHORITATIVE_ACCEPTANCE" || record.value("result") != "PASS"
+            || record.value("projectBinding") != identity) continue;
         bool matching = true;
         for (const auto& subject : QStringList{"F1","F2","F3","F4","P1","P2","P3","P4","P5"}) {
             QJsonObject certificate;

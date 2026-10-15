@@ -31,7 +31,8 @@ GeneratePage::GeneratePage(ProjectModel* model, ProjectSetupPage* setupPage,
         {tr("Platform and environment metadata"), QStringLiteral("platforms")},
         {tr("Resource manifest"), QStringLiteral("resources")},
         {tr("Project Memory artifacts"), QStringLiteral("memory")},
-        {tr("Provenance and selection effects"), QStringLiteral("provenance")}
+        {tr("Provenance and selection effects"), QStringLiteral("provenance")},
+        {tr("Academic documentation (Thesis / Report drafts)"), QStringLiteral("academic-documents")}
     };
     for (const auto& product : products) {
         auto* box = new QCheckBox(product.first, outputs);
@@ -42,7 +43,8 @@ GeneratePage::GeneratePage(ProjectModel* model, ProjectSetupPage* setupPage,
             : product.second == QStringLiteral("platforms") ? current.generatePlatforms
             : product.second == QStringLiteral("resources") ? current.generateResources
             : product.second == QStringLiteral("memory") ? current.generateMemory
-            : current.generateProvenance;
+            : product.second == QStringLiteral("provenance") ? current.generateProvenance
+            : current.generateAcademicDocuments;
         box->setChecked(checked);
         outputProducts_.append(box);
         outputLayout->addWidget(box);
@@ -79,7 +81,8 @@ GeneratePage::GeneratePage(ProjectModel* model, ProjectSetupPage* setupPage,
             && QDir::cleanPath(model_->projectPath().trimmed()) != QStringLiteral(".");
         const bool hasProduct = options.generateAgentRules || options.generateRouting
             || options.generatePlatforms || options.generateResources
-            || options.generateMemory || options.generateProvenance;
+            || options.generateMemory || options.generateProvenance
+            || options.generateAcademicDocuments;
         if (!hasProjectPath) {
             result_->setPlainText(tr("Save: NOT RUN\nGenerate: NOT RUN\n\nSave and Generate stopped: choose a Project Path first."));
             return;
@@ -101,7 +104,8 @@ GeneratePage::GeneratePage(ProjectModel* model, ProjectSetupPage* setupPage,
         const auto options = model_->generationOptions();
         const QList<bool> values{options.generateAgentRules, options.generateRouting,
                                  options.generatePlatforms, options.generateResources,
-                                 options.generateMemory, options.generateProvenance};
+                                 options.generateMemory, options.generateProvenance,
+                                 options.generateAcademicDocuments};
         for (int i = 0; i < outputProducts_.size(); ++i) {
             QSignalBlocker blocker(outputProducts_.at(i));
             outputProducts_.at(i)->setChecked(values.at(i));
@@ -120,6 +124,7 @@ GenerationOptions GeneratePage::selectedOptions() const
     options.generateResources = outputProducts_.at(3)->isChecked();
     options.generateMemory = outputProducts_.at(4)->isChecked();
     options.generateProvenance = outputProducts_.at(5)->isChecked();
+    options.generateAcademicDocuments = outputProducts_.at(6)->isChecked();
     return options;
 }
 

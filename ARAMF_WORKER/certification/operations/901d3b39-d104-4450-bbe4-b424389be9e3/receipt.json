@@ -1,0 +1,25 @@
+{
+    "contractId": "04244ecdb1e12032d4647fc3613724012ba945b53c8c316ce5709f998c18a331",
+    "error": "",
+    "operationId": "901d3b39-d104-4450-bbe4-b424389be9e3",
+    "outcome": "CANONICAL_OPERATIONS_APPLIED",
+    "outputs": {
+        "ARAMF_WORKER.aramf.json": "71e204d35ae90b36c7cecf0600f770a647dcae7e933b91399cff5a2746133f64",
+        "ARAMF_WORKER/certification/integration/901d3b39-d104-4450-bbe4-b424389be9e3/acceptance.json": "d56fe42101b84d32f3bd32185bbbc5134b311205fa86cb23e5e6f164788cec6d",
+        "ARAMF_WORKER/certification/operations/901d3b39-d104-4450-bbe4-b424389be9e3/recovery-seal.json": "MISSING",
+        "ARAMF_WORKER/certification/operations/901d3b39-d104-4450-bbe4-b424389be9e3/recovery.json": "MISSING",
+        "ARAMF_WORKER/certification/operations/901d3b39-d104-4450-bbe4-b424389be9e3/software-evidence.json": "3d4b38bcd565148d698fd1ecf33176e4556783c4e20f6247a0dfa08711c9627b",
+        "ARAMF_WORKER/memory/cold-start-validation.json": "fbb50e6c6e629666354a64a07fd1ee62b8f146a03cbb542c325b42442584b9c8",
+        "ARAMF_WORKER/project.json": "68c3b8f79f0ccae53a899b59fc3f3f95ab483c9db29df8fb91bafd3216624296"
+    },
+    "p6Eligibility": "PASS",
+    "producer": "WorkerTaskServices/certification-operation/v1",
+    "results": [
+        {
+            "artifact": "ARAMF_WORKER/certification/integration/901d3b39-d104-4450-bbe4-b424389be9e3/acceptance.json",
+            "foundationIntegrationValid": true,
+            "p6Entry": "UNBLOCKED"
+        }
+    ],
+    "timestamp": "2026-10-14T20:41:49.691Z"
+}

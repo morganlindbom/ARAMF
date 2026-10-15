@@ -163,12 +163,41 @@ QList<ReleaseComponent> ReleaseManagementService::defaultComponents()
         {"project.file-worker", "Project / Project file, path & Worker", 1, 1},
         {"project.modules-templates", "Project / Project modules & templates", 1, 2},
         {"project.academic", "Project / Academic", 1, 3},
+        {"project.communication", "Project / Project communication", 1, 10},
+        {"project.compatibility", "Project / Project compatibility & migration", 1, 11},
+        {"project.academic.documentation", "Project / Academic / Documentation", 2, 1},
+        {"project.academic.research", "Project / Academic / Thesis & research", 2, 2},
+        {"project.academic.information", "Project / Academic / Academic information", 2, 3},
+        {"project.academic.standards", "Project / Academic / Standards & languages", 2, 4},
+        {"project.academic.deliverables", "Project / Academic / Requirements & deliverables", 2, 5},
         {"project.languages", "Project / Which languages are used?", 1, 4},
+        {"project.languages.systems", "Project / Languages / Systems", 3, 1},
+        {"project.languages.application", "Project / Languages / Application", 3, 2},
+        {"project.languages.web", "Project / Languages / Web", 3, 3},
+        {"project.languages.scripting", "Project / Languages / Scripting & data", 3, 4},
         {"project.frameworks", "Project / Which frameworks / SDKs are used?", 1, 5},
+        {"project.frameworks.desktop-ui", "Project / Frameworks / Desktop & UI", 4, 1},
+        {"project.frameworks.web-server", "Project / Frameworks / Web & server", 4, 2},
+        {"project.frameworks.mobile", "Project / Frameworks / Mobile", 4, 3},
+        {"project.frameworks.embedded-device", "Project / Frameworks / Embedded & device", 4, 4},
+        {"project.frameworks.data-ml", "Project / Frameworks / Data & ML", 4, 5},
+        {"project.frameworks.graphics-game", "Project / Frameworks / Graphics & game", 4, 6},
         {"project.development-tools", "Project / Which development tools are used?", 1, 6},
+        {"project.development-tools.ide", "Project / Development Tools / IDE & editors", 5, 1},
+        {"project.development-tools.version-control", "Project / Development Tools / Version control", 5, 2},
+        {"project.development-tools.support", "Project / Development Tools / Development support", 5, 3},
         {"project.platforms", "Project / Where does the project run?", 1, 7},
+        {"project.platforms.hosts", "Project / Platforms / Host operating systems", 6, 1},
+        {"project.platforms.targets", "Project / Platforms / Target platforms", 6, 2},
         {"project.hardware-architecture", "Project / Which hardware / architecture is used?", 1, 8},
+        {"project.hardware-architecture.architectures", "Project / Hardware / Target architectures", 7, 1},
+        {"project.hardware-architecture.processors", "Project / Hardware / Processor families", 7, 2},
+        {"project.hardware-architecture.targets", "Project / Hardware / Hardware & deployment targets", 7, 3},
         {"project.build-delivery", "Project / How it is built, tested and delivered", 1, 9},
+        {"project.build-delivery.toolchains", "Project / Build & Delivery / Compiler & toolchain", 8, 1},
+        {"project.build-delivery.build-systems", "Project / Build & Delivery / Build systems & dependencies", 8, 2},
+        {"project.build-delivery.testing", "Project / Build & Delivery / Testing & quality", 8, 3},
+        {"project.build-delivery.automation", "Project / Build & Delivery / Automation & delivery", 8, 4},
         {"ai.agents", "AI / Which AI agents are used?", 2, 1},
         {"ai.responsibilities", "AI / What may AI work on?", 2, 2},
         {"ai.autonomy", "AI / How autonomous may AI be?", 2, 3},
@@ -192,7 +221,8 @@ QList<ReleaseComponent> ReleaseManagementService::defaultComponents()
         {"generate.finalize", "Generate / Finalize", 7, 4},
         {"update.review", "Update / Review Framework Knowledge", 8, 1},
         {"update.apply", "Update / Apply Framework Knowledge", 8, 2},
-        {"update.improvement-backlog", "Update / ARAMF Improvement Backlog", 8, 3}
+        {"update.improvement-backlog", "Update / ARAMF Improvement Backlog", 8, 3},
+        {"update.configuration", "Update / Update Configuration", 8, 4}
     };
     QList<ReleaseComponent> result;
     for (const auto& entry : entries) {
@@ -239,6 +269,9 @@ ReleaseReadinessSummary ReleaseManagementService::readiness(const std::optional<
 
 bool ReleaseManagementService::reload(QString* error)
 {
+    // Brief: Merge saved release state into current defaults.
+    // Keep historical entries and approvals intact while introducing newly tracked pages.
+
     if (error) error->clear();
     components_ = defaultComponents();
     approvalHistory_.clear();
@@ -260,7 +293,18 @@ bool ReleaseManagementService::reload(QString* error)
         const auto object = value.toObject();
         const QString id = object.value(QStringLiteral("id")).toString();
         auto it = std::find_if(components_.begin(), components_.end(), [&id](const ReleaseComponent& component) { return component.id == id; });
-        if (it == components_.end()) continue;
+        if (it == components_.end()) {
+            ComponentVersion historical;
+            QString parseErrorText;
+            if (!ComponentVersion::parse(object.value(QStringLiteral("version")).toString(), &historical, &parseErrorText)) {
+                if (error) *error = QStringLiteral("Invalid historical component version for %1: %2").arg(id, parseErrorText);
+                return false;
+            }
+            components_.append(ReleaseComponent{id, object.value(QStringLiteral("displayName")).toString(), historical,
+                object.value(QStringLiteral("releaseRequired")).toBool(true), object.value(QStringLiteral("enabled")).toBool(true),
+                object.value(QStringLiteral("legacyVersion")).toString()});
+            continue;
+        }
         ComponentVersion parsed;
         QString parseErrorText;
         if (!ComponentVersion::parse(object.value(QStringLiteral("version")).toString(), &parsed, &parseErrorText)) {
