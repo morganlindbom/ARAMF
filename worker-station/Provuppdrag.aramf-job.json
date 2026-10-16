@@ -1,0 +1,24 @@
+{
+    "goal": "Skapa en liten svensk välkomstsida för agentstationen.",
+    "id": "pilot-001",
+    "inputs": [
+        {
+            "path": "brief.txt",
+            "text": "Detta är ett provuppdrag för en separat Windows-agentstation. En tydlig sida med mörkblå rubrik och vit bakgrund räcker. Ingen publicering."
+        }
+    ],
+    "instructions": "Skapa index.html som en fristående HTML-sida utan externa länkar, skript, typsnitt eller nätverksanrop. Visa rubriken ARAMF Worker och texten Agent 01 är redo. Använd enkel inbyggd CSS. Läs brief.txt. Kontrollera HTML-filen och rapportera resultatet på svenska.",
+    "manager": "Morgan",
+    "member": "Agent 01",
+    "outputs": [
+        {
+            "mustContain": [
+                "ARAMF Worker",
+                "Agent 01 är redo"
+            ],
+            "path": "index.html"
+        }
+    ],
+    "schema": "aramf-worker-pilot/v1",
+    "team": "Morgan"
+}

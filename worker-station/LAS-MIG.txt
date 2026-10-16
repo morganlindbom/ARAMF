@@ -1,0 +1,97 @@
+ARAMF WORKER STATION — WINDOWS-PILOT 0.1
+
+Syfte
+Ett fristående provprogram för en AI-arbetare på en extra Windows-dator.
+Det kör ett granskat uppdrag genom den officiella Codex-motorn med ChatGPT-inloggning.
+Ingen separat OpenAI API-nyckel behövs för ChatGPT-inloggningen. Kontots tillgång
+till Codex och användningsgränser gäller. Internet krävs för inloggning och AI.
+
+FÖRSTA TESTET
+1. Kopiera ARAMF-Worker-Station-Windows.zip till extradatorn.
+2. Högerklicka på ZIP-filen och välj Extrahera alla. Kör inte direkt ur ZIP-filen.
+3. Öppna mappen ARAMF-Worker-Station-Windows och starta AramfWorkerStation.exe.
+   Hela mappen behövs; kopiera inte bara exe-filen. VS Code, Node.js, Python och
+   Qt-utvecklingsverktyg behövs inte för det medföljande provuppdraget.
+4. Klicka Logga in med ChatGPT och slutför OpenAI-inloggningen i webbläsaren.
+5. Klicka Skapa provuppdrag. Granska mål, agent, team och instruktioner.
+6. Behåll Windows MXC om extradatorn har en tillräckligt uppdaterad Windows 11.
+   Om Codex rapporterar att MXC inte stöds: uppdatera Windows, eller välj
+   Begränsad Windows-token för ett försök med ofarliga testdata.
+7. Klicka Starta uppdrag. Agenten ska skapa en enkel lokal HTML-sida.
+8. Klicka Öppna senaste resultat. Läs LAS-MIG.txt, report.json och answer.txt.
+   Leveransen ligger under workspace, exempelvis workspace\index.html.
+
+Programmet är en lokal pilot och saknar kodsignering. Om Windows visar en
+varning, kontrollera att filen kommer från det här paketet innan du väljer
+att köra den. Stäng inte av Windows skydd generellt.
+
+SÅ TESTAR DU MED TVÅ DATORER
+På managerdatorn skapar du en uppdragsfil med provknappen. Filens plats visas
+i loggen. Uppdragsfiler sparas normalt under Dokument\ARAMF Worker Jobs.
+Du kan ändra uppdragets JSON i en texteditor: member, team, manager, goal,
+instructions, inputs och outputs. Spara UTF-8. Skicka filen till extradatorn
+och öppna den där med Öppna uppdragsfil. Någon central server behövs inte.
+Kopiera tillbaka den aktuella run-mappen för granskning; kopiera inte kontomappen.
+
+VAR FINNS ARBETET?
+Standardplats: Dokument\ARAMF Worker Runs\run-<unik identitet>\
+Varje start får en ny mapp. Gamla körningar skrivs inte över.
+  job.json      Exakta uppdraget som startades.
+  workspace\    Arbetskopia med textindata, härledda instruktioner och leverans.
+  events.jsonl  Faktisk utdata från processen (kan innehålla uppdragsdata).
+  answer.txt    Agentens slutrapport när den har kunnat lämna en sådan.
+  report.json   Exitkod, observerad sluthändelse, filkontroller och SHA-256.
+  run.json      Körstatus. RUNNING utan slutrapport efter strömavbrott betyder
+                avbruten/okänd körning, inte en färdig leverans.
+
+VAD PILOTEN GÖR OCH INTE GÖR
+- Uppdragsfilen är ett granskat pilotunderlag. Den importeras ännu inte automatiskt
+  från ARAMF:s medlemssida och utgör inget kanoniskt ARAMF TaskContract.
+- Programmet producerar en tunn AGENTS.md och en uppdragsspecifik
+  ARAMF_WORKER\AGENTS.md i varje ny arbetskopia, härledda från samma uppdragsfil.
+- Agenten får fil- och kommandovektyg genom Codex. Körningen använder
+  workspace-write och kan inte be programmet om utökad åtkomst.
+- Körningen använder separat lokal Codex-inloggning och ignorerar personlig
+  Codex-konfiguration. Inga inloggningar, tokens eller API-nycklar följer med ZIP-filen.
+- Kontodata lagras av Codex under lokal AppData\ARAMFWorkerStation\Codex.
+  Flytta inte denna mapp mellan datorer och skicka den inte som testresultat.
+- MXC kräver stöd i Windows och misslyckas tydligt om stödet saknas.
+  Tokenläget har svagare nätverksisolering. Piloten är inte en säkerhetsgranskad
+  gräns mellan olika kunder. Använd testdata på en separat testdator.
+- Listan outputs är ett leveranskrav och en efterkontroll. Den är inte en
+  operativsystemsbehörighet per fil. Oväntade ändringar inne i arbetsmappen
+  leder till CHECKS_FAILED. Codex körskydd hanterar skrivgränsen för arbetsmappen.
+- DELIVERED betyder att processen slutfördes och deklarerade filkontroller gick
+  igenom. Det betyder INTE att innehållet är oberoende verifierat eller certifierat.
+- Tidsgränsen är 20 minuter. Stoppa avslutar processgruppen. Ingen automatisk
+  återkörning sker efter fel, avbrott eller stängning.
+- Agenten har inte fått mandat att publicera, committa/pusha, installera program
+  eller samarbeta med andra agenter. Inga sådana knappar finns i stationen.
+- Provuppdraget kräver inga extra verktyg. Egna bygguppdrag kräver att relevant
+  kompilator, SDK och testverktyg finns på extradatorn.
+
+TESTSTATUS
+Se TESTRESULTAT.txt. Automatiska processprov använder en tydligt markerad
+lokal testprocess. De är inte ChatGPT-leveranser. Det första verkliga AI-provet
+utför du efter inloggning på extradatorn. Programmet är inte certifierat.
+
+KÄLLKOD OCH BYGGE
+Källkoden finns i source. Det är ett separat C++17/Qt 6-projekt och ändrar
+inte ditt befintliga ARAMF-repository. Bygg med CMake, Ninja och Qt 6 Widgets:
+  cmake -S source -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=<Qt>
+  cmake --build build
+Egenkontroll: AramfWorkerStation.exe --self-test <ny tom evidenssökväg>
+Fönsterprov: AramfWorkerStation.exe --ui-smoke <evidenssökväg>
+
+MEDFÖLJANDE KOMPONENTER
+Officiell Codex CLI 0.162.1 (Apache-2.0), Qt 6 och Windows-runtimebibliotek.
+Licenstexter finns under licenses. Qt är dynamiskt länkat; motsvarande DLL-filer
+kan ersättas av kompatibla egna byggen. Källor till beroenden:
+https://github.com/openai/codex/tree/rust-v0.162.1
+https://packages.msys2.org/package/mingw-w64-ucrt-x86_64-qt6-base
+https://github.com/msys2/MINGW-packages
+
+OFFICIELL ANSLUTNINGSDOKUMENTATION
+https://learn.chatgpt.com/docs/auth
+https://learn.chatgpt.com/docs/non-interactive-mode
+https://learn.chatgpt.com/docs/windows/windows-sandbox

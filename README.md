@@ -6,6 +6,10 @@ AR&MF is a **C++17 / Qt 6 desktop application** for creating and maintaining a p
 
 Its purpose is to make project rules, current status, durable decisions, memory, routing, resources, and verification evidence portable between ChatGPT, Codex, and other repository-aware coding agents.
 
+## ARAMF Worker Station – Windows-pilot
+
+[Ladda ner Windows-programmet (ZIP)](https://github.com/morganlindbom/ARAMF/releases/download/worker-station-pilot-v0.1.0/ARAMF-Worker-Station-Windows.zip) · [Källkod och instruktioner](worker-station/)
+
 ## Implementation
 
 ARAMF itself is fully C++ based:

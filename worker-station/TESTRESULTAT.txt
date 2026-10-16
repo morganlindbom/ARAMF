@@ -1,0 +1,17 @@
+ARAMF Worker Station 0.1 - pilot validation
+Built: 2026-10-16T00:34:53.935378+00:00
+C++17 / Qt release build: PASS (no compiler warnings in final build)
+Packaged executable, clean runtime PATH: PASS
+Automated local regression checks: 47/47 PASS
+Includes subprocess success, failure, missing outputs, unexpected edits,
+instruction tampering, missing completion event, and cancellation.
+GUI smoke, job preview and screenshot: PASS
+Packaged official Codex CLI 0.162.1 version command: PASS
+Windows MXC sandbox real command probe: PASS on this host
+ChatGPT login: NOT RUN (user signs in on worker computer)
+Live ChatGPT job: NOT RUN
+Second-computer test: NOT RUN
+Independent product verification / certification: NOT PERFORMED
+
+The process regression suite uses a deterministic fake worker, not an AI model.
+This standalone pilot has no automatic member export from the existing ARAMF.
